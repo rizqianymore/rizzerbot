@@ -18,6 +18,7 @@ sessions/
 database/*.json
 !database/.gitkeep
 config/database.json
+marketing.txt
 
 # Local Environment Variables
 .env
@@ -70,3 +71,4 @@ temp/
 .cache/
 .npm
 .eslintcache
+

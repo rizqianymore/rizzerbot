@@ -1,4 +1,4 @@
-import { postForm, fetchBuffer } from '@/lib/scraping.js';
+import { postJson, fetchBuffer } from '@/lib/scraping.js';
 
 export default {
     description: 'Mengunduh video TikTok tanpa tanda air/watermark.',
@@ -33,18 +33,26 @@ export default {
         let successAPI = 'Rizzer API';
 
         try {
-            const res = await postForm('https://www.tikwm.com/api/', {
+            // Berikan delay 1 detik agar tidak terkena limit API (1 request/second)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const res = await postJson('https://tiktok-api.rakarizqi-cv.workers.dev/api/download/tiktok', {
                 url: url
             });
 
-            if (res?.data?.code === 0 && res?.data?.data) {
-                const data = res.data.data;
-                videoUrl = data.play || data.hdplay || data.wmplay;
-                authorUsername = data.author?.unique_id || 'unknown';
-                successAPI = 'Rizzer API';
+            if (res?.status && res?.data) {
+                const data = res.data;
+                videoUrl = data.url;
+                authorUsername = data.author || 'unknown';
+                successAPI = data.source || 'Rizzer API';
+            } else if (res?.status === false && res?.message) {
+                await sock.sendMessage(msg.key.remoteJid, {
+                    text: `❌ API Error: ${res.message}`
+                }, { quoted: msg });
+                return;
             }
         } catch (err) {
-            console.error('TikWM API Error:', err.message);
+            console.error('TikTok API Error:', err.message);
         }
 
         if (!videoUrl) {
