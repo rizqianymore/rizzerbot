@@ -326,30 +326,6 @@ async function startBot() {
             }
         } else if (connection === 'open') {
             logger.info('Primary Rizzerbot successfully connected and is now online!');
-            
-            let targetJid = settings.watchdogNumber || settings.ownerNumber;
-            if (targetJid) {
-                if (!targetJid.includes('@')) {
-                    targetJid += '@s.whatsapp.net';
-                }
-                const bannerPath = path.join(__dirname, 'assets', 'menu_banner.png');
-                let thumbnailBuffer = null;
-                if (fs.existsSync(bannerPath)) {
-                    thumbnailBuffer = fs.readFileSync(bannerPath);
-                }
-
-                sock.sendMessage(targetJid, { 
-                    text: `🤖 *${settings.botName}* is now *Online* and active!\n\nKetik *.help* untuk melihat daftar menu.`,
-                    linkPreview: {
-                        title: `${settings.botName} — Active`,
-                        body: 'WhatsApp bot is now online and active.',
-                        thumbnail: thumbnailBuffer,
-                        sourceUrl: 'https://whatsapp.com'
-                    }
-                }).catch(err => {
-                    logger.error('Failed to send startup notification to watchdog:', err);
-                });
-            }
         }
     });
 
