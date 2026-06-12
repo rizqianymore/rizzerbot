@@ -1,6 +1,7 @@
 import makeWASocket, {
     useMultiFileAuthState,
-    DisconnectReason
+    DisconnectReason,
+    Browsers
 } from 'baileys';
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
@@ -129,7 +130,7 @@ async function startSecondaryBot(authDirName, phoneNumber) {
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
-        browser: [settings.botName, 'Chrome', '1.0.0'],
+        browser: Browsers.ubuntu('Chrome'),
         markOnlineOnConnect: settings.autoOnline
     });
 
@@ -264,7 +265,7 @@ async function startBot() {
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: !usePairingCode,
-        browser: [settings.botName, 'Chrome', '1.0.0'],
+        browser: Browsers.ubuntu('Chrome'),
         markOnlineOnConnect: settings.autoOnline
     });
 
