@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+/jspm_packages/
+.pnp
+.pnp.js
+
+# WhatsApp Session Keys & Creds
+config/auth_info/
+config/sessions/
+assets/sessions/
+*.creds
+creds.json
+.creds.json
+auth_info/
+sessions/
+
+# Database Files (Contains JIDs/User info)
+database/*.json
+!database/.gitkeep
+config/database.json
+
+# Local Environment Variables
+.env
+.env.local
+.env.development
+.env.local.development
+.env.production
+.env.local.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic Reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime & Process Files
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary / Build Files
+dist/
+build/
+tmp/
+temp/
+*.tmp.mp4
+*.tmp.gif
+*.tmp.png
+*.tmp.jpg
+.cache/
+.npm
+.eslintcache
