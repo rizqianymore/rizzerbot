@@ -1,5 +1,5 @@
 import { createCanvas, loadImage } from 'canvas';
-import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji } from '@/lib/emojiHelper.js';
+import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '@/lib/emojiHelper.js';
 
 function drawRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.beginPath();
