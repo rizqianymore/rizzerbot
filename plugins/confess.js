@@ -8,12 +8,12 @@ const __dirname = path.dirname(__filename);
 
 // Register elegant cursive font for the card
 try {
-    const fontPath = path.join(__dirname, '..', 'assets', 'DancingScript-Bold.ttf');
+    const fontPath = path.join(__dirname, '..', 'assets', 'GreatVibes-Regular.ttf');
     if (fs.existsSync(fontPath)) {
-        registerFont(fontPath, { family: 'DancingScript' });
+        registerFont(fontPath, { family: 'Great Vibes' });
     }
 } catch (err) {
-    console.error('Failed to register DancingScript font:', err);
+    console.error('Failed to register Great Vibes font:', err);
 }
 
 function drawRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -122,54 +122,86 @@ export default {
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Draw romantic floating background hearts
+            // 2. Draw glowing background circles to elevate glassmorphism contrast
+            const glow1 = ctx.createRadialGradient(220, 170, 10, 220, 170, 160);
+            glow1.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+            glow1.addColorStop(1, 'rgba(255, 117, 140, 0)');
+            ctx.fillStyle = glow1;
+            ctx.fillRect(20, 20, 400, 300);
+
+            const glow2 = ctx.createRadialGradient(580, 330, 10, 580, 330, 180);
+            glow2.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+            glow2.addColorStop(1, 'rgba(255, 126, 179, 0)');
+            ctx.fillStyle = glow2;
+            ctx.fillRect(380, 150, 400, 320);
+
+            // 3. Draw romantic floating background hearts
             const hearts = [
-                { x: 100, y: 120, size: 25, opacity: 0.2 },
-                { x: 700, y: 150, size: 35, opacity: 0.15 },
-                { x: 150, y: 380, size: 30, opacity: 0.2 },
-                { x: 650, y: 390, size: 20, opacity: 0.25 },
-                { x: 400, y: 60, size: 15, opacity: 0.3 },
-                { x: 740, y: 80, size: 12, opacity: 0.35 },
-                { x: 50, y: 250, size: 18, opacity: 0.18 }
+                { x: 100, y: 120, size: 25, opacity: 0.25 },
+                { x: 700, y: 150, size: 35, opacity: 0.2 },
+                { x: 150, y: 380, size: 30, opacity: 0.25 },
+                { x: 650, y: 390, size: 20, opacity: 0.3 },
+                { x: 400, y: 60, size: 15, opacity: 0.35 },
+                { x: 740, y: 80, size: 12, opacity: 0.4 },
+                { x: 50, y: 250, size: 18, opacity: 0.22 }
             ];
             hearts.forEach(h => {
                 drawHeart(ctx, h.x, h.y, h.size, '#ffffff', h.opacity);
             });
 
-            // 3. Draw glassmorphic confession card container
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
-            ctx.shadowBlur = 25;
+            // 4. Draw glassmorphic confession card container
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 30;
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 10;
-            drawRoundRect(ctx, 60, 60, 680, 380, 24, 'rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.35)');
-            ctx.shadowBlur = 0; // Reset shadow for text
+            ctx.shadowOffsetY = 12;
+            drawRoundRect(ctx, 60, 60, 680, 380, 24, 'rgba(255, 255, 255, 0.18)', 'rgba(255, 255, 255, 0.38)');
+            
+            // CRITICAL: Reset ALL shadow properties to prevent duplicate/ghost outlines on text
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
 
-            // 4. Draw card corner decoration hearts
-            drawHeart(ctx, 95, 95, 20, '#ff4b78', 0.9);
-            drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.75);
+            // 5. Draw card corner decoration hearts
+            drawHeart(ctx, 95, 95, 20, '#ff4b78', 0.95);
+            drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.85);
 
-            // 5. Draw Header/Title
+            // 6. Draw Header/Title
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
-            ctx.font = 'bold 22px "Arial", sans-serif';
-            ctx.fillText('💝 SECRET LOVE CONFESSION 💝', width / 2, 110);
+            ctx.font = 'bold 20px sans-serif';
+            const titleText = 'SECRET LOVE CONFESSION';
+            ctx.fillText(titleText, width / 2, 110);
 
-            // 6. Draw "To: <target>"
+            // Programmatically draw hearts on either side of the title to avoid emoji rendering box errors
+            const titleWidth = ctx.measureText(titleText).width;
+            drawHeart(ctx, (width / 2) - (titleWidth / 2) - 22, 98, 10, '#ffffff', 0.95);
+            drawHeart(ctx, (width / 2) + (titleWidth / 2) + 22, 98, 10, '#ffffff', 0.95);
+
+            // Subtle divider line under title
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(100, 130);
+            ctx.lineTo(700, 130);
+            ctx.stroke();
+
+            // 7. Draw "To: <target>"
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
-            ctx.font = '36px "DancingScript", "Georgia", serif';
-            ctx.fillText(`To: ${to}`, 110, 180);
+            ctx.font = '48px "Great Vibes", cursive';
+            ctx.fillText(`To: ${to}`, 110, 190);
 
-            // 7. Draw Message Body (wrapped text)
+            // 8. Draw Message Body (wrapped text)
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'italic 20px "Arial", sans-serif';
+            ctx.font = 'italic 22px sans-serif';
             
             const textX = 110;
-            let textY = 225;
+            let textY = 240;
             const maxWidth = 580;
             const words = message.split(' ');
             let line = '';
-            const lineHeight = 28;
+            const lineHeight = 32;
 
             for (let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + ' ';
@@ -185,13 +217,13 @@ export default {
             }
             ctx.fillText(line, textX, textY);
 
-            // 8. Draw "From: <sender>" at the bottom right
-            ctx.fillStyle = '#ffe3e8';
+            // 9. Draw "From: <sender>" at the bottom right
+            ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'right';
-            ctx.font = '36px "DancingScript", "Georgia", serif';
+            ctx.font = '44px "Great Vibes", cursive';
             ctx.fillText(`With Love, ${from}`, 690, 400);
 
-            // 9. Send the image card
+            // 10. Send the image card
             const imageBuffer = canvas.toBuffer('image/png');
             await sock.sendMessage(msg.key.remoteJid, {
                 image: imageBuffer,
@@ -209,3 +241,4 @@ export default {
         }
     }
 };
+
