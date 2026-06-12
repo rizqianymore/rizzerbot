@@ -23,24 +23,23 @@ echo -e "${YELLOW}[*]${NC} Menginstal dependensi dasar (curl, wget, git, build-e
 sudo apt-get install -y curl wget git build-essential ffmpeg imagemagick libwebp-dev python3 python3-pip
 
 echo -e "${YELLOW}[*]${NC} Mengunduh dan menginstal NVM (Node Version Manager)..."
+# Download and install nvm:
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh | bash
 
-# Load NVM into current execution context
-export NVM_DIR="$HOME/.nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-  . "$NVM_DIR/nvm.sh"
-else
-  echo -e "${RED}[-]${NC} Gagal memuat NVM. Harap restart terminal Anda dan jalankan kembali."
-  exit 1
-fi
+# in lieu of restarting the shell
+\. "$HOME/.nvm/nvm.sh"
 
-echo -e "${YELLOW}[*]${NC} Menginstal Node.js 22..."
+echo -e "${YELLOW}[*]${NC} Menginstal Node.js..."
+# Download and install Node.js:
 nvm install 22
-nvm use 22
 
 echo -e "${GREEN}[+]${NC} Verifikasi Versi:"
-node -v | xargs echo -e " • Node.js:"
-npm -v | xargs echo -e " • NPM:"
+# Verify the Node.js version:
+node -v # Should print "v22.22.3".
+
+# Verify npm version:
+npm -v # Should print "10.9.8".
+
 ffmpeg -version | head -n 1 | xargs echo -e " • FFmpeg:"
 convert -version | head -n 1 | xargs echo -e " • ImageMagick:"
 python3 --version | xargs echo -e " • Python:"
