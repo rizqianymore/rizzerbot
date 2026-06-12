@@ -271,13 +271,14 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds);
     registerGroupGuard(sock);
+    let pairingTimeout = null;
 
     if (usePairingCode && !sock.authState.creds.registered) {
         const phoneNumber = settings.pairingNumber?.replace(/[^0-9]/g, '');
         if (!phoneNumber) {
             logger.error('Pairing phone number is missing or invalid in settings.js!');
         } else {
-            setTimeout(async () => {
+            pairingTimeout = setTimeout(async () => {
                 try {
                     logger.info(`Requesting pairing code for primary bot: ${phoneNumber}...`);
                     const code = await sock.requestPairingCode(phoneNumber);
@@ -285,7 +286,7 @@ async function startBot() {
                     console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
                     console.log(`\x1b[36m====================================\x1b[0m\n`);
                 } catch (err) {
-                    logger.error('Failed to request pairing code:', err);
+                    logger.error('Failed to request pairing code:', err.message || err);
                 }
             }, 3000);
         }
@@ -300,6 +301,7 @@ async function startBot() {
         }
 
         if (connection === 'close') {
+            if (pairingTimeout) clearTimeout(pairingTimeout);
             const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
@@ -311,7 +313,16 @@ async function startBot() {
                     startBot();
                 }, 5000);
             } else {
-                logger.error('Log out detected. Please delete the auth_info folder to generate a new QR code / pairing code.');
+                logger.error('Log out detected. Cleaning up primary session files...');
+                try {
+                    deleteFolderRecursive(authDir);
+                } catch (e) {
+                    logger.error('Failed to delete corrupted primary session:', e.message);
+                }
+                logger.info('Re-initializing bot connection with fresh state in 3 seconds...');
+                setTimeout(() => {
+                    startBot();
+                }, 3000);
             }
         } else if (connection === 'open') {
             logger.info('Primary Rizzerbot successfully connected and is now online!');
