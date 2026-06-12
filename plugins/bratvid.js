@@ -128,7 +128,7 @@ export default {
                 console.error('Failed to add metadata for bratvid sticker:', metaErr);
             }
 
-            await sock.sendMessage(msg.key.remoteJid, { sticker: gifBuffer }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { sticker: gifBuffer, mimetype: 'image/webp' }, { quoted: msg });
         } catch (err) {
             console.error('Local Bratvid generator error:', err);
             await sock.sendMessage(msg.key.remoteJid, { text: '❌ Gagal membuat stiker animasi Brat lokal.' }, { quoted: msg });

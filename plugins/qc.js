@@ -385,7 +385,8 @@ export default {
             const stickerBuffer = await addStickerMetadata(imageBuffer, 'RizzerBot QC', 'Pentagon');
 
             await sock.sendMessage(msg.key.remoteJid, {
-                sticker: stickerBuffer
+                sticker: stickerBuffer,
+                mimetype: 'image/webp'
             }, { quoted: msg });
 
         } catch (err) {
