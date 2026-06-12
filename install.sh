@@ -47,7 +47,9 @@ pip3 --version | head -n 1 | xargs echo -e " • Pip:"
 
 echo -e "${YELLOW}[*]${NC} Menginstal modul dependensi npm proyek..."
 npm install
+npm install -g pm2
 
 echo -e "${GREEN}[+]${NC} RizzerBot siap dijalankan!"
 echo -e " 1. Konfigurasikan bot Anda di: config/settings.js"
 echo -e " 2. Jalankan bot menggunakan perintah: npm start atau node index.js"
+echo -e " 3. Jalankan bot di latar belakang menggunakan PM2: pm2 start index.js --name \"rizzerbot\""
