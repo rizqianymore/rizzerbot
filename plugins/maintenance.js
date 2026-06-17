@@ -16,11 +16,11 @@ function isSafePath(targetPath) {
 }
 
 export default {
-    description: 'Sistem pemeliharaan bot: Mengatur mode pemeliharaan, memformat ulang database, merekonstruksi skema data, serta menghapus cache dan log.',
-    usage: '[on/off]',
+    description: 'Sistem pemeliharaan bot: Mengatur mode pemeliharaan, memformat ulang database, merekonstruksi skema data, menghapus cache/log, serta menghapus bersih database.',
+    usage: '[on/off/wipe]',
     example: 'on',
     name: 'maintenance',
-    aliases: ['maint', 'mt', 'cleanup'],
+    aliases: ['maint', 'mt', 'cleanup', 'wipedatabase', 'wipe'],
     category: 'Owner',
     ownerOnly: true,
     run: async (sock, msg, args, context) => {
@@ -29,6 +29,30 @@ export default {
 
         const remoteJid = msg.key.remoteJid;
         const subCommand = args[0]?.toLowerCase();
+
+        // 1. Fitur Wipe Database jika subCommand adalah 'wipe' atau 'wipedatabase'
+        if (subCommand === 'wipe' || subCommand === 'wipedatabase') {
+            db.data.users = {};
+            db.data.stats = {
+                totalCommands: 0,
+                commands: {}
+            };
+            db.data.groups = {};
+            db.data.settings.jpmChannels = [];
+            
+            // Mengembalikan owner dan admin bot agar tidak kehilangan akses
+            db.ensurePrivilegedUsers();
+            db.save();
+
+            await sock.sendMessage(remoteJid, {
+                text: '🗑️ *Wipe Database:* BERHASIL\n\nSeluruh data pengguna, statistik, dan grup telah dihapus bersih dari database. Memulai ulang bot dalam 3 detik untuk menerapkan perubahan...'
+            }, { quoted: msg });
+
+            setTimeout(() => {
+                process.exit(0);
+            }, 3000);
+            return;
+        }
 
         // Menentukan status target (on / off)
         let targetState = !db.data.settings.maintenance; // default: toggle
@@ -53,7 +77,7 @@ export default {
             text: '🛠️ *Mode Pemeliharaan:* AKTIF\n\nSistem pemeliharaan sedang berjalan. Memulai restrukturisasi database dan pembersihan cache/log...'
         }, { quoted: msg });
 
-        let logOutput = '🛠️ *PROSES PEMELIHARAAN SISTEM DAN PEMBERSIHAN*\n\n';
+        let logOutput = '🛠️ *Proses Pemeliharaan Sistem dan Pembersihan*\n\n';
         let success = true;
 
         try {
