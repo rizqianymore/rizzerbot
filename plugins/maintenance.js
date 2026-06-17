@@ -160,11 +160,17 @@ export default {
             logOutput += `   ✅ Berhasil menghapus *${clearedFilesCount}* file sampah.\n`;
             logOutput += `   💾 Total penyimpanan dibebaskan: *${sizeMb} MB*.\n\n`;
 
-            logOutput += '✨ *Pemeliharaan Selesai!* Bot sekarang berjalan dengan optimal.';
+            logOutput += '✨ *Pemeliharaan Selesai!* Bot sekarang berjalan dengan optimal.\n\n🔄 *Memulai ulang bot* dalam 3 detik untuk menerapkan perubahan secara menyeluruh...';
         } catch (err) {
             logOutput += `\n❌ *Terjadi Kesalahan saat Pemeliharaan:* ${err.message}`;
         }
 
         await sock.sendMessage(remoteJid, { text: logOutput }, { quoted: msg });
+
+        if (!logOutput.includes('❌')) {
+            setTimeout(() => {
+                process.exit(0);
+            }, 3000);
+        }
     }
 };
