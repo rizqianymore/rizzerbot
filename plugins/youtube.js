@@ -79,7 +79,7 @@ export default {
                 `🎵 *Title:* ${res.data.api.title}\n` +
                 `👤 *Channel:* ${res.data.api.userInfo.name}\n` +
                 `📊 *Quality:* ${quality}\n` +
-                `⚡ _Via Rizzer API_`;
+                `⚡ _Via Palantir API_`;
 
             await sock.sendMessage(msg.key.remoteJid, {
                 [isVideoFile ? 'video' : 'audio']: buffer,

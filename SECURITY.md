@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest version of RizzerBot is supported for security updates. Please upgrade to the latest release before reporting a vulnerability.
+Only the latest version of Palantir Bots is supported for security updates. Please upgrade to the latest release before reporting a vulnerability.
 
 | Version | Supported          |
 | ------- | ------------------ |

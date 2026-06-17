@@ -32,7 +32,7 @@ export default {
                 caption: `📸 *QR Code Berhasil Dibuat!*\n\n` +
                          `🔗 *Data:* ${text}\n` +
                          `📊 *Ukuran:* ${size}\n\n` +
-                         `⚡ _Via Rizzer API_`
+                         `⚡ _Via Palantir API_`
             }, { quoted: msg });
 
         } catch (err) {

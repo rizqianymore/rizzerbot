@@ -30,7 +30,7 @@ export default {
         }, { quoted: msg });
 
         let videoUrl = null;
-        let successAPI = 'Rizzer API';
+        let successAPI = 'Palantir API';
 
         try {
             // 1. Fetch ssstwitter.com homepage to get token, timestamp, and cookies

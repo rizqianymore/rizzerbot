@@ -1,11 +1,11 @@
 import GIFEncoder from 'gif-encoder-2';
 import { createCanvas } from 'canvas';
-import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '../lib/emojiHelper.js';
+import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '@/lib/emojiHelper.js';
 
 export default {
     description: 'Membuat stiker video teks Brat bergerak.',
     usage: '<teks>',
-    example: 'RizzerBot',
+    example: 'Palantir Bots',
     name: 'bratvid',
     aliases: ['bratgif', 'bratanim', 'bratvideo'],
     category: 'Media',

@@ -1,10 +1,10 @@
 import { createCanvas } from 'canvas';
-import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '../lib/emojiHelper.js';
+import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '@/lib/emojiHelper.js';
 
 export default {
     description: 'Membuat stiker teks bergaya Brat.',
     usage: '<teks>',
-    example: 'RizzerBot',
+    example: 'Palantir Bots',
     name: 'brat',
     aliases: ['bratmaker', 'brats'],
     category: 'Media',

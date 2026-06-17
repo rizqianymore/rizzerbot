@@ -146,12 +146,12 @@ export default {
                 if (item.isVideo) {
                     await sock.sendMessage(msg.key.remoteJid, {
                         video: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Rizzer API_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
                     }, { quoted: msg });
                 } else {
                     await sock.sendMessage(msg.key.remoteJid, {
                         image: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Rizzer API_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
                     }, { quoted: msg });
                 }
             }

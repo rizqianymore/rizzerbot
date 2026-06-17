@@ -41,7 +41,7 @@ export default {
             const buffer = await fetchBuffer(microUrl, { timeout: 40000 });
             await sock.sendMessage(msg.key.remoteJid, {
                 image: buffer,
-                caption: `📸 *Screenshot Website*\n🔗 ${url}\n⚡ Delay: ${delay / 1000}s\n⚡ _Via Rizzer API_`
+                caption: `📸 *Screenshot Website*\n🔗 ${url}\n⚡ Delay: ${delay / 1000}s\n⚡ _Via Palantir API_`
             }, { quoted: msg });
         } catch (err) {
             console.error('Screenshot Error:', err.message);

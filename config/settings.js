@@ -1,5 +1,5 @@
 export const settings = {
-    botName: "RizzerBot",
+    botName: "Palantir Bot",
     ownerName: "Pentagon",
     ownerNumber: "6287847566690",
     pairingNumber: "6287847566690",
@@ -11,6 +11,10 @@ export const settings = {
     autoOnline: false,
     cooldownTime: 3000,
     image: 'assets/image.png',
+    linkTitle: "Palantir Bot",
+    linkBody: "Modular & High-Performance WhatsApp Bot",
+    linkUrl: "https://github.com/rizqianymore/rizzerbot",
+    linkImage: "assets/menu_banner.png",
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",
         "Are you a Wi-Fi signal? Because I'm feeling a really strong connection.",

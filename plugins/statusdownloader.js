@@ -51,13 +51,13 @@ export default {
 
             let messageContent = {};
             if (quotedMedia.imageMessage) {
-                messageContent = { document: buffer, mimetype: 'image/jpeg', fileName: `Status_HD_${Date.now()}.jpg`, caption: '✅ Berhasil didownload (Resolusi Asli/HD)!\n⚡ _Via Rizzer API_' };
+                messageContent = { document: buffer, mimetype: 'image/jpeg', fileName: `Status_HD_${Date.now()}.jpg`, caption: '✅ Berhasil didownload (Resolusi Asli/HD)!\n⚡ _Via Palantir API_' };
             } else if (quotedMedia.videoMessage) {
-                messageContent = { document: buffer, mimetype: 'video/mp4', fileName: `Status_Video_HD_${Date.now()}.mp4`, caption: '✅ Berhasil didownload (Resolusi Asli/HD)!\n⚡ _Via Rizzer API_' };
+                messageContent = { document: buffer, mimetype: 'video/mp4', fileName: `Status_Video_HD_${Date.now()}.mp4`, caption: '✅ Berhasil didownload (Resolusi Asli/HD)!\n⚡ _Via Palantir API_' };
             } else if (quotedMedia.audioMessage) {
-                messageContent = { document: buffer, mimetype: 'audio/mp4', fileName: `Status_Audio_${Date.now()}.m4a`, caption: '✅ Audio berhasil didownload\n⚡ _Via Rizzer API_' };
+                messageContent = { document: buffer, mimetype: 'audio/mp4', fileName: `Status_Audio_${Date.now()}.m4a`, caption: '✅ Audio berhasil didownload\n⚡ _Via Palantir API_' };
             } else if (quotedMedia.documentMessage) {
-                messageContent = { document: buffer, mimetype: quotedMedia.documentMessage.mimetype, fileName: quotedMedia.documentMessage.title || 'document', caption: '✅ Berhasil didownload\n⚡ _Via Rizzer API_' };
+                messageContent = { document: buffer, mimetype: quotedMedia.documentMessage.mimetype, fileName: quotedMedia.documentMessage.title || 'document', caption: '✅ Berhasil didownload\n⚡ _Via Palantir API_' };
             }
 
             await sock.sendMessage(msg.key.remoteJid, messageContent, { quoted: msg });

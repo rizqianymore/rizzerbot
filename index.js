@@ -257,7 +257,7 @@ async function startBot() {
     const authDir = path.join(__dirname, 'assets', 'sessions', 'primary_bot');
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    logger.info('Initializing primary Rizzerbot connection...');
+    logger.info('Initializing primary Palantir Bots connection...');
 
     const usePairingCode = settings.usePairingCode;
 
@@ -325,7 +325,7 @@ async function startBot() {
                 }, 3000);
             }
         } else if (connection === 'open') {
-            logger.info('Primary Rizzerbot successfully connected and is now online!');
+            logger.info('Primary Palantir Bots successfully connected and is now online!');
         }
     });
 

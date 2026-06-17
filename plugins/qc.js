@@ -382,7 +382,7 @@ export default {
             // Convert and send as Sticker
             const imageBuffer = canvas.toBuffer('image/png');
             const { addStickerMetadata } = await import('@/lib/stickerMetadata.js');
-            const stickerBuffer = await addStickerMetadata(imageBuffer, 'RizzerBot QC', 'Pentagon');
+            const stickerBuffer = await addStickerMetadata(imageBuffer, 'Palantir Bots QC', 'Pentagon');
 
             await sock.sendMessage(msg.key.remoteJid, {
                 sticker: stickerBuffer,

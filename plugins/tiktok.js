@@ -30,7 +30,7 @@ export default {
 
         let videoUrl = null;
         let authorUsername = 'unknown';
-        let successAPI = 'Rizzer API';
+        let successAPI = 'Palantir API';
 
         try {
             // Berikan delay 1 detik agar tidak terkena limit API (1 request/second)
@@ -44,7 +44,7 @@ export default {
                 const data = res.data;
                 videoUrl = data.url;
                 authorUsername = data.author || 'unknown';
-                successAPI = data.source || 'Rizzer API';
+                successAPI = data.source || 'Palantir API';
             } else if (res?.status === false && res?.message) {
                 await sock.sendMessage(msg.key.remoteJid, {
                     text: `❌ API Error: ${res.message}`
