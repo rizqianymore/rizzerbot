@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
+    "prestart": "node -e \"import fs from 'fs'; const sym = 'node_modules/@'; if (fs.existsSync(sym)) { try { if (fs.readlinkSync(sym) !== '../' && fs.readlinkSync(sym) !== '..') { fs.unlinkSync(sym); } } catch (e) { try { fs.unlinkSync(sym); } catch (_) {} } } if (!fs.existsSync(sym)) fs.symlinkSync('../', sym, 'junction')\"",
+    "start": "npm run prestart && node index.js",
     "postinstall": "node -e \"import fs from 'fs'; if (!fs.existsSync('node_modules/@')) fs.symlinkSync('../', 'node_modules/@', 'junction')\""
   },
   "dependencies": {
