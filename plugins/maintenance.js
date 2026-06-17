@@ -17,8 +17,8 @@ function isSafePath(targetPath) {
 
 export default {
     description: 'Sistem pemeliharaan bot: Mengatur mode pemeliharaan, memformat ulang database, merekonstruksi skema data, serta menghapus cache dan log.',
-    usage: '[toggle/cleanup]',
-    example: 'cleanup',
+    usage: '[on/off]',
+    example: 'on',
     name: 'maintenance',
     aliases: ['maint', 'mt', 'cleanup'],
     category: 'Owner',
@@ -30,34 +30,31 @@ export default {
         const remoteJid = msg.key.remoteJid;
         const subCommand = args[0]?.toLowerCase();
 
-        // Jika tidak ada argumen atau argumennya adalah toggle mode pemeliharaan
-        if (!subCommand || subCommand === 'toggle' || subCommand === 'on' || subCommand === 'off') {
-            let nextState = !db.data.settings.maintenance;
-            if (subCommand === 'on') nextState = true;
-            if (subCommand === 'off') nextState = false;
+        // Menentukan status target (on / off)
+        let targetState = !db.data.settings.maintenance; // default: toggle
+        if (subCommand === 'on') targetState = true;
+        if (subCommand === 'off') targetState = false;
 
-            db.data.settings.maintenance = nextState;
+        // Jika mematikan mode pemeliharaan (off)
+        if (!targetState) {
+            db.data.settings.maintenance = false;
             db.save();
-
-            const statusText = nextState ? 'AKTIF' : 'NONAKTIF';
             await sock.sendMessage(remoteJid, {
-                text: `🛠️ *Mode Pemeliharaan:* ${statusText}\n\n` +
-                      `Status bot berhasil diubah. ${nextState ? 'Sekarang bot hanya merespons Owner Utama dan Admin.' : 'Semua pengguna sekarang dapat menggunakan bot kembali.'}`
+                text: '🛠️ *Mode Pemeliharaan:* NONAKTIF\n\nBot telah kembali ke mode normal. Semua pengguna sekarang dapat menggunakannya kembali.'
             }, { quoted: msg });
             return;
         }
 
-        if (subCommand !== 'cleanup' && subCommand !== 'bersih') {
-            await sock.sendMessage(remoteJid, {
-                text: `⚠️ *Format Perintah Salah!*\n\n` +
-                      `Gunakan:\n` +
-                      `• *.maintenance* (Untuk menyalakan/mematikan pemeliharaan)\n` +
-                      `• *.maintenance cleanup* (Untuk membersihkan database & file sampah)`
-            }, { quoted: msg });
-            return;
-        }
+        // Jika mengaktifkan mode pemeliharaan (on) -> otomatis jalankan proses pembersihan
+        db.data.settings.maintenance = true;
+        db.save();
+
+        await sock.sendMessage(remoteJid, {
+            text: '🛠️ *Mode Pemeliharaan:* AKTIF\n\nSistem pemeliharaan sedang berjalan. Memulai restrukturisasi database dan pembersihan cache/log...'
+        }, { quoted: msg });
 
         let logOutput = '🛠️ *PROSES PEMELIHARAAN SISTEM DAN PEMBERSIHAN*\n\n';
+        let success = true;
 
         try {
             // 1. Rekonstruksi & Auto-format Database
@@ -84,6 +81,7 @@ export default {
                         logOutput += `   ✅ \`${file}\` berhasil diformat ulang.\n`;
                     } catch (e) {
                         logOutput += `   ❌ Gagal memproses \`${file}\`: ${e.message}\n`;
+                        success = false;
                     }
                 }
                 // Reload database ke memori bot
@@ -92,6 +90,7 @@ export default {
                 logOutput += '   🔄 Database berhasil dimuat ulang ke memori.\n\n';
             } else {
                 logOutput += '   ⚠️ Direktori database tidak ditemukan.\n\n';
+                success = false;
             }
 
             // 2. Penghapusan Cache & File Sementara
@@ -163,11 +162,16 @@ export default {
             logOutput += '✨ *Pemeliharaan Selesai!* Bot sekarang berjalan dengan optimal.\n\n🔄 *Memulai ulang bot* dalam 3 detik untuk menerapkan perubahan secara menyeluruh...';
         } catch (err) {
             logOutput += `\n❌ *Terjadi Kesalahan saat Pemeliharaan:* ${err.message}`;
+            success = false;
         }
+
+        // Matikan kembali mode pemeliharaan (kembali ke normal) setelah selesai
+        db.data.settings.maintenance = false;
+        db.save();
 
         await sock.sendMessage(remoteJid, { text: logOutput }, { quoted: msg });
 
-        if (!logOutput.includes('❌')) {
+        if (success) {
             setTimeout(() => {
                 process.exit(0);
             }, 3000);
