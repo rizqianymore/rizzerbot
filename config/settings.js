@@ -15,6 +15,8 @@ export const settings = {
     linkBody: "Modular & High-Performance WhatsApp Bot",
     linkUrl: "https://github.com/rizqianymore/rizzerbot",
     linkImage: "assets/menu_banner.png",
+    newsletterJid: "120363202796245235@newsletter",
+    newsletterName: "Palantir Bot Updates",
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",
         "Are you a Wi-Fi signal? Because I'm feeling a really strong connection.",
