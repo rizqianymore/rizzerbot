@@ -40,12 +40,27 @@ export default {
             db.data.groups = {};
             db.data.settings.jpmChannels = [];
             
-            // Mengembalikan owner dan admin bot agar tidak kehilangan akses
-            db.ensurePrivilegedUsers();
+            // Mengembalikan owner, admin, dan nomor bot agar otomatis terdaftar & premium secara langsung (fast lookup)
+            const botJid = db.normalizeJid(sock.user?.id);
+            const ownerJid = db.normalizeJid(settings.ownerNumber);
+            const adminJids = (db.data.settings.admins || []).map(a => db.normalizeJid(a));
+
+            const defaultPrivileged = Array.from(new Set([botJid, ownerJid, ...adminJids])).filter(Boolean);
+
+            for (const jid of defaultPrivileged) {
+                db.data.users[jid] = {
+                    registered: true,
+                    name: jid === ownerJid ? settings.ownerName : (jid === botJid ? settings.botName : 'Admin'),
+                    banned: false,
+                    premium: true,
+                    limit: 100,
+                    joinedAt: new Date().toISOString()
+                };
+            }
             db.save();
 
             await sock.sendMessage(remoteJid, {
-                text: '🗑️ *Wipe Database:* BERHASIL\n\nSeluruh data pengguna, statistik, dan grup telah dihapus bersih dari database. Memulai ulang bot dalam 3 detik untuk menerapkan perubahan...'
+                text: '🗑️ *Wipe Database:* BERHASIL\n\nSeluruh data pengguna, statistik, dan grup telah dihapus bersih dari database. Nomor bot, owner, dan admin telah didaftarkan secara otomatis sebagai pengguna Premium.\n\nMemulai ulang bot dalam 3 detik untuk menerapkan perubahan...'
             }, { quoted: msg });
 
             setTimeout(() => {
