@@ -44,14 +44,15 @@ export default {
             // Mengembalikan owner, admin, dan nomor bot agar otomatis terdaftar & premium secara langsung (fast lookup)
             const botJid = db.normalizeJid(sock.user?.id);
             const ownerJid = db.normalizeJid(settings.ownerNumber);
+            const pairingJid = db.normalizeJid(settings.pairingNumber);
             const adminJids = (db.data.settings.admins || []).map(a => db.normalizeJid(a));
 
-            const defaultPrivileged = Array.from(new Set([botJid, ownerJid, ...adminJids])).filter(Boolean);
+            const defaultPrivileged = Array.from(new Set([botJid, ownerJid, pairingJid, ...adminJids])).filter(Boolean);
 
             for (const jid of defaultPrivileged) {
                 db.data.users[jid] = {
                     registered: true,
-                    name: jid === ownerJid ? settings.ownerName : (jid === botJid ? settings.botName : 'Admin'),
+                    name: (jid === ownerJid || jid === pairingJid) ? settings.ownerName : (jid === botJid ? settings.botName : 'Admin'),
                     banned: false,
                     premium: true,
                     limit: 100,
