@@ -1,6 +1,7 @@
 import { postJson, fetchBuffer } from '@/lib/scraping.js';
 
 export default {
+    premiumOnly: true,
     description: 'Mengunduh video TikTok tanpa tanda air/watermark.',
     usage: '<link TikTok>',
     example: 'https://vm.tiktok.com/...',

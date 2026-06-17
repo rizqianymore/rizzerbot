@@ -1,5 +1,52 @@
-import axios from 'axios';
-import { fetchBuffer } from '@/lib/scraping.js';
+import { fetchBuffer, postForm } from '@/lib/scraping.js';
+
+// Helper decoding functions for SnapInsta packer
+function _0xe0c(d, e, f) {
+    const _0xc0e = ["", "split", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/", "slice", "indexOf", "", "", ".", "pow", "reduce", "reverse", "0"];
+    var g = _0xc0e[2][_0xc0e[1]](_0xc0e[0]);
+    var h = g[_0xc0e[3]](0, e);
+    var i = g[_0xc0e[3]](0, f);
+    var j = d[_0xc0e[1]](_0xc0e[0])[_0xc0e[10]]()[_0xc0e[9]](function (a, b, c) {
+        if (h[_0xc0e[4]](b) !== -1)
+            return a += h[_0xc0e[4]](b) * (Math[_0xc0e[8]](e, c));
+    }, 0);
+    var k = _0xc0e[0];
+    while (j > 0) {
+        k = i[j % f] + k;
+        j = (j - (j % f)) / f;
+    }
+    return k || _0xc0e[11];
+}
+
+function snapDecode(h, u, n, t, e, r) {
+    r = "";
+    for (var i = 0, len = h.length; i < len; i++) {
+        var s = "";
+        while (h[i] !== n[e]) {
+            s += h[i];
+            i++;
+        }
+        for (var j = 0; j < n.length; j++) {
+            s = s.replace(new RegExp(n[j], "g"), j);
+        }
+        r += String.fromCharCode(_0xe0c(s, e, 10) - t);
+    }
+    return decodeURIComponent(r);
+}
+
+function decryptSnapInsta(data) {
+    const match = data.match(/\}\("([^"]+)",\s*(\d+),\s*(\[[^\]]+\]),\s*(\d+),\s*(\d+),\s*(\d+)\)\)/);
+    if (!match) return null;
+    
+    const h = match[1];
+    const u = parseInt(match[2]);
+    const n = JSON.parse(match[3]);
+    const t = parseInt(match[4]);
+    const e = parseInt(match[5]);
+    const r = parseInt(match[6]);
+    
+    return snapDecode(h, u, n, t, e, r);
+}
 
 export default {
     description: 'Mengunduh media (post/reel/story) dari link Instagram.',
@@ -9,6 +56,7 @@ export default {
     aliases: ['ig', 'igdl', 'instagramdl'],
     category: 'User',
     cooldown: 8000,
+    premiumOnly: true,
     run: async (sock, msg, args, { sendTyping }) => {
         const url = args[0];
         if (!url) {
@@ -27,107 +75,67 @@ export default {
 
         await sendTyping();
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: '⏳ Sedang memproses download Instagram...' 
+            text: '⏳ Sedang memproses download Instagram via SnapInsta...' 
         }, { quoted: msg });
 
         let mediaItems = []; // Array of { url: string, isVideo: boolean }
 
         try {
-            // 1. Fetch kol.id home page to get CSRF token and cookies
-            const getRes = await axios.get('https://kol.id/download-video/instagram', {
+            // Call snapinsta.to/api/ajaxSearch using postForm to bypass Cloudflare challenge fingerprint checks
+            const res = await postForm('https://snapinsta.to/api/ajaxSearch', {
+                q: url,
+                t: 'media',
+                v: 'v2',
+                lang: 'en'
+            }, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                },
-                timeout: 10000
-            });
-
-            const cookies = getRes.headers['set-cookie'] || [];
-            const cookieString = cookies.map(c => c.split(';')[0]).join('; ');
-
-            const match = getRes.data.match(/name="_token"\s+value="([^"]+)"/) || getRes.data.match(/csrf-token"\s+content="([^"]+)"/);
-            if (!match) {
-                throw new Error('Gagal mendapatkan token CSRF.');
-            }
-            const csrfToken = match[1];
-
-            // 2. Send POST request to kol.id downloader API
-            const params = new URLSearchParams();
-            params.append('url', url);
-            params.append('_token', csrfToken);
-
-            const postRes = await axios.post('https://kol.id/api/v2/downloader/instagram', params.toString(), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Referer': 'https://kol.id/download-video/instagram',
-                    'Origin': 'https://kol.id',
-                    'Cookie': cookieString,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                },
-                timeout: 15000
+                    'Origin': 'https://snapinsta.to',
+                    'Referer': 'https://snapinsta.to/en2'
+                }
             });
 
-            let downloadData = postRes.data?.data;
-            if (!downloadData) {
-                throw new Error('Gagal mengambil data dari API.');
+            if (res.status !== 200 || !res.data) {
+                throw new Error(`Server response error (HTTP ${res.status})`);
             }
 
-            // 3. If the download is queued, poll the status URL
-            if (postRes.data?.meta?.code === 2020 && downloadData.status_url) {
-                const statusUrl = downloadData.status_url;
-                let completed = false;
-
-                for (let i = 0; i < 15; i++) {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    const statusRes = await axios.get(statusUrl, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Referer': 'https://kol.id/download-video/instagram',
-                            'Cookie': cookieString,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                        },
-                        timeout: 10000
-                    });
-
-                    if (statusRes.data?.data?.status === 'completed') {
-                        downloadData = statusRes.data.data;
-                        completed = true;
-                        break;
-                    } else if (statusRes.data?.data?.status === 'failed') {
-                        throw new Error(statusRes.data?.data?.error?.message || 'Download gagal diproses.');
-                    }
-                }
-
-                if (!completed) {
-                    throw new Error('Timeout saat menunggu proses download.');
-                }
+            const resData = res.data;
+            if (resData.status !== 'ok') {
+                throw new Error(resData.message || 'Gagal memproses link di SnapInsta.');
             }
 
-            // 4. Extract URLs from completed download data
-            if (Array.isArray(downloadData.slides) && downloadData.slides.length > 0) {
-                for (const slide of downloadData.slides) {
-                    const mediaUrl = slide.video_url || slide.image_url || slide.url;
-                    if (mediaUrl) {
-                        mediaItems.push({
-                            url: mediaUrl,
-                            isVideo: slide.type === 'video'
-                        });
-                    }
+            let htmlContent = '';
+            if (resData.v === 'v1') {
+                htmlContent = resData.data;
+            } else if (resData.v === 'v2') {
+                // Decrypt the packed JavaScript to get the HTML content
+                htmlContent = decryptSnapInsta(resData.data);
+                if (!htmlContent) {
+                    throw new Error('Gagal mendeskripsi data respon.');
                 }
             } else {
-                const mediaUrl = downloadData.video_url || downloadData.url;
-                if (mediaUrl) {
+                htmlContent = resData.data;
+            }
+
+            // Extract download links and media types from HTML content
+            const blocks = htmlContent.split('class="download-items"');
+            for (let i = 1; i < blocks.length; i++) {
+                const block = blocks[i];
+                const hrefMatch = block.match(/href="([^"]+)"[^>]*class="[^"]*abutton/i);
+                if (hrefMatch) {
+                    const mediaUrl = hrefMatch[1];
+                    const isVideo = /download\s*video/i.test(block) || /icon-dlvideo/i.test(block);
                     mediaItems.push({
                         url: mediaUrl,
-                        isVideo: downloadData.type === 'video'
+                        isVideo
                     });
                 }
             }
 
         } catch (err) {
-            console.error('KOL.id API Error:', err.message);
+            console.error('SnapInsta API Error:', err.message);
             await sock.sendMessage(msg.key.remoteJid, {
-                text: `❌ Gagal mengambil media dari link tersebut: ${err.message}`
+                text: `❌ Gagal mengambil media: ${err.message}`
             }, { quoted: msg });
             return;
         }
@@ -139,19 +147,19 @@ export default {
             return;
         }
 
-        // 5. Download and send all media items
+        // Send all media items
         try {
             for (const item of mediaItems) {
                 const buffer = await fetchBuffer(item.url);
                 if (item.isVideo) {
                     await sock.sendMessage(msg.key.remoteJid, {
                         video: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via SnapInsta_`
                     }, { quoted: msg });
                 } else {
                     await sock.sendMessage(msg.key.remoteJid, {
                         image: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via SnapInsta_`
                     }, { quoted: msg });
                 }
             }

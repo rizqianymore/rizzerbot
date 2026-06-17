@@ -7,6 +7,7 @@ export default [
     {
         name: 'addkolase',
         category: 'Media',
+        premiumOnly: true,
         run: async (sock, msg, args, { sendTyping, senderJid }) => {
             const { extractMessageContent, downloadMediaMessage } = await import('baileys');
 
@@ -69,6 +70,7 @@ export default [
     {
         name: 'kolase',
         category: 'Media',
+        premiumOnly: true,
         run: async (sock, msg, args, { sendTyping, senderJid }) => {
             const session = collageSessions.get(senderJid);
             if (!session || session.length === 0) {
@@ -201,6 +203,7 @@ export default [
     {
         name: 'cancelkolase',
         category: 'Media',
+        premiumOnly: true,
         run: async (sock, msg, args, { senderJid }) => {
             if (collageSessions.has(senderJid)) {
                 collageSessions.delete(senderJid);

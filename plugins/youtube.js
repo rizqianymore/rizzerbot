@@ -1,6 +1,7 @@
 import { postForm, fetchBuffer } from '@/lib/scraping.js';
 
 export default {
+    premiumOnly: true,
     description: 'Mengunduh video atau audio dari tautan YouTube.',
     usage: '<link YouTube>',
     example: 'https://youtube.com/watch?v=...',

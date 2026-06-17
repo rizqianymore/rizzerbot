@@ -26,6 +26,7 @@ function drawRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 
 export default {
+    premiumOnly: true,
     description: 'Membuat gelembung chat stiker bergaya kutipan (Quotation Chat).',
     usage: '<teks>',
     example: 'Halo',

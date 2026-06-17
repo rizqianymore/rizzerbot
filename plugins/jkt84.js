@@ -19,6 +19,7 @@ const localMembersList = [
 ];
 
 export default {
+    premiumOnly: true,
     description: 'Menampilkan jadwal teater JKT48.',
     usage: '',
     example: '',

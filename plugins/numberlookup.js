@@ -1,4 +1,5 @@
 export default {
+    premiumOnly: true,
     description: 'Memeriksa detail informasi kepemilikan nomor WhatsApp.',
     usage: '<nomor>',
     example: '628xxx',

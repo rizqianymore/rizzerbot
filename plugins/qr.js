@@ -1,6 +1,7 @@
 import { fetchBuffer } from '@/lib/scraping.js';
 
 export default {
+    premiumOnly: true,
     description: 'Membuat gambar kode QR dari teks.',
     usage: '<teks>',
     example: 'https://github.com/',

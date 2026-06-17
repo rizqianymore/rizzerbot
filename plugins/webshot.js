@@ -1,6 +1,7 @@
 import { fetchBuffer } from '@/lib/scraping.js';
 
 export default {
+    premiumOnly: true,
     description: 'Mengambil tangkapan layar/screenshot dari halaman website.',
     usage: '<link web>',
     example: 'https://google.com',

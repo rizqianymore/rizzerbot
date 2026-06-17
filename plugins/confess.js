@@ -61,6 +61,7 @@ function drawHeart(ctx, x, y, size, fillStyle, opacity = 1) {
 }
 
 export default {
+    premiumOnly: true,
     name: 'confess',
     aliases: ['confesscard', 'lovecard', 'menfess'],
     description: 'Membuat kartu ucapan / pengakuan cinta (love confession card) rahasia yang cantik.',

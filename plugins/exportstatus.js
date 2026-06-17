@@ -6,6 +6,7 @@ import path from 'path';
 const execAsync = util.promisify(exec);
 
 export default {
+    premiumOnly: true,
     description: 'Mengekspor seluruh file media status WhatsApp yang terunduh ke dalam file ZIP.',
     usage: '[clear]',
     example: 'clear',

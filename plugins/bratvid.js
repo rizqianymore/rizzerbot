@@ -3,6 +3,7 @@ import { createCanvas } from 'canvas';
 import { tokenize, loadEmojiImages, measureTokensWidth, drawTokens, wrapTextEmoji, drawTokensJustified } from '@/lib/emojiHelper.js';
 
 export default {
+    premiumOnly: true,
     description: 'Membuat stiker video teks Brat bergerak.',
     usage: '<teks>',
     example: 'Palantir Bots',

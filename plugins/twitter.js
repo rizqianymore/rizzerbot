@@ -2,6 +2,7 @@ import axios from 'axios';
 import { fetchBuffer } from '@/lib/scraping.js';
 
 export default {
+    premiumOnly: true,
     description: 'Mengunduh video/foto dari tautan postingan Twitter/X.',
     usage: '<link Twitter/X>',
     example: 'https://x.com/...',

@@ -1,4 +1,5 @@
 export default {
+    premiumOnly: true,
     description: 'Mengunduh media status WhatsApp milik kontak Anda.',
     usage: '<balas status>',
     example: '',

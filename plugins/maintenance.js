@@ -17,6 +17,7 @@ function isSafePath(targetPath) {
 }
 
 export default {
+    premiumOnly: true,
     description: 'Sistem pemeliharaan bot: Mengatur mode pemeliharaan, memformat ulang database, merekonstruksi skema data, menghapus cache/log, serta menghapus bersih database.',
     usage: '[on/off/wipe]',
     example: 'on',
