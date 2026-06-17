@@ -5,12 +5,21 @@ import { db } from '@/lib/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(process.cwd());
+
+/**
+ * Validasi apakah path berada di dalam direktori kerja project untuk mencegah Path Traversal.
+ */
+function isSafePath(targetPath) {
+    const resolvedPath = path.resolve(targetPath);
+    return resolvedPath.startsWith(projectRoot + path.sep) || resolvedPath === projectRoot;
+}
 
 export default {
-    description: 'Sistem Pemeliharaan Bot: Auto format ulang database, rekonstruksi skema data, dan hapus cache/logs.',
-    usage: '',
-    example: '',
-    name: 'maintenance_run',
+    description: 'Sistem pemeliharaan bot: Mengatur mode pemeliharaan, memformat ulang database, merekonstruksi skema data, serta menghapus cache dan log.',
+    usage: '[toggle/cleanup]',
+    example: 'cleanup',
+    name: 'maintenance',
     aliases: ['maint', 'mt', 'cleanup'],
     category: 'Owner',
     ownerOnly: true,
@@ -19,16 +28,47 @@ export default {
         await sendTyping();
 
         const remoteJid = msg.key.remoteJid;
-        let logOutput = '🛠️ *PROSES PEMELIHARAAN SYSTEM DAN CLEANUP*\n\n';
+        const subCommand = args[0]?.toLowerCase();
+
+        // Jika tidak ada argumen atau argumennya adalah toggle mode pemeliharaan
+        if (!subCommand || subCommand === 'toggle' || subCommand === 'on' || subCommand === 'off') {
+            let nextState = !db.data.settings.maintenance;
+            if (subCommand === 'on') nextState = true;
+            if (subCommand === 'off') nextState = false;
+
+            db.data.settings.maintenance = nextState;
+            db.save();
+
+            const statusText = nextState ? 'AKTIF' : 'NONAKTIF';
+            await sock.sendMessage(remoteJid, {
+                text: `🛠️ *Mode Pemeliharaan:* ${statusText}\n\n` +
+                      `Status bot berhasil diubah. ${nextState ? 'Sekarang bot hanya merespons Owner Utama dan Admin.' : 'Semua pengguna sekarang dapat menggunakan bot kembali.'}`
+            }, { quoted: msg });
+            return;
+        }
+
+        if (subCommand !== 'cleanup' && subCommand !== 'bersih') {
+            await sock.sendMessage(remoteJid, {
+                text: `⚠️ *Format Perintah Salah!*\n\n` +
+                      `Gunakan:\n` +
+                      `• *.maintenance* (Untuk menyalakan/mematikan pemeliharaan)\n` +
+                      `• *.maintenance cleanup* (Untuk membersihkan database & file sampah)`
+            }, { quoted: msg });
+            return;
+        }
+
+        let logOutput = '🛠️ *PROSES PEMELIHARAAN SISTEM DAN PEMBERSIHAN*\n\n';
 
         try {
             // 1. Rekonstruksi & Auto-format Database
             logOutput += '📂 *1. Restrukturisasi & Format Database:*\n';
-            const dbDir = path.join(__dirname, '..', 'database');
+            const dbDir = path.join(projectRoot, 'database');
             if (fs.existsSync(dbDir)) {
                 const dbFiles = fs.readdirSync(dbDir).filter(f => f.endsWith('.json'));
                 for (const file of dbFiles) {
                     const filePath = path.join(dbDir, file);
+                    if (!isSafePath(filePath)) continue;
+
                     try {
                         const raw = fs.readFileSync(filePath, 'utf8');
                         let parsed = {};
@@ -41,7 +81,7 @@ export default {
 
                         // Terapkan format rapi (auto-format)
                         fs.writeFileSync(filePath, JSON.stringify(parsed, null, 4), 'utf8');
-                        logOutput += `   ✅ \`${file}\` berhasil di-format ulang.\n`;
+                        logOutput += `   ✅ \`${file}\` berhasil diformat ulang.\n`;
                     } catch (e) {
                         logOutput += `   ❌ Gagal memproses \`${file}\`: ${e.message}\n`;
                     }
@@ -60,53 +100,55 @@ export default {
             let clearedBytes = 0;
 
             const targets = [
-                { dir: path.join(process.cwd(), 'statuses'), ext: /.*\.(jpg|mp4)$/ },
-                { dir: path.join(process.cwd(), 'tmp'), ext: /.*/ },
-                { dir: path.join(process.cwd(), 'temp'), ext: /.*/ },
-                { dir: path.join(process.cwd(), '.cache'), ext: /.*/ },
-                { dir: process.cwd(), ext: /.*\.(log|tmp\..*)$/ }
+                path.join(projectRoot, 'statuses'),
+                path.join(projectRoot, 'tmp'),
+                path.join(projectRoot, 'temp'),
+                path.join(projectRoot, '.cache')
             ];
 
-            for (const target of targets) {
-                if (fs.existsSync(target.dir)) {
-                    const stat = fs.statSync(target.dir);
+            for (const dirPath of targets) {
+                if (fs.existsSync(dirPath)) {
+                    const resolved = path.resolve(dirPath);
+                    if (!isSafePath(resolved)) continue;
+
+                    const stat = fs.statSync(resolved);
                     if (stat.isDirectory()) {
-                        const files = fs.readdirSync(target.dir);
+                        const files = fs.readdirSync(resolved);
                         for (const file of files) {
-                            const filePath = path.join(target.dir, file);
-                            if (target.ext.test(file)) {
-                                try {
-                                    const fileStat = fs.statSync(filePath);
-                                    if (fileStat.isFile()) {
-                                        clearedBytes += fileStat.size;
-                                        fs.unlinkSync(filePath);
-                                        clearedFilesCount++;
-                                    }
-                                } catch (_) {}
-                            }
+                            const filePath = path.join(resolved, file);
+                            const fileResolved = path.resolve(filePath);
+                            if (!isSafePath(fileResolved)) continue;
+
+                            try {
+                                const fileStat = fs.statSync(fileResolved);
+                                if (fileStat.isFile()) {
+                                    clearedBytes += fileStat.size;
+                                    fs.unlinkSync(fileResolved);
+                                    clearedFilesCount++;
+                                } else if (fileStat.isDirectory()) {
+                                    fs.rmSync(fileResolved, { recursive: true, force: true });
+                                    clearedFilesCount++;
+                                }
+                            } catch (_) {}
                         }
-                    } else if (stat.isFile() && target.ext.test(path.basename(target.dir))) {
-                        // File target tunggal (misal *.log di root)
-                        try {
-                            clearedBytes += stat.size;
-                            fs.unlinkSync(target.dir);
-                            clearedFilesCount++;
-                        } catch (_) {}
                     }
                 }
             }
 
-            // Cari file bertipe *.log atau *.tmp.* di root workspace secara dinamis
+            // Cari file bertipe *.log atau *.tmp.* di root secara dinamis
             try {
-                const rootFiles = fs.readdirSync(process.cwd());
+                const rootFiles = fs.readdirSync(projectRoot);
                 for (const file of rootFiles) {
                     if (file.endsWith('.log') || /.*\.tmp\.(mp4|gif|png|jpg)$/.test(file)) {
-                        const filePath = path.join(process.cwd(), file);
+                        const filePath = path.join(projectRoot, file);
+                        const fileResolved = path.resolve(filePath);
+                        if (!isSafePath(fileResolved)) continue;
+
                         try {
-                            const stat = fs.statSync(filePath);
+                            const stat = fs.statSync(fileResolved);
                             if (stat.isFile()) {
                                 clearedBytes += stat.size;
-                                fs.unlinkSync(filePath);
+                                fs.unlinkSync(fileResolved);
                                 clearedFilesCount++;
                             }
                         } catch (_) {}
