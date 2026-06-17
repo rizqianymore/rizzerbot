@@ -17,6 +17,10 @@ export const settings = {
     linkImage: "https://raw.githubusercontent.com/rizqianymore/rizzerbot/main/assets/menu_banner.png",
     newsletterJid: "120363202796245235@newsletter",
     newsletterName: "Palantir Bot Updates",
+    danaNumber: "[Masukkan Nomor Dana]",
+    gopayNumber: "[Masukkan Nomor Gopay]",
+    ovoNumber: "[Masukkan Nomor OVO]",
+    saweriaUrl: "https://saweria.co/example",
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",
         "Are you a Wi-Fi signal? Because I'm feeling a really strong connection.",
