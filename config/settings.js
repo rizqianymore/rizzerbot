@@ -14,7 +14,7 @@ export const settings = {
     linkTitle: "Palantir Bot",
     linkBody: "Modular & High-Performance WhatsApp Bot",
     linkUrl: "https://github.com/rizqianymore/rizzerbot",
-    linkImage: "assets/menu_banner.png",
+    linkImage: "https://raw.githubusercontent.com/rizqianymore/rizzerbot/main/assets/menu_banner.png",
     newsletterJid: "120363202796245235@newsletter",
     newsletterName: "Palantir Bot Updates",
     rizzQuotes: [
