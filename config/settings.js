@@ -12,7 +12,7 @@ export const settings = {
     cooldownTime: 3000,
     stickerPackName: "Palantir Bot Stickers",
     stickerAuthor: "Pentagon",
-    image: 'assets/image.png',
+    image: 'assets/banner.png',
     linkTitle: "Palantir Bot",
     linkBody: "Modular & High-Performance WhatsApp Bot",
     linkUrl: "https://github.com/rizqianymore/rizzerbot",
