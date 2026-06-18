@@ -8,8 +8,8 @@ export default {
     description: 'Membuat bukti transaksi pembayaran sukses.',
     usage: '<item> | <harga> | [metode] | [status] | [ref]',
     example: 'Premium Gold | 35000 | GOPAY',
-    category: 'Utilities',
-    premiumOnly: false,
+    category: 'Owner',
+    ownerOnly: true,
     run: async (sock, msg, args, { sendTyping, sendUsage }) => {
         const text = args.join(' ');
         if (!text) {
