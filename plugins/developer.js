@@ -18,10 +18,8 @@ export default {
 📝 *Penjelasan Bot:*
 Palantir Bot adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk kebutuhan promosi massal (JPM), manajemen grup secara otomatis, serta pengunduhan berbagai media (Instagram, TikTok, YouTube, Spotify) dengan kecepatan respons optimal.
 
-💰 *Daftar Harga Sewa & Pembelian:*
-• *Sewa Premium (1 Bulan):* Rp 15.000 / nomor
-• *Sewa Premium (Permanen):* Rp 35.000 / nomor
-• *Pembelian Source Code:* Rp 100.000 (Full script & gratis panduan instalasi)`;
+💰 *Daftar Harga Pembelian:*
+• *Pembelian Source Code:* Rp 25.000 (Full script & gratis panduan instalasi)`;
 
         await sock.sendMessage(msg.key.remoteJid, { text: devText }, { quoted: msg });
     }
