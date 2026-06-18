@@ -8,7 +8,7 @@ export default {
     usage: '<teks>',
     example: 'Info terbaru',
     name: 'jpm',
-    aliases: ['bcgc', 'jpmch', 'addjpmch', 'deljpmch', 'listjpmch', 'checkdb'],
+    aliases: ['bcgc', 'jpmch', 'addjpmch', 'deljpmch', 'listjpmch', 'checkdb', 'addjpmblacklist', 'addjpmbl', 'deljpmblacklist', 'deljpmbl', 'listjpmblacklist', 'listjpmbl'],
     category: 'Premium',
     premiumOnly: true,
     run: async (sock, msg, args, context) => {
@@ -140,6 +140,104 @@ export default {
             return;
         }
 
+        // --- COMMAND: addjpmblacklist / addjpmbl ---
+        if (cmdUsed === 'addjpmblacklist' || cmdUsed === 'addjpmbl') {
+            await sendTyping();
+            let input = args[0];
+            let targetJid = '';
+
+            if (input) {
+                if (input.includes('chat.whatsapp.com/')) {
+                    const code = input.split('chat.whatsapp.com/')[1]?.split(' ')[0];
+                    if (code) {
+                        try {
+                            const meta = await sock.groupGetInviteInfo(code);
+                            if (meta && meta.id) {
+                                targetJid = meta.id;
+                            } else {
+                                await sock.sendMessage(msg.key.remoteJid, { text: '❌ Tidak dapat mengambil JID grup dari tautan tersebut.' }, { quoted: msg });
+                                return;
+                            }
+                        } catch (err) {
+                            await sock.sendMessage(msg.key.remoteJid, { text: `❌ Gagal mengambil metadata grup: ${err.message}` }, { quoted: msg });
+                            return;
+                        }
+                    }
+                } else {
+                    targetJid = input;
+                }
+            } else if (msg.key.remoteJid.endsWith('@g.us')) {
+                targetJid = msg.key.remoteJid;
+            }
+
+            if (!targetJid || !targetJid.endsWith('@g.us')) {
+                await sock.sendMessage(msg.key.remoteJid, { text: `⚠️ *Penggunaan:* \`${activePrefix}addjpmblacklist [JID/Link Grup]\` atau gunakan langsung di dalam grup.` }, { quoted: msg });
+                return;
+            }
+
+            const blacklist = db.data.settings.jpmBlacklist || [];
+            if (blacklist.includes(targetJid)) {
+                await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Grup tersebut sudah ada di daftar blacklist JPM!' }, { quoted: msg });
+                return;
+            }
+
+            blacklist.push(targetJid);
+            db.data.settings.jpmBlacklist = blacklist;
+            db.save();
+
+            await sock.sendMessage(msg.key.remoteJid, { text: `✅ Berhasil menambahkan grup ke blacklist JPM:\n\`${targetJid}\`` }, { quoted: msg });
+            return;
+        }
+
+        // --- COMMAND: deljpmblacklist / deljpmbl ---
+        if (cmdUsed === 'deljpmblacklist' || cmdUsed === 'deljpmbl') {
+            await sendTyping();
+            let input = args[0];
+            let targetJid = '';
+
+            if (input) {
+                targetJid = input;
+            } else if (msg.key.remoteJid.endsWith('@g.us')) {
+                targetJid = msg.key.remoteJid;
+            }
+
+            if (!targetJid) {
+                await sock.sendMessage(msg.key.remoteJid, { text: `⚠️ *Penggunaan:* \`${activePrefix}deljpmblacklist [JID Grup]\` atau gunakan langsung di dalam grup.` }, { quoted: msg });
+                return;
+            }
+
+            let blacklist = db.data.settings.jpmBlacklist || [];
+            if (!blacklist.includes(targetJid)) {
+                await sock.sendMessage(msg.key.remoteJid, { text: '❌ JID Grup tidak ditemukan di daftar blacklist JPM!' }, { quoted: msg });
+                return;
+            }
+
+            blacklist = blacklist.filter(id => id !== targetJid);
+            db.data.settings.jpmBlacklist = blacklist;
+            db.save();
+
+            await sock.sendMessage(msg.key.remoteJid, { text: `✅ Berhasil menghapus grup dari blacklist JPM:\n\`${targetJid}\`` }, { quoted: msg });
+            return;
+        }
+
+        // --- COMMAND: listjpmblacklist / listjpmbl ---
+        if (cmdUsed === 'listjpmblacklist' || cmdUsed === 'listjpmbl') {
+            await sendTyping();
+            const blacklist = db.data.settings.jpmBlacklist || [];
+            if (blacklist.length === 0) {
+                await sock.sendMessage(msg.key.remoteJid, { text: '📋 *Daftar Blacklist JPM kosong.*' }, { quoted: msg });
+                return;
+            }
+
+            let listText = `📋 *Daftar Blacklist JPM Grup* (${blacklist.length})\n\n`;
+            blacklist.forEach((jid, idx) => {
+                listText += `${idx + 1}. \`${jid}\`\n`;
+            });
+
+            await sock.sendMessage(msg.key.remoteJid, { text: listText.trim() }, { quoted: msg });
+            return;
+        }
+
         // --- COMMAND 5: jpmch (Channel Broadcast) ---
         if (cmdUsed === 'jpmch') {
             if (activeBroadcasts.has(botJid)) {
@@ -210,10 +308,12 @@ export default {
 
             try {
                 const getGroups = await sock.groupFetchAllParticipating();
-                const groupJids = Object.keys(getGroups || {});
+                const rawGroupJids = Object.keys(getGroups || {});
+                const blacklist = db.data.settings.jpmBlacklist || [];
+                const groupJids = rawGroupJids.filter(jid => !blacklist.includes(jid));
 
                 if (groupJids.length === 0) {
-                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Bot tidak bergabung di grup manapun.' }, { quoted: msg });
+                    await sock.sendMessage(msg.key.remoteJid, { text: '❌ Bot tidak bergabung di grup manapun (atau semua grup masuk blacklist).' }, { quoted: msg });
                     return;
                 }
 
