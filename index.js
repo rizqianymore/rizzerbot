@@ -131,7 +131,9 @@ async function startSecondaryBot(authDirName, phoneNumber) {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
         browser: Browsers.ubuntu('Chrome'),
-        markOnlineOnConnect: settings.autoOnline
+        markOnlineOnConnect: settings.autoOnline,
+        syncFullHistory: false,
+        keepAliveIntervalMs: 30000
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -203,8 +205,17 @@ function cleanSessionCache() {
         ];
 
         const now = Date.now();
-        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        const maxAge = 12 * 60 * 60 * 1000; // 12 hours
         let deletedCount = 0;
+
+        const isTempFile = (name) => {
+            return name.endsWith('.json') && (
+                name.startsWith('pre-key-') ||
+                name.startsWith('session-') ||
+                name.startsWith('sender-key-') ||
+                name.startsWith('app-state-sync-key-')
+            );
+        };
 
         for (const basePath of pathsToClean) {
             if (!fs.existsSync(basePath)) continue;
@@ -217,7 +228,7 @@ function cleanSessionCache() {
                 if (stat.isDirectory() && item.startsWith('session_')) {
                     const subFiles = fs.readdirSync(itemPath);
                     for (const subFile of subFiles) {
-                        if (subFile.startsWith('pre-key-') && subFile.endsWith('.json')) {
+                        if (isTempFile(subFile)) {
                             const filePath = path.join(itemPath, subFile);
                             const fileStat = fs.statSync(filePath);
                             if (now - fileStat.mtimeMs > maxAge) {
@@ -226,7 +237,7 @@ function cleanSessionCache() {
                             }
                         }
                     }
-                } else if (item.startsWith('pre-key-') && item.endsWith('.json')) {
+                } else if (isTempFile(item)) {
                     if (now - stat.mtimeMs > maxAge) {
                         fs.unlinkSync(itemPath);
                         deletedCount++;
@@ -235,7 +246,7 @@ function cleanSessionCache() {
             }
         }
         if (deletedCount > 0) {
-            logger.info(`Auto-clean session cache: Deleted ${deletedCount} old pre-key files.`);
+            logger.info(`Auto-clean session cache: Deleted ${deletedCount} old temporary Baileys session files.`);
         }
     } catch (err) {
         logger.error('Error during auto-clean session cache task:', err.message);
@@ -266,7 +277,9 @@ async function startBot() {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: !usePairingCode,
         browser: Browsers.ubuntu('Chrome'),
-        markOnlineOnConnect: settings.autoOnline
+        markOnlineOnConnect: settings.autoOnline,
+        syncFullHistory: false,
+        keepAliveIntervalMs: 30000
     });
 
     sock.ev.on('creds.update', saveCreds);

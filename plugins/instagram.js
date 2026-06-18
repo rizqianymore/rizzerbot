@@ -1,57 +1,44 @@
-import { fetchBuffer, postForm } from '@/lib/scraping.js';
+import { fetchBuffer, postForm, fetchJson } from '@/lib/scraping.js';
 
-// Helper decoding functions for SnapInsta packer
-function _0xe0c(d, e, f) {
-    const _0xc0e = ["", "split", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/", "slice", "indexOf", "", "", ".", "pow", "reduce", "reverse", "0"];
-    var g = _0xc0e[2][_0xc0e[1]](_0xc0e[0]);
-    var h = g[_0xc0e[3]](0, e);
-    var i = g[_0xc0e[3]](0, f);
-    var j = d[_0xc0e[1]](_0xc0e[0])[_0xc0e[10]]()[_0xc0e[9]](function (a, b, c) {
-        if (h[_0xc0e[4]](b) !== -1)
-            return a += h[_0xc0e[4]](b) * (Math[_0xc0e[8]](e, c));
-    }, 0);
-    var k = _0xc0e[0];
-    while (j > 0) {
-        k = i[j % f] + k;
-        j = (j - (j % f)) / f;
+// Helper to parse slide/image selections from arguments (e.g. "1,3" or "2-4")
+function parseSelection(args, totalSlides) {
+    const selectionStr = args.slice(1).join('').replace(/\s+/g, '');
+    if (!selectionStr || selectionStr.toLowerCase() === 'all') {
+        return null;
     }
-    return k || _0xc0e[11];
-}
 
-function snapDecode(h, u, n, t, e, r) {
-    r = "";
-    for (var i = 0, len = h.length; i < len; i++) {
-        var s = "";
-        while (h[i] !== n[e]) {
-            s += h[i];
-            i++;
+    const selected = new Set();
+    const parts = selectionStr.split(',');
+
+    for (const part of parts) {
+        if (part.includes('-')) {
+            const [startStr, endStr] = part.split('-');
+            const start = parseInt(startStr, 10);
+            const end = parseInt(endStr, 10);
+            if (!isNaN(start) && !isNaN(end)) {
+                const min = Math.min(start, end);
+                const max = Math.max(start, end);
+                for (let i = min; i <= max; i++) {
+                    if (i >= 1 && i <= totalSlides) {
+                        selected.add(i - 1); // convert to 0-indexed
+                    }
+                }
+            }
+        } else {
+            const index = parseInt(part, 10);
+            if (!isNaN(index) && index >= 1 && index <= totalSlides) {
+                selected.add(index - 1); // convert to 0-indexed
+            }
         }
-        for (var j = 0; j < n.length; j++) {
-            s = s.replace(new RegExp(n[j], "g"), j);
-        }
-        r += String.fromCharCode(_0xe0c(s, e, 10) - t);
     }
-    return decodeURIComponent(r);
-}
 
-function decryptSnapInsta(data) {
-    const match = data.match(/\}\("([^"]+)",\s*(\d+),\s*(\[[^\]]+\]),\s*(\d+),\s*(\d+),\s*(\d+)\)\)/);
-    if (!match) return null;
-    
-    const h = match[1];
-    const u = parseInt(match[2]);
-    const n = JSON.parse(match[3]);
-    const t = parseInt(match[4]);
-    const e = parseInt(match[5]);
-    const r = parseInt(match[6]);
-    
-    return snapDecode(h, u, n, t, e, r);
+    return selected.size > 0 ? Array.from(selected).sort((a, b) => a - b) : null;
 }
 
 export default {
-    description: 'Mengunduh media (post/reel/story) dari link Instagram.',
-    usage: '<link Instagram>',
-    example: 'https://www.instagram.com/p/...',
+    description: 'Mengunduh media dari link post Instagram.',
+    usage: '<link post Instagram> [pilihan slide]',
+    example: 'https://www.instagram.com/p/... 1,3',
     name: 'instagram',
     aliases: ['ig', 'igdl', 'instagramdl'],
     category: 'User',
@@ -61,79 +48,157 @@ export default {
         const url = args[0];
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap sertakan link Instagram!\nContoh:\n• Post/Reel: *.ig https://www.instagram.com/p/...\n• Story: *.ig https://www.instagram.com/stories/.../'
+                text: '⚠️ Harap sertakan link post Instagram!\nContoh:\n• Post Instagram: *.ig https://www.instagram.com/p/...\n• Pilih slide: *.ig https://www.instagram.com/p/... 1,3'
             }, { quoted: msg });
             return;
         }
 
         if (!/instagram\.com/i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari Instagram.'
+                text: '❌ Link tidak valid. Pastikan link dari post Instagram.'
             }, { quoted: msg });
             return;
         }
 
         await sendTyping();
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: '⏳ Sedang memproses download Instagram via SnapInsta...' 
+            text: '⏳ Sedang memproses post Instagram via Palantir API...' 
         }, { quoted: msg });
 
         let mediaItems = []; // Array of { url: string, isVideo: boolean }
 
         try {
-            // Call snapinsta.to/api/ajaxSearch using postForm to bypass Cloudflare challenge fingerprint checks
-            const res = await postForm('https://snapinsta.to/api/ajaxSearch', {
-                q: url,
-                t: 'media',
-                v: 'v2',
-                lang: 'en'
+            // 1. Fetch main page using fetchJson to retrieve headers/cookies
+            const mainPageRes = await fetchJson('https://kol.id/download-video/instagram');
+            const setCookie = mainPageRes.headers['set-cookie'];
+            let cookies = '';
+            if (setCookie) {
+                cookies = setCookie.map(c => c.split(';')[0]).join('; ');
+            }
+
+            // 2. Submit download task request
+            const postResponse = await postForm('https://kol.id/api/v2/downloader/instagram', {
+                url: url
             }, {
                 headers: {
+                    'Cookie': cookies,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Origin': 'https://snapinsta.to',
-                    'Referer': 'https://snapinsta.to/en2'
+                    'Origin': 'https://kol.id',
+                    'Referer': 'https://kol.id/download-video/instagram'
                 }
             });
 
-            if (res.status !== 200 || !res.data) {
-                throw new Error(`Server response error (HTTP ${res.status})`);
+            if (!postResponse?.data || postResponse.data.meta?.success === false) {
+                const errMsg = postResponse?.data?.meta?.message || 'Gagal mengirim permintaan download.';
+                throw new Error(errMsg);
             }
 
-            const resData = res.data;
-            if (resData.status !== 'ok') {
-                throw new Error(resData.message || 'Gagal memproses link di SnapInsta.');
+            const requestId = postResponse.data.data?.request_id;
+            if (!requestId) {
+                throw new Error('Gagal mendapatkan ID permintaan dari server.');
             }
 
-            let htmlContent = '';
-            if (resData.v === 'v1') {
-                htmlContent = resData.data;
-            } else if (resData.v === 'v2') {
-                // Decrypt the packed JavaScript to get the HTML content
-                htmlContent = decryptSnapInsta(resData.data);
-                if (!htmlContent) {
-                    throw new Error('Gagal mendeskripsi data respon.');
+            // 3. Poll status until completed or failed
+            let completed = false;
+            let resData = null;
+            let attempts = 0;
+            const maxAttempts = 12;
+            const pollAfterSeconds = postResponse.data?.poll_after || 5;
+            
+            // Wait for the initially suggested delay before the first check
+            await new Promise(resolve => setTimeout(resolve, pollAfterSeconds * 1000));
+
+            while (!completed && attempts < maxAttempts) {
+                attempts++;
+
+                const statusResponse = await fetchJson(`https://kol.id/api/v2/downloader/status/${requestId}`, {
+                    headers: {
+                        'Cookie': cookies,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Referer': 'https://kol.id/download-video/instagram'
+                    }
+                });
+
+                const statusData = statusResponse?.data;
+                if (!statusData) {
+                    // If response structure was resolved, adapt to returned type
+                    const rawData = statusResponse;
+                    if (rawData?.meta?.success === false) {
+                        throw new Error(rawData.meta?.message || 'Permintaan gagal diproses.');
+                    }
+                    const status = rawData?.data?.status;
+                    if (status === 'completed') {
+                        completed = true;
+                        resData = rawData.data;
+                        break;
+                    } else if (status === 'failed') {
+                        throw new Error(rawData.data?.error?.message || 'Proses pengunduhan gagal.');
+                    }
+                } else {
+                    if (statusResponse.meta?.success === false) {
+                        throw new Error(statusResponse.meta?.message || 'Permintaan gagal diproses.');
+                    }
+                    const status = statusResponse.data?.status;
+                    if (status === 'completed') {
+                        completed = true;
+                        resData = statusResponse.data;
+                        break;
+                    } else if (status === 'failed') {
+                        throw new Error(statusResponse.data?.error?.message || 'Proses pengunduhan gagal.');
+                    }
                 }
-            } else {
-                htmlContent = resData.data;
+
+                if (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
             }
 
-            // Extract download links and media types from HTML content
-            const blocks = htmlContent.split('class="download-items"');
-            for (let i = 1; i < blocks.length; i++) {
-                const block = blocks[i];
-                const hrefMatch = block.match(/href="([^"]+)"[^>]*class="[^"]*abutton/i);
-                if (hrefMatch) {
-                    const mediaUrl = hrefMatch[1];
-                    const isVideo = /download\s*video/i.test(block) || /icon-dlvideo/i.test(block);
+            if (!completed || !resData) {
+                throw new Error('Waktu pemrosesan habis (Timeout). Silakan coba lagi.');
+            }
+
+            // 4. Parse the results and handle slides if present
+            if (Array.isArray(resData.slides) && resData.slides.length > 0) {
+                const totalSlides = resData.slides.length;
+                const selectedIndices = parseSelection(args, totalSlides);
+                
+                let slidesToDownload = resData.slides;
+                if (selectedIndices !== null) {
+                    slidesToDownload = selectedIndices.map(idx => resData.slides[idx]);
+                    await sock.sendMessage(msg.key.remoteJid, {
+                        text: `⏳ Mengunduh ${slidesToDownload.length} slide terpilih dari total ${totalSlides}...`
+                    }, { quoted: msg });
+                } else if (totalSlides > 1) {
+                    await sock.sendMessage(msg.key.remoteJid, {
+                        text: `⏳ Menemukan ${totalSlides} slide. Mengunduh semua...\n💡 _Tips: Gunakan *.ig <link> 1,3* untuk memilih slide tertentu._`
+                    }, { quoted: msg });
+                }
+
+                for (const slide of slidesToDownload) {
                     mediaItems.push({
-                        url: mediaUrl,
-                        isVideo
+                        url: slide.url || slide.thumbnail,
+                        isVideo: slide.type === 'video'
                     });
                 }
+            } else if (resData.video_url) {
+                mediaItems.push({
+                    url: resData.video_url,
+                    isVideo: true
+                });
+            } else if (resData.url) {
+                mediaItems.push({
+                    url: resData.url,
+                    isVideo: false
+                });
+            } else if (resData.thumbnail) {
+                mediaItems.push({
+                    url: resData.thumbnail,
+                    isVideo: false
+                });
             }
 
         } catch (err) {
-            console.error('SnapInsta API Error:', err.message);
+            console.error('Instagram Downloader Error:', err.message);
             await sock.sendMessage(msg.key.remoteJid, {
                 text: `❌ Gagal mengambil media: ${err.message}`
             }, { quoted: msg });
@@ -147,19 +212,19 @@ export default {
             return;
         }
 
-        // Send all media items
+        // 5. Send all resolved media items
         try {
             for (const item of mediaItems) {
                 const buffer = await fetchBuffer(item.url);
                 if (item.isVideo) {
                     await sock.sendMessage(msg.key.remoteJid, {
                         video: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via SnapInsta_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
                     }, { quoted: msg });
                 } else {
                     await sock.sendMessage(msg.key.remoteJid, {
                         image: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via SnapInsta_`
+                        caption: `📥 *Instagram Downloader*\n⚡ _Via Palantir API_`
                     }, { quoted: msg });
                 }
             }

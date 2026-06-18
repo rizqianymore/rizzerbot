@@ -10,6 +10,8 @@ export const settings = {
     autoRead: false,
     autoOnline: false,
     cooldownTime: 3000,
+    stickerPackName: "Palantir Bot Stickers",
+    stickerAuthor: "Pentagon",
     image: 'assets/image.png',
     linkTitle: "Palantir Bot",
     linkBody: "Modular & High-Performance WhatsApp Bot",
