@@ -165,7 +165,7 @@ export default {
 
             // 5. Draw card corner decoration hearts
             drawHeart(ctx, 95, 95, 20, '#ff4b78', 0.95);
-            drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.85);
+            drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.85); 
 
             // 6. Draw Header/Title
             ctx.fillStyle = '#ffffff';
