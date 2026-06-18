@@ -1,58 +1,52 @@
-# Palantir Bots
+# 🤖 Palantir Bots
 
-Palantir Bots is a modular, high-performance WhatsApp bot built using Baileys. The project is designed with a clean, tiered architecture, featuring modularized command files, a dynamic plugin engine, and a structured, split database system.
-
----
-
-## Tiered Features
-
-### 1. Basic User Tier
-Streamlined basic commands for security, performance, and simplicity:
-- **`help`** (aliases: `menu`): View the main menu.
-- **`ping`**: Test bot response speed and latency.
-- **`register`** (aliases: `daftar`): Register your account.
-- **`donate`** (aliases: `donasi`, `sawer`): Show donation info.
-
-### 2. Premium Tier
-Advanced features and plugins reserved for premium users:
-- **Media Generators**: Custom stickers, Brat text overlays, Bratvid animated text, and Quotation Chat (QC) bubbles.
-- **Downloaders**: TikTok, Instagram, YouTube (MP3/MP4), Spotify, Twitter/X, and Web screenshots.
-- **Dynamic Plugins**: Custom plugins placed in `plugins/` automatically run under the Premium category.
-
-### 3. Owner Tier
-Full administrative control over the bot instance:
-- Broadcast tools, maintenance mode toggles, user database controls, block/unblock, and bot name configurations.
+**Palantir Bots** is a modular, high-performance WhatsApp bot built using Baileys. Designed with a clean, tiered architecture, it features modularized command categories, a hot-reloading dynamic plugin engine, and a structured split JSON database.
 
 ---
 
-## Project Structure
+## 🌟 Key Features
 
-```
+### 1. Tiered Command Registry
+To maintain a secure and clean codebase, commands are strictly categorized into three tiers:
+- **Basic User (`lib/commands/user.js`)**: Fundamental commands available to all registered users (`help`, `ping`, `register`, `donate`).
+- **Premium Tier (`lib/commands/premium.js`)**: Access-controlled features for premium members (media editors, video downloaders, dynamic plugins list).
+- **Owner Tier (`lib/commands/owner.js`)**: Admin controls such as maintenance mode, user status management, broadcasts, and pairing controls.
+
+### 2. Dynamic Plugin Engine (`plugins/`)
+Plugins are loaded on-the-fly and hot-reloaded automatically when files are modified. All custom plugins in the `plugins/` directory default to the **Premium** access level.
+- **Example Plugin: `trx.js`**: Generates transaction success/receipt proof images via a Cloudflare Worker API screenshot. Supports custom product names, prices, payment methods, and buyer details separated by either pipes (`|`) or commas (`,`).
+
+---
+
+## 📁 Project Structure
+
+```text
 palantir-bots/
 ├── index.js                  # Main application entry point
 ├── install.sh                # System dependency auto-installer script
 ├── package.json              # NPM package manifest
-├── assets/                   # Static assets and menu banners
+├── GEMINI.md                 # Developer reference guide
+├── assets/                   # Static resources, fonts, and assets
 ├── config/
 │   └── settings.js           # Global configuration settings
 ├── database/                 # Structured JSON database storage
 ├── lib/
-│   ├── commands/             # Standard command handlers
-│   │   ├── user.js           # Basic user commands (3 commands)
-│   │   ├── premium.js        # Premium commands & plugins menu
-│   │   └── owner.js          # Owner commands
-│   ├── database.js           # Database controller with in-memory cache
-│   ├── handler.js            # Message router and security validator
-│   ├── menu.js               # Menu formatter layouts
-│   └── plugins.js            # Plugin loader and watcher
-└── plugins/                  # Dynamic custom plugins (Premium)
+│   ├── commands/             # Standard core commands
+│   │   ├── user.js           # Basic user command list
+│   │   ├── premium.js        # Premium commands list
+│   │   └── owner.js          # Administrative/Owner commands
+│   ├── database.js           # Atomic JSON database manager with cache
+│   ├── handler.js            # Message router & security validator
+│   ├── menu.js               # Dynamic menu layout formatter
+│   └── plugins.js            # Hot-reloading plugin loader
+└── plugins/                  # Directory for custom dynamic plugins
 ```
 
 ---
 
-## Installation & Setup
+## 🛠️ Installation & Setup
 
-An automated installer script is provided to set up Node.js 22 LTS, npm, FFmpeg, ImageMagick, libwebp, and other required system tools.
+An installer script is provided to set up Node.js 22 LTS, npm, FFmpeg, ImageMagick, libwebp, and other required system utilities.
 
 ### 1. Run the Auto-Installer
 Execute the installation script in the root directory:
@@ -61,15 +55,56 @@ sudo bash install.sh
 ```
 
 ### 2. Configure Settings
-Update the variables in `config/settings.js` to match your preferences (e.g., bot name, owner number, pairing configurations).
+Open `config/settings.js` and update configuration details:
+* `botName`: Name of the bot.
+* `ownerName`: Name of the bot owner.
+* `ownerNumber`: Primary owner WhatsApp number (with country code, e.g. `6281xxx`).
 
 ### 3. Run the Bot
-To start the bot in development mode, run:
+To initialize and start the bot:
 ```bash
 npm start
 ```
 
 ---
 
-## Security Policy
-Please refer to `SECURITY.md` for information on how to report vulnerabilities privately.
+## 🔌 Writing Plugins
+
+To extend the bot, create a `.js` file in the `plugins/` directory. Use the following ES Module template:
+
+```javascript
+export default {
+    name: 'myplugin',
+    description: 'A brief description of what it does.',
+    usage: '<arguments>',
+    example: 'myplugin test',
+    aliases: ['myalias'],
+    category: 'Utilities', // Appears in this category under getPluginsMenu()
+    premiumOnly: true,     // Protect premium features
+    run: async (sock, msg, args, context) => {
+        const { sendTyping } = context;
+        await sendTyping();
+        
+        // Main execution logic here
+        await sock.sendMessage(msg.key.remoteJid, { text: 'Hello World!' }, { quoted: msg });
+    }
+};
+```
+
+---
+
+## 💾 Database State Management (`lib/database.js`)
+
+* All user profiles and group settings are cached in memory and saved to files inside the `database/` directory.
+* Disk writes are atomically debounced (written every 3 seconds max) to prevent file corruption.
+* Use helper methods like `db.getUser(jid)` and `db.updateUser(jid, props)` instead of modifying files directly to avoid race conditions.
+
+---
+
+## 🎨 Code Aesthetics & Formatting Rules
+* In menus, all command lists must be formatted with the vertical pipe format:
+  ```
+  │ .commandname <arg>
+  ```
+  *No prefix bullets or custom characters are allowed before the command prefix.*
+* Keep log output clean and structured using the `pino` logger.
