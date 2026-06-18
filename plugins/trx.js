@@ -17,7 +17,15 @@ export default {
             return;
         }
 
-        const parts = text.split('|').map(p => p.trim());
+        let parts = [];
+        if (text.includes('|')) {
+            parts = text.split('|').map(p => p.trim());
+        } else if (text.includes(',')) {
+            parts = text.split(',').map(p => p.trim());
+        } else {
+            parts = [text];
+        }
+
         const item = parts[0];
         const rawPrice = parts[1];
         
