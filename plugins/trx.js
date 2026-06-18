@@ -1,3 +1,5 @@
+import { fetchBuffer } from '@/lib/scraping.js';
+
 export default {
     name: 'trx',
     aliases: ['transaksi', 'receipt', 'tx'],
@@ -33,8 +35,12 @@ export default {
                 phone: phone || '08123456789',
                 method: method || 'QRIS'
             });
-            const response = await fetch(`${baseUrl}?${params.toString()}`);
-            const buffer = Buffer.from(await response.arrayBuffer());
+            
+            const workerUrl = `${baseUrl}?${params.toString()}`;
+            // screenshot the target element (#receipt-area) directly for a cropped clean receipt image
+            const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url&element=%23receipt-area&waitForTimeout=500`;
+            
+            const buffer = await fetchBuffer(microUrl);
 
             await sock.sendMessage(msg.key.remoteJid, {
                 image: buffer,
