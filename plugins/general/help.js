@@ -24,31 +24,20 @@ export default {
         // Beautiful premium text-based menu layout
         const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${getUptimeString()} | User: ${userCount} | Hits: ${totalHits}`;
 
-        const menuText = `🤖 *${settings.botName}* 🤖
-━━━━━━━━━━━━━━━━━━
-📊 *INFO BOT*
-• *Owner:* ${settings.ownerName}
-• *Prefix:* [ ${activePrefix} ]
-• *Uptime:* ${getUptimeString()}
-• *Pengguna:* ${userCount} terdaftar
-• *Total Hits:* ${totalHits} kali dipanggil
+        const menuText = `𝐊𝐲𝐫𝐨𝐬-𝐌𝐃
 
-📂 *DAFTAR MENU*
-Silakan ketik perintah di bawah ini:
+*Info Bot*
+* User: [ ${userCount} ]
+* Prefix: [ ${activePrefix} ]
+* Uptime: ${getUptimeString()}
 
-• *${activePrefix}usermenu*
-  └ _Melihat daftar perintah umum user_
+*Daftar Menu*
+* ${activePrefix}usermenu
+* ${activePrefix}premiummenu
+* ${activePrefix}ownermenu
+* ${activePrefix}plugins
 
-• *${activePrefix}premiummenu*
-  └ _Melihat fitur premium & downloader_
-
-• *${activePrefix}ownermenu*
-  └ _Melihat panel kontrol owner & admin_
-
-• *${activePrefix}plugins*
-  └ _Melihat modul plugin eksternal_
-━━━━━━━━━━━━━━━━━━
-💡 *Tips:* Ketik salah satu menu di atas untuk melihat perintah secara lengkap.`.trim();
+Tips: Ketik salah satu menu di atas untuk melihat perintah secara lengkap.`.trim();
 
         const adReplyOptions = {
             title: settings.linkTitle,
