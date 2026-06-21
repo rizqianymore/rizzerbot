@@ -1,8 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { sendInteractiveMessage } from '@/lib/messageHelper.js';
 import { db } from '@/lib/database.js';
 import { settings } from '@/config/settings.js';
+import { getThumbnailBuffer } from '@/lib/imageHelper.js';
 import { getUptimeString } from '@/lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,72 +21,54 @@ export default {
         const userCount = Object.keys(db.data.users).filter(k => db.data.users[k].registered).length;
         const totalHits = db.data.stats.totalCommands || 0;
 
-        const bodyText = `🤖 *Halo, ${msg.pushName || 'User'}!*\nSelamat datang di *${settings.botName}*.\n\n` +
-            `📊 *Statistik Bot:*\n` +
-            `• *Uptime:* ${getUptimeString()}\n` +
-            `• *Pengguna:* ${userCount} terdaftar\n` +
-            `• *Total Hits:* ${totalHits} kali dipanggil\n\n` +
-            `Silakan klik tombol di bawah untuk melihat menu utama atau gunakan pintasan teks jika tombol tidak muncul.`;
+        const menuText = `𝐊𝐲𝐫𝐨𝐬-𝐌𝐃
 
-        const buttons = [
-            {
-                name: "single_select",
-                buttonParamsJson: JSON.stringify({
-                    title: "📂 Buka Menu",
-                    sections: [
-                        {
-                            title: "Navigasi Menu Utama",
-                            rows: [
-                                {
-                                    header: "User Menu",
-                                    title: "Daftar Perintah Umum",
-                                    description: "Melihat menu commands umum/basic user.",
-                                    id: `${activePrefix}usermenu`
-                                },
-                                {
-                                    header: "Premium Menu",
-                                    title: "Fitur Premium & Downloader",
-                                    description: "Akses AI, downloader media, push kontak, dsb.",
-                                    id: `${activePrefix}premiummenu`
-                                },
-                                {
-                                    header: "Owner Menu",
-                                    title: "Panel Kontrol Owner/Admin",
-                                    description: "Manajemen database, self/public, maintenance, dsb.",
-                                    id: `${activePrefix}ownermenu`
-                                },
-                                {
-                                    header: "Plugins Menu",
-                                    title: "Plugin Eksternal",
-                                    description: "Melihat perintah dari modul plugin dinamis.",
-                                    id: `${activePrefix}plugins`
-                                }
-                            ]
-                        }
-                    ]
-                })
-            },
-            {
-                name: "quick_reply",
-                buttonParamsJson: JSON.stringify({
-                    display_text: "⚡ Ping",
-                    id: `${activePrefix}ping`
-                })
-            },
-            {
-                name: "quick_reply",
-                buttonParamsJson: JSON.stringify({
-                    display_text: "💖 Donasi",
-                    id: `${activePrefix}donate`
-                })
+*Info Bot*
+* User: [ ${userCount} ]
+* Prefix: [ ${activePrefix} ]
+* Uptime: ${getUptimeString()}
+
+*Daftar Menu*
+* ${activePrefix}usermenu
+* ${activePrefix}premiummenu
+* ${activePrefix}ownermenu
+* ${activePrefix}plugins
+
+Tips: Ketik salah satu menu di atas untuk melihat perintah secara lengkap.`;
+
+        const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${getUptimeString()} | User: ${userCount} | Hits: ${totalHits}`;
+
+        const adReplyOptions = {
+            title: settings.linkTitle,
+            body: statsBody,
+            sourceUrl: settings.linkUrl,
+            mediaType: 1,
+            renderLargerThumbnail: true,
+            showAdAttribution: true
+        };
+
+        if (settings.linkImage && (settings.linkImage.startsWith('http://') || settings.linkImage.startsWith('https://'))) {
+            adReplyOptions.thumbnailUrl = settings.linkImage;
+        } else if (settings.linkImage) {
+            const bannerPath = path.join(__dirname, '..', '..', settings.linkImage);
+            const thumb = await getThumbnailBuffer(bannerPath);
+            if (thumb) adReplyOptions.thumbnail = thumb;
+        }
+
+        const msgOptions = {
+            text: menuText,
+            contextInfo: {
+                forwardingScore: 1,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: settings.newsletterJid,
+                    newsletterName: settings.newsletterName,
+                    serverMessageId: -1
+                },
+                externalAdReply: adReplyOptions
             }
-        ];
+        };
 
-        await sendInteractiveMessage(sock, msg.key.remoteJid, {
-            title: settings.botName,
-            body: bodyText,
-            footer: `Kyros-MD • Owner: ${settings.ownerName}`,
-            buttons: buttons
-        }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, msgOptions, { quoted: msg });
     }
 };
