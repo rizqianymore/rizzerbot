@@ -1,6 +1,6 @@
-# 🤖 Palantir Bots
+# 🤖 Kyros-MD
 
-**Palantir Bots** is a modular, high-performance WhatsApp bot built using Baileys. Designed with a clean, tiered architecture, it features modularized command categories, a hot-reloading dynamic plugin engine, and a structured split JSON database.
+**Kyros-MD** is a modular, high-performance WhatsApp bot built using Baileys. Designed with a clean, tiered architecture, it features modularized command categories, a hot-reloading dynamic plugin engine, and a structured split JSON database.
 
 ---
 
@@ -21,7 +21,7 @@ Plugins are loaded on-the-fly and hot-reloaded automatically when files are modi
 ## 📁 Project Structure
 
 ```text
-palantir-bots/
+kyros-md/
 ├── index.js                  # Main application entry point
 ├── install.sh                # System dependency auto-installer script
 ├── package.json              # NPM package manifest

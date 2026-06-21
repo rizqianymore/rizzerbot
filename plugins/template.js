@@ -25,7 +25,7 @@ export default {
         
         // 3. Logika utama perintah
         let replyText = `👋 *Halo ${senderName}!*\n\n` +
-                        `Ini adalah berkas template plugin baru untuk *Palantir Bots*.\n\n` +
+                        `Ini adalah berkas template plugin baru untuk *Kyros-MD*.\n\n` +
                         `ℹ️ *Detail Informasi Konteks:*\n` +
                         `• Prefix Aktif: \`${activePrefix}\`\n` +
                         `• JID Anda: \`${senderJid}\`\n` +

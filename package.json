@@ -1,5 +1,5 @@
 {
-  "name": "rizzerbot",
+  "name": "kyros-md",
   "version": "1.0.0",
   "description": "Professional and Modular WhatsApp Bot built with Baileys",
   "main": "index.js",
@@ -16,6 +16,7 @@
     "canvas": "^3.2.3",
     "gif-encoder-2": "^1.0.5",
     "node-webpmux": "^3.2.1",
+    "ourin-baileys": "0.7.14",
     "pino": "^9.6.0",
     "pino-pretty": "^13.1.1",
     "qrcode-terminal": "^0.12.0",
@@ -23,6 +24,7 @@
   },
   "overrides": {
     "axios": "^1.17.0",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "file-type": "^21.3.4"
   }
 }

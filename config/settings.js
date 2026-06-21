@@ -1,28 +1,41 @@
 export const settings = {
-    botName: "Palantir Bot",
+    // Nama bot dan developer
+    botName: "Kyros-MD",
     ownerName: "Pentagon",
     ownerNumber: "6287847566690",
     pairingNumber: "6287847566690",
     watchdogNumber: "62811111111",
+
+    // Sistem pairing code (note: kalau dinyalakan akan berganti ke qr)
     usePairingCode: true,
+
+    // Sistem bot (note: kalau dinyalakan akan menjadi public)
     public: true,
-    prefix: ".",
-    autoRead: false,
-    autoOnline: false,
-    cooldownTime: 3000,
-    stickerPackName: "Palantir Bot Stickers",
+    prefix: ".", // Prefix (note: kalau mau ganti prefix, ganti di semua command juga)
+
+    // Auto
+    autoRead: false, // Auto read (note: kalau dinyalakan akan auto read semua pesan)
+    autoOnline: false, // Auto online (note: kalau dinyalakan akan selalu online)
+    cooldownTime: 3000, // Time out pada module jpm dan pushkontak
+
+    // Display media
+    stickerPackName: "Kyros-MD Stickers",
     stickerAuthor: "Pentagon",
     image: 'assets/banner.png',
-    linkTitle: "Palantir Bot",
+    linkTitle: "Kyros-MD",
     linkBody: "Modular & High-Performance WhatsApp Bot",
-    linkUrl: "https://github.com/rizqianymore/rizzerbot",
+    linkUrl: "https://github.com/rizqianymore/kyros-md",
     linkImage: "assets/banner.png",
     newsletterJid: "120363202796245235@newsletter",
-    newsletterName: "Palantir Bot Updates",
+    newsletterName: "Kyros-MD Updates",
+
+    // Fitur Donasi 
     danaNumber: "[Masukkan Nomor Dana]",
     gopayNumber: "[Masukkan Nomor Gopay]",
     ovoNumber: "[Masukkan Nomor OVO]",
     saweriaUrl: "https://saweria.co/example",
+
+    // Fitur Rizz Quotes
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",
         "Are you a Wi-Fi signal? Because I'm feeling a really strong connection.",

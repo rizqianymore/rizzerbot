@@ -30,6 +30,7 @@ const logger = pino({
 });
 
 let isPluginsLoaded = false;
+let _cleanIntervalStarted = false;
 export const runningBots = new Map();
 
 // Helper to remove directory recursively for delbot
@@ -260,15 +261,18 @@ async function startBot() {
         db.ensurePrivilegedUsers();
     }
 
-    // Start session cache cleaner (runs on boot and every 6 hours)
-    cleanSessionCache();
-    setInterval(cleanSessionCache, 6 * 60 * 60 * 1000);
+    // Start session cache cleaner once — guard prevents duplication on reconnect
+    if (!_cleanIntervalStarted) {
+        _cleanIntervalStarted = true;
+        cleanSessionCache();
+        setInterval(cleanSessionCache, 6 * 60 * 60 * 1000);
+    }
 
     // 1. Connect primary bot
     const authDir = path.join(__dirname, 'assets', 'sessions', 'primary_bot');
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    logger.info('Initializing primary Palantir Bots connection...');
+    logger.info('Initializing primary Kyros-MD connection...');
 
     const usePairingCode = settings.usePairingCode;
 
@@ -338,7 +342,7 @@ async function startBot() {
                 }, 3000);
             }
         } else if (connection === 'open') {
-            logger.info('Primary Palantir Bots successfully connected and is now online!');
+            logger.info('Primary Kyros-MD successfully connected and is now online!');
         }
     });
 

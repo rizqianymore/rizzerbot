@@ -1,8 +1,10 @@
 # Dependencies
+.node_modules-*
 node_modules/
 /jspm_packages/
 .pnp
 .pnp.js
+.package-lock.json
 
 # WhatsApp Session Keys & Creds
 config/auth_info/
