@@ -22,9 +22,9 @@ export default {
             return;
         }
 
-        if (!/instagram\.com/i.test(url)) {
+        if (!/instagram\.com\/(p|reel|reels|stories|tv)\//i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari Instagram.'
+                text: '❌ Link tidak valid. Pastikan link dari Post, Reels, Stories, atau TV Instagram.'
             }, { quoted: msg });
             return;
         }
@@ -38,8 +38,8 @@ export default {
         let mediaItems = [];
 
         try {
-            // Menggunakan endpoint scraper yang lebih stabil dan universal
-            const apiUrl = 'https://api.fastdl.app/api/convert';
+            // Menggunakan endpoint scraper yang valid
+            const apiUrl = 'https://api-wh.fastdl.app/api/convert';
 
             const formData = new URLSearchParams();
             formData.append('sf_url', url);
