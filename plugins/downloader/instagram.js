@@ -4,11 +4,11 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export default {
-    description: 'Mengunduh media Instagram (Post, Reels, Carousel) dengan cepat.',
+    description: 'Downloader Instagram Universal (Post, Reels, Story, IGTV).',
     usage: '<link> [opsional: nomor slide]',
-    example: '.ig https://instagram.com/p/xyz 1,3',
+    example: '.ig https://instagram.com/p/xyz 1,3\n.ig https://instagram.com/stories/username',
     name: 'instagram',
-    aliases: ['ig', 'igdl', 'instagramdl'],
+    aliases: ['ig', 'igdl', 'instadl'],
     category: 'Downloader',
     cooldown: 5000,
     premiumOnly: false,
@@ -17,14 +17,14 @@ export default {
 
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap sertakan link post Instagram!\nContoh:\n• *.ig https://www.instagram.com/p/...\n• *.ig https://www.instagram.com/p/... 1,3'
+                text: '⚠️ Harap sertakan link Instagram!\nContoh:\n• *.ig https://www.instagram.com/p/...*\n• *.ig https://www.instagram.com/stories/...*'
             }, { quoted: msg });
             return;
         }
 
-        if (!/instagram\.com\/(p|reel|tv)\//i.test(url)) {
+        if (!/instagram\.com/i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari Post, Reels, atau TV Instagram.'
+                text: '❌ Link tidak valid. Pastikan link dari Instagram.'
             }, { quoted: msg });
             return;
         }
@@ -38,7 +38,8 @@ export default {
         let mediaItems = [];
 
         try {
-            const apiUrl = 'https://api-wh.fastdl.app/api/convert';
+            // Menggunakan endpoint scraper yang lebih stabil dan universal
+            const apiUrl = 'https://api.fastdl.app/api/convert';
 
             const formData = new URLSearchParams();
             formData.append('sf_url', url);
@@ -59,10 +60,14 @@ export default {
 
             const result = await response.json();
 
+            // Validasi hasil: FastDL biasanya mengembalikan array of objects
             if (!Array.isArray(result) || result.length === 0) {
+                // Cek jika ada pesan error di dalam JSON
+                if (result.message) throw new Error(result.message);
                 throw new Error('Media tidak ditemukan atau akun diprivat.');
             }
 
+            // Ekstrak media dari hasil
             for (const item of result) {
                 if (item.url && Array.isArray(item.url) && item.url.length > 0) {
                     const downloadUrl = item.url[0].url;
@@ -80,6 +85,7 @@ export default {
                 throw new Error('Tidak ada media yang bisa diunduh.');
             }
 
+            // --- LOGIKA PEMILIHAN SLIDE ---
             const totalSlides = mediaItems.length;
             const selectionStr = args.slice(1).join(' ').trim();
             let selectedIndices = null;
@@ -130,6 +136,7 @@ export default {
                 }
             }
 
+            // --- PENGIRIMAN DENGAN DELAY ---
             for (let i = 0; i < finalMedia.length; i++) {
                 const item = finalMedia[i];
 
