@@ -4,27 +4,27 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export default {
-    description: 'Mengunduh media dari link post Instagram dengan delay aman.',
-    usage: '<link post Instagram> [opsional: nomor slide]',
-    example: 'https://www.instagram.com/p/... 1,3',
+    description: 'Mengunduh media Instagram (Post, Reels, Carousel) dengan cepat.',
+    usage: '<link> [opsional: nomor slide]',
+    example: '.ig https://instagram.com/p/xyz 1,3',
     name: 'instagram',
     aliases: ['ig', 'igdl', 'instagramdl'],
     category: 'Downloader',
-    cooldown: 8000,
-    premiumOnly: true,
+    cooldown: 5000,
+    premiumOnly: false,
     run: async (sock, msg, args, { sendTyping }) => {
         const url = args[0];
 
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap sertakan link post Instagram!\nContoh:\n• Post Instagram: *.ig https://www.instagram.com/p/...\n• Pilih slide: *.ig https://www.instagram.com/p/... 1,3'
+                text: '⚠️ Harap sertakan link post Instagram!\nContoh:\n• *.ig https://www.instagram.com/p/...\n• *.ig https://www.instagram.com/p/... 1,3'
             }, { quoted: msg });
             return;
         }
 
-        if (!/instagram\.com/i.test(url)) {
+        if (!/instagram\.com\/(p|reel|tv)\//i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari post Instagram.'
+                text: '❌ Link tidak valid. Pastikan link dari Post, Reels, atau TV Instagram.'
             }, { quoted: msg });
             return;
         }
@@ -32,7 +32,7 @@ export default {
         await sendTyping();
 
         const loadingMsg = await sock.sendMessage(msg.key.remoteJid, {
-            text: '⏳ Sedang memproses... Mohon tunggu sebentar.'
+            text: '⏳ Sedang memproses... Mohon tunggu.'
         }, { quoted: msg });
 
         let mediaItems = [];
