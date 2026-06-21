@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateWAMessageFromContent } from 'baileys';
 import { db } from '@/lib/database.js';
 import { settings } from '@/config/settings.js';
 import { getUptimeString } from '@/lib/utils.js';
@@ -103,6 +104,7 @@ export default {
             }
         };
 
-        await sock.sendMessage(msg.key.remoteJid, interactiveMessage, { quoted: msg });
+        const msgContent = generateWAMessageFromContent(msg.key.remoteJid, interactiveMessage, { quoted: msg });
+        await sock.relayMessage(msg.key.remoteJid, msgContent.message, { messageId: msgContent.key.id });
     }
 };
