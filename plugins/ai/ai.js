@@ -30,7 +30,7 @@ export default {
         } catch (err) {
             console.error('AI API Error:', err.message);
             try {
-                // Fallback to backup API if first fails
+                
                 const res = await axios.get(`https://widipe.com/openai?text=${encodeURIComponent(query)}`, { timeout: 20000 });
                 const result = res.data?.result;
                 if (result) {

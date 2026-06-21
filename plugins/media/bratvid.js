@@ -26,23 +26,23 @@ export default {
         await sendTyping();
 
         try {
-            // Setup GIF Encoder for 512x512 animation
+            
             const encoder = new GIFEncoder(512, 512, 'octree', false);
             encoder.start();
-            encoder.setDelay(400); // 400ms per frame (smoother, more gradual reading speed)
-            encoder.setRepeat(0);  // Loop infinitely
+            encoder.setDelay(400); 
+            encoder.setRepeat(0);  
 
-            // We will render frames on a temporary 256x256 canvas for the authentic lofi pixelated/blurry look
+            
             const tempCanvas = createCanvas(256, 256);
             const tempCtx = tempCanvas.getContext('2d');
 
             const canvas = createCanvas(512, 512);
             const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true; // default smoothing makes it slightly blurry when upscaling
+            ctx.imageSmoothingEnabled = true; 
 
             const words = text.split(' ');
 
-            // Find all emojis in the text to preload
+            
             const allEmojis = [];
             for (const word of words) {
                 const tokens = tokenize(word);
@@ -54,13 +54,13 @@ export default {
             }
             const emojiImages = await loadEmojiImages(allEmojis);
 
-            let fontSize = 50; // start with max font size (50) instead of 180
+            let fontSize = 50; 
             const paddingLeft = 14;
             const paddingTop = 18;
-            const maxTextWidth = 256 - (paddingLeft * 2); // 228
-            const maxTextHeight = 256 - paddingTop - 18; // 220
+            const maxTextWidth = 256 - (paddingLeft * 2); 
+            const maxTextHeight = 256 - paddingTop - 18; 
 
-            // Compute the target font size once based on the FULL text to keep it consistent
+            
             let finalLines = [];
             let finalLineHeight = 0;
             while (fontSize > 10) {
@@ -86,16 +86,16 @@ export default {
             }
 
             let accumulatedText = "";
-            const fixedStartY = paddingTop; // Start from top padding instead of center
+            const fixedStartY = paddingTop; 
 
             for (let i = 0; i < words.length; i++) {
                 accumulatedText += (i === 0 ? "" : " ") + words[i];
 
-                // Render frame on the temporary canvas
-                tempCtx.fillStyle = '#ffffff'; // White background
+                
+                tempCtx.fillStyle = '#ffffff'; 
                 tempCtx.fillRect(0, 0, 256, 256);
 
-                tempCtx.fillStyle = '#000000'; // Black text
+                tempCtx.fillStyle = '#000000'; 
                 tempCtx.textBaseline = 'top';
                 tempCtx.font = `${fontSize}px "Arial Narrow", Arial, sans-serif`;
 
@@ -109,7 +109,7 @@ export default {
                     startY += finalLineHeight;
                 }
 
-                // Copy from the temporary canvas to the final 512x512 canvas to get the blurry effect
+                
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, 512, 512);
                 ctx.drawImage(tempCanvas, 0, 0, 512, 512);
@@ -120,7 +120,7 @@ export default {
             encoder.finish();
             let gifBuffer = encoder.out.getData();
 
-            // Add EXIF Sticker Information Metadata locally
+            
             try {
                 const { addStickerMetadata } = await import('@/lib/stickerMetadata.js');
                 const { settings } = await import('@/config/settings.js');

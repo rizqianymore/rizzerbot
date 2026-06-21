@@ -25,18 +25,18 @@ export default {
         await sendTyping();
 
         try {
-            // Create a smaller 256x256 canvas for the authentic lofi pixel-blurry brat look
+            
             const tempCanvas = createCanvas(256, 256);
             const tempCtx = tempCanvas.getContext('2d');
 
-            // 1. Draw solid white background
+            
             tempCtx.fillStyle = '#ffffff'; 
             tempCtx.fillRect(0, 0, 256, 256);
 
-            // 2. Setup text style
+            
             const words = text.split(' ');
 
-            // Find all emojis in the text to preload
+            
             const allEmojis = [];
             for (const word of words) {
                 const tokens = tokenize(word);
@@ -50,13 +50,13 @@ export default {
 
             tempCtx.fillStyle = '#000000';
             tempCtx.textBaseline = 'top';
-            let fontSize = 50; // Max font size in 256x256 canvas (corresponds to ~100px on 512x512)
+            let fontSize = 50; 
             const paddingLeft = 14;
             const paddingTop = 18;
-            const maxTextWidth = 256 - (paddingLeft * 2); // 228
-            const maxTextHeight = 256 - paddingTop - 18; // 220
+            const maxTextWidth = 256 - (paddingLeft * 2); 
+            const maxTextHeight = 256 - paddingTop - 18; 
 
-            // Dynamically calculate the best fitting font size
+            
             let lines = [];
             let lineHeight = 0;
             while (fontSize > 10) {
@@ -65,7 +65,7 @@ export default {
                 lines = wrapTextEmoji(tempCtx, text, maxTextWidth, fontSize);
                 const totalHeight = lines.length * lineHeight;
                 
-                // Ensure no single word is wider than maxTextWidth
+                
                 let wordFits = true;
                 for (const word of words) {
                     const wordTokens = tokenize(word);
@@ -84,7 +84,7 @@ export default {
 
             tempCtx.font = `${fontSize}px "Arial Narrow", Arial, sans-serif`;
 
-            // Start drawing from the top (top-left aligned), not centered vertically
+            
             let startY = paddingTop;
 
             for (let i = 0; i < lines.length; i++) {
@@ -95,16 +95,16 @@ export default {
             }
 
 
-            // 3. Draw the 256x256 canvas onto the final 512x512 canvas to get the pixelated/blurry effect
+            
             const canvas = createCanvas(512, 512);
             const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true; // default smoothing makes it slightly blurry when upscaling
+            ctx.imageSmoothingEnabled = true; 
             ctx.drawImage(tempCanvas, 0, 0, 512, 512);
 
-            // Export to PNG buffer
+            
             let buffer = canvas.toBuffer('image/png');
 
-            // Add EXIF Sticker Information Metadata locally
+            
             try {
                 const { addStickerMetadata } = await import('@/lib/stickerMetadata.js');
                 const { settings } = await import('@/config/settings.js');

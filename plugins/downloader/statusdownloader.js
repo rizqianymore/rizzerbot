@@ -37,9 +37,9 @@ export default {
             const quotedInfo = msg.message.extendedTextMessage.contextInfo;
             const mediaMessage = {
                 key: {
-                    remoteJid: msg.key.remoteJid, // Usually status is in broadcast, but we use the remoteJid of the current chat for sending back
+                    remoteJid: msg.key.remoteJid, 
                     id: quotedInfo.stanzaId,
-                    participant: quotedInfo.participant, // The original sender of the status
+                    participant: quotedInfo.participant, 
                     fromMe: false
                 },
                 message: quotedMedia

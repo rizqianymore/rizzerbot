@@ -33,13 +33,13 @@ export default {
         const zipPath = path.join(process.cwd(), 'statuses_export.zip');
         
         try {
-            // Remove old zip if exists
+            
             if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 
-            // Compress the statuses folder (-j to junk directory paths)
+            
             await execAsync(`zip -r -j ${zipPath} ${statusesDir}/*`);
             
-            // Send the file
+            
             const buffer = fs.readFileSync(zipPath);
             await sock.sendMessage(msg.key.remoteJid, {
                 document: buffer,
@@ -48,10 +48,10 @@ export default {
                 caption: '✅ Ini semua status yang berhasil dikumpulkan sejauh ini.'
             }, { quoted: msg });
 
-            // Clean up zip
+            
             fs.unlinkSync(zipPath);
 
-            // If user passed "clear" argument, delete the statuses
+            
             if (args[0] === 'clear') {
                 const files = fs.readdirSync(statusesDir);
                 for (const file of files) {

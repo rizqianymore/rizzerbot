@@ -38,7 +38,7 @@ export default {
             
             if (hasMedia) return content;
             
-            // Handle viewOnce wrappers
+            
             if (keys.includes('viewOnceMessage')) return getMediaNode(content.viewOnceMessage.message);
             if (keys.includes('viewOnceMessageV2')) return getMediaNode(content.viewOnceMessageV2.message);
             
@@ -79,14 +79,14 @@ export default {
                 reuploadRequest: sock.updateMediaMessage
             });
 
-            // Meme Text Overlay Logic
+            
             const text = args.join(' ');
             const mediaNode = directMedia || quotedMedia;
             const isImage = mediaNode.imageMessage || 
                             mediaNode.stickerMessage || 
                             (mediaNode.documentMessage && mediaNode.documentMessage.mimetype?.startsWith('image/'));
 
-            // If input is WebP/Sticker, pre-convert to PNG so canvas/loadImage can read it
+            
             try {
                 const isWebP = buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
                 if (isWebP) {
@@ -124,16 +124,16 @@ export default {
 
                         const padding = img.width * 0.04;
                         const maxWidth = img.width - (padding * 2);
-                        const maxHeight = img.height * 0.25; // Allow text block to occupy up to 25% height
+                        const maxHeight = img.height * 0.25; 
                         
-                        let fontSize = Math.floor(img.width * 0.075); // base font size 7.5% of width
+                        let fontSize = Math.floor(img.width * 0.075); 
                         let lines = [];
                         let lineHeight = 0;
                         
-                        // Adjust font size dynamically to fit constraints
+                        
                         while (fontSize > 12) {
                             ctx.font = `bold ${fontSize}px "Anton", Impact, "Arial Black", sans-serif`;
-                            lineHeight = fontSize * 1.05; // tighter line height for Anton
+                            lineHeight = fontSize * 1.05; 
                             
                             const words = txt.split(' ');
                             lines = [];
@@ -152,7 +152,7 @@ export default {
                             
                             const totalHeight = lines.length * lineHeight;
                             
-                            // Ensure no single line overflows the width boundary
+                            
                             let overflows = false;
                             for (const line of lines) {
                                 if (ctx.measureText(line).width > maxWidth) {
@@ -202,7 +202,7 @@ export default {
                 }
             }
 
-            // Add EXIF Sticker Information Metadata locally
+            
             try {
                 const { addStickerMetadata } = await import('@/lib/stickerMetadata.js');
                 buffer = await addStickerMetadata(buffer, settings.botName, settings.ownerName);

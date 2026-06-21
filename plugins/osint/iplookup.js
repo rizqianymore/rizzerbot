@@ -20,7 +20,7 @@ export default {
             }, { quoted: msg });
         }
 
-        // Simple IP validation (IPv4 or IPv6 basic match)
+        
         const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/i;
         if (!ipRegex.test(ip)) {
             return sock.sendMessage(msg.key.remoteJid, {

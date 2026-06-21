@@ -42,7 +42,7 @@ export default {
             const groupMetadata = await sock.groupMetadata(remoteJid);
             const participants = groupMetadata.participants || [];
 
-            // Filter agar tidak mengirim ke diri sendiri (bot)
+            
             const targets = participants
                 .map(p => p.id)
                 .filter(jid => jid.replace(/:.*@/, '@') !== botJid);
@@ -56,20 +56,20 @@ export default {
             let batchCounter = 0;
 
             for (const targetJid of targets) {
-                if (!broadcastLock.has(botJid)) break; // Cancelled if deleted
+                if (!broadcastLock.has(botJid)) break; 
 
                 try {
                     await sock.sendMessage(targetJid, { text: text });
                     success++;
                     batchCounter++;
 
-                    // 1. Jeda Kelompok: setiap 10 pesan beri jeda 15 detik
+                    
                     if (batchCounter >= 10) {
                         batchCounter = 0;
                         console.log(`[Push Kontak] Batch break aktif (15s) setelah mengirim ke 10 kontak.`);
                         await sleep(15_000);
                     } else {
-                        // 2. Delay Acak: 3000ms – 5500ms humanized pattern
+                        
                         await randomDelay(3_000, 5_500);
                     }
                 } catch (err) {

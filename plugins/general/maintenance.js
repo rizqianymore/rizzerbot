@@ -8,9 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(process.cwd());
 
-/**
- * Validasi apakah path berada di dalam direktori kerja project untuk mencegah Path Traversal.
- */
+
 function isSafePath(targetPath) {
     const resolvedPath = path.resolve(targetPath);
     return resolvedPath.startsWith(projectRoot + path.sep) || resolvedPath === projectRoot;
@@ -32,7 +30,7 @@ export default {
         const remoteJid = msg.key.remoteJid;
         const subCommand = args[0]?.toLowerCase();
 
-        // 1. Fitur Wipe Database jika subCommand adalah 'wipe' atau 'wipedatabase'
+        
         if (subCommand === 'wipe' || subCommand === 'wipedatabase') {
             db.data.users = {};
             db.data.stats = {
@@ -42,7 +40,7 @@ export default {
             db.data.groups = {};
             db.data.settings.jpmChannels = [];
             
-            // Mengembalikan owner, admin, dan nomor bot agar otomatis terdaftar & premium secara langsung (fast lookup)
+            
             const botJid = db.normalizeJid(sock.user?.id);
             const ownerJid = db.normalizeJid(settings.ownerNumber);
             const pairingJid = db.normalizeJid(settings.pairingNumber);
@@ -72,12 +70,12 @@ export default {
             return;
         }
 
-        // Menentukan status target (on / off)
-        let targetState = !db.data.settings.maintenance; // default: toggle
+        
+        let targetState = !db.data.settings.maintenance; 
         if (subCommand === 'on') targetState = true;
         if (subCommand === 'off') targetState = false;
 
-        // Jika mematikan mode pemeliharaan (off)
+        
         if (!targetState) {
             db.data.settings.maintenance = false;
             db.save();
@@ -87,7 +85,7 @@ export default {
             return;
         }
 
-        // Jika mengaktifkan mode pemeliharaan (on) -> otomatis jalankan proses pembersihan
+        
         db.data.settings.maintenance = true;
         db.save();
 
@@ -99,7 +97,7 @@ export default {
         let success = true;
 
         try {
-            // 1. Rekonstruksi & Auto-format Database
+            
             logOutput += '📂 *1. Restrukturisasi & Format Database:*\n';
             const dbDir = path.join(projectRoot, 'database');
             if (fs.existsSync(dbDir)) {
@@ -114,11 +112,11 @@ export default {
                         try {
                             parsed = JSON.parse(raw);
                         } catch (_) {
-                            // File rusak atau kosong, set default berdasarkan nama file
+                            
                             parsed = file === 'users.json' || file === 'groups.json' ? {} : [];
                         }
 
-                        // Terapkan format rapi (auto-format)
+                        
                         fs.writeFileSync(filePath, JSON.stringify(parsed, null, 4), 'utf8');
                         logOutput += `   ✅ \`${file}\` berhasil diformat ulang.\n`;
                     } catch (e) {
@@ -126,7 +124,7 @@ export default {
                         success = false;
                     }
                 }
-                // Reload database ke memori bot
+                
                 db.load();
                 db.ensurePrivilegedUsers();
                 logOutput += '   🔄 Database berhasil dimuat ulang ke memori.\n\n';
@@ -135,7 +133,7 @@ export default {
                 success = false;
             }
 
-            // 2. Penghapusan Cache & File Sementara
+            
             logOutput += '🧹 *2. Pembersihan Cache & File Sementara:*\n';
             let clearedFilesCount = 0;
             let clearedBytes = 0;
@@ -176,7 +174,7 @@ export default {
                 }
             }
 
-            // Cari file bertipe *.log atau *.tmp.* di root secara dinamis
+            
             try {
                 const rootFiles = fs.readdirSync(projectRoot);
                 for (const file of rootFiles) {
@@ -207,7 +205,7 @@ export default {
             success = false;
         }
 
-        // Matikan kembali mode pemeliharaan (kembali ke normal) setelah selesai
+        
         db.data.settings.maintenance = false;
         db.save();
 

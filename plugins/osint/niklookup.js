@@ -34,12 +34,12 @@ export default {
         }
 
         try {
-            // Parse kode wilayah (6 digit pertama: XX.XX.XX)
+            
             const provCode = nik.substring(0, 2);
             const regCode = `${provCode}.${nik.substring(2, 4)}`;
             const distCode = `${regCode}.${nik.substring(4, 6)}`;
 
-            // Fetch data kecamatan
+            
             const districtRes = await fetchJson(`https://wilayah.id/api/districts/${regCode}.json`);
 
             if (districtRes.status !== 200) {
@@ -53,7 +53,7 @@ export default {
                 throw new Error('Data wilayah tidak ditemukan');
             }
 
-            // Fetch data kabupaten/kota
+            
             const regencyRes = await fetchJson(`https://wilayah.id/api/regencies/${provCode}.json`);
             if (regencyRes.status !== 200) {
                 throw new Error('Kode kabupaten tidak ditemukan');
@@ -61,7 +61,7 @@ export default {
             const regencyData = regencyRes.data;
             const regency = regencyData.data.find(r => r.code === regCode);
 
-            // Fetch data provinsi
+            
             const provinceRes = await fetchJson('https://wilayah.id/api/provinces.json');
             if (provinceRes.status !== 200) {
                 throw new Error('Kode provinsi tidak ditemukan');
@@ -69,10 +69,10 @@ export default {
             const provinceData = provinceRes.data;
             const province = provinceData.data.find(p => p.code === provCode);
 
-            // Parse tanggal lahir & gender
+            
             const birthInfo = parseBirthDate(nik.substring(6, 12));
 
-            // Format response
+            
             let replyText = `📋 *Hasil Pencarian NIK*\n\n`;
             replyText += `• *NIK:* \`${nik}\`\n`;
             replyText += `• *Provinsi:* ${province?.name || '-'}\n`;
@@ -96,7 +96,7 @@ export default {
     }
 };
 
-// Helper function untuk parse tanggal lahir
+
 function parseBirthDate(tgl) {
     const day = parseInt(tgl.substring(0, 2));
     let month = parseInt(tgl.substring(2, 4));

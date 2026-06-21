@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Register elegant cursive font for the card
+
 try {
     const fontPath = path.join(__dirname, '..', 'assets', 'GreatVibes-Regular.ttf');
     if (fs.existsSync(fontPath)) {
@@ -46,10 +46,10 @@ function drawHeart(ctx, x, y, size, fillStyle, opacity = 1) {
     ctx.globalAlpha = opacity;
     ctx.beginPath();
     ctx.moveTo(x, y + size / 4);
-    // Left curve
+    
     ctx.quadraticCurveTo(x - size / 2, y - size / 2, x - size, y + size / 4);
     ctx.quadraticCurveTo(x - size, y + (size * 3) / 4, x, y + size * 1.2);
-    // Right curve
+    
     ctx.quadraticCurveTo(x + size, y + (size * 3) / 4, x + size, y + size / 4);
     ctx.quadraticCurveTo(x + size, y - size / 2, x, y + size / 4);
     ctx.closePath();
@@ -84,7 +84,7 @@ export default {
         let message = '';
         let from = senderName;
 
-        // Split by pipe (|) or comma (,)
+        
         if (text.includes('|')) {
             const parts = text.split('|');
             to = parts[0]?.trim() || '';
@@ -96,7 +96,7 @@ export default {
             message = parts[1]?.trim() || '';
             if (parts[2]) from = parts[2]?.trim() || '';
         } else {
-            // Fallback if no delimiter
+            
             to = 'Seseorang';
             message = text.trim();
         }
@@ -116,14 +116,14 @@ export default {
             const canvas = createCanvas(width, height);
             const ctx = canvas.getContext('2d');
 
-            // 1. Draw solid gradient background (romantic theme)
+            
             const grad = ctx.createLinearGradient(0, 0, width, height);
             grad.addColorStop(0, '#ff758c');
             grad.addColorStop(1, '#ff7eb3');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Draw glowing background circles to elevate glassmorphism contrast
+            
             const glow1 = ctx.createRadialGradient(220, 170, 10, 220, 170, 160);
             glow1.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
             glow1.addColorStop(1, 'rgba(255, 117, 140, 0)');
@@ -136,7 +136,7 @@ export default {
             ctx.fillStyle = glow2;
             ctx.fillRect(380, 150, 400, 320);
 
-            // 3. Draw romantic floating background hearts
+            
             const hearts = [
                 { x: 100, y: 120, size: 25, opacity: 0.25 },
                 { x: 700, y: 150, size: 35, opacity: 0.2 },
@@ -150,36 +150,36 @@ export default {
                 drawHeart(ctx, h.x, h.y, h.size, '#ffffff', h.opacity);
             });
 
-            // 4. Draw glassmorphic confession card container
+            
             ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
             ctx.shadowBlur = 30;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 12;
             drawRoundRect(ctx, 60, 60, 680, 380, 24, 'rgba(255, 255, 255, 0.18)', 'rgba(255, 255, 255, 0.38)');
             
-            // CRITICAL: Reset ALL shadow properties to prevent duplicate/ghost outlines on text
+            
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
 
-            // 5. Draw card corner decoration hearts
+            
             drawHeart(ctx, 95, 95, 20, '#ff4b78', 0.95);
             drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.85); 
 
-            // 6. Draw Header/Title
+            
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.font = 'bold 20px sans-serif';
             const titleText = 'SECRET LOVE CONFESSION';
             ctx.fillText(titleText, width / 2, 110);
 
-            // Programmatically draw hearts on either side of the title to avoid emoji rendering box errors
+            
             const titleWidth = ctx.measureText(titleText).width;
             drawHeart(ctx, (width / 2) - (titleWidth / 2) - 22, 98, 10, '#ffffff', 0.95);
             drawHeart(ctx, (width / 2) + (titleWidth / 2) + 22, 98, 10, '#ffffff', 0.95);
 
-            // Subtle divider line under title
+            
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -187,13 +187,13 @@ export default {
             ctx.lineTo(700, 130);
             ctx.stroke();
 
-            // 7. Draw "To: <target>"
+            
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
             ctx.font = '48px "Great Vibes", cursive';
             ctx.fillText(`To: ${to}`, 110, 190);
 
-            // 8. Draw Message Body (wrapped text)
+            
             ctx.fillStyle = '#ffffff';
             ctx.font = 'italic 22px sans-serif';
             
@@ -218,13 +218,13 @@ export default {
             }
             ctx.fillText(line, textX, textY);
 
-            // 9. Draw "From: <sender>" at the bottom right
+            
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'right';
             ctx.font = '44px "Great Vibes", cursive';
             ctx.fillText(`With Love, ${from}`, 690, 400);
 
-            // 10. Send the image card
+            
             const imageBuffer = canvas.toBuffer('image/png');
             await sock.sendMessage(msg.key.remoteJid, {
                 image: imageBuffer,

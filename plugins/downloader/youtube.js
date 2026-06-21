@@ -25,7 +25,7 @@ export default {
             return;
         }
 
-        // Determine type based on invoked command name
+        
         const isAudio = commandName === 'ytmp3' || commandName === 'play';
 
         await sendTyping();
@@ -34,7 +34,7 @@ export default {
         }, { quoted: msg });
 
         try {
-            // POST Request to ytdown.to proxy
+            
             const res = await postForm('https://app.ytdown.to/proxy.php', {
                 url: url
             });
@@ -48,7 +48,7 @@ export default {
             let quality = '';
 
             if (!isAudio) {
-                // Prioritas Video: FHD → HD → SD
+                
                 const video = items.find(item => 
                     item.type === 'Video' && 
                     (item.mediaQuality === 'FHD' || item.mediaQuality === 'HD')
@@ -59,7 +59,7 @@ export default {
                     quality = video.mediaQuality || 'HD';
                 }
             } else {
-                // Audio (128k atau 48k)
+                
                 const audio = items.find(item => 
                     item.type === 'Audio' && item.mediaQuality === '128K'
                 ) || items.find(item => item.type === 'Audio');
@@ -72,7 +72,7 @@ export default {
 
             if (!mediaUrl) throw new Error('Link media tidak ditemukan');
 
-            // Download media file using secure fetchBuffer
+            
             const buffer = await fetchBuffer(mediaUrl);
             const isVideoFile = !isAudio;
 

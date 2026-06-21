@@ -33,7 +33,7 @@ let isPluginsLoaded = false;
 let _cleanIntervalStarted = false;
 export const runningBots = new Map();
 
-// Helper to remove directory recursively for delbot
+
 function deleteFolderRecursive(dirPath) {
     if (fs.existsSync(dirPath)) {
         fs.readdirSync(dirPath).forEach((file) => {
@@ -48,7 +48,7 @@ function deleteFolderRecursive(dirPath) {
     }
 }
 
-// Helper to register group guard protection
+
 function registerGroupGuard(sock) {
     sock.ev.on('group-participants.update', async (anu) => {
         try {
@@ -63,15 +63,15 @@ function registerGroupGuard(sock) {
                     const isUserPrivileged = db.isPrivilegedJid(normalizedParticipant);
                     
                     if (isUserPrivileged) {
-                        // Promote them back
+                        
                         await sock.groupParticipantsUpdate(anu.id, [participant], 'promote');
                         
-                        // Demote the demoter (if not the bot itself)
+                        
                         if (anu.author && anu.author.replace(/:.*@/, '@') !== botJid) {
                             await sock.groupParticipantsUpdate(anu.id, [anu.author], 'demote').catch(() => {});
                         }
 
-                        // Send alert
+                        
                         await sock.sendMessage(anu.id, {
                             text: `🛡️ *[GROUP GUARD ALERT]* 🛡️\n\n` +
                                   `Percobaan demote Admin/Owner oleh @${anu.author.split('@')[0]} telah digagalkan.\n` +
@@ -206,7 +206,7 @@ function cleanSessionCache() {
         ];
 
         const now = Date.now();
-        const maxAge = 12 * 60 * 60 * 1000; // 12 hours
+        const maxAge = 12 * 60 * 60 * 1000; 
         let deletedCount = 0;
 
         const isTempFile = (name) => {
@@ -261,14 +261,14 @@ async function startBot() {
         db.ensurePrivilegedUsers();
     }
 
-    // Start session cache cleaner once — guard prevents duplication on reconnect
+    
     if (!_cleanIntervalStarted) {
         _cleanIntervalStarted = true;
         cleanSessionCache();
         setInterval(cleanSessionCache, 6 * 60 * 60 * 1000);
     }
 
-    // 1. Connect primary bot
+    
     const authDir = path.join(__dirname, 'assets', 'sessions', 'primary_bot');
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
@@ -363,7 +363,7 @@ async function startBot() {
         }
     });
 
-    // 2. Scan and load secondary bots from filesystem
+    
     const sessionsParentDir = path.join(__dirname, 'assets', 'sessions');
     if (fs.existsSync(sessionsParentDir)) {
         const folders = fs.readdirSync(sessionsParentDir);

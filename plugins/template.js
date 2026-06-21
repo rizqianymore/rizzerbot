@@ -5,7 +5,7 @@ export default {
     name: 'template',
     aliases: ['temp'],
     category: 'User',
-    ownerOnly: false, // Set true jika perintah hanya boleh dijalankan oleh owner/admin bot
+    ownerOnly: false, 
     run: async (sock, msg, args, context) => {
         const { 
             sendTyping, 
@@ -17,13 +17,13 @@ export default {
             getTargetJid 
         } = context;
 
-        // 1. Kirim status sedang mengetik
+        
         await sendTyping();
 
-        // 2. Argument parsing
+        
         const query = args.join(' ');
         
-        // 3. Logika utama perintah
+        
         let replyText = `👋 *Halo ${senderName}!*\n\n` +
                         `Ini adalah berkas template plugin baru untuk *Kyros-MD*.\n\n` +
                         `ℹ️ *Detail Informasi Konteks:*\n` +
@@ -33,7 +33,7 @@ export default {
                         `• Input Argumen: \`${query || '(Kosong)'}\`\n\n` +
                         `Silakan salin file ini untuk membuat fitur/plugin baru Anda sendiri!`;
 
-        // 4. Kirim balasan ke pengguna
+        
         await sock.sendMessage(msg.key.remoteJid, { 
             text: replyText,
             mentions: [senderJid]

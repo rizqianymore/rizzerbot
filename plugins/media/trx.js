@@ -37,7 +37,7 @@ export default {
             });
             
             const workerUrl = `${baseUrl}?${params.toString()}`;
-            // screenshot the target element (#receipt-area) directly for a cropped clean receipt image
+            
             const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url&element=%23receipt-area&waitForTimeout=500`;
             
             const buffer = await fetchBuffer(microUrl);

@@ -9,7 +9,7 @@ export default {
     aliases: ['daftar'],
     category: 'User',
     run: async (sock, msg, args, { sendTyping, senderJid, userProfile, activePrefix, isOwner }) => {
-        // Check if registration is closed
+        
         const isRegOpen = db.data.settings.registrationOpen !== false;
         if (!isRegOpen && !isOwner) {
             await sock.sendMessage(msg.key.remoteJid, { text: '⚠️ Pendaftaran pengguna baru sedang ditutup sementara oleh Owner!' }, { quoted: msg });

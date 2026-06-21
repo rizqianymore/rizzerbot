@@ -34,7 +34,7 @@ export default {
         let successAPI = 'Kyros-MD API';
 
         try {
-            // Berikan delay 1 detik agar tidak terkena limit API (1 request/second)
+            
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             const res = await postJson('https://tiktok-api.rakarizqi-cv.workers.dev/api/download/tiktok', {

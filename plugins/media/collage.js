@@ -1,6 +1,6 @@
 import { createCanvas, loadImage } from 'canvas';
 
-// Session storage: mapping senderJid -> Array of image buffers
+
 const collageSessions = new Map();
 
 export default [
@@ -80,13 +80,13 @@ export default [
 
             await sendTyping();
             try {
-                // Load all images
+                
                 const images = await Promise.all(session.map(buf => loadImage(buf)));
 
-                // Collage settings
+                
                 const baseWidth = 1080;
                 const baseHeight = 1080;
-                const scaleFactor = 2; // HD Quality (2160x2160)
+                const scaleFactor = 2; 
                 
                 const canvasWidth = baseWidth * scaleFactor;
                 const canvasHeight = baseHeight * scaleFactor;
@@ -94,28 +94,28 @@ export default [
                 const ctx = canvas.getContext('2d');
                 ctx.scale(scaleFactor, scaleFactor);
 
-                // Use baseWidth for logic so we don't have to rewrite drawing math
+                
                 const logicalWidth = baseWidth;
                 const logicalHeight = baseHeight;
 
-                // 1. Draw blurred background
-                const bgImage = images[0]; // use first image as background
-                // Draw background filling the canvas (cover)
+                
+                const bgImage = images[0]; 
+                
                 const scale = Math.max(logicalWidth / bgImage.width, logicalHeight / bgImage.height);
                 const x = (logicalWidth / 2) - (bgImage.width / 2) * scale;
                 const y = (logicalHeight / 2) - (bgImage.height / 2) * scale;
 
                 ctx.filter = 'blur(30px)';
                 ctx.drawImage(bgImage, x, y, bgImage.width * scale, bgImage.height * scale);
-                ctx.filter = 'none'; // reset filter
+                ctx.filter = 'none'; 
 
-                // 2. Glassmorphism overlay
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; // light semi transparent white
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; 
                 const overlayMargin = 60;
                 const overlayW = logicalWidth - (overlayMargin * 2);
                 const overlayH = logicalHeight - (overlayMargin * 2);
 
-                // Draw rounded rect overlay
+                
                 const radius = 30;
                 ctx.beginPath();
                 ctx.moveTo(overlayMargin + radius, overlayMargin);
@@ -130,12 +130,12 @@ export default [
                 ctx.closePath();
                 ctx.fill();
 
-                // Glass border
+                
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.stroke();
 
-                // 3. Draw grid of images inside the glass panel
+                
                 const count = images.length;
                 let cols = 1; let rows = 1;
                 if (count == 2) { cols = 2; rows = 1; }
@@ -159,18 +159,18 @@ export default [
                     const cellY = overlayMargin + gridPadding + (r * (cellH + gap));
 
                     const img = images[i];
-                    // cover logic for cell
+                    
                     const imgScale = Math.max(cellW / img.width, cellH / img.height);
                     const drawW = img.width * imgScale;
                     const drawH = img.height * imgScale;
                     const drawX = cellX + (cellW / 2) - (drawW / 2);
                     const drawY = cellY + (cellH / 2) - (drawH / 2);
 
-                    // clip to rounded cell
+                    
                     ctx.save();
                     ctx.beginPath();
                     
-                    // Custom polyfill for rounded rect clipping
+                    
                     const cellRadius = 15;
                     ctx.moveTo(cellX + cellRadius, cellY);
                     ctx.lineTo(cellX + cellW - cellRadius, cellY);
@@ -188,11 +188,11 @@ export default [
                     ctx.restore();
                 }
 
-                // Convert to buffer
+                
                 const buffer = canvas.toBuffer('image/jpeg', { quality: 0.9 });
                 await sock.sendMessage(msg.key.remoteJid, { image: buffer, caption: '✨ Kolase Glassmorphism' }, { quoted: msg });
 
-                // Clear session
+                
                 collageSessions.delete(senderJid);
             } catch (err) {
                 console.error('Kolase Error:', err);

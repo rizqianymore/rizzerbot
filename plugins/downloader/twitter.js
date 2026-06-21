@@ -34,7 +34,7 @@ export default {
         let successAPI = 'Kyros-MD API';
 
         try {
-            // 1. Fetch ssstwitter.com homepage to get token, timestamp, and cookies
+            
             const getRes = await axios.get('https://ssstwitter.com/', {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -54,7 +54,7 @@ export default {
                 throw new Error('Gagal memuat token atau timestamp dari ssstwitter.');
             }
 
-            // 2. Send POST request to ssstwitter.com
+            
             const params = new URLSearchParams();
             params.append('id', url);
             params.append('locale', 'en');
@@ -85,11 +85,11 @@ export default {
 
             const targetGetUrl = redirectUrl.startsWith('http') ? redirectUrl : 'https://ssstwitter.com' + redirectUrl;
 
-            // Extract cookie update if any
+            
             const postCookies = postRes.headers['set-cookie'] || [];
             const combinedCookies = [...cookies, ...postCookies].map(c => c.split(';')[0]).join('; ');
 
-            // 3. Fetch redirect URL containing output links
+            
             const resultRes = await axios.get(targetGetUrl, {
                 headers: {
                     'Cookie': combinedCookies,
@@ -104,16 +104,16 @@ export default {
 
             const html = resultRes.data;
 
-            // === PRIORITAS HD TERATAS (quality-best) ===
+            
             let match;
 
-            // Cara 1: Ambil data-directurl dari link yang ada class quality-best
+            
             match = html.match(/data-directurl=["']([^"']+)["'][^>]*?quality-best/i);
             if (match && match[1]) {
                 videoUrl = match[1];
             }
 
-            // Cara 2: Ambil data-directurl pertama yang muncul (biasanya HD)
+            
             if (!videoUrl) {
                 match = html.match(/data-directurl=["']([^"']+)["']/i);
                 if (match && match[1]) {
@@ -121,7 +121,7 @@ export default {
                 }
             }
 
-            // Cara 3: Fallback regex ssscdn.io
+            
             if (!videoUrl) {
                 match = html.match(/href=["'](https:\/\/ssscdn\.io\/ssstwitter\/[^"']+)["']/i);
                 if (match && match[1]) {

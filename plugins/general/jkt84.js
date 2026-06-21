@@ -38,7 +38,7 @@ export default {
         await sendTyping();
 
         try {
-            // 1. Fetch all members from JKT48 API
+            
             const listRes = await axios.get('https://jkt48.com/api/v1/members?lang=id', { timeout: 5000 });
             if (!listRes.data || !listRes.data.status || !Array.isArray(listRes.data.data)) {
                 throw new Error('Invalid API response structure');
@@ -46,7 +46,7 @@ export default {
 
             const apiMembers = listRes.data.data;
 
-            // 2. Filter matches by name, nickname, or code
+            
             const matches = apiMembers.filter(m =>
                 (m.name && m.name.toLowerCase().includes(query.toLowerCase())) ||
                 (m.nickname && m.nickname.toLowerCase().includes(query.toLowerCase())) ||
@@ -60,7 +60,7 @@ export default {
                 return;
             }
 
-            // 3. If multiple matches, list them so user can be specific
+            
             if (matches.length > 1) {
                 let responseText = `⚠️ *Menemukan beberapa member (${matches.length}). Harap lebih spesifik:*\n\n`;
                 matches.forEach((m, index) => {
@@ -70,7 +70,7 @@ export default {
                 return;
             }
 
-            // 4. Exactly one match, fetch detailed info
+            
             const targetMember = matches[0];
             const memberId = targetMember.jkt48_member_id || targetMember.id;
 
@@ -86,7 +86,7 @@ export default {
 
             const details = detailRes.data.data;
 
-            // Formating birth date
+            
             let birthDateStr = '-';
             if (details.birth_date) {
                 try {
@@ -100,7 +100,7 @@ export default {
                 }
             }
 
-            // Formating profile details text
+            
             const detailsText = `🎤 *Profil Member JKT48*\n\n` +
                 `• *Nama Lengkap:* ${details.name || '-'}\n` +
                 `• *Nama Panggilan:* ${details.nickname || '-'}\n` +
@@ -134,7 +134,7 @@ export default {
         } catch (err) {
             console.error('JKT48 API lookup error:', err);
 
-            // Local fallback if API is down / request fails
+            
             const localMatches = localMembersList.filter(name => name.toLowerCase().includes(query.toLowerCase()));
             if (localMatches.length === 0) {
                 await sock.sendMessage(msg.key.remoteJid, {

@@ -24,7 +24,7 @@ export default {
             return;
         }
 
-        let delay = 3000; // default delay 3 seconds
+        let delay = 3000; 
         if (args[1] && !isNaN(args[1])) {
             const parsedDelay = parseInt(args[1], 10);
             if (parsedDelay >= 0 && parsedDelay <= 10000) {

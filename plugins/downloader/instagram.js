@@ -1,6 +1,6 @@
 import { fetchBuffer, postForm, fetchJson } from '@/lib/scraping.js';
 
-// Helper to parse slide/image selections from arguments (e.g. "1,3" or "2-4")
+
 function parseSelection(args, totalSlides) {
     const selectionStr = args.slice(1).join('').replace(/\s+/g, '');
     if (!selectionStr || selectionStr.toLowerCase() === 'all') {
@@ -20,14 +20,14 @@ function parseSelection(args, totalSlides) {
                 const max = Math.max(start, end);
                 for (let i = min; i <= max; i++) {
                     if (i >= 1 && i <= totalSlides) {
-                        selected.add(i - 1); // convert to 0-indexed
+                        selected.add(i - 1); 
                     }
                 }
             }
         } else {
             const index = parseInt(part, 10);
             if (!isNaN(index) && index >= 1 && index <= totalSlides) {
-                selected.add(index - 1); // convert to 0-indexed
+                selected.add(index - 1); 
             }
         }
     }
@@ -65,10 +65,10 @@ export default {
             text: '⏳ Sedang memproses post Instagram via Kyros-MD API...' 
         }, { quoted: msg });
 
-        let mediaItems = []; // Array of { url: string, isVideo: boolean }
+        let mediaItems = []; 
 
         try {
-            // 1. Fetch main page using fetchJson to retrieve headers/cookies
+            
             const mainPageRes = await fetchJson('https://kol.id/download-video/instagram');
             const setCookie = mainPageRes.headers['set-cookie'];
             let cookies = '';
@@ -76,7 +76,7 @@ export default {
                 cookies = setCookie.map(c => c.split(';')[0]).join('; ');
             }
 
-            // 2. Submit download task request
+            
             const postResponse = await postForm('https://kol.id/api/v2/downloader/instagram', {
                 url: url
             }, {
@@ -98,14 +98,14 @@ export default {
                 throw new Error('Gagal mendapatkan ID permintaan dari server.');
             }
 
-            // 3. Poll status until completed or failed
+            
             let completed = false;
             let resData = null;
             let attempts = 0;
             const maxAttempts = 12;
             const pollAfterSeconds = postResponse.data?.poll_after || 5;
             
-            // Wait for the initially suggested delay before the first check
+            
             await new Promise(resolve => setTimeout(resolve, pollAfterSeconds * 1000));
 
             while (!completed && attempts < maxAttempts) {
@@ -121,7 +121,7 @@ export default {
 
                 const statusData = statusResponse?.data;
                 if (!statusData) {
-                    // If response structure was resolved, adapt to returned type
+                    
                     const rawData = statusResponse;
                     if (rawData?.meta?.success === false) {
                         throw new Error(rawData.meta?.message || 'Permintaan gagal diproses.');
@@ -157,7 +157,7 @@ export default {
                 throw new Error('Waktu pemrosesan habis (Timeout). Silakan coba lagi.');
             }
 
-            // 4. Parse the results and handle slides if present
+            
             if (Array.isArray(resData.slides) && resData.slides.length > 0) {
                 const totalSlides = resData.slides.length;
                 const selectedIndices = parseSelection(args, totalSlides);
@@ -212,7 +212,7 @@ export default {
             return;
         }
 
-        // 5. Send all resolved media items
+        
         try {
             for (const item of mediaItems) {
                 const buffer = await fetchBuffer(item.url);

@@ -28,7 +28,7 @@ export default {
         let cleanNum = targetJid.split('@')[0];
         
         try {
-            // 1. Check if number is on WhatsApp
+            
             let resolvedJid = targetJid;
             let exists = false;
 
@@ -49,7 +49,7 @@ export default {
                 return;
             }
             
-            // 2. Fetch Bio Status
+            
             let bio = '-';
             let bioTime = '-';
             try {
@@ -68,7 +68,7 @@ export default {
                 bio = '(Privasi / Tidak diatur)';
             }
             
-            // 3. Fetch Business Profile
+            
             let isBusiness = false;
             let bizInfo = '';
             try {
@@ -83,18 +83,18 @@ export default {
                               `  • *Web:* ${bizProfile.website?.join(', ') || '-'}`;
                 }
             } catch (_) {
-                // Ignore business lookup failure
+                
             }
             
-            // 4. Fetch Profile Picture
+            
             let pfpUrl = null;
             try {
                 pfpUrl = await sock.profilePictureUrl(resolvedJid, 'image');
             } catch (_) {
-                // Profile pic might be private or default
+                
             }
             
-            // 5. Format Output Text
+            
             let infoText = `📞 *Informasi Nomor WhatsApp*\n\n` +
                            `• *Nomor:* +${cleanNum}\n` +
                            `• *JID:* \`${resolvedJid}\`\n` +

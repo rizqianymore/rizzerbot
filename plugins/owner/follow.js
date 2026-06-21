@@ -14,7 +14,7 @@ export default {
         try {
             let jid = target;
             if (target.includes('whatsapp.com/channel/')) {
-                // Extract channel ID/JID if possible, or just attempt to use the string as JID
+                
             }
             await sock.newsletterFollow(jid);
             await sock.sendMessage(msg.key.remoteJid, { text: `✅ Berhasil mengikuti saluran: ${jid}` }, { quoted: msg });

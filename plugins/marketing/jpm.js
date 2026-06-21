@@ -18,7 +18,7 @@ export default {
         const text      = args.join(' ');
         const botJid    = (sock.user?.id || '').replace(/:.*@/, '@');
 
-        // ── addjpmch ─────────────────────────────────────────────────────────
+        
         if (commandName === 'addjpmch') {
             await sendTyping();
             const input = args[0];
@@ -63,7 +63,7 @@ export default {
             return;
         }
 
-        // ── deljpmch ─────────────────────────────────────────────────────────
+        
         if (commandName === 'deljpmch') {
             await sendTyping();
             const targetJid = args[0];
@@ -84,7 +84,7 @@ export default {
             return;
         }
 
-        // ── listjpmch ────────────────────────────────────────────────────────
+        
         if (commandName === 'listjpmch') {
             await sendTyping();
             const channels = db.data.settings.jpmChannels || [];
@@ -98,7 +98,7 @@ export default {
             return;
         }
 
-        // ── checkdb ───────────────────────────────────────────────────────────
+        
         if (commandName === 'checkdb') {
             await sendTyping();
             const users       = db.data.users;
@@ -123,7 +123,7 @@ export default {
             return;
         }
 
-        // ── addjpmblacklist / addjpmbl ────────────────────────────────────────
+        
         if (commandName === 'addjpmblacklist' || commandName === 'addjpmbl') {
             await sendTyping();
             let targetJid = '';
@@ -168,7 +168,7 @@ export default {
             return;
         }
 
-        // ── deljpmblacklist / deljpmbl ────────────────────────────────────────
+        
         if (commandName === 'deljpmblacklist' || commandName === 'deljpmbl') {
             await sendTyping();
             const targetJid = args[0] || (remoteJid.endsWith('@g.us') ? remoteJid : '');
@@ -190,7 +190,7 @@ export default {
             return;
         }
 
-        // ── listjpmblacklist / listjpmbl ─────────────────────────────────────
+        
         if (commandName === 'listjpmblacklist' || commandName === 'listjpmbl') {
             await sendTyping();
             const blacklist = db.data.settings.jpmBlacklist || [];
@@ -204,7 +204,7 @@ export default {
             return;
         }
 
-        // ── jpmch (Channel Broadcast) ─────────────────────────────────────────
+        
         if (commandName === 'jpmch') {
             if (broadcastLock.has(botJid)) {
                 await sock.sendMessage(remoteJid, { text: '⚠️ Perangkat ini sedang menjalankan tugas broadcast/push lainnya!' }, { quoted: msg });
@@ -259,7 +259,7 @@ export default {
             return;
         }
 
-        // ── jpm / bcgc (Group Broadcast) ──────────────────────────────────────
+        
         if (commandName === 'jpm' || commandName === 'bcgc') {
             if (broadcastLock.has(botJid)) {
                 await sock.sendMessage(remoteJid, { text: '⚠️ Perangkat ini sedang menjalankan tugas broadcast/push lainnya!' }, { quoted: msg });
@@ -307,7 +307,7 @@ export default {
                         success++;
                         batchCounter++;
 
-                        // Batch break setiap 10 pesan → 15 detik, sisanya random 4–7 detik
+                        
                         if (batchCounter >= 10) {
                             batchCounter = 0;
                             await sleep(15_000);
