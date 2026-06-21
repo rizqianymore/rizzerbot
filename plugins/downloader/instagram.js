@@ -1,51 +1,20 @@
-import { fetchBuffer, postForm, fetchJson } from '@/lib/scraping.js';
+import { fetchBuffer } from '@/lib/scraping.js';
 
-
-function parseSelection(args, totalSlides) {
-    const selectionStr = args.slice(1).join('').replace(/\s+/g, '');
-    if (!selectionStr || selectionStr.toLowerCase() === 'all') {
-        return null;
-    }
-
-    const selected = new Set();
-    const parts = selectionStr.split(',');
-
-    for (const part of parts) {
-        if (part.includes('-')) {
-            const [startStr, endStr] = part.split('-');
-            const start = parseInt(startStr, 10);
-            const end = parseInt(endStr, 10);
-            if (!isNaN(start) && !isNaN(end)) {
-                const min = Math.min(start, end);
-                const max = Math.max(start, end);
-                for (let i = min; i <= max; i++) {
-                    if (i >= 1 && i <= totalSlides) {
-                        selected.add(i - 1); 
-                    }
-                }
-            }
-        } else {
-            const index = parseInt(part, 10);
-            if (!isNaN(index) && index >= 1 && index <= totalSlides) {
-                selected.add(index - 1); 
-            }
-        }
-    }
-
-    return selected.size > 0 ? Array.from(selected).sort((a, b) => a - b) : null;
-}
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export default {
-    description: 'Mengunduh media dari link post Instagram.',
-    usage: '<link post Instagram> [pilihan slide]',
+    description: 'Mengunduh media dari link post Instagram dengan delay aman.',
+    usage: '<link post Instagram> [opsional: nomor slide]',
     example: 'https://www.instagram.com/p/... 1,3',
     name: 'instagram',
     aliases: ['ig', 'igdl', 'instagramdl'],
-    category: 'User',
+    category: 'Downloader',
     cooldown: 8000,
     premiumOnly: true,
     run: async (sock, msg, args, { sendTyping }) => {
         const url = args[0];
+
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
                 text: '⚠️ Harap sertakan link post Instagram!\nContoh:\n• Post Instagram: *.ig https://www.instagram.com/p/...\n• Pilih slide: *.ig https://www.instagram.com/p/... 1,3'
@@ -61,178 +30,143 @@ export default {
         }
 
         await sendTyping();
-        await sock.sendMessage(msg.key.remoteJid, { 
-            text: '⏳ Sedang memproses post Instagram via Kyros-MD API...' 
+
+        const loadingMsg = await sock.sendMessage(msg.key.remoteJid, {
+            text: '⏳ Sedang memproses... Mohon tunggu sebentar.'
         }, { quoted: msg });
 
-        let mediaItems = []; 
+        let mediaItems = [];
 
         try {
-            
-            const mainPageRes = await fetchJson('https://kol.id/download-video/instagram');
-            const setCookie = mainPageRes.headers['set-cookie'];
-            let cookies = '';
-            if (setCookie) {
-                cookies = setCookie.map(c => c.split(';')[0]).join('; ');
-            }
+            const apiUrl = 'https://api-wh.fastdl.app/api/convert';
 
-            
-            const postResponse = await postForm('https://kol.id/api/v2/downloader/instagram', {
-                url: url
-            }, {
+            const formData = new URLSearchParams();
+            formData.append('sf_url', url);
+            formData.append('ts', Date.now().toString());
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
                 headers: {
-                    'Cookie': cookies,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Origin': 'https://kol.id',
-                    'Referer': 'https://kol.id/download-video/instagram'
-                }
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
+                    'Origin': 'https://fastdl.app',
+                    'Referer': 'https://fastdl.app/'
+                },
+                body: formData.toString()
             });
 
-            if (!postResponse?.data || postResponse.data.meta?.success === false) {
-                const errMsg = postResponse?.data?.meta?.message || 'Gagal mengirim permintaan download.';
-                throw new Error(errMsg);
+            if (!response.ok) throw new Error('Gagal menghubungi server downloader.');
+
+            const result = await response.json();
+
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('Media tidak ditemukan atau akun diprivat.');
             }
 
-            const requestId = postResponse.data.data?.request_id;
-            if (!requestId) {
-                throw new Error('Gagal mendapatkan ID permintaan dari server.');
-            }
+            for (const item of result) {
+                if (item.url && Array.isArray(item.url) && item.url.length > 0) {
+                    const downloadUrl = item.url[0].url;
+                    const type = item.url[0].type || 'jpg';
 
-            
-            let completed = false;
-            let resData = null;
-            let attempts = 0;
-            const maxAttempts = 12;
-            const pollAfterSeconds = postResponse.data?.poll_after || 5;
-            
-            
-            await new Promise(resolve => setTimeout(resolve, pollAfterSeconds * 1000));
-
-            while (!completed && attempts < maxAttempts) {
-                attempts++;
-
-                const statusResponse = await fetchJson(`https://kol.id/api/v2/downloader/status/${requestId}`, {
-                    headers: {
-                        'Cookie': cookies,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Referer': 'https://kol.id/download-video/instagram'
-                    }
-                });
-
-                const statusData = statusResponse?.data;
-                if (!statusData) {
-                    
-                    const rawData = statusResponse;
-                    if (rawData?.meta?.success === false) {
-                        throw new Error(rawData.meta?.message || 'Permintaan gagal diproses.');
-                    }
-                    const status = rawData?.data?.status;
-                    if (status === 'completed') {
-                        completed = true;
-                        resData = rawData.data;
-                        break;
-                    } else if (status === 'failed') {
-                        throw new Error(rawData.data?.error?.message || 'Proses pengunduhan gagal.');
-                    }
-                } else {
-                    if (statusResponse.meta?.success === false) {
-                        throw new Error(statusResponse.meta?.message || 'Permintaan gagal diproses.');
-                    }
-                    const status = statusResponse.data?.status;
-                    if (status === 'completed') {
-                        completed = true;
-                        resData = statusResponse.data;
-                        break;
-                    } else if (status === 'failed') {
-                        throw new Error(statusResponse.data?.error?.message || 'Proses pengunduhan gagal.');
-                    }
-                }
-
-                if (attempts < maxAttempts) {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            }
-
-            if (!completed || !resData) {
-                throw new Error('Waktu pemrosesan habis (Timeout). Silakan coba lagi.');
-            }
-
-            
-            if (Array.isArray(resData.slides) && resData.slides.length > 0) {
-                const totalSlides = resData.slides.length;
-                const selectedIndices = parseSelection(args, totalSlides);
-                
-                let slidesToDownload = resData.slides;
-                if (selectedIndices !== null) {
-                    slidesToDownload = selectedIndices.map(idx => resData.slides[idx]);
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        text: `⏳ Mengunduh ${slidesToDownload.length} slide terpilih dari total ${totalSlides}...`
-                    }, { quoted: msg });
-                } else if (totalSlides > 1) {
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        text: `⏳ Menemukan ${totalSlides} slide. Mengunduh semua...\n💡 _Tips: Gunakan *.ig <link> 1,3* untuk memilih slide tertentu._`
-                    }, { quoted: msg });
-                }
-
-                for (const slide of slidesToDownload) {
                     mediaItems.push({
-                        url: slide.url || slide.thumbnail,
-                        isVideo: slide.type === 'video'
+                        url: downloadUrl,
+                        type: type.includes('mp4') || type.includes('video') ? 'video' : 'image',
+                        filename: item.url[0].filename || 'media'
                     });
                 }
-            } else if (resData.video_url) {
-                mediaItems.push({
-                    url: resData.video_url,
-                    isVideo: true
+            }
+
+            if (mediaItems.length === 0) {
+                throw new Error('Tidak ada media yang bisa diunduh.');
+            }
+
+            const totalSlides = mediaItems.length;
+            const selectionStr = args.slice(1).join(' ').trim();
+            let selectedIndices = null;
+
+            if (selectionStr && selectionStr.toLowerCase() !== 'all' && selectionStr.toLowerCase() !== 'semua') {
+                const parts = selectionStr.split(',');
+                const tempSelected = new Set();
+
+                for (const part of parts) {
+                    const cleanPart = part.trim();
+                    if (cleanPart.includes('-')) {
+                        const [startStr, endStr] = cleanPart.split('-');
+                        const start = parseInt(startStr, 10);
+                        const end = parseInt(endStr, 10);
+                        if (!isNaN(start) && !isNaN(end)) {
+                            const min = Math.min(start, end);
+                            const max = Math.max(start, end);
+                            for (let i = min; i <= max; i++) {
+                                if (i >= 1 && i <= totalSlides) tempSelected.add(i - 1);
+                            }
+                        }
+                    } else {
+                        const index = parseInt(cleanPart, 10);
+                        if (!isNaN(index) && index >= 1 && index <= totalSlides) {
+                            tempSelected.add(index - 1);
+                        }
+                    }
+                }
+
+                if (tempSelected.size > 0) {
+                    selectedIndices = Array.from(tempSelected).sort((a, b) => a - b);
+                }
+            }
+
+            let finalMedia = mediaItems;
+            if (selectedIndices !== null) {
+                finalMedia = selectedIndices.map(idx => mediaItems[idx]);
+                await sock.sendMessage(msg.key.remoteJid, {
+                    text: `✅ Ditemukan ${totalSlides} media. Mengunduh ${finalMedia.length} slide terpilih: _${selectedIndices.map(i => i + 1).join(', ')}_`,
+                    edit: loadingMsg.key
                 });
-            } else if (resData.url) {
-                mediaItems.push({
-                    url: resData.url,
-                    isVideo: false
-                });
-            } else if (resData.thumbnail) {
-                mediaItems.push({
-                    url: resData.thumbnail,
-                    isVideo: false
-                });
+            } else {
+                if (totalSlides > 1) {
+                    await sock.sendMessage(msg.key.remoteJid, {
+                        text: `✅ Ditemukan ${totalSlides} media. Mengunduh semuanya...\n💡 _Tips: Tambahkan angka di belakang link (ex: .ig link 1,3) untuk memilih._`,
+                        edit: loadingMsg.key
+                    });
+                }
+            }
+
+            for (let i = 0; i < finalMedia.length; i++) {
+                const item = finalMedia[i];
+
+                try {
+                    const buffer = await fetchBuffer(item.url);
+
+                    if (!buffer) continue;
+
+                    if (item.type === 'video') {
+                        await sock.sendMessage(msg.key.remoteJid, {
+                            video: buffer,
+                            caption: `📥 *Instagram Video* (${i + 1}/${finalMedia.length})`,
+                            mimetype: 'video/mp4'
+                        }, { quoted: msg });
+                    } else {
+                        await sock.sendMessage(msg.key.remoteJid, {
+                            image: buffer,
+                            caption: `📥 *Instagram Photo* (${i + 1}/${finalMedia.length})`
+                        }, { quoted: msg });
+                    }
+
+                    if (i < finalMedia.length - 1) {
+                        const delayTime = randomInt(3000, 5000);
+                        await delay(delayTime);
+                    }
+
+                } catch (err) {
+                    console.error(`Error sending media ${i + 1}:`, err);
+                }
             }
 
         } catch (err) {
             console.error('Instagram Downloader Error:', err.message);
             await sock.sendMessage(msg.key.remoteJid, {
-                text: `❌ Gagal mengambil media: ${err.message}`
-            }, { quoted: msg });
-            return;
-        }
-
-        if (mediaItems.length === 0) {
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Gagal menemukan media yang bisa diunduh.'
-            }, { quoted: msg });
-            return;
-        }
-
-        
-        try {
-            for (const item of mediaItems) {
-                const buffer = await fetchBuffer(item.url);
-                if (item.isVideo) {
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        video: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Kyros-MD API_`
-                    }, { quoted: msg });
-                } else {
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        image: buffer,
-                        caption: `📥 *Instagram Downloader*\n⚡ _Via Kyros-MD API_`
-                    }, { quoted: msg });
-                }
-            }
-        } catch (err) {
-            console.error('Send Media Error:', err);
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: `❌ Gagal mengirim media: ${err.message}`
-            }, { quoted: msg });
+                text: `❌ Gagal mengambil media: ${err.message}`,
+                edit: loadingMsg.key
+            });
         }
     }
 };
