@@ -4,7 +4,7 @@ export default {
     name: 'setbotname',
     description: 'Mengubah konfigurasi nama bot.',
     usage: '<nama baru>',
-    example: 'Kyros-MD V2',
+    example: '𝐊𝐲𝐫𝐨𝐬-𝐌𝐃 V2',
     category: 'Owner',
     ownerOnly: true,
     run: async (sock, msg, args) => {

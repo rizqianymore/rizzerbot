@@ -1,6 +1,6 @@
 export const settings = {
     // Nama bot dan developer
-    botName: "Kyros-MD",
+    botName: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃",
     ownerName: "Pentagon",
     ownerNumber: "6287847566690",
     pairingNumber: "6287847566690",
@@ -22,12 +22,12 @@ export const settings = {
     stickerPackName: "Kyros-MD Stickers",
     stickerAuthor: "Pentagon",
     image: 'assets/banner.png',
-    linkTitle: "Kyros-MD",
+    linkTitle: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃",
     linkBody: "Modular & High-Performance WhatsApp Bot",
-    linkUrl: "https://github.com/rizqianymore/kyros-md",
+    linkUrl: "https://whatsapp.com/",
     linkImage: "assets/banner.png",
     newsletterJid: "120363202796245235@newsletter",
-    newsletterName: "Kyros-MD Updates",
+    newsletterName: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃 Updates",
 
     // Fitur Donasi 
     danaNumber: "[Masukkan Nomor Dana]",
