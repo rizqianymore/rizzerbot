@@ -98,13 +98,13 @@ export default {
 
 
 function parseBirthDate(tgl) {
-    const day = parseInt(tgl.substring(0, 2));
-    let month = parseInt(tgl.substring(2, 4));
+    let day = parseInt(tgl.substring(0, 2));
+    const month = parseInt(tgl.substring(2, 4));
     const year = parseInt(tgl.substring(4, 6));
 
     let gender = 'Laki-laki';
-    if (month > 40) {
-        month -= 40;
+    if (day > 40) {
+        day -= 40;
         gender = 'Perempuan';
     }
 

@@ -4,11 +4,11 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export default {
-    description: 'Downloader Instagram Universal (Post, Reels, Story, IGTV).',
+    description: 'Downloader Instagram Universal (Post, Reels, Story, IGTV) dengan support slide.',
     usage: '<link> [opsional: nomor slide]',
-    example: '.ig https://instagram.com/p/xyz 1,3\n.ig https://instagram.com/stories/username',
-    name: 'instagram',
-    aliases: ['ig', 'igdl', 'instadl'],
+    example: '.igpost https://instagram.com/p/xyz 1,3\n.igpost https://instagram.com/stories/username',
+    name: 'igpost',
+    aliases: ['igdl', 'instadl'],
     category: 'Downloader',
     cooldown: 5000,
     premiumOnly: false,
@@ -17,7 +17,7 @@ export default {
 
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap sertakan link Instagram!\nContoh:\n• *.ig https://www.instagram.com/p/...*\n• *.ig https://www.instagram.com/stories/...*'
+                text: '⚠️ Harap sertakan link Instagram!\nContoh:\n• *.igpost https://www.instagram.com/p/...*\n• *.igpost https://www.instagram.com/stories/...*'
             }, { quoted: msg });
             return;
         }
@@ -38,20 +38,43 @@ export default {
         let mediaItems = [];
 
         try {
-            // Menggunakan endpoint scraper yang valid
-            const apiUrl = 'https://api-wh.fastdl.app/api/convert';
+            // Fetch token dari halaman utama
+            let token = 'eKVRTJxZDqas7iGG06cmJwWHfjd4TRNXYC6VPh9a';
+
+            try {
+                const pageResponse = await fetch('https://kol.id/download-video/instagram', {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                    }
+                });
+
+                if (pageResponse.ok) {
+                    const html = await pageResponse.text();
+                    const tokenMatch = html.match(/name="_token"\s+value="([^"]+)"/);
+                    if (tokenMatch && tokenMatch[1]) {
+                        token = tokenMatch[1];
+                    }
+                }
+            } catch (err) {
+                console.log('Using fallback token');
+            }
+
+            const apiUrl = 'https://kol.id/api/v2/downloader/instagram';
 
             const formData = new URLSearchParams();
-            formData.append('sf_url', url);
-            formData.append('ts', Date.now().toString());
+            formData.append('url', url);
+            formData.append('_token', token);
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                    'Origin': 'https://fastdl.app',
-                    'Referer': 'https://fastdl.app/'
+                    'Origin': 'https://kol.id',
+                    'Referer': 'https://kol.id/download-video/instagram',
+                    'Accept': '*/*',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: formData.toString()
             });
@@ -60,24 +83,31 @@ export default {
 
             const result = await response.json();
 
-            // Validasi hasil: FastDL biasanya mengembalikan array of objects
-            if (!Array.isArray(result) || result.length === 0) {
-                // Cek jika ada pesan error di dalam JSON
-                if (result.message) throw new Error(result.message);
-                throw new Error('Media tidak ditemukan atau akun diprivat.');
+            if (!result.meta || !result.meta.success) {
+                throw new Error(result.meta?.message || 'Gagal mengambil data dari Instagram.');
             }
 
-            // Ekstrak media dari hasil
-            for (const item of result) {
-                if (item.url && Array.isArray(item.url) && item.url.length > 0) {
-                    const downloadUrl = item.url[0].url;
-                    const type = item.url[0].type || 'jpg';
+            const data = result.data;
 
-                    mediaItems.push({
-                        url: downloadUrl,
-                        type: type.includes('mp4') || type.includes('video') ? 'video' : 'image',
-                        filename: item.url[0].filename || 'media'
-                    });
+            // Handle video tunggal
+            if (data.video_url) {
+                mediaItems.push({
+                    url: data.video_url,
+                    type: 'video',
+                    filename: 'video.mp4'
+                });
+            }
+
+            // Handle slides (carousel)
+            if (data.slides && Array.isArray(data.slides)) {
+                for (const slide of data.slides) {
+                    if (slide.url) {
+                        mediaItems.push({
+                            url: slide.url,
+                            type: slide.type === 'video' ? 'video' : 'image',
+                            filename: slide.filename || 'media'
+                        });
+                    }
                 }
             }
 
@@ -130,7 +160,7 @@ export default {
             } else {
                 if (totalSlides > 1) {
                     await sock.sendMessage(msg.key.remoteJid, {
-                        text: `✅ Ditemukan ${totalSlides} media. Mengunduh semuanya...\n💡 _Tips: Tambahkan angka di belakang link (ex: .ig link 1,3) untuk memilih._`,
+                        text: `✅ Ditemukan ${totalSlides} media. Mengunduh semuanya...\n💡 _Tips: Tambahkan angka di belakang link (ex: .igpost link 1,3) untuk memilih._`,
                         edit: loadingMsg.key
                     });
                 }
@@ -141,6 +171,11 @@ export default {
                 const item = finalMedia[i];
 
                 try {
+                    if (i > 0) {
+                        const delayTime = randomInt(2000, 4000);
+                        await delay(delayTime);
+                    }
+
                     const buffer = await fetchBuffer(item.url);
 
                     if (!buffer) continue;
@@ -156,11 +191,6 @@ export default {
                             image: buffer,
                             caption: `📥 *Instagram Photo* (${i + 1}/${finalMedia.length})`
                         }, { quoted: msg });
-                    }
-
-                    if (i < finalMedia.length - 1) {
-                        const delayTime = randomInt(3000, 5000);
-                        await delay(delayTime);
                     }
 
                 } catch (err) {

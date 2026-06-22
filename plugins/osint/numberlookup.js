@@ -91,7 +91,11 @@ export default {
             try {
                 pfpUrl = await sock.profilePictureUrl(resolvedJid, 'image');
             } catch (_) {
-                
+                try {
+                    pfpUrl = await sock.profilePictureUrl(resolvedJid, 'preview');
+                } catch (_) {
+                    
+                }
             }
             
             
@@ -100,7 +104,8 @@ export default {
                            `• *JID:* \`${resolvedJid}\`\n` +
                            `• *Tipe Akun:* ${isBusiness ? 'Akun Bisnis' : 'Akun Personal'}\n` +
                            `• *Bio/Status:* ${bio}\n` +
-                           `• *Diperbarui:* ${bioTime}` +
+                           `• *Diperbarui:* ${bioTime}\n` +
+                           `• *Foto Profil:* ${pfpUrl ? 'Tersedia' : 'Tidak Tersedia / Privat'}` +
                            `${bizInfo}`;
                            
             if (pfpUrl) {
