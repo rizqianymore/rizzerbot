@@ -8,7 +8,7 @@ export default {
     example: 'https://x.com/...',
     name: 'twitter',
     aliases: ['x', 'tw', 'twdl', 'xdl'],
-    category: 'User',
+    category: 'Downloader',
     run: async (sock, msg, args, { sendTyping }) => {
         const url = args[0];
         if (!url) {

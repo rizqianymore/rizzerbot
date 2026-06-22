@@ -5,7 +5,7 @@ export default {
     example: '',
     name: 'sw',
     aliases: ['downloadsw', 'download', 'save'],
-    category: 'Utilities',
+    category: 'Downloader',
     run: async (sock, msg, args, { sendTyping }) => {
         const { extractMessageContent, downloadMediaMessage } = await import('baileys');
 

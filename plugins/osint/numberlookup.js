@@ -5,7 +5,7 @@ export default {
     example: '628xxx',
     name: 'numberlookup',
     aliases: ['lookup', 'checknum'],
-    category: 'User',
+    category: 'OSINT',
     ownerOnly: false,
     run: async (sock, msg, args, context) => {
         const { sendTyping, getTargetJid, senderJid } = context;

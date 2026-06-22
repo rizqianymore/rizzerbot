@@ -25,7 +25,7 @@ export default {
     example: '',
     name: 'jkt84',
     aliases: ['jkt48', 'memberjkt'],
-    category: 'User',
+    category: 'Fun',
     run: async (sock, msg, args, { sendTyping }) => {
         const query = args.join(' ').trim();
         if (!query) {
