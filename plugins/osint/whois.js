@@ -35,6 +35,16 @@ export default {
             const data = res.data;
             const ldhName = data.ldhName || domain;
             
+            const formatDate = (dateStr) => {
+                try {
+                    if (!dateStr) return '-';
+                    const d = new Date(dateStr);
+                    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                } catch (_) {
+                    return '-';
+                }
+            };
+
             // Extract registration, expiration, and update dates from events array
             let created = '-';
             let expired = '-';
@@ -43,11 +53,11 @@ export default {
             if (Array.isArray(data.events)) {
                 for (const ev of data.events) {
                     if (ev.eventAction === 'registration') {
-                        created = new Date(ev.eventDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                        created = formatDate(ev.eventDate);
                     } else if (ev.eventAction === 'expiration') {
-                        expired = new Date(ev.eventDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                        expired = formatDate(ev.eventDate);
                     } else if (ev.eventAction === 'last changed' || ev.eventAction === 'last update of RDAP database') {
-                        updated = new Date(ev.eventDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                        updated = formatDate(ev.eventDate);
                     }
                 }
             }

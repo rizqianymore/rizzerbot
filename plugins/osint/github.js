@@ -30,6 +30,17 @@ export default {
             }
 
             const data = res.data;
+            
+            const formatDate = (dateStr) => {
+                try {
+                    if (!dateStr) return '-';
+                    const d = new Date(dateStr);
+                    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                } catch (_) {
+                    return '-';
+                }
+            };
+
             let replyText = `🔍 *GitHub Profile OSINT*\n\n` +
                             `• *Username:* \`${data.login || '-'}\`\n` +
                             `• *Nama:* ${data.name || '-'}\n` +
@@ -41,8 +52,8 @@ export default {
                             `• *Gist Publik:* ${data.public_gists || 0}\n` +
                             `• *Followers:* ${data.followers || 0}\n` +
                             `• *Following:* ${data.following || 0}\n` +
-                            `• *Akun Dibuat:* ${new Date(data.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
-                            `• *Update Terakhir:* ${new Date(data.updated_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
+                            `• *Akun Dibuat:* ${formatDate(data.created_at)}\n` +
+                            `• *Update Terakhir:* ${formatDate(data.updated_at)}\n\n` +
                             `_Dicari oleh: ${senderName}_`;
 
             if (data.avatar_url) {
