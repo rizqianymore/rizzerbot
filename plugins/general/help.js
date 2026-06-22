@@ -32,7 +32,6 @@ export default {
 * ${activePrefix}usermenu
 * ${activePrefix}premiummenu
 * ${activePrefix}ownermenu
-* ${activePrefix}plugins
 
 Tips: Ketik salah satu menu di atas untuk melihat perintah secara lengkap.`;
 
