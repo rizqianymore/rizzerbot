@@ -21,7 +21,7 @@ const fetchWithTimeout = async (url, options, timeout = 30000) => {
 };
 
 export default {
-    premiumOnly: false,
+    premiumOnly: true,
     description: 'Mengunduh video atau audio dari YouTube via Kol.id (Async).',
     usage: '<link YouTube>',
     example: '.yt https://youtu.be/...\n.ytmp3 https://youtube.com/watch?v=...',

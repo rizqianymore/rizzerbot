@@ -21,7 +21,7 @@ const fetchWithTimeout = async (url, options, timeout = 30000) => {
 };
 
 export default {
-    premiumOnly: false, // Bisa diubah true jika mau dibatasi
+    premiumOnly: true,
     description: 'Mengunduh video TikTok tanpa watermark (via Kol.id).',
     usage: '<link TikTok>',
     example: '.tiktok https://www.tiktok.com/@user/video/123',

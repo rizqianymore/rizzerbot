@@ -29,7 +29,7 @@ export default {
     aliases: ['igreels', 'instagramreels'],
     category: 'Downloader',
     cooldown: 5000,
-    premiumOnly: false,
+    premiumOnly: true,
     run: async (sock, msg, args, { sendTyping }) => {
         const url = args[0];
 
