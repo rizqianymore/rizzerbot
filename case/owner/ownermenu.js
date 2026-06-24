@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { db } from '@/lib/database.js';
 import { settings } from '@/config/settings.js';
-import { getOwnerMenu } from '@/lib/menu.js';
+import { getOwnerMenu } from '@/lib/view.js';
 import { getThumbnailBuffer } from '@/lib/imageHelper.js';
 
 const __filename = fileURLToPath(import.meta.url);

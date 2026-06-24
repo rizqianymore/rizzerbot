@@ -1,41 +1,39 @@
 export const settings = {
-    
+
     botName: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃",
     ownerName: "Pentagon",
     ownerNumber: "6287847566690",
     pairingNumber: "6287847566690",
     watchdogNumber: "62811111111",
-
-    
     usePairingCode: true,
 
-    
+
     public: true,
-    prefix: ".", 
+    prefix: ".",
 
-    
-    autoRead: false, 
-    autoOnline: false, 
-    cooldownTime: 3000, 
 
-    
+    autoRead: false,
+    autoOnline: false,
+    cooldownTime: 3000,
+
+
     stickerPackName: "Kyros-MD Stickers",
     stickerAuthor: "Pentagon",
-    image: 'assets/banner.png',
+    image: 'assets/image/banner.png',
     linkTitle: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃",
     linkBody: "Modular & High-Performance WhatsApp Bot",
     linkUrl: "https://whatsapp.com/",
-    linkImage: "assets/banner.png",
+    linkImage: "assets/image/banner.png",
     newsletterJid: "120363202796245235@newsletter",
     newsletterName: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃 Updates",
 
-    
+
     danaNumber: "[Masukkan Nomor Dana]",
     gopayNumber: "[Masukkan Nomor Gopay]",
     ovoNumber: "[Masukkan Nomor OVO]",
     saweriaUrl: "https://saweria.co/example",
 
-    
+
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",
         "Are you a Wi-Fi signal? Because I'm feeling a really strong connection.",

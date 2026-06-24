@@ -22,7 +22,7 @@ const fetchWithTimeout = async (url, options, timeout = 30000) => {
 
 export default {
     premiumOnly: true,
-    description: 'Mengunduh video atau audio dari YouTube via Kol.id (Async).',
+    description: 'Mengunduh video atau audio dari YouTube via Kyros-MD API.',
     usage: '<link YouTube>',
     example: '.yt https://youtu.be/...\n.ytmp3 https://youtube.com/watch?v=...',
     name: 'youtube',
@@ -189,7 +189,7 @@ export default {
                 `🎬 *Title:* ${title}\n` +
                 `👤 *Channel:* ${channel}\n` +
                 `📊 *Quality:* ${qualityLabel}\n` +
-                `⚡ _Via Kol.id API_`;
+                `⚡ _Via Kyros-MD API_`;
 
             if (isAudio) {
                 await sock.sendMessage(msg.key.remoteJid, {

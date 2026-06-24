@@ -10,8 +10,8 @@ export default {
     aliases: ['bcgc', 'jpmch', 'addjpmch', 'deljpmch', 'listjpmch', 'checkdb',
               'addjpmblacklist', 'addjpmbl', 'deljpmblacklist', 'deljpmbl',
               'listjpmblacklist', 'listjpmbl'],
-    category: 'Premium',
-    premiumOnly: true,
+    category: 'Owner',
+    ownerOnly: true,
     run: async (sock, msg, args, context) => {
         const { sendTyping, activePrefix, commandName } = context;
         const remoteJid = msg.key.remoteJid;

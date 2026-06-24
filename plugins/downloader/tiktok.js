@@ -22,7 +22,7 @@ const fetchWithTimeout = async (url, options, timeout = 30000) => {
 
 export default {
     premiumOnly: true,
-    description: 'Mengunduh video TikTok tanpa watermark (via Kol.id).',
+    description: 'Mengunduh video TikTok tanpa watermark (via Kyros-MD API).',
     usage: '<link TikTok>',
     example: '.tiktok https://www.tiktok.com/@user/video/123',
     name: 'tiktok',
@@ -55,119 +55,35 @@ export default {
         let videoData = null;
 
         try {
-            // 1. Ambil Token CSRF dari halaman utama
-            let token = 'eKVRTJxZDqas7iGG06cmJwWHfjd4TRNXYC6VPh9a';
-            try {
-                const pageRes = await fetchWithTimeout('https://kol.id/download-video/tiktok', {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36'
-                    }
-                }, 10000);
-
-                if (pageRes.ok) {
-                    const html = await pageRes.text();
-                    const match = html.match(/name="_token"\s+value="([^"]+)"/);
-                    if (match) token = match[1];
-                }
-            } catch (e) {
-                console.log('Token fetch failed, using fallback');
-            }
-
-            // 2. Submit Request (POST)
-            const apiUrl = 'https://kol.id/api/v2/downloader/tiktok';
-            const formData = new URLSearchParams();
-            formData.append('url', url);
-            formData.append('_token', token);
-            // Opsional: Jika API mendukung parameter no_wm, bisa ditambahkan di sini
-            // formData.append('type', 'nowm'); 
-
-            const submitRes = await fetchWithTimeout(apiUrl, {
-                method: 'POST',
+            // 1. Submit Request ke Vgasoft API (GET)
+            const apiUrl = `https://download.vgasoft.vn/web/c/tiktok/getVideo?link=${encodeURIComponent(url)}`;
+            const res = await fetchWithTimeout(apiUrl, {
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                    'Origin': 'https://kol.id',
-                    'Referer': 'https://kol.id/download-video/tiktok',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData.toString()
+                    'Referer': 'https://downloadvideo.vn/',
+                    'Origin': 'https://downloadvideo.vn',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
+                    'os': 'webSite'
+                }
             }, 15000);
 
-            if (!submitRes.ok) throw new Error('Gagal menghubungi server.');
+            if (!res.ok) throw new Error('Gagal menghubungi server Vgasoft.');
 
-            const submitData = await submitRes.json();
-
-            // Cek apakah langsung jadi atau perlu polling
-            let finalData = null;
-
-            if (submitData.meta?.success && submitData.data?.video) {
-                // Langsung jadi (cached)
-                finalData = submitData.data;
-            } else if (submitData.meta?.status === 'accepted' && submitData.data?.request_id) {
-                // Perlu Polling (Async)
-                const requestId = submitData.data.request_id;
-                const statusUrl = `https://kol.id/api/v2/downloader/status/${requestId}`;
-                const pollInterval = (submitData.data.poll_after || 5) * 1000;
-
-                await sock.sendMessage(msg.key.remoteJid, {
-                    text: '🔄 Sedang mengambil data dari server... (Async)',
-                    edit: loadingMsg.key
-                });
-
-                let attempts = 0;
-                const maxAttempts = 12; // Max 60 detik
-
-                while (attempts < maxAttempts) {
-                    await delay(pollInterval);
-
-                    const statusRes = await fetchWithTimeout(statusUrl, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    }, 10000);
-
-                    if (statusRes.ok) {
-                        const statusJson = await statusRes.json();
-
-                        if (statusJson.meta?.success && statusJson.data?.status === 'completed') {
-                            finalData = statusJson.data;
-                            break;
-                        } else if (statusJson.meta?.status === 'failed') {
-                            throw new Error('Proses download gagal di server.');
-                        }
-                    }
-                    attempts++;
-                }
-
-                if (!finalData) throw new Error('Timeout: Server terlalu lama merespon.');
-            } else {
-                throw new Error(submitData.meta?.message || 'Format response tidak dikenali.');
+            const data = await res.json();
+            if (!data.success || !data.result || data.result.length === 0) {
+                throw new Error('Video tidak ditemukan atau link tidak valid.');
             }
 
-            // 3. Parse Data Video
-            if (finalData) {
-                // Cari URL video tanpa watermark jika ada array video
-                let targetVideoUrl = null;
+            const item = data.result[0];
+            const targetVideoUrl = item.video?.url || item.video?.urlWatermark;
+            if (!targetVideoUrl) throw new Error('URL Video tidak ditemukan dalam response.');
 
-                if (Array.isArray(finalData.video)) {
-                    // Prioritaskan yang Watermark: false jika ada
-                    const noWm = finalData.video.find(v => !v.Watermark);
-                    targetVideoUrl = noWm ? noWm.url : finalData.video[0].url;
-                } else if (typeof finalData.video === 'string') {
-                    targetVideoUrl = finalData.video;
-                }
-
-                if (!targetVideoUrl) throw new Error('URL Video tidak ditemukan.');
-
-                videoData = {
-                    url: targetVideoUrl,
-                    author: finalData.author || 'unknown',
-                    desc: finalData.description || '',
-                    audio: finalData.audio || null,
-                    thumbnail: finalData.thumbnail || null
-                };
-            }
+            videoData = {
+                url: targetVideoUrl,
+                author: item.author?.unique_id || 'unknown',
+                desc: item.title || '',
+                audio: item.video?.music || null,
+                thumbnail: item.thumbnail || null
+            };
 
             if (!videoData) throw new Error('Data video kosong.');
 
@@ -187,7 +103,7 @@ export default {
             const caption = `📥 *TikTok Downloader*\n\n` +
                 `👤 *Username:* @${videoData.author}\n` +
                 `📝 *Desc:* ${videoData.desc.substring(0, 100)}${videoData.desc.length > 100 ? '...' : ''}\n` +
-                `⚡ _Via Kol.id API_`;
+                `⚡ _Via Kyros-MD API_`;
 
             await sock.sendMessage(msg.key.remoteJid, {
                 video: videoBuffer,

@@ -36,6 +36,20 @@ export default {
 
             const data = body.data;
 
+            const formatWaLink = (num) => {
+                if (!num) return '';
+                let clean = String(num).replace(/[^0-9]/g, '');
+                if (clean.startsWith('0')) {
+                    clean = '62' + clean.slice(1);
+                }
+                return clean ? `https://wa.me/${clean}` : '';
+            };
+
+            const waLink = formatWaLink(data['NO HP GURU']);
+            const guruPendampingStr = waLink 
+                ? `${data['GURU PENDAMPING'] || '-'} (${waLink})` 
+                : (data['GURU PENDAMPING'] || '-');
+
             let replyText = `🔍 *Hasil Pencarian PKL*\n\n` +
                             `• *Nama Peserta Didik:* ${data['NAMA PESERTA DIDIK'] || '-'}\n` +
                             `• *NIS:* \`${data['NIS'] || '-'}\`\n` +
@@ -48,7 +62,7 @@ export default {
                             `• *Tanggal Mulai PKL:* ${data['TANGGAL MULAI PKL'] || '-'}\n` +
                             `• *Alamat Perusahaan:* ${data['ALAMAT PERUSAHAAN'] || '-'}\n` +
                             `• *Kota Perusahaan:* ${data['KOTA PERUSAHAAN'] || '-'}\n` +
-                            `• *Guru Pendamping:* ${data['GURU PENDAMPING'] || '-'}${data['NO HP GURU'] ? ` (+${data['NO HP GURU']})` : ''}\n` +
+                            `• *Guru Pendamping:* ${guruPendampingStr}\n` +
                             `• *Guru Pembimbing:* ${data['GURU PEMBIMBING'] || '-'}\n\n` +
                             `_Dicari oleh: ${senderName}_`;
 

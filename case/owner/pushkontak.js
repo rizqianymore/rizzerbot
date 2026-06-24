@@ -7,8 +7,8 @@ export default {
     example: 'Halo kak',
     name: 'pushkontak',
     aliases: ['pushcontact', 'pcgc'],
-    category: 'Premium',
-    premiumOnly: true,
+    category: 'Owner',
+    ownerOnly: true,
     run: async (sock, msg, args, context) => {
         const { sendTyping, activePrefix } = context;
         const botJid = (sock.user?.id || '').replace(/:.*@/, '@');

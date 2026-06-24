@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getPremiumMenu } from '@/lib/menu.js';
+import { getPremiumMenu } from '@/lib/view.js';
 import { settings } from '@/config/settings.js';
 import { getThumbnailBuffer } from '@/lib/imageHelper.js';
 

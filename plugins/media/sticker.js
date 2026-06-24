@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 try {
-    const fontPath = path.join(__dirname, '..', '..', 'assets', 'Anton-Regular.ttf');
+    const fontPath = path.join(__dirname, '..', '..', 'assets', 'fonts', 'Anton-Regular.ttf');
     if (fs.existsSync(fontPath)) {
         registerFont(fontPath, { family: 'Anton' });
     }

@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 
 try {
-    const fontPath = path.join(__dirname, '..', 'assets', 'GreatVibes-Regular.ttf');
+    const fontPath = path.join(__dirname, '..', '..', 'assets', 'fonts', 'GreatVibes-Regular.ttf');
     if (fs.existsSync(fontPath)) {
         registerFont(fontPath, { family: 'Great Vibes' });
     }
