@@ -3,30 +3,12 @@ import { fetchBuffer } from '@/lib/scraping.js';
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Fetch dengan timeout
-const fetchWithTimeout = async (url, options, timeout = 30000) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
-    try {
-        const response = await fetch(url, {
-            ...options,
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return response;
-    } catch (err) {
-        clearTimeout(timeoutId);
-        throw err;
-    }
-};
-
 export default {
-    description: 'Downloader Instagram Reels (mengunduh video Reels).',
-    usage: '<link Reels>',
-    example: '.reels https://www.instagram.com/reel/C8XyZ9yyXyz/',
+    description: 'Downloader Instagram Reels & Post.',
+    usage: '<link Reels/Post>',
+    example: '.reels https://www.instagram.com/reel/C8XyZ9yyXyz/\n.reels https://www.instagram.com/p/xyz/',
     name: 'reels',
-    aliases: ['igreels', 'instagramreels'],
+    aliases: ['igreels', 'instagramreels', 'igpost'],
     category: 'Downloader',
     cooldown: 5000,
     premiumOnly: true,
@@ -35,144 +17,88 @@ export default {
 
         if (!url) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap sertakan link Instagram Reels!\nContoh:\n• *.reels https://www.instagram.com/reel/...*'
+                text: '⚠️ Harap sertakan link Instagram!\nContoh:\n• *.reels https://www.instagram.com/reel/...*\n• *.reels https://www.instagram.com/p/...*'
             }, { quoted: msg });
             return;
         }
 
-        if (!/instagram\.com\/(reel|reels)\//i.test(url)) {
+        if (!/instagram\.com\/(p|reel|reels)\//i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari Instagram Reels.'
+                text: '❌ Link tidak valid.'
             }, { quoted: msg });
             return;
         }
 
         await sendTyping();
-        await delay(1500);
 
         const loadingMsg = await sock.sendMessage(msg.key.remoteJid, {
             text: '⏳ Sedang memproses... Mohon tunggu.'
         }, { quoted: msg });
 
-        let mediaItems = [];
-
         try {
-            // 1. Ambil Token CSRF
-            let token = 'eKVRTJxZDqas7iGG06cmJwWHfjd4TRNXYC6VPh9a';
-            try {
-                const pageRes = await fetchWithTimeout('https://kol.id/download-video/instagram', {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36'
-                    }
-                }, 10000);
-                
-                if (pageRes.ok) {
-                    const html = await pageRes.text();
-                    const match = html.match(/name="_token"\s+value="([^"]+)"/);
-                    if (match) token = match[1];
-                }
-            } catch (e) { console.log('Token fetch failed, using fallback'); }
+            // Generate timestamp
+            const ts = Date.now();
+            const _ts = 1781691802136;
+            const _tsc = 0;
+            const _sv = 2;
 
-            // 2. Submit Request (POST)
-            const apiUrl = 'https://kol.id/api/v2/downloader/instagram';
+            // Signature perlu diextract dari halaman fastdl.app atau hardcoded sementara
+            // Untuk production, sebaiknya fetch halaman dulu untuk dapat signature yang valid
+            const _s = '53ae2b37332ef6e65b1cf501cac8bec465bb215467524f710b66d9b4cfbe03e7';
+
             const formData = new URLSearchParams();
-            formData.append('url', url);
-            formData.append('_token', token);
+            formData.append('sf_url', url);
+            formData.append('ts', ts.toString());
+            formData.append('_ts', _ts.toString());
+            formData.append('_tsc', _tsc.toString());
+            formData.append('_sv', _sv.toString());
+            formData.append('_s', _s);
 
-            const submitRes = await fetchWithTimeout(apiUrl, {
+            const response = await fetch('https://api-wh.fastdl.app/api/convert', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                    'Origin': 'https://kol.id',
-                    'Referer': 'https://kol.id/download-video/instagram',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
+                    'Origin': 'https://fastdl.app',
+                    'Referer': 'https://fastdl.app/',
+                    'Accept': 'application/json, text/plain, */*'
                 },
                 body: formData.toString()
-            }, 15000);
+            });
 
-            if (!submitRes.ok) throw new Error('Gagal menghubungi server.');
+            if (!response.ok) throw new Error('Gagal menghubungi server.');
 
-            const submitData = await submitRes.json();
-            
-            // Cek apakah langsung jadi atau perlu polling
-            let finalData = null;
+            const result = await response.json();
 
-            if (submitData.meta?.success && submitData.data?.slides) {
-                // Langsung jadi (cached)
-                finalData = submitData.data;
-            } else if (submitData.meta?.status === 'accepted' && submitData.data?.request_id) {
-                // Perlu Polling
-                const requestId = submitData.data.request_id;
-                const statusUrl = `https://kol.id/api/v2/downloader/status/${requestId}`;
-                const pollInterval = (submitData.data.poll_after || 5) * 1000;
-                
-                await sock.sendMessage(msg.key.remoteJid, {
-                    text: '🔄 Sedang mengambil data dari server... (Async)',
-                    edit: loadingMsg.key
+            let mediaItems = [];
+
+            // Parse response fastdl.app
+            if (result.medias && Array.isArray(result.medias)) {
+                for (const media of result.medias) {
+                    if (media.url || media.url_downloadable) {
+                        // Prioritaskan url_downloadable jika ada (lebih stabil)
+                        const downloadUrl = media.url_downloadable || media.url;
+                        mediaItems.push({
+                            url: downloadUrl,
+                            type: media.ext === 'mp4' ? 'video' : 'image',
+                            filename: media.filename || 'media'
+                        });
+                    }
+                }
+            } else if (result.url) {
+                // Single media fallback
+                mediaItems.push({
+                    url: result.url_downloadable || result.url,
+                    type: result.ext === 'mp4' ? 'video' : 'image',
+                    filename: result.filename || 'media'
                 });
-
-                let attempts = 0;
-                const maxAttempts = 12; // Max 60 detik (12 x 5 detik)
-
-                while (attempts < maxAttempts) {
-                    await delay(pollInterval);
-                    
-                    const statusRes = await fetchWithTimeout(statusUrl, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    }, 10000);
-
-                    if (statusRes.ok) {
-                        const statusJson = await statusRes.json();
-                        
-                        if (statusJson.meta?.success && statusJson.data?.status === 'completed') {
-                            finalData = statusJson.data;
-                            break;
-                        } else if (statusJson.meta?.status === 'failed') {
-                            throw new Error('Proses download gagal di server.');
-                        }
-                    }
-                    attempts++;
-                }
-
-                if (!finalData) throw new Error('Timeout: Server terlalu lama merespon.');
-            } else {
-                throw new Error(submitData.meta?.message || 'Format response tidak dikenali.');
-            }
-
-            // 3. Parse Media
-            if (finalData) {
-                // Handle Video Tunggal
-                if (finalData.video_url) {
-                    mediaItems.push({
-                        url: finalData.video_url,
-                        type: 'video',
-                        filename: 'video.mp4'
-                    });
-                }
-
-                // Handle Slides (Story/Carousel)
-                if (finalData.slides && Array.isArray(finalData.slides)) {
-                    for (const slide of finalData.slides) {
-                        if (slide.url) {
-                            mediaItems.push({
-                                url: slide.url,
-                                type: slide.type === 'video' ? 'video' : 'image',
-                                filename: slide.filename || 'media'
-                            });
-                        }
-                    }
-                }
             }
 
             if (mediaItems.length === 0) {
                 throw new Error('Tidak ada media ditemukan.');
             }
 
-            // 4. Logika Pilih Slide
+            // --- LOGIKA PEMILIHAN SLIDE ---
             const totalSlides = mediaItems.length;
             const selectionStr = args.slice(1).join(' ').trim();
             let selectedIndices = null;
@@ -223,11 +149,16 @@ export default {
                 }
             }
 
-            // 5. Kirim Media
+            // --- PENGIRIMAN DENGAN DELAY ---
             for (let i = 0; i < finalMedia.length; i++) {
                 const item = finalMedia[i];
+
                 try {
-                    await delay(500); // Jeda sebelum fetch buffer
+                    if (i > 0) {
+                        const delayTime = randomInt(2000, 4000);
+                        await delay(delayTime);
+                    }
+
                     const buffer = await fetchBuffer(item.url);
 
                     if (!buffer || buffer.length === 0) continue;
@@ -245,17 +176,13 @@ export default {
                         }, { quoted: msg });
                     }
 
-                    if (i < finalMedia.length - 1) {
-                        await delay(randomInt(2500, 4500)); // Anti-spam delay
-                    }
-
                 } catch (err) {
-                    console.error(`Error sending media ${i + 1}:`, err.message);
+                    console.error(`Error sending media ${i + 1}:`, err);
                 }
             }
 
         } catch (err) {
-            console.error('IG Downloader Error:', err.message);
+            console.error('Instagram Downloader Error:', err.message);
             await sock.sendMessage(msg.key.remoteJid, {
                 text: `❌ Gagal: ${err.message}`,
                 edit: loadingMsg.key

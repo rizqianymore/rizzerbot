@@ -24,7 +24,7 @@ export default {
 
         if (!/instagram\.com\/(p|reel|reels|stories|tv)\//i.test(url)) {
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Link tidak valid. Pastikan link dari Post, Reels, Stories, atau TV Instagram.'
+                text: '❌ Link tidak valid.'
             }, { quoted: msg });
             return;
         }
@@ -35,80 +35,58 @@ export default {
             text: '⏳ Sedang memproses... Mohon tunggu.'
         }, { quoted: msg });
 
-        let mediaItems = [];
-
         try {
-            // Fetch token dari halaman utama
-            let token = 'eKVRTJxZDqas7iGG06cmJwWHfjd4TRNXYC6VPh9a';
-
-            try {
-                const pageResponse = await fetch('https://kol.id/download-video/instagram', {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-                    }
-                });
-
-                if (pageResponse.ok) {
-                    const html = await pageResponse.text();
-                    const tokenMatch = html.match(/name="_token"\s+value="([^"]+)"/);
-                    if (tokenMatch && tokenMatch[1]) {
-                        token = tokenMatch[1];
-                    }
-                }
-            } catch (err) {
-                console.log('Using fallback token');
-            }
-
-            const apiUrl = 'https://kol.id/api/v2/downloader/instagram';
+            // Generate timestamp & signature seperti di browser
+            const ts = Date.now();
+            const _ts = 1781691802136; // fixed value dari request
+            const _tsc = 0;
+            const _sv = 2;
+            const _s = '53ae2b37332ef6e65b1cf501cac8bec465bb215467524f710b66d9b4cfbe03e7'; // fixed signature
 
             const formData = new URLSearchParams();
-            formData.append('url', url);
-            formData.append('_token', token);
+            formData.append('sf_url', url);
+            formData.append('ts', ts.toString());
+            formData.append('_ts', _ts.toString());
+            formData.append('_tsc', _tsc.toString());
+            formData.append('_sv', _sv.toString());
+            formData.append('_s', _s);
 
-            const response = await fetch(apiUrl, {
+            const response = await fetch('https://api-wh.fastdl.app/api/convert', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
-                    'Origin': 'https://kol.id',
-                    'Referer': 'https://kol.id/download-video/instagram',
-                    'Accept': '*/*',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36',
+                    'Origin': 'https://fastdl.app',
+                    'Referer': 'https://fastdl.app/',
+                    'Accept': 'application/json, text/plain, */*'
                 },
                 body: formData.toString()
             });
 
-            if (!response.ok) throw new Error('Gagal menghubungi server downloader.');
+            if (!response.ok) throw new Error('Gagal menghubungi server.');
 
             const result = await response.json();
 
-            if (!result.meta || !result.meta.success) {
-                throw new Error(result.meta?.message || 'Gagal mengambil data dari Instagram.');
-            }
+            // Parse response dari fastdl.app
+            let mediaItems = [];
 
-            const data = result.data;
-
-            // Handle video tunggal
-            if (data.video_url) {
-                mediaItems.push({
-                    url: data.video_url,
-                    type: 'video',
-                    filename: 'video.mp4'
-                });
-            }
-
-            // Handle slides (carousel)
-            if (data.slides && Array.isArray(data.slides)) {
-                for (const slide of data.slides) {
-                    if (slide.url) {
+            if (result.medias && Array.isArray(result.medias)) {
+                for (const media of result.medias) {
+                    if (media.url) {
                         mediaItems.push({
-                            url: slide.url,
-                            type: slide.type === 'video' ? 'video' : 'image',
-                            filename: slide.filename || 'media'
+                            url: media.url,
+                            type: media.ext === 'mp4' ? 'video' : 'image',
+                            filename: media.filename || 'media'
                         });
                     }
                 }
+            } else if (result.url) {
+                // Single media
+                mediaItems.push({
+                    url: result.url,
+                    type: result.ext === 'mp4' ? 'video' : 'image',
+                    filename: result.filename || 'media'
+                });
             }
 
             if (mediaItems.length === 0) {
