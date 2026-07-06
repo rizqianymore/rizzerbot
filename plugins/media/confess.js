@@ -1,245 +1,243 @@
-import { createCanvas, registerFont } from 'canvas';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
-try {
-    const fontPath = path.join(__dirname, '..', '..', 'assets', 'fonts', 'GreatVibes-Regular.ttf');
-    if (fs.existsSync(fontPath)) {
-        registerFont(fontPath, { family: 'Great Vibes' });
-    }
-} catch (err) {
-    console.error('Failed to register Great Vibes font:', err);
-}
-
-function drawRoundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fill) {
-        ctx.fillStyle = fill;
-        ctx.fill();
-    }
-    if (stroke) {
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-    }
-    ctx.restore();
-}
-
-function drawHeart(ctx, x, y, size, fillStyle, opacity = 1) {
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.beginPath();
-    ctx.moveTo(x, y + size / 4);
-    
-    ctx.quadraticCurveTo(x - size / 2, y - size / 2, x - size, y + size / 4);
-    ctx.quadraticCurveTo(x - size, y + (size * 3) / 4, x, y + size * 1.2);
-    
-    ctx.quadraticCurveTo(x + size, y + (size * 3) / 4, x + size, y + size / 4);
-    ctx.quadraticCurveTo(x + size, y - size / 2, x, y + size / 4);
-    ctx.closePath();
-    ctx.fillStyle = fillStyle;
-    ctx.shadowColor = 'rgba(255, 75, 120, 0.3)';
-    ctx.shadowBlur = 10;
-    ctx.fill();
-    ctx.restore();
-}
+import { extractMessageContent } from "baileys";
 
 export default {
-    premiumOnly: true,
-    name: 'confess',
-    aliases: ['confesscard', 'lovecard', 'menfess'],
-    description: 'Membuat kartu ucapan / pengakuan cinta (love confession card) rahasia yang cantik.',
-    usage: '<untuk> | <pesan> | <dari>',
-    example: 'Alya | Aku suka kamu sejak pertama kali kita sekelompok tugas | Rahasia',
-    category: 'Fun',
-    cooldown: 5000,
-    run: async (sock, msg, args, { sendTyping, senderName, activePrefix }) => {
-        const text = args.join(' ');
-        if (!text) {
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: `⚠️ *Penggunaan Salah!*\n\n` +
-                      `Format: *${activePrefix || '.'}confess Untuk | Pesan | Dari*\n` +
-                      `Contoh: *${activePrefix || '.'}confess Dia | Aku sayang kamu | Anonim*`
-            }, { quoted: msg });
-            return;
-        }
-
-        let to = '';
-        let message = '';
-        let from = senderName;
-
-        
-        if (text.includes('|')) {
-            const parts = text.split('|');
-            to = parts[0]?.trim() || '';
-            message = parts[1]?.trim() || '';
-            if (parts[2]) from = parts[2]?.trim() || '';
-        } else if (text.includes(',')) {
-            const parts = text.split(',');
-            to = parts[0]?.trim() || '';
-            message = parts[1]?.trim() || '';
-            if (parts[2]) from = parts[2]?.trim() || '';
-        } else {
-            
-            to = 'Seseorang';
-            message = text.trim();
-        }
-
-        if (!to || !message) {
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: '⚠️ Harap masukkan minimal penerima dan pesan. Contoh: *.confess Kamu | Aku suka kamu*'
-            }, { quoted: msg });
-            return;
-        }
-
-        await sendTyping();
-
-        try {
-            const width = 800;
-            const height = 500;
-            const canvas = createCanvas(width, height);
-            const ctx = canvas.getContext('2d');
-
-            
-            const grad = ctx.createLinearGradient(0, 0, width, height);
-            grad.addColorStop(0, '#ff758c');
-            grad.addColorStop(1, '#ff7eb3');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, width, height);
-
-            
-            const glow1 = ctx.createRadialGradient(220, 170, 10, 220, 170, 160);
-            glow1.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-            glow1.addColorStop(1, 'rgba(255, 117, 140, 0)');
-            ctx.fillStyle = glow1;
-            ctx.fillRect(20, 20, 400, 300);
-
-            const glow2 = ctx.createRadialGradient(580, 330, 10, 580, 330, 180);
-            glow2.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-            glow2.addColorStop(1, 'rgba(255, 126, 179, 0)');
-            ctx.fillStyle = glow2;
-            ctx.fillRect(380, 150, 400, 320);
-
-            
-            const hearts = [
-                { x: 100, y: 120, size: 25, opacity: 0.25 },
-                { x: 700, y: 150, size: 35, opacity: 0.2 },
-                { x: 150, y: 380, size: 30, opacity: 0.25 },
-                { x: 650, y: 390, size: 20, opacity: 0.3 },
-                { x: 400, y: 60, size: 15, opacity: 0.35 },
-                { x: 740, y: 80, size: 12, opacity: 0.4 },
-                { x: 50, y: 250, size: 18, opacity: 0.22 }
-            ];
-            hearts.forEach(h => {
-                drawHeart(ctx, h.x, h.y, h.size, '#ffffff', h.opacity);
-            });
-
-            
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-            ctx.shadowBlur = 30;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 12;
-            drawRoundRect(ctx, 60, 60, 680, 380, 24, 'rgba(255, 255, 255, 0.18)', 'rgba(255, 255, 255, 0.38)');
-            
-            
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            
-            drawHeart(ctx, 95, 95, 20, '#ff4b78', 0.95);
-            drawHeart(ctx, 705, 95, 12, '#ff4b78', 0.85); 
-
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 20px sans-serif';
-            const titleText = 'SECRET LOVE CONFESSION';
-            ctx.fillText(titleText, width / 2, 110);
-
-            
-            const titleWidth = ctx.measureText(titleText).width;
-            drawHeart(ctx, (width / 2) - (titleWidth / 2) - 22, 98, 10, '#ffffff', 0.95);
-            drawHeart(ctx, (width / 2) + (titleWidth / 2) + 22, 98, 10, '#ffffff', 0.95);
-
-            
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(100, 130);
-            ctx.lineTo(700, 130);
-            ctx.stroke();
-
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'left';
-            ctx.font = '48px "Great Vibes", cursive';
-            ctx.fillText(`To: ${to}`, 110, 190);
-
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'italic 22px sans-serif';
-            
-            const textX = 110;
-            let textY = 240;
-            const maxWidth = 580;
-            const words = message.split(' ');
-            let line = '';
-            const lineHeight = 32;
-
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    ctx.fillText(line, textX, textY);
-                    line = words[n] + ' ';
-                    textY += lineHeight;
-                } else {
-                    line = testLine;
-                }
-            }
-            ctx.fillText(line, textX, textY);
-
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'right';
-            ctx.font = '44px "Great Vibes", cursive';
-            ctx.fillText(`With Love, ${from}`, 690, 400);
-
-            
-            const imageBuffer = canvas.toBuffer('image/png');
-            await sock.sendMessage(msg.key.remoteJid, {
-                image: imageBuffer,
-                caption: `💝 *Love Confession Card Baru!*\n\n` +
-                         `💌 *Untuk:* _${to}_\n` +
-                         `👤 *Dari:* _${from}_\n\n` +
-                         `*Pesan:* "${message}"`
-            }, { quoted: msg });
-
-        } catch (err) {
-            console.error('Confess Card Generation Error:', err);
-            await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Gagal membuat kartu pengakuan cinta. Pastikan format teks benar.'
-            }, { quoted: msg });
-        }
+  premiumOnly: true,
+  name: "confess",
+  aliases: ["confesscard", "lovecard", "menfess"],
+  description:
+    "Membuat kartu ucapan / pengakuan cinta (love confession card) rahasia yang cantik via API.",
+  usage: "<untuk> | <pesan> | <dari> [--theme pink/blue/purple]",
+  example:
+    "Alya | Aku suka kamu sejak pertama kali kita sekelompok tugas | Rahasia --theme purple",
+  category: "Fun",
+  cooldown: 5000,
+  run: async (sock, msg, args, { sendTyping, senderName, activePrefix }) => {
+    let text = args.join(" ");
+    if (!text) {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text:
+            `⚠️ *Penggunaan Salah!*\n\n` +
+            `Format: *${activePrefix || "."}confess Untuk | Pesan | Dari*\n` +
+            `Contoh: *${activePrefix || "."}confess Dia | Aku sayang kamu | Anonim*\n\n` +
+            `💡 *Opsi Tema:* Tambahkan \`--theme pink\`, \`--theme blue\`, atau \`--theme purple\` (default: \`pink\`).\n` +
+            `💡 *Foto:* Balas/quote gambar saat mengirim perintah untuk menambahkan foto ke dalam kartu.`,
+        },
+        { quoted: msg },
+      );
+      return;
     }
-};
 
+    // Parse theme from text
+    let theme = "pink";
+    const themeFlagRegex = /--theme\s+(pink|blue|purple)\b/i;
+    const matchFlag = text.match(themeFlagRegex);
+    if (matchFlag) {
+      theme = matchFlag[1].toLowerCase();
+      text = text.replace(themeFlagRegex, "").trim();
+    } else {
+      const themeRegex = /--(pink|blue|purple)\b/i;
+      const match = text.match(themeRegex);
+      if (match) {
+        theme = match[1].toLowerCase();
+        text = text.replace(themeRegex, "").trim();
+      }
+    }
+
+    let to = "";
+    let message = "";
+    let from = senderName;
+
+    const parts = text.split("|").map((p) => p.trim());
+    if (parts.length >= 2) {
+      to = parts[0];
+      message = parts[1];
+      if (parts[2]) from = parts[2];
+      if (
+        parts[3] &&
+        ["pink", "blue", "purple"].includes(parts[3].toLowerCase())
+      ) {
+        theme = parts[3].toLowerCase();
+      }
+    } else {
+      const commaParts = text.split(",").map((p) => p.trim());
+      if (commaParts.length >= 2) {
+        to = commaParts[0];
+        message = commaParts[1];
+        if (commaParts[2]) from = commaParts[2];
+        if (
+          commaParts[3] &&
+          ["pink", "blue", "purple"].includes(commaParts[3].toLowerCase())
+        ) {
+          theme = commaParts[3].toLowerCase();
+        }
+      } else {
+        to = "Seseorang";
+        message = text.trim();
+      }
+    }
+
+    if (!to || !message) {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text: "⚠️ Harap masukkan minimal penerima dan pesan. Contoh: *.confess Kamu | Aku suka kamu*",
+        },
+        { quoted: msg },
+      );
+      return;
+    }
+
+    await sendTyping();
+
+    // Check if there is an image to download
+    let photoBase64 = null;
+    try {
+      const getMediaNode = (m) => {
+        if (!m) return null;
+        const content = extractMessageContent(m);
+        if (!content) return null;
+        const keys = Object.keys(content);
+        const hasMedia =
+          keys.includes("imageMessage") ||
+          (keys.includes("documentMessage") &&
+            content.documentMessage.mimetype?.startsWith("image/"));
+
+        if (hasMedia) return content;
+
+        if (keys.includes("viewOnceMessage"))
+          return getMediaNode(content.viewOnceMessage.message);
+        if (keys.includes("viewOnceMessageV2"))
+          return getMediaNode(content.viewOnceMessageV2.message);
+
+        return null;
+      };
+
+      const directMedia = getMediaNode(msg.message);
+      const quotedMsg =
+        msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      const quotedMedia = getMediaNode(quotedMsg);
+
+      if (directMedia || quotedMedia) {
+        const { downloadMediaMessage } = await import("baileys");
+
+        let mediaMessage;
+        if (directMedia) {
+          mediaMessage = msg;
+        } else {
+          const quotedInfo = msg.message.extendedTextMessage?.contextInfo;
+          mediaMessage = {
+            key: {
+              remoteJid: msg.key.remoteJid,
+              id: quotedInfo?.stanzaId,
+              participant: quotedInfo?.participant,
+              fromMe: false,
+            },
+            message: quotedMedia,
+          };
+        }
+
+        const buffer = await downloadMediaMessage(
+          mediaMessage,
+          "buffer",
+          {},
+          {
+            logger: {
+              info: () => {},
+              error: () => {},
+              warn: () => {},
+              debug: () => {},
+              trace: () => {},
+              child: () => ({
+                info: () => {},
+                error: () => {},
+                warn: () => {},
+                debug: () => {},
+                trace: () => {},
+              }),
+            },
+            reuploadRequest: sock.updateMediaMessage,
+          },
+        );
+
+        if (buffer) {
+          let mimeType = "image/png";
+          const mediaNode = directMedia || quotedMedia;
+          if (mediaNode?.imageMessage?.mimetype) {
+            mimeType = mediaNode.imageMessage.mimetype;
+          } else if (mediaNode?.documentMessage?.mimetype) {
+            mimeType = mediaNode.documentMessage.mimetype;
+          }
+          photoBase64 = `data:${mimeType};base64,${buffer.toString("base64")}`;
+        }
+      }
+    } catch (err) {
+      console.error("Gagal mendownload gambar terlampir:", err);
+    }
+
+    try {
+      const payload = {
+        to,
+        message,
+        from,
+        theme,
+      };
+      if (photoBase64) {
+        payload.photo = photoBase64;
+      }
+
+      const response = await fetch(
+        "https://confest-api.rakarizqi-cv.workers.dev/api/generate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success || !data.base64) {
+        throw new Error(
+          data.error || "Gagal mendapatkan respon sukses dari API."
+        );
+      }
+
+      const htmlBuffer = Buffer.from(data.base64, "base64");
+      const safeToName = to.replace(/[^a-zA-Z0-9]/g, "_");
+
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          document: htmlBuffer,
+          mimetype: "text/html",
+          fileName: `confess-${safeToName}.html`,
+          caption:
+            `💝 *Love Confession Card Baru!*\n\n` +
+            `💌 *Untuk:* _${to}_\n` +
+            `👤 *Dari:* _${from}_\n` +
+            `🎨 *Tema:* _${theme}_\n` +
+            `📸 *Foto:* _${photoBase64 ? "Ya (Dilampirkan)" : "Tidak"}\n\n` +
+            `*Pesan:* "${message}"\n\n` +
+            `Buka file HTML di atas di browser untuk melihat kartu pengakuannya!`,
+        },
+        { quoted: msg },
+      );
+    } catch (err) {
+      console.error("Confess Card Generation API Error:", err);
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text: `❌ Gagal membuat kartu pengakuan cinta menggunakan API.\nDetail: ${err.message}`,
+        },
+        { quoted: msg },
+      );
+    }
+  },
+};

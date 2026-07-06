@@ -4,10 +4,10 @@
 
 Only the latest version of Kyros-MD is supported for security updates. Please upgrade to the latest release before reporting a vulnerability.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| < 1.0.0 | :x: No             |
-| >= 1.0.0| :white_check_mark: Yes |
+| Version  | Supported              |
+| -------- | ---------------------- |
+| < 1.0.0  | :x: No                 |
+| >= 1.0.0 | :white_check_mark: Yes |
 
 ## Reporting a Vulnerability
 
