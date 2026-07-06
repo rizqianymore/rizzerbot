@@ -1,4 +1,5 @@
 import { extractMessageContent } from "baileys";
+import { fetchBuffer } from "@/lib/scraping.js";
 
 export default {
   premiumOnly: true,
@@ -92,7 +93,7 @@ export default {
     await sendTyping();
 
     // Check if there is an image to download
-    let photoBase64 = null;
+    let photoUrl = "";
     try {
       const getMediaNode = (m) => {
         if (!m) return null;
@@ -169,72 +170,66 @@ export default {
           } else if (mediaNode?.documentMessage?.mimetype) {
             mimeType = mediaNode.documentMessage.mimetype;
           }
-          photoBase64 = `data:${mimeType};base64,${buffer.toString("base64")}`;
+
+          // Upload to tmpfiles
+          const form = new FormData();
+          const file = new Blob([buffer], { type: mimeType });
+          form.append("file", file, "image.png");
+
+          const uploadRes = await fetch("https://tmpfiles.org/api/v1/upload", {
+            method: "POST",
+            body: form,
+          });
+          const uploadData = await uploadRes.json();
+          if (uploadData.status === "success" && uploadData.data?.url) {
+            photoUrl = uploadData.data.url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/");
+          }
         }
       }
     } catch (err) {
-      console.error("Gagal mendownload gambar terlampir:", err);
+      console.error("Gagal mendownload/upload gambar terlampir:", err);
     }
 
     try {
-      const payload = {
+      const baseUrl = "https://confest-api.rakarizqi-cv.workers.dev/card";
+      const params = new URLSearchParams({
         to,
         message,
         from,
         theme,
-      };
-      if (photoBase64) {
-        payload.photo = photoBase64;
+      });
+      if (photoUrl) {
+        params.append("photo", photoUrl);
       }
 
-      const response = await fetch(
-        "https://confest-api.rakarizqi-cv.workers.dev/api/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
+      const cardUrl = `${baseUrl}?${params.toString()}`;
+      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(
+        cardUrl
+      )}&screenshot=true&embed=screenshot.url&element=.card&waitForTimeout=500`;
 
-      if (!response.ok) {
-        throw new Error(`API responded with status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!data.success || !data.base64) {
-        throw new Error(
-          data.error || "Gagal mendapatkan respon sukses dari API."
-        );
-      }
-
-      const htmlBuffer = Buffer.from(data.base64, "base64");
-      const safeToName = to.replace(/[^a-zA-Z0-9]/g, "_");
+      const imgBuffer = await fetchBuffer(microUrl);
 
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          document: htmlBuffer,
-          mimetype: "text/html",
-          fileName: `confess-${safeToName}.html`,
+          image: imgBuffer,
           caption:
             `💝 *Love Confession Card Baru!*\n\n` +
             `💌 *Untuk:* _${to}_\n` +
             `👤 *Dari:* _${from}_\n` +
             `🎨 *Tema:* _${theme}_\n` +
-            `📸 *Foto:* _${photoBase64 ? "Ya (Dilampirkan)" : "Tidak"}\n\n` +
+            `📸 *Foto:* _${photoUrl ? "Ya (Dilampirkan)" : "Tidak"}\n\n` +
             `*Pesan:* "${message}"\n\n` +
-            `Buka file HTML di atas di browser untuk melihat kartu pengakuannya!`,
+            `⚡ _Via Kyros-MD API_`,
         },
         { quoted: msg },
       );
     } catch (err) {
-      console.error("Confess Card Generation API Error:", err);
+      console.error("Confess Card Generation Error:", err);
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `❌ Gagal membuat kartu pengakuan cinta menggunakan API.\nDetail: ${err.message}`,
+          text: `❌ Gagal membuat kartu pengakuan cinta.\nDetail: ${err.message}`,
         },
         { quoted: msg },
       );
