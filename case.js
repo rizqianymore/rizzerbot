@@ -26,6 +26,23 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getMenuBanner() {
+  const imgPath = settings.linkImage || settings.image;
+  if (!imgPath) return null;
+  if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
+    return { url: imgPath };
+  }
+  const resolvedPath = path.resolve(process.cwd(), imgPath);
+  if (fs.existsSync(resolvedPath)) {
+    return fs.readFileSync(resolvedPath);
+  }
+  const relativePath = path.join(__dirname, imgPath);
+  if (fs.existsSync(relativePath)) {
+    return fs.readFileSync(relativePath);
+  }
+  return null;
+}
+
 export function hasCommand(commandName) {
   return caseCommands.has(commandName.toLowerCase());
 }
@@ -167,25 +184,7 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
 
         const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${getUptimeString()} | User: ${userCount} | Hits: ${totalHits}`;
 
-        let bannerImage = null;
-        if (settings.linkImage) {
-          if (
-            settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://")
-          ) {
-            bannerImage = { url: settings.linkImage };
-          } else {
-            const bannerPath = path.join(
-              __dirname,
-              "..",
-              "..",
-              settings.linkImage,
-            );
-            if (fs.existsSync(bannerPath)) {
-              bannerImage = fs.readFileSync(bannerPath);
-            }
-          }
-        }
+        const bannerImage = getMenuBanner();
 
         if (bannerImage) {
           await sock.sendMessage(
@@ -344,25 +343,7 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
 
         const menuText = getUserMenu();
 
-        let bannerImage = null;
-        if (settings.linkImage) {
-          if (
-            settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://")
-          ) {
-            bannerImage = { url: settings.linkImage };
-          } else {
-            const bannerPath = path.join(
-              __dirname,
-              "..",
-              "..",
-              settings.linkImage,
-            );
-            if (fs.existsSync(bannerPath)) {
-              bannerImage = fs.readFileSync(bannerPath);
-            }
-          }
-        }
+        const bannerImage = getMenuBanner();
 
         if (bannerImage) {
           await sock.sendMessage(
@@ -2598,25 +2579,7 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
         const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${uptimeString} | User: ${userCount} | Hits: ${totalHits}`;
 
         const menuText = getOwnerMenu();
-        let bannerImage = null;
-        if (settings.linkImage) {
-          if (
-            settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://")
-          ) {
-            bannerImage = { url: settings.linkImage };
-          } else {
-            const bannerPath = path.join(
-              __dirname,
-              "..",
-              "..",
-              settings.linkImage,
-            );
-            if (fs.existsSync(bannerPath)) {
-              bannerImage = fs.readFileSync(bannerPath);
-            }
-          }
-        }
+        const bannerImage = getMenuBanner();
 
         if (bannerImage) {
           await sock.sendMessage(
@@ -3333,25 +3296,7 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
       const run = async (sock, msg, args, { sendTyping }) => {
         await sendTyping();
         const menuText = getPremiumMenu();
-        let bannerImage = null;
-        if (settings.linkImage) {
-          if (
-            settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://")
-          ) {
-            bannerImage = { url: settings.linkImage };
-          } else {
-            const bannerPath = path.join(
-              __dirname,
-              "..",
-              "..",
-              settings.linkImage,
-            );
-            if (fs.existsSync(bannerPath)) {
-              bannerImage = fs.readFileSync(bannerPath);
-            }
-          }
-        }
+        const bannerImage = getMenuBanner();
 
         if (bannerImage) {
           await sock.sendMessage(
