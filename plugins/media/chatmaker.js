@@ -45,63 +45,61 @@ export default {
     }
 
     let imgBuffer = null;
+    const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
 
-    // 1. Try local Puppeteer first
-    let browser;
+    // 1. Try fast Cloud Screenshot API first (fast & reliable)
     try {
-      const puppeteerModule = await import("puppeteer");
-      const puppeteer = puppeteerModule.default || puppeteerModule;
-
-      browser = await puppeteer.launch({
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--single-process",
-          "--disable-gpu",
-        ],
-        headless: true,
-      });
-
-      const page = await browser.newPage();
-      await page.setViewport({
-        width: 320,
-        height: 568,
-        deviceScaleFactor: 2,
-      });
-
-      const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
-
-      await page.goto(workerUrl, {
-        waitUntil: "networkidle0",
-        timeout: 30000,
-      });
-
-      const element = await page.$("#captureScreen");
-      if (element) {
-        imgBuffer = await element.screenshot({ type: "png" });
-      }
-    } catch (err) {
-      console.warn("Local Puppeteer renderer unavailable, using cloud rendering API fallback:", err.message);
-    } finally {
-      if (browser) {
-        try {
-          await browser.close();
-        } catch (_) {}
-      }
+      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url`;
+      imgBuffer = await fetchBuffer(microUrl, { timeout: 15000 });
+    } catch (cloudErr) {
+      console.warn("Cloud screenshot API error, attempting local puppeteer fallback:", cloudErr.message);
     }
 
-    // 2. Fallback to Cloud screenshot API if Puppeteer fails or host lacks Chrome libraries
+    // 2. Fallback to local Puppeteer if Cloud API fails
     if (!imgBuffer) {
+      let browser;
       try {
-        const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
-        const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url`;
-        imgBuffer = await fetchBuffer(microUrl, { timeout: 30000 });
-      } catch (fallbackErr) {
-        console.error("Chatmaker Fallback Error:", fallbackErr.message);
+        const puppeteerModule = await import("puppeteer");
+        const puppeteer = puppeteerModule.default || puppeteerModule;
+
+        browser = await puppeteer.launch({
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--single-process",
+            "--disable-gpu",
+          ],
+          headless: true,
+        });
+
+        const page = await browser.newPage();
+        await page.setViewport({
+          width: 320,
+          height: 568,
+          deviceScaleFactor: 2,
+        });
+
+        await page.goto(workerUrl, {
+          waitUntil: "networkidle0",
+          timeout: 10000,
+        });
+
+        const element = await page.$("#captureScreen");
+        if (element) {
+          imgBuffer = await element.screenshot({ type: "png" });
+        }
+      } catch (err) {
+        console.warn("Local Puppeteer renderer error:", err.message);
+      } finally {
+        if (browser) {
+          try {
+            await browser.close();
+          } catch (_) {}
+        }
       }
     }
 
@@ -125,4 +123,5 @@ export default {
     }
   },
 };
+
 

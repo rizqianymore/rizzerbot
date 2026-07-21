@@ -34,11 +34,11 @@ function getMenuBanner() {
   }
   const resolvedPath = path.resolve(process.cwd(), imgPath);
   if (fs.existsSync(resolvedPath)) {
-    return fs.readFileSync(resolvedPath);
+    return { url: resolvedPath };
   }
   const relativePath = path.join(__dirname, imgPath);
   if (fs.existsSync(relativePath)) {
-    return fs.readFileSync(relativePath);
+    return { url: relativePath };
   }
   return null;
 }
