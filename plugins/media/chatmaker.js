@@ -47,9 +47,9 @@ export default {
     let imgBuffer = null;
     const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
 
-    // 1. Try fast Cloud Screenshot API first (fast & reliable)
+    // 1. Try fast Cloud Screenshot API first (fast & reliable, targeting #captureScreen element)
     try {
-      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url`;
+      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&element=%23captureScreen&embed=screenshot.url`;
       imgBuffer = await fetchBuffer(microUrl, { timeout: 15000 });
     } catch (cloudErr) {
       console.warn("Cloud screenshot API error, attempting local puppeteer fallback:", cloudErr.message);
