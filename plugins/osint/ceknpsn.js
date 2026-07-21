@@ -10,7 +10,7 @@ export default {
   category: "Education",
   ownerOnly: false,
   run: async (sock, msg, args, context) => {
-    const { sendTyping } = context;
+    const { sendTyping, activePrefix } = context;
     await sendTyping();
 
     const npsn = args[0]?.replace(/[^0-9]/g, "");
@@ -18,7 +18,7 @@ export default {
       return sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "❌ Format salah! Gunakan: *!cek-npsn <nomor_npsn>*\nContoh: !cek-npsn 20104462",
+          text: `❌ Format salah! Gunakan: *${activePrefix}cek-npsn <nomor_npsn>*\nContoh: ${activePrefix}cek-npsn 20104462`,
         },
         { quoted: msg },
       );

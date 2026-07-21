@@ -29,9 +29,6 @@ export default {
         `https://api.github.com/users/${encodeURIComponent(username)}`,
       );
       if (res.status !== 200) {
-        if (res.status === 404) {
-          throw new Error("Username tidak ditemukan.");
-        }
         throw new Error(`Gagal mengambil data (HTTP ${res.status})`);
       }
 
@@ -87,10 +84,17 @@ export default {
       }
     } catch (error) {
       console.error("Error GitHub lookup:", error);
+      const status = error.response?.status;
+      let errMsg = error.message || "Gagal melakukan lookup GitHub.";
+      if (status === 404) {
+        errMsg = "Username tidak ditemukan di GitHub.";
+      } else if (status === 403) {
+        errMsg = "Rate limit GitHub API tercapai. Coba lagi nanti.";
+      }
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `❌ *Terjadi kesalahan!*\n\n${error.message || "Gagal melakukan lookup GitHub."}`,
+          text: `❌ *Terjadi kesalahan!*\n\n${errMsg}`,
         },
         { quoted: msg },
       );

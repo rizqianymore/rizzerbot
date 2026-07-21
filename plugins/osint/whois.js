@@ -32,11 +32,6 @@ export default {
         `https://rdap.org/domain/${encodeURIComponent(domain)}`,
       );
       if (res.status !== 200) {
-        if (res.status === 404) {
-          throw new Error(
-            "Domain tidak ditemukan atau tidak didukung oleh RDAP.",
-          );
-        }
         throw new Error(`Gagal mengambil data WHOIS (HTTP ${res.status})`);
       }
 
@@ -119,10 +114,17 @@ export default {
       );
     } catch (error) {
       console.error("Error WHOIS lookup:", error);
+      const status = error.response?.status;
+      let errMsg = error.message || "Gagal melakukan lookup WHOIS.";
+      if (status === 404) {
+        errMsg = "Domain tidak ditemukan atau tidak didukung oleh RDAP.";
+      } else if (status === 429) {
+        errMsg = "Rate limit tercapai. Coba lagi dalam beberapa saat.";
+      }
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `❌ *Terjadi kesalahan!*\n\n${error.message || "Gagal melakukan lookup WHOIS."}`,
+          text: `❌ *Terjadi kesalahan!*\n\n${errMsg}`,
         },
         { quoted: msg },
       );

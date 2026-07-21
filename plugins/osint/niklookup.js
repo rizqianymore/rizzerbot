@@ -50,7 +50,11 @@ export default {
       }
 
       const districtData = districtRes.data;
-      const district = districtData.data.find((d) => d.code === distCode);
+      const districtList = districtData?.data;
+      if (!Array.isArray(districtList)) {
+        throw new Error("Data kecamatan tidak tersedia dari server.");
+      }
+      const district = districtList.find((d) => d.code === distCode);
 
       if (!district) {
         throw new Error("Data wilayah tidak ditemukan");
@@ -63,7 +67,10 @@ export default {
         throw new Error("Kode kabupaten tidak ditemukan");
       }
       const regencyData = regencyRes.data;
-      const regency = regencyData.data.find((r) => r.code === regCode);
+      const regencyList = regencyData?.data;
+      const regency = Array.isArray(regencyList)
+        ? regencyList.find((r) => r.code === regCode)
+        : null;
 
       const provinceRes = await fetchJson(
         "https://wilayah.id/api/provinces.json",
@@ -72,7 +79,10 @@ export default {
         throw new Error("Kode provinsi tidak ditemukan");
       }
       const provinceData = provinceRes.data;
-      const province = provinceData.data.find((p) => p.code === provCode);
+      const provinceList = provinceData?.data;
+      const province = Array.isArray(provinceList)
+        ? provinceList.find((p) => p.code === provCode)
+        : null;
 
       const birthInfo = parseBirthDate(nik.substring(6, 12));
 
