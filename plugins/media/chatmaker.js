@@ -1,5 +1,3 @@
-import puppeteer from "puppeteer";
-
 export default {
   premiumOnly: true,
   name: "chatmaker",
@@ -46,6 +44,9 @@ export default {
 
     let browser;
     try {
+      const puppeteerModule = await import("puppeteer");
+      const puppeteer = puppeteerModule.default || puppeteerModule;
+
       // Launch local headless browser
       browser = await puppeteer.launch({
         args: [
