@@ -1,9 +1,9 @@
-import puppeteer from "puppeteer";
+import axios from "axios";
 
 export default {
   premiumOnly: true,
   name: "chatmaker",
-  description: "Membuat gambar bertema menu popup chat iOS/iPhone menggunakan local Puppeteer renderer.",
+  description: "Membuat gambar bertema menu popup chat iOS/iPhone via API Cloudflare Worker POST.",
   usage: "<teks | waktu (opsional)>",
   example: "OK | 12:38 PM",
   aliases: ["cm", "chatmake", "popupchat"],
@@ -44,49 +44,27 @@ export default {
       time = `${hours}:${minutes} ${ampm}`;
     }
 
-    let browser;
     try {
-      // Launch local headless browser
-      browser = await puppeteer.launch({
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-          "--no-zygote",
-          "--single-process",
-          "--disable-gpu"
-        ],
-        headless: true
+      // API endpoint for your Cloudflare Worker
+      const apiUrl = "https://bitter-water-1579.rakarizqi-cv.workers.dev/";
+
+      // Send POST request with JSON payload
+      const response = await axios.post(apiUrl, {
+        text: text,
+        time: time
+      }, {
+        headers: {
+          "Content-Type": "application/json"
+        },
+        timeout: 40000 // 40 seconds timeout for Cloudflare Browser Rendering launch
       });
 
-      const page = await browser.newPage();
-      
-      // Set viewport scale to 2x for high quality output
-      await page.setViewport({
-        width: 320,
-        height: 568,
-        deviceScaleFactor: 2
-      });
-
-      // Construct your deployed Worker URL with a cache buster
-      const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
-
-      // Open the page using the local browser
-      await page.goto(workerUrl, {
-        waitUntil: "networkidle0", // Wait for all icons and resources to load
-        timeout: 30000
-      });
-
-      // Select the phone screen element
-      const element = await page.$("#captureScreen");
-      if (!element) {
-        throw new Error("Target element #captureScreen not found on the page.");
+      if (!response.data || !response.data.image) {
+        throw new Error("Invalid response structure or missing image data");
       }
-      
-      // Capture screenshot directly as buffer (perfect rectangular output, no external API!)
-      const imgBuffer = await element.screenshot({ type: "png" });
+
+      // Decode base64 image back to Buffer
+      const imgBuffer = Buffer.from(response.data.image, "base64");
 
       await sock.sendMessage(
         msg.key.remoteJid,
@@ -94,16 +72,12 @@ export default {
         { quoted: msg },
       );
     } catch (err) {
-      console.error("Chatmaker Local Puppeteer Error:", err);
+      console.error("Chatmaker API Error:", err.message);
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `❌ Gagal membuat gambar secara lokal.\nDetail: ${err.message}` },
+        { text: `❌ Gagal membuat gambar popup chat.\nDetail: ${err.message}` },
         { quoted: msg },
       );
-    } finally {
-      if (browser) {
-        await browser.close();
-      }
     }
   },
 };
