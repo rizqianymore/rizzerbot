@@ -73,9 +73,13 @@ export default {
       );
     } catch (err) {
       console.error("Chatmaker API Error:", err.message);
+      let detail = err.message;
+      if (err.response && err.response.data && err.response.data.error) {
+        detail = err.response.data.error;
+      }
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `❌ Gagal membuat gambar popup chat.\nDetail: ${err.message}` },
+        { text: `❌ Gagal membuat gambar popup chat.\nDetail: ${detail}` },
         { quoted: msg },
       );
     }
