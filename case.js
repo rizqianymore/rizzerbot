@@ -167,47 +167,39 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
 
         const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${getUptimeString()} | User: ${userCount} | Hits: ${totalHits}`;
 
-        const adReplyOptions = {
-          title: settings.linkTitle,
-          body: statsBody,
-          sourceUrl: settings.linkUrl,
-          mediaType: 1,
-          renderLargerThumbnail: true,
-          showAdAttribution: true,
-        };
-
-        if (
-          settings.linkImage &&
-          (settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://"))
-        ) {
-          adReplyOptions.thumbnailUrl = settings.linkImage;
-        } else if (settings.linkImage) {
-          const bannerPath = path.join(
-            __dirname,
-            "..",
-            "..",
-            settings.linkImage,
-          );
-          const thumb = await getThumbnailBuffer(bannerPath);
-          if (thumb) adReplyOptions.thumbnail = thumb;
+        let bannerImage = null;
+        if (settings.linkImage) {
+          if (
+            settings.linkImage.startsWith("http://") ||
+            settings.linkImage.startsWith("https://")
+          ) {
+            bannerImage = { url: settings.linkImage };
+          } else {
+            const bannerPath = path.join(
+              __dirname,
+              "..",
+              "..",
+              settings.linkImage,
+            );
+            if (fs.existsSync(bannerPath)) {
+              bannerImage = fs.readFileSync(bannerPath);
+            }
+          }
         }
 
-        const msgOptions = {
-          text: menuText,
-          contextInfo: {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: settings.newsletterJid,
-              newsletterName: settings.newsletterName,
-              serverMessageId: -1,
-            },
-            externalAdReply: adReplyOptions,
-          },
-        };
-
-        await sock.sendMessage(msg.key.remoteJid, msgOptions, { quoted: msg });
+        if (bannerImage) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { image: bannerImage, caption: menuText },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { text: menuText },
+            { quoted: msg }
+          );
+        }
       };
       await run(sock, msg, args, context);
       return true;
@@ -352,46 +344,39 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
 
         const menuText = getUserMenu();
 
-        const userAdReplyOptions = {
-          title: settings.linkTitle,
-          body: statsBody,
-          sourceUrl: settings.linkUrl,
-          mediaType: 1,
-          renderLargerThumbnail: true,
-          showAdAttribution: true,
-        };
-
-        if (
-          settings.linkImage &&
-          (settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://"))
-        ) {
-          userAdReplyOptions.thumbnailUrl = settings.linkImage;
-        } else if (settings.linkImage) {
-          const bannerPath = path.join(
-            __dirname,
-            "..",
-            "..",
-            settings.linkImage,
-          );
-          const thumb = await getThumbnailBuffer(bannerPath);
-          if (thumb) userAdReplyOptions.thumbnail = thumb;
+        let bannerImage = null;
+        if (settings.linkImage) {
+          if (
+            settings.linkImage.startsWith("http://") ||
+            settings.linkImage.startsWith("https://")
+          ) {
+            bannerImage = { url: settings.linkImage };
+          } else {
+            const bannerPath = path.join(
+              __dirname,
+              "..",
+              "..",
+              settings.linkImage,
+            );
+            if (fs.existsSync(bannerPath)) {
+              bannerImage = fs.readFileSync(bannerPath);
+            }
+          }
         }
 
-        const msgOptions = {
-          text: menuText,
-          contextInfo: {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: settings.newsletterJid,
-              newsletterName: settings.newsletterName,
-              serverMessageId: -1,
-            },
-            externalAdReply: userAdReplyOptions,
-          },
-        };
-        await sock.sendMessage(msg.key.remoteJid, msgOptions, { quoted: msg });
+        if (bannerImage) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { image: bannerImage, caption: menuText },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { text: menuText },
+            { quoted: msg }
+          );
+        }
       };
       await run(sock, msg, args, context);
       return true;
@@ -2613,45 +2598,39 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
         const statsBody = `Owner: ${settings.ownerName} | Prefix: [ ${activePrefix} ] | Uptime: ${uptimeString} | User: ${userCount} | Hits: ${totalHits}`;
 
         const menuText = getOwnerMenu();
-        const adReplyOptions = {
-          title: settings.linkTitle,
-          body: statsBody,
-          sourceUrl: settings.linkUrl,
-          mediaType: 1,
-          renderLargerThumbnail: true,
-        };
-
-        if (
-          settings.linkImage &&
-          (settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://"))
-        ) {
-          adReplyOptions.thumbnailUrl = settings.linkImage;
-        } else if (settings.linkImage) {
-          const bannerPath = path.join(
-            __dirname,
-            "..",
-            "..",
-            settings.linkImage,
-          );
-          const thumb = await getThumbnailBuffer(bannerPath);
-          if (thumb) adReplyOptions.thumbnail = thumb;
+        let bannerImage = null;
+        if (settings.linkImage) {
+          if (
+            settings.linkImage.startsWith("http://") ||
+            settings.linkImage.startsWith("https://")
+          ) {
+            bannerImage = { url: settings.linkImage };
+          } else {
+            const bannerPath = path.join(
+              __dirname,
+              "..",
+              "..",
+              settings.linkImage,
+            );
+            if (fs.existsSync(bannerPath)) {
+              bannerImage = fs.readFileSync(bannerPath);
+            }
+          }
         }
 
-        const msgOptions = {
-          text: menuText,
-          contextInfo: {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: settings.newsletterJid,
-              newsletterName: settings.newsletterName,
-              serverMessageId: -1,
-            },
-            externalAdReply: adReplyOptions,
-          },
-        };
-        await sock.sendMessage(msg.key.remoteJid, msgOptions, { quoted: msg });
+        if (bannerImage) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { image: bannerImage, caption: menuText },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { text: menuText },
+            { quoted: msg }
+          );
+        }
       };
       await run(sock, msg, args, context);
       return true;
@@ -3354,45 +3333,39 @@ Kyros-MD adalah WhatsApp Bot modular berperforma tinggi yang dirancang untuk keb
       const run = async (sock, msg, args, { sendTyping }) => {
         await sendTyping();
         const menuText = getPremiumMenu();
-        const adReplyOptions = {
-          title: settings.linkTitle,
-          body: settings.linkBody,
-          sourceUrl: settings.linkUrl,
-          mediaType: 1,
-          renderLargerThumbnail: true,
-        };
-
-        if (
-          settings.linkImage &&
-          (settings.linkImage.startsWith("http://") ||
-            settings.linkImage.startsWith("https://"))
-        ) {
-          adReplyOptions.thumbnailUrl = settings.linkImage;
-        } else if (settings.linkImage) {
-          const bannerPath = path.join(
-            __dirname,
-            "..",
-            "..",
-            settings.linkImage,
-          );
-          const thumb = await getThumbnailBuffer(bannerPath);
-          if (thumb) adReplyOptions.thumbnail = thumb;
+        let bannerImage = null;
+        if (settings.linkImage) {
+          if (
+            settings.linkImage.startsWith("http://") ||
+            settings.linkImage.startsWith("https://")
+          ) {
+            bannerImage = { url: settings.linkImage };
+          } else {
+            const bannerPath = path.join(
+              __dirname,
+              "..",
+              "..",
+              settings.linkImage,
+            );
+            if (fs.existsSync(bannerPath)) {
+              bannerImage = fs.readFileSync(bannerPath);
+            }
+          }
         }
 
-        const msgOptions = {
-          text: menuText,
-          contextInfo: {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: settings.newsletterJid,
-              newsletterName: settings.newsletterName,
-              serverMessageId: -1,
-            },
-            externalAdReply: adReplyOptions,
-          },
-        };
-        await sock.sendMessage(msg.key.remoteJid, msgOptions, { quoted: msg });
+        if (bannerImage) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { image: bannerImage, caption: menuText },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { text: menuText },
+            { quoted: msg }
+          );
+        }
       };
       await run(sock, msg, args, context);
       return true;
