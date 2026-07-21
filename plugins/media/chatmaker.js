@@ -46,10 +46,10 @@ export default {
 
     try {
       // Worker endpoint provided by the user
-      const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}`;
+      const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
       
-      // Call Microlink API to screenshot only the .phone-screen selector
-      const screenshotApiUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url&element=.phone-screen&waitForTimeout=2000`;
+      // Call Microlink API to screenshot only the .phone-screen selector (with ttl=0 to disable cache)
+      const screenshotApiUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url&element=.phone-screen&waitForTimeout=2000&ttl=0`;
       
       const imgBuffer = await fetchBuffer(screenshotApiUrl, { timeout: 30000 });
       
