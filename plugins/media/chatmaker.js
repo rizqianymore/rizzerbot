@@ -1,11 +1,9 @@
 import { fetchBuffer } from "@/lib/scraping.js";
-import { addStickerMetadata } from "@/lib/stickerMetadata.js";
-import { settings } from "@/config/settings.js";
 
 export default {
   premiumOnly: true,
   name: "chatmaker",
-  description: "Membuat stiker WhatsApp bertema menu popup chat iOS/iPhone.",
+  description: "Membuat gambar bertema menu popup chat iOS/iPhone.",
   usage: "<teks | waktu (opsional)>",
   example: "OK | 12:38 PM",
   aliases: ["cm", "chatmake", "popupchat"],
@@ -17,7 +15,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Harap tentukan teks stiker. Contoh: *.chatmaker OK* atau *.chatmaker Keren | 10:00 AM*",
+          text: "⚠️ Harap tentukan teks gambar. Contoh: *.chatmaker OK* atau *.chatmaker Keren | 10:00 AM*",
         },
         { quoted: msg },
       );
@@ -55,24 +53,16 @@ export default {
       
       const imgBuffer = await fetchBuffer(screenshotApiUrl, { timeout: 30000 });
       
-      // Convert the screenshot image buffer to WebP sticker with metadata
-      const stickerBuffer = await addStickerMetadata(
-        imgBuffer,
-        settings.stickerPackName,
-        settings.stickerAuthor,
-        false
-      );
-
       await sock.sendMessage(
         msg.key.remoteJid,
-        { sticker: stickerBuffer, mimetype: "image/webp" },
+        { image: imgBuffer, caption: `⚡ *iOS Popup Chat Maker*\n💬 Teks: ${text}\n⏰ Waktu: ${time}` },
         { quoted: msg },
       );
     } catch (err) {
       console.error("Chatmaker Plugin Error:", err);
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: "❌ Gagal membuat stiker popup chat. Coba lagi beberapa saat." },
+        { text: "❌ Gagal membuat gambar popup chat. Coba lagi beberapa saat." },
         { quoted: msg },
       );
     }
