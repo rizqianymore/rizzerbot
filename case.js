@@ -9,7 +9,6 @@ import {
   getPremiumMenu,
   getOwnerMenu,
 } from "@/lib/view.js";
-import { getThumbnailBuffer } from "@/lib/imageHelper.js";
 import {
   getUptimeString,
   broadcastLock,
