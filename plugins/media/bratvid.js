@@ -151,8 +151,8 @@ export default {
           extractedEmojis.length > 0 ? extractedEmojis : undefined;
         gifBuffer = await addStickerMetadata(
           gifBuffer,
-          settings.botName,
-          settings.ownerName,
+          settings.stickerPackName,
+          settings.stickerAuthor,
           true,
           emojiParam,
         );

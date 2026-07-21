@@ -120,11 +120,19 @@ export default {
         .replace(/\p{Extended_Pictographic}/gu, "")
         .trim();
       const mediaNode = directMedia || quotedMedia;
-      const isImage =
-        mediaNode.imageMessage ||
-        mediaNode.stickerMessage ||
+      const isGif = !!(
         (mediaNode.documentMessage &&
-          mediaNode.documentMessage.mimetype?.startsWith("image/"));
+          mediaNode.documentMessage.mimetype === "image/gif") ||
+        (mediaNode.videoMessage && mediaNode.videoMessage.gifPlayback) ||
+        (buffer && buffer.toString("ascii", 0, 10).includes("GIF"))
+      );
+      const isImage = !!(
+        (mediaNode.imageMessage ||
+          mediaNode.stickerMessage ||
+          (mediaNode.documentMessage &&
+            mediaNode.documentMessage.mimetype?.startsWith("image/"))) &&
+        !isGif
+      );
 
       try {
         const isWebP =
@@ -255,10 +263,11 @@ export default {
 
       // Add metadata
       try {
-        const isVideo = !!(
+        const isVideoOrGif = !!(
           mediaNode.videoMessage ||
           (mediaNode.documentMessage &&
-            mediaNode.documentMessage.mimetype?.startsWith("video/"))
+            mediaNode.documentMessage.mimetype?.startsWith("video/")) ||
+          isGif
         );
         const { addStickerMetadata } = await import("@/lib/stickerMetadata.js");
         const { tokenize } = await import("@/lib/emojiHelper.js");
@@ -272,9 +281,9 @@ export default {
           extractedEmojis.length > 0 ? extractedEmojis : undefined;
         buffer = await addStickerMetadata(
           buffer,
-          settings.botName,
-          settings.ownerName,
-          isVideo,
+          settings.stickerPackName,
+          settings.stickerAuthor,
+          isVideoOrGif,
           emojiParam,
         );
       } catch (metaErr) {

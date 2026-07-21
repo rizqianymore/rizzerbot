@@ -126,8 +126,8 @@ export default {
           extractedEmojis.length > 0 ? extractedEmojis : undefined;
         buffer = await addStickerMetadata(
           buffer,
-          settings.botName,
-          settings.ownerName,
+          settings.stickerPackName,
+          settings.stickerAuthor,
           false,
           emojiParam,
         );
