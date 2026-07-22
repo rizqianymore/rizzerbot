@@ -156,7 +156,12 @@ export default {
         edit: loadingMsg.key,
       });
 
-      const videoBuffer = await fetchBuffer(downloadInfo.downloadUrl);
+      const videoBuffer = await fetchBuffer(downloadInfo.downloadUrl, {
+        headers: {
+          "Referer": "https://kol.id/",
+          "Cookie": cookieHeader
+        }
+      });
 
       const caption =
         `📥 *YouTube Downloader*\n\n` +
