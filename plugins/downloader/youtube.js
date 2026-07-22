@@ -1,5 +1,4 @@
-import axios from "axios";
-import { fetchBuffer } from "@/lib/scraping.js";
+import { customRequest, fetchBuffer } from "@/lib/scraping.js";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -48,11 +47,9 @@ export default {
     );
 
     try {
-      const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-      
       // 1. Dapatkan cookies & CSRF token
-      const pageRes = await axios.get("https://kol.id/download-video/youtube", {
-        headers: { "User-Agent": userAgent }
+      const pageRes = await customRequest("https://kol.id/download-video/youtube", {
+        method: "GET"
       });
 
       const setCookies = pageRes.headers["set-cookie"] || [];
@@ -72,9 +69,10 @@ export default {
       params.append("url", url);
       params.append("_token", csrfToken);
 
-      const submitRes = await axios.post(postUrl, params.toString(), {
+      const submitRes = await customRequest(postUrl, {
+        method: "POST",
+        data: params.toString(),
         headers: {
-          "User-Agent": userAgent,
           "Cookie": cookieHeader,
           "Referer": "https://kol.id/download-video/youtube",
           "X-Requested-With": "XMLHttpRequest",
@@ -126,9 +124,9 @@ export default {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           await delay(pollAfter);
 
-          const statusRes = await axios.get(statusUrl, {
+          const statusRes = await customRequest(statusUrl, {
+            method: "GET",
             headers: {
-              "User-Agent": userAgent,
               "Cookie": cookieHeader
             }
           });
