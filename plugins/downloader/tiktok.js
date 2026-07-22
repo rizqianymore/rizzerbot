@@ -97,8 +97,11 @@ export default {
           { quoted: msg },
         );
 
-        // Hapus pesan loading
-        await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+        // Edit loading message to success
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: "✅ Selesai mengunduh video TikTok!",
+          edit: loadingMsg.key,
+        });
       } else {
         // Slideshow / kumpulan foto
         await sock.sendMessage(msg.key.remoteJid, {
@@ -120,8 +123,11 @@ export default {
           );
         }
 
-        // Hapus pesan loading
-        await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+        // Edit loading message to success
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: "✅ Selesai mengunduh slideshow TikTok!",
+          edit: loadingMsg.key,
+        });
       }
     } catch (err) {
       console.error("TikTok Downloader Error:", err.message);

@@ -136,8 +136,11 @@ export default {
         { quoted: msg }
       );
 
-      // Hapus pesan loading
-      await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+      // Edit loading message to success
+      await sock.sendMessage(msg.key.remoteJid, {
+        text: "✅ Selesai mengunduh video YouTube!",
+        edit: loadingMsg.key,
+      });
 
     } catch (err) {
       console.error("YouTube Downloader Error:", err.message);

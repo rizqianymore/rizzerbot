@@ -130,8 +130,11 @@ export default {
         }
       }
 
-      // Delete loading message
-      await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+      // Edit loading message to success
+      await sock.sendMessage(msg.key.remoteJid, {
+        text: "✅ Selesai mengunduh media Instagram!",
+        edit: loadingMsg.key,
+      });
 
     } catch (err) {
       console.error("Instagram Downloader Error:", err.message);
