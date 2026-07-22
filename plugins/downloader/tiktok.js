@@ -1,28 +1,8 @@
-import { fetchBuffer } from "@/lib/scraping.js";
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Fetch dengan timeout protection
-const fetchWithTimeout = async (url, options, timeout = 30000) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
-};
+import { fetchJson, fetchBuffer } from "@/lib/scraping.js";
 
 export default {
   premiumOnly: true,
-  description: "Mengunduh video TikTok tanpa watermark (via Kyros-MD API).",
+  description: "Mengunduh video TikTok tanpa watermark / slideshow foto (via TikWM API).",
   usage: "<link TikTok>",
   example: ".tiktok https://www.tiktok.com/@user/video/123",
   name: "tiktok",
@@ -36,7 +16,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Harap sertakan link video TikTok!\nContoh: *.tiktok https://www.tiktok.com/@user/video/123456789",
+          text: "⚠️ Harap sertakan link video TikTok!\nContoh: *.tiktok https://www.tiktok.com/@user/video/123456789*",
         },
         { quoted: msg },
       );
@@ -64,90 +44,85 @@ export default {
       { quoted: msg },
     );
 
-    let videoData = null;
-
     try {
-      // 1. Submit Request ke Vgasoft API (GET)
-      const apiUrl = `https://download.vgasoft.vn/web/c/tiktok/getVideo?link=${encodeURIComponent(url)}`;
-      const res = await fetchWithTimeout(
-        apiUrl,
-        {
-          headers: {
-            Referer: "https://downloadvideo.vn/",
-            Origin: "https://downloadvideo.vn",
-            "User-Agent":
-              "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
-            os: "webSite",
-          },
+      const apiUrl = "https://www.tikwm.com/api/";
+      const response = await fetchJson(apiUrl, {
+        params: {
+          url: url,
+          hd: 1
         },
-        15000,
-      );
-
-      if (!res.ok) throw new Error("Gagal menghubungi server Vgasoft.");
-
-      const data = await res.json();
-      if (!data.success || !data.result || data.result.length === 0) {
-        throw new Error("Video tidak ditemukan atau link tidak valid.");
-      }
-
-      const item = data.result[0];
-      const targetVideoUrl = item.video?.url || item.video?.urlWatermark;
-      if (!targetVideoUrl)
-        throw new Error("URL Video tidak ditemukan dalam response.");
-
-      videoData = {
-        url: targetVideoUrl,
-        author: item.author?.unique_id || "unknown",
-        desc: item.title || "",
-        audio: item.video?.music || null,
-        thumbnail: item.thumbnail || null,
-      };
-
-      if (!videoData) throw new Error("Data video kosong.");
-
-      // 4. Download Buffer
-      await sock.sendMessage(msg.key.remoteJid, {
-        text: "📥 Sedang mengunduh file...",
-        edit: loadingMsg.key,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        }
       });
 
-      const videoBuffer = await fetchBuffer(videoData.url);
+      const resData = response.data;
 
-      if (!videoBuffer || videoBuffer.length === 0) {
-        throw new Error("Gagal mendownload buffer video.");
+      if (!resData || resData.code !== 0) {
+        throw new Error(resData?.msg || "Gagal mengambil data dari TikWM API.");
       }
 
-      // 5. Kirim Video
-      const caption =
-        `📥 *TikTok Downloader*\n\n` +
-        `👤 *Username:* @${videoData.author}\n` +
-        `📝 *Desc:* ${videoData.desc.substring(0, 100)}${videoData.desc.length > 100 ? "..." : ""}\n` +
-        `⚡ _Via Kyros-MD API_`;
+      const data = resData.data;
+      const author = data.author?.nickname || "Unknown";
+      const title = data.title || "";
+      const images = data.images || [];
+      const isVideo = images.length === 0;
 
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        {
-          video: videoBuffer,
-          caption: caption,
-          mimetype: "video/mp4",
-        },
-        { quoted: msg },
-      );
+      if (isVideo) {
+        const downloadUrl = data.hdplay || data.play || data.wmplay;
+        if (!downloadUrl) {
+          throw new Error("URL download video tidak ditemukan.");
+        }
 
-      // Opsional: Kirim Audio terpisah jika ingin
-      /*
-            if (videoData.audio) {
-                await delay(2000);
-                const audioBuf = await fetchBuffer(videoData.audio);
-                if (audioBuf) {
-                    await sock.sendMessage(msg.key.remoteJid, {
-                        audio: audioBuf,
-                        mimetype: 'audio/mpeg',
-                        ptt: false
-                    }, { quoted: msg });
-                }
-            }
-            */
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: "📥 Mengunduh file video...",
+          edit: loadingMsg.key,
+        });
+
+        const videoBuffer = await fetchBuffer(downloadUrl);
+
+        const caption =
+          `📥 *TikTok Downloader*\n\n` +
+          `👤 *Username:* ${author}\n` +
+          `📝 *Desc:* ${title.substring(0, 150)}${title.length > 150 ? "..." : ""}\n\n` +
+          `⚡ _Via TikWM API_`;
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            video: videoBuffer,
+            caption: caption,
+            mimetype: "video/mp4",
+          },
+          { quoted: msg },
+        );
+
+        // Hapus pesan loading
+        await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+      } else {
+        // Slideshow / kumpulan foto
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: `📥 Mengunduh slideshow (${images.length} foto)...`,
+          edit: loadingMsg.key,
+        });
+
+        for (let i = 0; i < images.length; i++) {
+          const imgUrl = images[i];
+          const imgBuffer = await fetchBuffer(imgUrl);
+
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+              image: imgBuffer,
+              caption: `📸 TikTok Slideshow (Part ${i + 1}/${images.length})\n👤 *Username:* ${author}\n⚡ _Via TikWM API_`,
+            },
+            { quoted: msg }
+          );
+        }
+
+        // Hapus pesan loading
+        await sock.sendMessage(msg.key.remoteJid, { delete: loadingMsg.key });
+      }
     } catch (err) {
       console.error("TikTok Downloader Error:", err.message);
       await sock.sendMessage(msg.key.remoteJid, {
