@@ -1,10 +1,10 @@
-import { customRequest, fetchBuffer } from "@/lib/scraping.js";
+import { customRequest, postJson, fetchBuffer } from "@/lib/scraping.js";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default {
   premiumOnly: true,
-  description: "Mengunduh video YouTube (via kol.id API).",
+  description: "Mengunduh video YouTube (via ytmp3.gg API).",
   usage: "<link YouTube>",
   example: ".youtube https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   name: "youtube",
@@ -47,127 +47,84 @@ export default {
     );
 
     try {
-      // 1. Dapatkan cookies & CSRF token
-      const pageRes = await customRequest("https://kol.id/download-video/youtube", {
-        method: "GET"
-      });
-
-      const setCookies = pageRes.headers["set-cookie"] || [];
-      const cookieHeader = setCookies.map(c => c.split(";")[0]).join("; ");
-
-      const tokenMatch = pageRes.data.match(/name="_token"\s+value="([^"]+)"/);
-      if (!tokenMatch) {
-        throw new Error("Gagal mengekstrak token CSRF dari halaman kol.id.");
-      }
-      const csrfToken = tokenMatch[1];
-
-      // 2. Submit request ke Downloader API
-      const postUrl = "https://kol.id/api/v2/downloader/youtube";
-      
-      // Menggunakan URLSearchParams untuk format application/x-www-form-urlencoded
-      const params = new URLSearchParams();
-      params.append("url", url);
-      params.append("_token", csrfToken);
-
-      const submitRes = await customRequest(postUrl, {
-        method: "POST",
-        data: params.toString(),
-        headers: {
-          "Cookie": cookieHeader,
-          "Referer": "https://kol.id/download-video/youtube",
-          "X-Requested-With": "XMLHttpRequest",
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      });
-
-      const submitResult = submitRes.data;
-      const meta = submitResult.meta || {};
-      let data = submitResult.data || {};
-
-      const parseCompletedData = (completedData) => {
-        const title = completedData.title || "YouTube Video";
-        const videos = completedData.video || [];
-        
-        if (videos.length === 0) {
-          throw new Error("Tidak ada media download yang tersedia.");
-        }
-
-        // Cari format video terbaik yang memiliki audio bawaan (audio === true)
-        let bestCombined = videos.find(item => item.format === "video" && item.audio === true);
-        if (!bestCombined) {
-          bestCombined = videos.find(item => item.format === "video");
-        }
-
-        return {
-          title,
-          thumbnail: completedData.thumbnail,
-          downloadUrl: bestCombined ? bestCombined.url : null,
-          quality: bestCombined ? bestCombined.quality : null
-        };
+      const headers = {
+        "Origin": "https://media.ytmp3.gg",
+        "Referer": "https://media.ytmp3.gg/",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36"
       };
 
-      let downloadInfo = null;
+      // 1. Cek DMCA status
+      const checkRes = await customRequest(`https://dmca.ytmp3.gg/api/check?url=${encodeURIComponent(url)}`, {
+        method: "GET",
+        headers
+      });
 
-      // Jika langsung selesai/completed
-      if (meta.status === "ok" && data.status === "completed") {
-        downloadInfo = parseCompletedData(data);
-      } else {
-        if (meta.status !== "accepted" || !data.status_url) {
-          throw new Error(meta.message || "Request ditolak oleh API.");
+      if (checkRes.data && checkRes.data.blocked) {
+        throw new Error("Video ini diblokir karena permintaan DMCA.");
+      }
+
+      // 2. Request download
+      const payload = {
+        url: url,
+        os: "android",
+        output: {
+          type: "video",
+          format: "mp4",
+          quality: "720p" // Default ke 720p untuk keseimbangan kualitas & ukuran file agar tidak melebihi limit WA
+        },
+        audio: {
+          bitrate: "128k"
         }
+      };
 
-        const statusUrl = data.status_url;
-        let pollAfter = parseInt(data.poll_after || 5) * 1000;
+      const dlRes = await postJson("https://hub.convert1s.com/api/download", payload, { headers });
 
-        // 3. Polling status
-        const maxAttempts = 12;
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          await delay(pollAfter);
+      if (!dlRes || !dlRes.statusUrl) {
+        throw new Error("Gagal menginisiasi download dari API.");
+      }
 
-          const statusRes = await customRequest(statusUrl, {
-            method: "GET",
-            headers: {
-              "Cookie": cookieHeader
-            }
-          });
+      const statusUrl = dlRes.statusUrl;
+      let downloadUrl = null;
+      let title = dlRes.title || "YouTube Video";
 
-          const statusResult = statusRes.data;
-          const currentData = statusResult.data || {};
-          const currentStatus = currentData.status;
+      // 3. Polling status
+      const maxAttempts = 15;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await delay(3000);
 
-          if (currentStatus === "completed") {
-            downloadInfo = parseCompletedData(currentData);
-            break;
-          } else if (currentStatus === "failed") {
-            throw new Error("Proses download video di server kol.id gagal.");
-          }
+        const statusRes = await customRequest(statusUrl, {
+          method: "GET",
+          headers
+        });
 
-          pollAfter = parseInt(currentData.poll_after || 5) * 1000;
+        const statusData = statusRes.data;
+
+        if (statusData.status === "completed") {
+          downloadUrl = statusData.downloadUrl;
+          title = statusData.title || title;
+          break;
+        } else if (statusData.status === "failed") {
+          throw new Error("Proses download di server API gagal.");
         }
       }
 
-      if (!downloadInfo || !downloadInfo.downloadUrl) {
-        throw new Error("Proses download timeout atau tidak dapat menemukan link download.");
+      if (!downloadUrl) {
+        throw new Error("Proses download timeout (server terlalu sibuk).");
       }
 
       // 4. Download file & send
       await sock.sendMessage(msg.key.remoteJid, {
-        text: `📥 Mengunduh video: *${downloadInfo.title}* (${downloadInfo.quality || "Default"})...`,
+        text: `📥 Mengunduh video: *${title}*...`,
         edit: loadingMsg.key,
       });
 
-      const videoBuffer = await fetchBuffer(downloadInfo.downloadUrl, {
-        headers: {
-          "Referer": "https://kol.id/",
-          "Cookie": cookieHeader
-        }
-      });
+      const videoBuffer = await fetchBuffer(downloadUrl, { headers });
 
       const caption =
         `📥 *YouTube Downloader*\n\n` +
-        `📝 *Title:* ${downloadInfo.title}\n` +
-        `⚡ *Quality:* ${downloadInfo.quality || "Default"}\n\n` +
-        `⚡ _Via kol.id API_`;
+        `📝 *Title:* ${title}\n` +
+        `⚡ *Quality:* 720p\n\n` +
+        `⚡ _Via ytmp3.gg API_`;
 
       await sock.sendMessage(
         msg.key.remoteJid,
