@@ -117,7 +117,7 @@ export default {
 
       const text = args.join(" ");
       const nonEmojiText = text
-        .replace(/\p{Extended_Pictographic}/gu, "")
+        .replace(/\p{RGI_Emoji}/gv, "")
         .trim();
       const mediaNode = directMedia || quotedMedia;
       const isGif = !!(
