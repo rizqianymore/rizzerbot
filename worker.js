@@ -1594,9 +1594,9 @@ function getPostcardHtmlTemplate() {
       .photo-grid.count-1 { flex-direction: column; }
       .photo-grid.count-1 .photo-item { width: 100%; height: 100%; }
 
-      .photo-grid.count-2 { flex-direction: row; }
-      .photo-grid.count-2 .photo-item { width: 50%; height: 100%; border-right: 1px solid var(--border-color); }
-      .photo-grid.count-2 .photo-item:last-child { border-right: none; }
+      .photo-grid.count-2 { flex-direction: column; }
+      .photo-grid.count-2 .photo-item { width: 100%; height: 50%; border-bottom: 1px solid var(--border-color); border-right: none; }
+      .photo-grid.count-2 .photo-item:last-child { border-bottom: none; }
 
       .photo-grid.count-3 { flex-direction: column; }
       .photo-grid.count-3 .photo-item { width: 100%; height: 33.33%; border-bottom: 1px solid var(--border-color); }
