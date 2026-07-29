@@ -45,7 +45,7 @@ export default {
     }
 
     let imgBuffer = null;
-    const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
+    const workerUrl = `https://photoboth.rakarizqi-cv.workers.dev/chat?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
 
     // 1. Try fast Cloud Screenshot API first (fast & reliable, targeting #captureScreen element)
     try {

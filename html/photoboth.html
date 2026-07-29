@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aesthetic Photobooth Strip Maker</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&family=Caveat:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #faf6f4;
+        --card-bg: #ffffff;
+        --text-color: #4a3b32;
+        --text-muted: #8c7a6e;
+        --accent-color: #c97a7e;
+        --accent-hover: #b36569;
+        --border-color: #e8ded8;
+        --strip-bg: #ffffff;
+        --strip-text: #333333;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 30px 20px;
+        color: var(--text-color);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        font-family: "Playfair Display", serif;
+        font-weight: 600;
+        font-size: 1.9rem;
+        color: var(--text-color);
+        margin: 0 0 6px 0;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      .container {
+        display: flex;
+        gap: 36px;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 950px;
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      /* Form Controls */
+      .controls {
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        width: 340px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-height: 85vh;
+        overflow-y: auto;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 0.88rem;
+        color: var(--text-color);
+        background-color: #faf9f8;
+        transition: border-color 0.2s, background-color 0.2s;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        background-color: #ffffff;
+      }
+
+      .photo-control-card {
+        background: #faf7f5;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .photo-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .btn-del {
+        background: none;
+        border: none;
+        color: #d9534f;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0;
+      }
+
+      button {
+        border: 1px solid var(--accent-color);
+        background-color: var(--accent-color);
+        color: white;
+        padding: 11px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.88rem;
+        transition: background-color 0.2s, border-color 0.2s;
+      }
+
+      button:hover {
+        background-color: var(--accent-hover);
+        border-color: var(--accent-hover);
+      }
+
+      button.btn-add {
+        background-color: #f5ebe6;
+        color: var(--text-color);
+        border: 1px dashed var(--accent-color);
+        padding: 8px 12px;
+        font-size: 0.82rem;
+      }
+
+      button.btn-add:hover {
+        background-color: #ebdcd5;
+      }
+
+      /* Photobooth Strip Preview */
+      .photobooth-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .photobooth-strip {
+        width: 220px;
+        background-color: var(--strip-bg);
+        padding: 16px 14px 20px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        box-sizing: border-box;
+      }
+
+      .strip-photos {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .strip-photo-item {
+        width: 100%;
+        height: 140px;
+        background-color: #f2ebe7;
+        overflow: hidden;
+        border-radius: 3px;
+        position: relative;
+      }
+
+      .strip-photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* Photobooth Strip Footer */
+      .strip-footer {
+        width: 100%;
+        text-align: center;
+        padding-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .strip-title {
+        font-family: "Caveat", cursive;
+        font-size: 1.3rem;
+        color: var(--strip-text);
+        line-height: 1.2;
+      }
+
+      .strip-date {
+        font-size: 0.68rem;
+        letter-spacing: 1px;
+        color: var(--strip-text);
+        opacity: 0.7;
+        text-transform: uppercase;
+        font-weight: 500;
+      }
+
+      /* Responsive Adjustments */
+      @media (max-width: 768px) {
+        .container {
+          gap: 24px;
+        }
+
+        .controls {
+          width: 100%;
+          max-width: 360px;
+          max-height: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Photobooth Strip Maker</h1>
+      <p class="subtitle">Buat strip foto gaya photobooth simpel & manis</p>
+    </div>
+
+    <div class="container">
+      <!-- Controls -->
+      <div class="controls">
+        <label>Kelola Foto Photobooth (1 - 5 Foto)</label>
+        <div id="photosList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <button class="btn-add" onclick="addPhoto()">+ Tambah Foto</button>
+
+        <div class="form-group" style="margin-top: 8px;">
+          <label for="titleInput">Judul / Teks Footer</label>
+          <input
+            type="text"
+            id="titleInput"
+            placeholder="Tulis judul kenangan..."
+            value="Best Moments ♥"
+            oninput="updateStripText()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="dateInput">Tanggal / Lokasi</label>
+          <input 
+            type="text" 
+            id="dateInput" 
+            placeholder="Tanggal / Tempat..." 
+            value="29.07.2026 • PHOTOBOOTH" 
+            oninput="updateStripText()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="themeSelect">Warna Bingkai Strip</label>
+          <select id="themeSelect" onchange="updateTheme()">
+            <option value="#ffffff|#333333">Putih Klasik (Classic White)</option>
+            <option value="#1a1a1a|#ffffff">Hitam Vintage (Retro Black)</option>
+            <option value="#fbf3f0|#4a3b32">Pink Soft (Warm Cream)</option>
+            <option value="#eef2f5|#334155">Biru Pastel (Pastel Blue)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="stickerSelect">Hiasan Boneka Lucu</label>
+          <select id="stickerSelect" onchange="renderPaperStickers()">
+            <option value="cute_bear">🧸 Boneka Beruang Imut (Teddy Bear)</option>
+            <option value="cute_tape">🎀 Pita Kertas & Hati (Classic Ribbon)</option>
+            <option value="none">Tanpa Hiasan (Clean)</option>
+          </select>
+        </div>
+
+        <button onclick="downloadStrip()">Unduh Photobooth Strip</button>
+      </div>
+
+      <!-- Photobooth Strip Preview -->
+      <div class="photobooth-wrapper">
+        <div class="photobooth-strip" id="photoboothStrip">
+          <!-- Paper Overlay Layer -->
+          <div class="paper-stickers-layer" id="paperStickersLayer"></div>
+
+          <div class="strip-photos" id="stripPhotos">
+            <!-- Photobooth photos dynamically rendered here -->
+          </div>
+          <div class="strip-footer">
+            <div class="strip-title" id="stripTitleText">Best Moments ♥</div>
+            <div class="strip-date" id="stripDateText">29.07.2026 • PHOTOBOOTH</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* Paper Strip Base */
+      .photobooth-strip {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .strip-photo-item {
+        position: relative;
+      }
+
+      /* Cute Tilted Corner Bear Stickers (Zig-Zag Pattern) */
+      .photo-corner-sticker {
+        position: absolute;
+        font-size: 1.15rem;
+        z-index: 10;
+        pointer-events: none;
+        line-height: 1;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+      }
+
+      .photo-corner-sticker.corner-tl {
+        top: 6px;
+        left: 6px;
+      }
+
+      .photo-corner-sticker.corner-tr {
+        top: 6px;
+        right: 6px;
+      }
+
+      .photo-corner-sticker.corner-bl {
+        bottom: 6px;
+        left: 6px;
+      }
+
+      .photo-corner-sticker.corner-br {
+        bottom: 6px;
+        right: 6px;
+      }
+
+      .paper-stickers-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* Cute SVG Bear Ears on top of strip photo frames */
+      .bear-ears-svg {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 20px;
+        z-index: 12;
+        fill: #8d6e63;
+      }
+
+      .bear-ear-inner {
+        fill: #ffcdd2;
+      }
+
+      .photo-divider-bear {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 16px;
+        margin: -4px 0;
+        z-index: 5;
+      }
+
+      .photo-divider-bear span {
+        font-size: 0.85rem;
+        background: var(--strip-bg);
+        border-radius: 50%;
+        padding: 0 4px;
+        line-height: 1;
+      }
+    </style>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+      let photoList = [
+        "https://images.unsplash.com/photo-1518199266791-5375a83190b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      ];
+
+      function renderPhotoInputs() {
+        const container = document.getElementById("photosList");
+        container.innerHTML = "";
+
+        photoList.forEach((src, idx) => {
+          const card = document.createElement("div");
+          card.className = "photo-control-card";
+          card.innerHTML = `
+            <div class="photo-card-header">
+              <span>Foto #${idx + 1}</span>
+              ${photoList.length > 1 ? `<button class="btn-del" onclick="deletePhoto(${idx})">Hapus</button>` : ''}
+            </div>
+            <input type="text" placeholder="URL Foto..." value="${src.startsWith('data:') ? '[File Uploaded]' : src}" oninput="updatePhotoUrl(${idx}, this.value)">
+            <input type="file" accept="image/*" onchange="uploadPhoto(event, ${idx})">
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      function addPhoto() {
+        if (photoList.length >= 5) {
+          alert("Maksimal 5 foto per strip.");
+          return;
+        }
+        photoList.push("https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+        renderPhotoInputs();
+        renderStripPhotos();
+      }
+
+      function deletePhoto(idx) {
+        if (photoList.length <= 1) return;
+        photoList.splice(idx, 1);
+        renderPhotoInputs();
+        renderStripPhotos();
+      }
+
+      function updatePhotoUrl(idx, val) {
+        if (!val.startsWith('[File Uploaded]')) {
+          photoList[idx] = val;
+          renderStripPhotos();
+        }
+      }
+
+      function uploadPhoto(event, idx) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            photoList[idx] = e.target.result;
+            renderPhotoInputs();
+            renderStripPhotos();
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function renderStripPhotos() {
+        const container = document.getElementById("stripPhotos");
+        container.innerHTML = "";
+
+        const stickerType = document.getElementById("stickerSelect") ? document.getElementById("stickerSelect").value : "cute_bear";
+
+        photoList.forEach((src, idx) => {
+          const item = document.createElement("div");
+          item.className = "strip-photo-item";
+
+          const img = document.createElement("img");
+          img.crossOrigin = "anonymous";
+          img.src = src;
+          img.alt = "Photobooth Frame";
+          img.onerror = function() {
+            this.onerror = null;
+            this.src = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+          };
+
+          item.appendChild(img);
+
+          // Strict Alternating Kiri & Kanan (Foto 1: Kiri Atas, Foto 2: Kanan Atas, Foto 3: Kiri Atas, Foto 4: Kanan Atas)
+          if (stickerType === "cute_bear" || stickerType === "cute_tape") {
+            const icon = stickerType === "cute_bear" ? "🧸" : "🎀";
+            const cornerSticker = document.createElement("div");
+
+            // Even index (Foto 1, 3, 5) -> Kiri Atas (corner-tl)
+            // Odd index (Foto 2, 4) -> Kanan Atas (corner-tr)
+            const isLeft = (idx % 2 === 0);
+            const cornerClass = isLeft ? "corner-tl" : "corner-tr";
+            const rotateDeg = isLeft ? "-15deg" : "15deg";
+
+            cornerSticker.className = `photo-corner-sticker ${cornerClass}`;
+            cornerSticker.style.transform = `rotate(${rotateDeg})`;
+            cornerSticker.innerText = icon;
+
+            item.appendChild(cornerSticker);
+          }
+
+          container.appendChild(item);
+        });
+
+        renderPaperStickers();
+      }
+
+      function renderPaperStickers() {
+        const layer = document.getElementById("paperStickersLayer");
+        if (!layer) return;
+        layer.innerHTML = "";
+
+        const type = document.getElementById("stickerSelect") ? document.getElementById("stickerSelect").value : "cute_bear";
+        if (type === "none") return;
+
+        if (type === "cute_tape") {
+          const tape = document.createElement("div");
+          tape.className = "paper-tape-top";
+          layer.appendChild(tape);
+        }
+      }
+
+      function updateStripText() {
+        const title = document.getElementById("titleInput").value;
+        const date = document.getElementById("dateInput").value;
+
+        document.getElementById("stripTitleText").innerText = title || "Best Moments ♥";
+        document.getElementById("stripDateText").innerText = date;
+      }
+
+      function updateTheme() {
+        const themeVal = document.getElementById("themeSelect").value;
+        const [bgColor, textColor] = themeVal.split("|");
+
+        document.documentElement.style.setProperty("--strip-bg", bgColor);
+        document.documentElement.style.setProperty("--strip-text", textColor);
+      }
+
+      function downloadStrip() {
+        const strip = document.getElementById("photoboothStrip");
+        const btn = document.querySelector(".controls button:last-child");
+        const originalText = btn.innerText;
+        btn.innerText = "Mengunduh...";
+        btn.disabled = true;
+
+        html2canvas(strip, {
+          useCORS: true,
+          allowTaint: true,
+          scale: 3,
+          logging: false
+        }).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "photobooth-strip.png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }).catch((err) => {
+          console.error("Gagal membuat gambar:", err);
+          alert("Gagal mengunduh photobooth strip.");
+          btn.innerText = originalText;
+          btn.disabled = false;
+        });
+      }
+
+      // Render awal
+      renderPhotoInputs();
+      renderStripPhotos();
+      updateStripText();
+      updateTheme();
+    </script>
+  </body>
+</html>
+
+
