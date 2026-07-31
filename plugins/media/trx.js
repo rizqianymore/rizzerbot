@@ -7,6 +7,7 @@ export default {
   usage: "<item> | <harga> | [metode] | [pembeli] | [hp]",
   category: "Owner",
   ownerOnly: true,
+  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping, sendUsage }) => {
     const text = args.join(" ");
     if (!text) return await sendUsage();

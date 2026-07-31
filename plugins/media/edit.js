@@ -4,6 +4,7 @@ export default {
   usage: "<teks baru>",
   example: "Halo Dunia",
   category: "Media",
+  premiumOnly: true,
   run: async (sock, msg, args) => {
     const quotedCtx = msg.message.extendedTextMessage?.contextInfo;
     const newText = args.join(" ");

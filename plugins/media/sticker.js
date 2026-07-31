@@ -30,6 +30,7 @@ export default {
   example: "",
   aliases: ["s", "stiker"],
   category: "Media",
+  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     const { extractMessageContent } = await import("baileys");
 

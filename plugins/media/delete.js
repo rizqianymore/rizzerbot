@@ -5,6 +5,7 @@ export default {
   example: "",
   aliases: ["del"],
   category: "Media",
+  premiumOnly: true,
   run: async (sock, msg, args) => {
     const quotedCtx = msg.message.extendedTextMessage?.contextInfo;
     if (!quotedCtx?.stanzaId) {
