@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { settings } from "@/config/settings.js";
-import { getPluginsMenu } from "@/lib/view.js";
+import { getPluginsMenu } from "@/src/utils/view.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,7 +33,7 @@ export default {
   premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     await sendTyping();
-    const { commands } = await import("@/lib/plugins.js");
+    const { commands } = await import("@/src/core/loader.js");
     const menuText = getPluginsMenu(commands);
     const bannerImage = getMenuBanner();
 

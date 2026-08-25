@@ -1,7 +1,7 @@
 import { extractMessageContent } from "baileys";
 import { settings } from "@/config/settings.js";
-import { db } from "@/lib/database.js";
-import { commands } from "@/lib/plugins.js";
+import { db } from "@/src/core/database.js";
+import { commands } from "@/src/core/loader.js";
 import { handleStatusBroadcast } from "@/src/middleware/statusSaver.js";
 import { processGroupSecurity } from "@/src/middleware/groupSecurity.js";
 import { evaluatePermissions, isPublicCommand } from "@/src/middleware/auth.js";

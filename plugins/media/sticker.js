@@ -270,8 +270,8 @@ export default {
             mediaNode.documentMessage.mimetype?.startsWith("video/")) ||
           isGif
         );
-        const { addStickerMetadata } = await import("@/lib/stickerMetadata.js");
-        const { tokenize } = await import("@/lib/emojiHelper.js");
+        const { addStickerMetadata } = await import("@/src/services/sticker.js");
+        const { tokenize } = await import("@/src/utils/emoji.js");
         const tokens = tokenize(text);
         const extractedEmojis = [
           ...new Set(

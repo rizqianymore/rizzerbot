@@ -1,4 +1,4 @@
-import { db } from "@/lib/database.js";
+import { db } from "@/src/core/database.js";
 
 export function registerGroupGuard(sock) {
   sock.ev.on("group-participants.update", async (anu) => {

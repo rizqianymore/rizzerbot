@@ -42,6 +42,19 @@ const PREFIX_DB = {
   887: { carrier: "Smartfren", type: "Prepaid", city: "General" },
   888: { carrier: "Smartfren", type: "Prepaid", city: "General" },
   889: { carrier: "Smartfren", type: "Prepaid", city: "General" },
+
+  // Axis
+  831: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
+  832: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
+  833: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
+  838: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
+
+  // Three (3)
+  895: { carrier: "Three (3)", type: "Prepaid", city: "General" },
+  896: { carrier: "Three (3)", type: "Prepaid", city: "General" },
+  897: { carrier: "Three (3)", type: "Prepaid", city: "General" },
+  898: { carrier: "Three (3)", type: "Prepaid", city: "General" },
+  899: { carrier: "Three (3)", type: "Prepaid", city: "General" },
 };
 
 function getNumberInfo(number) {
@@ -66,7 +79,7 @@ export default {
   usage: "<nomor>",
   example: "628xxx",
   name: "numberlookup",
-  aliases: ["lookup", "checknum"],
+  aliases: ["lookup", "checknum", "ceknomor", "ceknum"],
   category: "OSINT",
   ownerOnly: false,
   run: async (sock, msg, args, context) => {

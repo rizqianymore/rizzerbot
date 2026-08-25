@@ -9,7 +9,7 @@ import pino from "pino";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { handleMessage } from "@/lib/handler.js";
+import { enqueueMessage } from "@/src/core/queue.js";
 import { settings } from "@/config/settings.js";
 import { registerGroupGuard } from "@/src/middleware/groupGuard.js";
 
@@ -124,7 +124,7 @@ export async function startSecondaryBot(authDirName, phoneNumber, logger) {
         if (settings.autoRead) {
           await sock.readMessages([msg.key]).catch(() => {});
         }
-        await handleMessage(sock, msg, logger);
+        enqueueMessage(sock, msg, logger);
       } catch (err) {
         if (logger) {
           logger.error(

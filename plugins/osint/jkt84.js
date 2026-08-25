@@ -1,4 +1,4 @@
-import axios from "axios";
+import { fetchJson } from "@/src/utils/scraping.js";
 
 const localMembersList = [
   "Abigail Rachel",
@@ -95,9 +95,9 @@ export default {
     await sendTyping();
 
     try {
-      const listRes = await axios.get(
+      const listRes = await fetchJson(
         "https://jkt48.com/api/v1/members?lang=id",
-        { timeout: 5000 },
+        { timeout: 8000 },
       );
       if (
         !listRes.data ||
@@ -148,9 +148,9 @@ export default {
         throw new Error("Member ID not found in API list");
       }
 
-      const detailRes = await axios.get(
+      const detailRes = await fetchJson(
         `https://jkt48.com/api/v1/members/${memberId}?lang=id`,
-        { timeout: 5000 },
+        { timeout: 8000 },
       );
 
       if (!detailRes.data || !detailRes.data.status || !detailRes.data.data) {

@@ -1,5 +1,5 @@
-import { db } from "@/lib/database.js";
-import { getCachedGroupMeta } from "@/lib/utils.js";
+import { db } from "@/src/core/database.js";
+import { getCachedGroupMeta } from "@/src/utils/helper.js";
 
 export async function processGroupSecurity(sock, msg, messageContent, senderJid, remoteJid, isOwner, logger) {
   if (!remoteJid.endsWith("@g.us") || isOwner || msg.key.fromMe) return false;

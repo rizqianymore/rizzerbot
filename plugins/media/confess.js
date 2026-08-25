@@ -1,5 +1,5 @@
 import { extractMessageContent } from "baileys";
-import { fetchBuffer } from "@/lib/scraping.js";
+import { fetchBuffer } from "@/src/utils/scraping.js";
 
 export default {
   premiumOnly: true,

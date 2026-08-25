@@ -1,4 +1,4 @@
-import { db } from "@/lib/database.js";
+import { db } from "@/src/core/database.js";
 import { settings } from "@/config/settings.js";
 
 export default {

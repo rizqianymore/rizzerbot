@@ -1,4 +1,4 @@
-import { fetchJson } from "@/lib/scraping.js";
+import { fetchJson } from "@/src/utils/scraping.js";
 
 export default {
   name: "whois",

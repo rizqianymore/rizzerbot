@@ -6,7 +6,7 @@ import {
   drawTokens,
   wrapTextEmoji,
   drawTokensJustified,
-} from "@/lib/emojiHelper.js";
+} from "@/src/utils/emoji.js";
 
 export default {
   premiumOnly: true,
@@ -119,7 +119,7 @@ export default {
       let buffer = canvas.toBuffer("image/png");
 
       try {
-        const { addStickerMetadata } = await import("@/lib/stickerMetadata.js");
+        const { addStickerMetadata } = await import("@/src/services/sticker.js");
         const { settings } = await import("@/config/settings.js");
         const extractedEmojis = [...new Set(allEmojis)];
         const emojiParam =

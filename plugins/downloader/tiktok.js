@@ -1,4 +1,4 @@
-import { fetchJson, fetchBuffer } from "@/lib/scraping.js";
+import { fetchJson, fetchBuffer } from "@/src/utils/scraping.js";
 
 export default {
   premiumOnly: true,

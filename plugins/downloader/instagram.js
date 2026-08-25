@@ -1,4 +1,4 @@
-import { postJson, fetchBuffer } from "@/lib/scraping.js";
+import { postJson, fetchBuffer } from "@/src/utils/scraping.js";
 
 export default {
   premiumOnly: true,

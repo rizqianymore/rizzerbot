@@ -1,4 +1,4 @@
-import { fetchBuffer } from "@/lib/scraping.js";
+import { fetchBuffer } from "@/src/utils/scraping.js";
 
 export default {
   name: "trx",

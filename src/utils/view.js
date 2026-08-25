@@ -1,5 +1,5 @@
 import { settings } from "@/config/settings.js";
-import { db } from "@/lib/database.js";
+import { db } from "@/src/core/database.js";
 import { commands as defaultCommandsMap } from "@/src/core/loader.js";
 
 function getHeader(title) {

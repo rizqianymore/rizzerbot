@@ -1,4 +1,4 @@
-import { customRequest, postJson, fetchBuffer } from "@/lib/scraping.js";
+import { customRequest, postJson, fetchBuffer } from "@/src/utils/scraping.js";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

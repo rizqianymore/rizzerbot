@@ -10,10 +10,10 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import qrcode from "qrcode-terminal";
-import { handleMessage } from "@/lib/handler.js";
-import { loadPlugins } from "@/lib/plugins.js";
+import { enqueueMessage } from "@/src/core/queue.js";
+import { loadPlugins } from "@/src/core/loader.js";
 import { settings } from "@/config/settings.js";
-import { db } from "@/lib/database.js";
+import { db } from "@/src/core/database.js";
 import { registerGroupGuard } from "@/src/middleware/groupGuard.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
 import {
@@ -175,7 +175,7 @@ export async function startBot() {
         if (settings.autoRead) {
           await sock.readMessages([msg.key]).catch(() => {});
         }
-        await handleMessage(sock, msg, logger);
+        enqueueMessage(sock, msg, logger);
       } catch (err) {
         logger.error("Error in primary message handler middleware:", err);
       }
