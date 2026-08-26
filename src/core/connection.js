@@ -64,10 +64,10 @@ export async function startBot() {
   const authDir = path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot");
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
   const { version } = await fetchLatestBaileysVersion().catch(() => ({
-    version: undefined,
+    version: [2, 3000, 1043857760],
   }));
 
-  logger.info("Initializing primary Kyros-MD connection...");
+  logger.info(`Initializing primary Kyros-MD connection (WA Version: ${version ? version.join('.') : 'default'})...`);
 
   const usePairingCode = settings.usePairingCode;
 

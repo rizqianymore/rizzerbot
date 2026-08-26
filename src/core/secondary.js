@@ -143,7 +143,9 @@ export async function startSecondaryBot(authDirName, phoneNumber, logger) {
 
   const authDir = path.join(sessionsDir, authDirName);
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
-  const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: undefined }));
+  const { version } = await fetchLatestBaileysVersion().catch(() => ({
+    version: [2, 3000, 1043857760],
+  }));
 
   // Clear reconnect timer for this bot if one is running
   if (reconnectTimers.has(authDirName)) {
