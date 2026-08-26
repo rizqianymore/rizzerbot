@@ -48,6 +48,11 @@ const CCTV_SOURCES = {
     file: "cctv-scbd.json",
     badge: "🏢 SCBD",
   },
+  publik: {
+    name: "CCTV Publik / Kawasan",
+    file: "cctv.json",
+    badge: "🌐 PUBLIK",
+  },
 };
 
 // Cache memory to prevent repetitive fs disk reads
@@ -64,21 +69,30 @@ function loadAllCctvData() {
   const allItems = [];
   const dbDir = path.join(__dirname, "..", "..", "database");
 
+  let nextAutoId = 1;
   for (const [sourceKey, meta] of Object.entries(CCTV_SOURCES)) {
     const filePath = path.join(dbDir, meta.file);
     if (fs.existsSync(filePath)) {
       try {
         const raw = fs.readFileSync(filePath, "utf8");
         const parsed = JSON.parse(raw);
-        const list = Array.isArray(parsed.data)
-          ? parsed.data
-          : Array.isArray(parsed)
-          ? parsed
-          : Object.values(parsed);
+        let list = [];
+
+        if (Array.isArray(parsed.data)) {
+          list = parsed.data;
+        } else if (Array.isArray(parsed)) {
+          list = parsed;
+        } else if (typeof parsed === "object" && parsed !== null) {
+          list = Object.entries(parsed).map(([k, v]) => ({
+            id: v.id || k,
+            ...v,
+          }));
+        }
 
         list.forEach((item) => {
           allItems.push({
             ...item,
+            id: item.id !== undefined ? String(item.id) : String(nextAutoId++),
             sourceKey,
             sourceName: meta.name,
             badge: meta.badge,
@@ -241,9 +255,9 @@ export default {
   name: "cctv-lantas",
   description:
     "Monitoring, live snapshot & pencarian CCTV Lalu Lintas, Tol, Dishub, Korlantas Polri, & ETLE se-Indonesia.",
-  usage: "[snap/info] <keyword | id | source>",
-  example: "cctv-lantas snap semanggi",
-  aliases: ["cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan"],
+  usage: "[snap/info] <keyword | id | url | source>",
+  example: "cctv snap semanggi",
+  aliases: ["cctv", "cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan", "cctvlive"],
   category: "OSINT",
   premiumOnly: true,
   ownerOnly: false,
@@ -276,16 +290,17 @@ export default {
 
       helpText +=
         `\n📌 *Fitur & Perintah:*\n` +
-        `│ ${activePrefix}cctv-lantas <nama_jalan / area / km>\n` +
-        `│ ${activePrefix}cctv-lantas snap <id / nama_lokasi>\n` +
-        `│ ${activePrefix}cctv-lantas info <id>\n` +
-        `│ ${activePrefix}cctv-lantas <kategori> <keyword>\n\n` +
-        `📁 *Kategori Tersedia:* \`lantas\`, \`korlantas\`, \`dishub\`, \`etle\`, \`tol\`, \`scbd\`\n\n` +
+        `│ ${activePrefix}cctv <nama_jalan / area / kota / km>\n` +
+        `│ ${activePrefix}cctv snap <id / nama_lokasi / url>\n` +
+        `│ ${activePrefix}cctv info <id>\n` +
+        `│ ${activePrefix}cctv <kategori> <keyword>\n\n` +
+        `📁 *Kategori Tersedia:* \`lantas\`, \`korlantas\`, \`dishub\`, \`etle\`, \`tol\`, \`scbd\`, \`publik\`\n\n` +
         `💡 *Contoh:*\n` +
-        `• \`${activePrefix}cctv-lantas snap semanggi\`\n` +
-        `• \`${activePrefix}cctv-lantas snap 10253\`\n` +
-        `• \`${activePrefix}cctv-lantas km 58\`\n` +
-        `• \`${activePrefix}cctv-lantas etle surabaya\`\n\n` +
+        `• \`${activePrefix}cctv semanggi\`\n` +
+        `• \`${activePrefix}cctv snap 10253\`\n` +
+        `• \`${activePrefix}cctv km 58\`\n` +
+        `• \`${activePrefix}cctv dishub monas\`\n` +
+        `• \`${activePrefix}cctv snap https://example.com/live.m3u8\`\n\n` +
         `⚡ _Kyros-MD Traffic Intelligence_`;
 
       return sock.sendMessage(jid, { text: helpText }, { quoted: msg });
@@ -297,7 +312,7 @@ export default {
     let workingArgs = [...args];
 
     const firstLower = workingArgs[0].toLowerCase();
-    if (firstLower === "snap" || firstLower === "snapshot") {
+    if (firstLower === "snap" || firstLower === "snapshot" || firstLower === "live") {
       isSnapAction = true;
       workingArgs.shift();
     } else if (firstLower === "info" || firstLower === "detail") {
@@ -316,21 +331,30 @@ export default {
       return sock.sendMessage(
         jid,
         {
-          text: `⚠️ Harap masukkan nama lokasi atau ID kamera!\nContoh: \`${activePrefix}cctv-lantas snap semanggi\` atau \`${activePrefix}cctv-lantas 10253\``,
+          text: `⚠️ Harap masukkan nama lokasi, URL stream, atau ID kamera!\nContoh: \`${activePrefix}cctv snap semanggi\` atau \`${activePrefix}cctv 10253\``,
         },
         { quoted: msg }
       );
     }
 
-    // 1. Direct search by numeric ID
-    const isNumericId = /^\d+$/.test(query);
-    if (isNumericId) {
-      const targetId = parseInt(query, 10);
-      const matchedById = allData.find((item) => item.id === targetId);
+    // 0. Direct URL Stream (.m3u8, .mp4, direct http/https stream)
+    if (query.startsWith("http://") || query.startsWith("https://") || query.startsWith("rtsp://")) {
+      const customCam = {
+        id: "CUSTOM_URL",
+        nama: "Direct Stream Target",
+        url: query,
+        sourceName: "Custom URL Stream",
+        badge: "📡 STREAM",
+      };
+      return handleCameraOutput(sock, msg, customCam, activePrefix, isInfoOnly);
+    }
 
-      if (matchedById) {
-        return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly);
-      }
+    // 1. Direct search by ID
+    const matchedById = allData.find(
+      (item) => String(item.id).toLowerCase() === query.toLowerCase()
+    );
+    if (matchedById) {
+      return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly);
     }
 
     // 2. Search dataset by keyword
@@ -343,9 +367,9 @@ export default {
     const queryParts = queryLower.split(/\s+/).filter(Boolean);
 
     const matches = dataset.filter((item) => {
-      const nama = (item.nama || item.name || "").toLowerCase();
-      const kabkota = (item.kabkota || "").toLowerCase();
-      const alamat = (item.alamat || "").toLowerCase();
+      const nama = (item.nama || item.name || item.alias || "").toLowerCase();
+      const kabkota = (item.kabkota || item.kota || item.wilayah || "").toLowerCase();
+      const alamat = (item.alamat || item.lokasi || "").toLowerCase();
       const combined = `${nama} ${kabkota} ${alamat}`;
 
       return queryParts.every((part) => combined.includes(part));
@@ -379,7 +403,7 @@ export default {
       `Ditemukan: *${matches.length} Titik Kamera*\n\n`;
 
     sliced.forEach((item, index) => {
-      const nama = item.nama || item.name || "Kamera";
+      const nama = item.nama || item.name || item.alias || "Kamera";
       const kab = item.kabkota ? ` (${item.kabkota})` : "";
       listText += `*${index + 1}.* [ID: \`${item.id}\`] ${item.badge} *${nama}*${kab}\n`;
     });
@@ -389,8 +413,8 @@ export default {
     }
 
     listText +=
-      `\n💡 *Untuk mengambil snapshot:* Ketik \`${activePrefix}cctv-lantas snap <ID>\`\n` +
-      `Contoh: \`${activePrefix}cctv-lantas snap ${sliced[0].id}\``;
+      `\n💡 *Untuk mengambil snapshot:* Ketik \`${activePrefix}cctv snap <ID>\`\n` +
+      `Contoh: \`${activePrefix}cctv snap ${sliced[0].id}\``;
 
     return sock.sendMessage(jid, { text: listText }, { quoted: msg });
   },
