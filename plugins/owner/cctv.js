@@ -29,7 +29,7 @@ const createAxiosClient = () => {
     httpsAgent: new https.Agent({
       rejectUnauthorized: false,
     }),
-    timeout: 15000,
+    timeout: 30000,
   });
 };
 
@@ -94,11 +94,32 @@ const getNxSnapshot = async (client, token, cameraId) => {
   }
 };
 
+const getNxVideo = async (client, token, cameraId, duration = 5) => {
+  const baseUrl = getEnvVal("CCTV_BASE_URL");
+  try {
+    const response = await client.get(
+      `${baseUrl}/media/${cameraId}.mp4`,
+      {
+        params: {
+          duration: duration,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "arraybuffer",
+      }
+    );
+    return Buffer.from(response.data);
+  } catch (error) {
+    throw new Error(`Gagal mengambil video dari kamera ${cameraId}: ${error.message}`);
+  }
+};
+
 export default {
   name: "cctv",
   description: "Monitoring CCTV Nx Witness (Network Optix) dengan pemilihan kamera.",
-  usage: "[nomor/nama kamera]",
-  example: "cctv 1",
+  usage: "[nomor/nama kamera] [v/video]",
+  example: "cctv 1 video",
   aliases: ["monitor", "cam", "nx"],
   category: "Owner",
   premiumOnly: false,
@@ -109,7 +130,13 @@ export default {
 
     const jid = msg.key.remoteJid;
     const client = createAxiosClient();
-    const input = args.join(" ").trim();
+    let input = args.join(" ").trim();
+    let isVideo = false;
+
+    if (/\s+(video|v)$/i.test(input)) {
+      isVideo = true;
+      input = input.replace(/\s+(video|v)$/i, "").trim();
+    }
 
     try {
       const token = await loginToNx(client);
@@ -130,7 +157,7 @@ export default {
           const status = cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           menuText += `${index + 1}. ${status} *${cam.name}* (ID: \`${cam.id}\`)\n`;
         });
-        menuText += "\n*Cara penggunaan:* Ketik `.cctv <nomor>` atau `.cctv <nama kamera>` untuk mengambil snapshot.";
+        menuText += "\n*Penggunaan Snapshot:* Ketik `.cctv <nomor/nama>`\n*Penggunaan Video (5s):* Ketik `.cctv <nomor/nama> v` atau `.cctv <nomor/nama> video`";
 
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
         return;
@@ -158,27 +185,46 @@ export default {
 
       await sock.sendMessage(
         jid,
-        { text: `⏳ Mengambil snapshot dari kamera *${targetCamera.name}*...` },
+        { text: `⏳ Mengambil ${isVideo ? "video clip 5 detik" : "snapshot"} dari kamera *${targetCamera.name}*...` },
         { quoted: msg }
       );
 
-      const imageBuffer = await getNxSnapshot(client, token, targetCamera.id);
+      if (isVideo) {
+        const videoBuffer = await getNxVideo(client, token, targetCamera.id, 5);
+        const captionText =
+          `📹 *CCTV Video Clip (5s)*\n\n` +
+          `• *Nama Kamera:* ${targetCamera.name}\n` +
+          `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
+          `• *ID:* \`${targetCamera.id}\`\n\n` +
+          `⚡ _Via Nx Witness REST API_`;
 
-      const captionText =
-        `📹 *CCTV Snapshot*\n\n` +
-        `• *Nama Kamera:* ${targetCamera.name}\n` +
-        `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
-        `• *ID:* \`${targetCamera.id}\`\n\n` +
-        `⚡ _Via Nx Witness REST API_`;
+        await sock.sendMessage(
+          jid,
+          {
+            video: videoBuffer,
+            caption: captionText,
+            mimetype: "video/mp4",
+          },
+          { quoted: msg }
+        );
+      } else {
+        const imageBuffer = await getNxSnapshot(client, token, targetCamera.id);
+        const captionText =
+          `📹 *CCTV Snapshot*\n\n` +
+          `• *Nama Kamera:* ${targetCamera.name}\n` +
+          `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
+          `• *ID:* \`${targetCamera.id}\`\n\n` +
+          `⚡ _Via Nx Witness REST API_`;
 
-      await sock.sendMessage(
-        jid,
-        {
-          image: imageBuffer,
-          caption: captionText,
-        },
-        { quoted: msg }
-      );
+        await sock.sendMessage(
+          jid,
+          {
+            image: imageBuffer,
+            caption: captionText,
+          },
+          { quoted: msg }
+        );
+      }
     } catch (error) {
       console.error(error);
       await sock.sendMessage(
