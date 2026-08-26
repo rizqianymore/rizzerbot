@@ -93,7 +93,7 @@ export async function startBot() {
         "Pairing phone number is missing or invalid in settings.js!"
       );
     } else {
-      pairingTimeout = setTimeout(async () => {
+      const requestPairing = async () => {
         try {
           logger.info(
             `Requesting pairing code for primary bot: ${phoneNumber}...`
@@ -109,9 +109,11 @@ export async function startBot() {
             `\x1b[36m====================================\x1b[0m\n`
           );
         } catch (err) {
-          logger.error("Failed to request pairing code:", err.message || err);
+          logger.error(`Failed to request pairing code: ${err.message || err}. Retrying in 5 seconds...`);
+          pairingTimeout = setTimeout(requestPairing, 5000);
         }
-      }, 3000);
+      };
+      pairingTimeout = setTimeout(requestPairing, 3000);
     }
   }
 

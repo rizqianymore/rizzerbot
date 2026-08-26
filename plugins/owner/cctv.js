@@ -132,11 +132,29 @@ export default {
   premiumOnly: false,
   ownerOnly: true,
 
-  run: async (sock, msg, args, { sendTyping }) => {
+  run: async (sock, msg, args, context) => {
+    const { sendTyping, activePrefix } = context;
     await sendTyping();
 
     const jid = msg.key.remoteJid;
     const client = createAxiosClient();
+
+    // Re-parse args to respect double/single quotes
+    const text =
+      msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      msg.message.imageMessage?.caption ||
+      msg.message.videoMessage?.caption ||
+      "";
+    const matchArgs = text.slice(activePrefix.length).trim().match(/[^\s"']+|"([^"]*)"|'([^']*)'/g) || [];
+    const parsedArgs = matchArgs.map(arg => {
+      if (arg.startsWith('"') && arg.endsWith('"')) return arg.slice(1, -1);
+      if (arg.startsWith("'") && arg.endsWith("'")) return arg.slice(1, -1);
+      return arg;
+    });
+    // Shift command name
+    parsedArgs.shift();
+    args = parsedArgs;
 
     let action = "snap"; // default action
     let target = "";
