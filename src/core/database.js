@@ -414,21 +414,37 @@ class Database {
     this.save();
   }
 
-  getCctvAlias(alias) {
+  getCctvAlias(target) {
     if (!this.data.cctvAliases) this.data.cctvAliases = {};
-    return this.data.cctvAliases[alias.toLowerCase()] || null;
+    const targetLower = target.toLowerCase();
+    for (const [id, camData] of Object.entries(this.data.cctvAliases)) {
+      if (camData && camData.alias && camData.alias.toLowerCase() === targetLower) {
+        return id;
+      }
+    }
+    return null;
   }
 
-  setCctvAlias(alias, cameraId) {
+  setCctvAlias(cameraId, name, alias) {
     if (!this.data.cctvAliases) this.data.cctvAliases = {};
-    this.data.cctvAliases[alias.toLowerCase()] = cameraId;
+    this.data.cctvAliases[cameraId] = {
+      name: name || this.data.cctvAliases[cameraId]?.name || "",
+      alias: alias || ""
+    };
     this.save();
   }
 
-  deleteCctvAlias(alias) {
+  deleteCctvAlias(aliasName) {
     if (!this.data.cctvAliases) this.data.cctvAliases = {};
-    delete this.data.cctvAliases[alias.toLowerCase()];
-    this.save();
+    const targetLower = aliasName.toLowerCase();
+    for (const [id, camData] of Object.entries(this.data.cctvAliases)) {
+      if (camData && camData.alias && camData.alias.toLowerCase() === targetLower) {
+        this.data.cctvAliases[id].alias = "";
+        this.save();
+        return true;
+      }
+    }
+    return false;
   }
 }
 
