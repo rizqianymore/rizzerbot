@@ -139,7 +139,7 @@ export default {
         const isWebP =
           buffer.toString("ascii", 0, 4) === "RIFF" &&
           buffer.toString("ascii", 8, 12) === "WEBP";
-        if (isWebP) {
+        if (isWebP && nonEmojiText) {
           const sharp = (await import("sharp")).default;
           buffer = await sharp(buffer).png().toBuffer();
         }
