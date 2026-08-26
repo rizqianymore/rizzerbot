@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import axios from "axios";
 import GIFEncoder from "gif-encoder-2";
 import { createCanvas, loadImage } from "canvas";
 import { settings } from "@/config/settings.js";
@@ -38,30 +39,32 @@ async function getEmojiBase64(emoji) {
     return emojiBase64Cache.get(codePoints) || null;
   }
 
-  const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${codePoints}.png`;
-  try {
-    let res = await fetch(url);
-    if (!res.ok) {
-      const simplified = [...emoji]
-        .map((c) => c.codePointAt(0).toString(16).toLowerCase())
-        .filter((c) => c !== "fe0f")
-        .join("-");
-      if (simplified !== codePoints) {
-        res = await fetch(
-          `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${simplified}.png`
-        );
-      }
-    }
-    if (res && res.ok) {
-      const arrayBuffer = await res.arrayBuffer();
-      const b64 = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      emojiBase64Cache.set(codePoints, b64);
-      return b64;
-    }
-    return null;
-  } catch {
-    return null;
+  const urls = [
+    `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${codePoints}.png`,
+    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${codePoints}.png`,
+  ];
+
+  if (codePoints.endsWith("-fe0f")) {
+    const withoutFe0f = codePoints.replace(/-fe0f$/, "");
+    urls.push(`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${withoutFe0f}.png`);
   }
+
+  for (const url of urls) {
+    try {
+      const res = await axios.get(url, {
+        responseType: "arraybuffer",
+        timeout: 4000,
+      });
+      if (res.status === 200 && res.data) {
+        const b64 = `data:image/png;base64,${Buffer.from(res.data).toString("base64")}`;
+        emojiBase64Cache.set(codePoints, b64);
+        return b64;
+      }
+    } catch (_) {}
+  }
+
+  emojiBase64Cache.set(codePoints, null);
+  return null;
 }
 
 function escapeXml(value) {
@@ -188,7 +191,9 @@ async function calculateLayout(rawText) {
       if (t.type === "emoji") allEmojis.push(t.value);
     }
   }
-  await Promise.all(allEmojis.map(getEmojiBase64));
+  try {
+    await Promise.all(allEmojis.map(getEmojiBase64));
+  } catch (_) {}
 
   let low = 16;
   let high = 140;
@@ -363,13 +368,11 @@ export default {
       const { theme: themeName, text } = parseArgs(rawInput);
       const theme = THEMES[themeName] || THEMES.white;
 
-      // Calculate layout from full text to maintain font size stability
       const { optimalSize, allEmojis } = await calculateLayout(text.trim());
 
       const words = text.split(" ");
       const frames = [];
 
-      // Step-by-step word accumulation for typewriter animation
       for (let i = 0; i < words.length; i++) {
         const subText = words.slice(0, i + 1).join(" ");
         const tokens = tokenizeLine(subText);

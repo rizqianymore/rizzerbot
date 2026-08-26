@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import axios from "axios";
 import { settings } from "@/config/settings.js";
 import { addStickerMetadata } from "@/src/services/sticker.js";
 
@@ -8,8 +9,8 @@ const MAX_CONTENT_WIDTH = CANVAS_SIZE - PADDING * 2;
 const MAX_CONTENT_HEIGHT = CANVAS_SIZE - PADDING * 2;
 
 const THEMES = {
-  green: { bg: "#8ACF00", text: "#000000", blur: 1.6 },
   white: { bg: "#FFFFFF", text: "#000000", blur: 1.6 },
+  green: { bg: "#8ACF00", text: "#000000", blur: 1.6 },
   black: { bg: "#000000", text: "#FFFFFF", blur: 1.6 },
   blue: { bg: "#0000FF", text: "#DE0100", blur: 0 },
 };
@@ -36,31 +37,32 @@ async function getEmojiBase64(emoji) {
     return emojiBase64Cache.get(codePoints) || null;
   }
 
-  const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${codePoints}.png`;
-  try {
-    let res = await fetch(url);
-    if (!res.ok) {
-      // Retry without 0xfe0f variation selector if needed
-      const simplified = [...emoji]
-        .map((c) => c.codePointAt(0).toString(16).toLowerCase())
-        .filter((c) => c !== "fe0f")
-        .join("-");
-      if (simplified !== codePoints) {
-        res = await fetch(
-          `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${simplified}.png`
-        );
-      }
-    }
-    if (res && res.ok) {
-      const arrayBuffer = await res.arrayBuffer();
-      const b64 = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
-      emojiBase64Cache.set(codePoints, b64);
-      return b64;
-    }
-    return null;
-  } catch {
-    return null;
+  const urls = [
+    `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${codePoints}.png`,
+    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${codePoints}.png`,
+  ];
+
+  if (codePoints.endsWith("-fe0f")) {
+    const withoutFe0f = codePoints.replace(/-fe0f$/, "");
+    urls.push(`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${withoutFe0f}.png`);
   }
+
+  for (const url of urls) {
+    try {
+      const res = await axios.get(url, {
+        responseType: "arraybuffer",
+        timeout: 4000,
+      });
+      if (res.status === 200 && res.data) {
+        const b64 = `data:image/png;base64,${Buffer.from(res.data).toString("base64")}`;
+        emojiBase64Cache.set(codePoints, b64);
+        return b64;
+      }
+    } catch (_) {}
+  }
+
+  emojiBase64Cache.set(codePoints, null);
+  return null;
 }
 
 function escapeXml(value) {
@@ -181,14 +183,15 @@ async function calculateLayout(rawText) {
     .filter(Boolean);
   const paragraphTokens = paragraphs.map(tokenizeLine);
 
-  // Pre-fetch all emojis concurrently
   const allEmojis = [];
   for (const p of paragraphTokens) {
     for (const t of p) {
       if (t.type === "emoji") allEmojis.push(t.value);
     }
   }
-  await Promise.all(allEmojis.map(getEmojiBase64));
+  try {
+    await Promise.all(allEmojis.map(getEmojiBase64));
+  } catch (_) {}
 
   let low = 16;
   let high = 140;
@@ -247,7 +250,6 @@ async function createTextSvg(text, themeName) {
   const svgElements = [];
 
   lines.forEach((line, lineIdx) => {
-    // Add extra spacing between adjacent text and emoji if no space token exists
     const adjustedTokens = [];
     for (let i = 0; i < line.length; i++) {
       const tok = line[i];
