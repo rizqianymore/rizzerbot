@@ -1,4 +1,4 @@
-import { runningBots } from "@/src/core/secondary.js";
+import { runningBots } from "../../src/core/secondary.js";
 
 export default {
   name: "bot",
@@ -45,7 +45,7 @@ export default {
       );
 
       try {
-        const { addSecondaryBot } = await import("@/index.js");
+        const { addSecondaryBot } = await import("../../index.js");
         const code = await addSecondaryBot(targetNumber);
         if (code) {
           await sock.sendMessage(
@@ -91,7 +91,7 @@ export default {
       }
 
       try {
-        const { stopSecondaryBot } = await import("@/index.js");
+        const { stopSecondaryBot } = await import("../../index.js");
         await stopSecondaryBot(targetNumber);
         await sock.sendMessage(
           msg.key.remoteJid,

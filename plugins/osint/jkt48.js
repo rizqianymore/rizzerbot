@@ -1,4 +1,4 @@
-import { fetchJson } from "@/src/utils/scraping.js";
+import { fetchJson } from "../../src/utils/scraping.js";
 
 const localMembersList = [
   "Abigail Rachel",
@@ -73,12 +73,12 @@ const localMembersList = [
 
 export default {
   premiumOnly: true,
-  description: "Menampilkan jadwal teater JKT48.",
-  usage: "",
-  example: "",
-  name: "jkt84",
-  aliases: ["jkt48", "memberjkt"],
-  category: "Fun",
+  description: "Menampilkan profil member JKT48.",
+  usage: "<nama member>",
+  example: "Freya",
+  name: "jkt48",
+  aliases: ["memberjkt", "jkt"],
+  category: "OSINT",
   run: async (sock, msg, args, { sendTyping }) => {
     const query = args.join(" ").trim();
     if (!query) {

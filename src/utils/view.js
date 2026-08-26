@@ -118,7 +118,7 @@ ${getHeader("Premium Menu")}
 │ ${activePrefix}cekpkl <nomor>
 │ ${activePrefix}github <username>
 │ ${activePrefix}iplookup <ip>
-│ ${activePrefix}jkt84 <nama member>
+│ ${activePrefix}jkt48 <nama member>
 │ ${activePrefix}nik <nik>
 │ ${activePrefix}numberlookup <nomor>
 │ ${activePrefix}whois <domain>
