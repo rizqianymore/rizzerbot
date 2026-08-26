@@ -63,12 +63,13 @@ const loginToNx = async (client) => {
 const getNxCameraList = async (client, token) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
-    const response = await client.get(`${baseUrl}/ec2/getCamerasList`, {
+    const response = await client.get(`${baseUrl}/rest/v1/devices`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data || [];
+    const devices = response.data || [];
+    return devices.filter((d) => d.deviceType === "Camera");
   } catch (error) {
     throw new Error(`Gagal mengambil daftar kamera Nx: ${error.message}`);
   }
@@ -209,15 +210,24 @@ export default {
       const aliasesObj = db.data.cctvAliases || {};
       let dbChanged = false;
       cameras.forEach((cam) => {
+        const defaultAlias = cam.name.toLowerCase().trim();
         if (!aliasesObj[cam.id]) {
           aliasesObj[cam.id] = {
             name: cam.name,
-            alias: ""
+            alias: defaultAlias
           };
           dbChanged = true;
-        } else if (aliasesObj[cam.id].name !== cam.name) {
-          aliasesObj[cam.id].name = cam.name;
-          dbChanged = true;
+        } else {
+          let updated = false;
+          if (aliasesObj[cam.id].name !== cam.name) {
+            aliasesObj[cam.id].name = cam.name;
+            updated = true;
+          }
+          if (!aliasesObj[cam.id].alias) {
+            aliasesObj[cam.id].alias = defaultAlias;
+            updated = true;
+          }
+          if (updated) dbChanged = true;
         }
       });
       if (dbChanged) {
