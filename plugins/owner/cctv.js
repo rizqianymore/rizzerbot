@@ -118,8 +118,8 @@ const getNxVideo = async (client, token, cameraId, duration = 5) => {
 export default {
   name: "cctv",
   description: "Monitoring CCTV Nx Witness (Network Optix) dengan pemilihan kamera.",
-  usage: "[nomor/nama kamera] [v/video]",
-  example: "cctv 1 video",
+  usage: "[command] [args]",
+  example: "cctv snap 1",
   aliases: ["monitor", "cam", "nx"],
   category: "Owner",
   premiumOnly: false,
@@ -130,12 +130,53 @@ export default {
 
     const jid = msg.key.remoteJid;
     const client = createAxiosClient();
-    let input = args.join(" ").trim();
-    let isVideo = false;
 
-    if (/\s+(video|v)$/i.test(input)) {
-      isVideo = true;
-      input = input.replace(/\s+(video|v)$/i, "").trim();
+    let action = "snap"; // default action
+    let target = "";
+    let duration = 5;
+
+    if (args.length === 0) {
+      action = "help";
+    } else {
+      const firstArg = args[0].toLowerCase();
+      if (firstArg === "list") {
+        action = "list";
+      } else if (firstArg === "help" || firstArg === "-h" || firstArg === "--help") {
+        action = "help";
+      } else if (firstArg === "snap" || firstArg === "snapshot") {
+        action = "snap";
+        target = args.slice(1).join(" ").trim();
+      } else if (firstArg === "info") {
+        action = "info";
+        target = args.slice(1).join(" ").trim();
+      } else if (firstArg === "video" || firstArg === "v") {
+        action = "video";
+        // Check if last argument is a number (duration)
+        const lastArg = args[args.length - 1];
+        const parsedDuration = parseInt(lastArg, 10);
+        if (args.length > 2 && !isNaN(parsedDuration) && parsedDuration > 0 && parsedDuration <= 60) {
+          duration = parsedDuration;
+          target = args.slice(1, -1).join(" ").trim();
+        } else {
+          target = args.slice(1).join(" ").trim();
+        }
+      } else {
+        // Fallback or legacy syntax: `.cctv 1` or `.cctv 1 video`
+        let fullInput = args.join(" ").trim();
+        if (/\s+(video|v|vid)$/i.test(fullInput)) {
+          action = "video";
+          target = fullInput.replace(/\s+(video|v|vid)$/i, "").trim();
+          const match = target.match(/(.*)\s+(\d+)$/);
+          if (match) {
+            target = match[1].trim();
+            const dur = parseInt(match[2], 10);
+            if (dur > 0 && dur <= 60) duration = dur;
+          }
+        } else {
+          action = "snap";
+          target = fullInput;
+        }
+      }
     }
 
     try {
@@ -151,48 +192,78 @@ export default {
         return;
       }
 
-      if (!input) {
+      if (action === "help") {
+        const helpText = 
+          `📹 *CCTV Nx Witness Help & Usage*\n\n` +
+          `Format penggunaan:\n` +
+          `│ .cctv list\n` +
+          `│ .cctv snap <nomor/nama>\n` +
+          `│ .cctv video <nomor/nama> [durasi]\n` +
+          `│ .cctv info <nomor/nama>\n` +
+          `│ .cctv help\n\n` +
+          `*Contoh:* \`.cctv snap 1\` atau \`.cctv video Depan 10\`\n\n` +
+          `Ketik *.cctv list* untuk melihat daftar kamera.`;
+        await sock.sendMessage(jid, { text: helpText }, { quoted: msg });
+        return;
+      }
+
+      if (action === "list") {
         let menuText = "📹 *Daftar Kamera Nx Witness*\n\n";
         cameras.forEach((cam, index) => {
-          const status = cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
+          const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           menuText += `${index + 1}. ${status} *${cam.name}* (ID: \`${cam.id}\`)\n`;
         });
-        menuText += "\n*Penggunaan Snapshot:* Ketik `.cctv <nomor/nama>`\n*Penggunaan Video (5s):* Ketik `.cctv <nomor/nama> v` atau `.cctv <nomor/nama> video`";
-
+        menuText += `\n💡 Ketik \`.cctv snap <nomor/nama>\` untuk mengambil gambar.`;
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
         return;
       }
 
+      // Find target camera
       let targetCamera = null;
-      const indexInput = parseInt(input, 10);
-
+      const indexInput = parseInt(target, 10);
       if (!isNaN(indexInput) && indexInput > 0 && indexInput <= cameras.length) {
         targetCamera = cameras[indexInput - 1];
       } else {
         targetCamera = cameras.find((cam) =>
-          cam.name.toLowerCase().includes(input.toLowerCase())
+          cam.name.toLowerCase().includes(target.toLowerCase())
         );
       }
 
       if (!targetCamera) {
         await sock.sendMessage(
           jid,
-          { text: `❌ Kamera dengan kata kunci *"${input}"* tidak ditemukan.` },
+          { text: `❌ Kamera dengan kata kunci *"${target}"* tidak ditemukan.` },
           { quoted: msg }
         );
         return;
       }
 
+      if (action === "info") {
+        const status = targetCamera.status === "Online" || targetCamera.statusFlags === "CSF_NoFlags" || !targetCamera.statusFlags ? "🟢 Online" : "🔴 Offline";
+        const infoText = 
+          `📹 *Informasi Detail Kamera*\n\n` +
+          `• *Nama:* ${targetCamera.name}\n` +
+          `• *Status:* ${status}\n` +
+          `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
+          `• *Model:* ${targetCamera.model || "Unknown"}\n` +
+          `• *IP Address:* ${targetCamera.ipAddress || targetCamera.url || "N/A"}\n` +
+          `• *Firmware:* ${targetCamera.firmware || "N/A"}\n` +
+          `• *MAC Address:* ${targetCamera.mac || "N/A"}\n` +
+          `• *ID:* \`${targetCamera.id}\``;
+        await sock.sendMessage(jid, { text: infoText }, { quoted: msg });
+        return;
+      }
+
       await sock.sendMessage(
         jid,
-        { text: `⏳ Mengambil ${isVideo ? "video clip 5 detik" : "snapshot"} dari kamera *${targetCamera.name}*...` },
+        { text: `⏳ Mengambil ${action === "video" ? `video clip ${duration} detik` : "snapshot"} dari kamera *${targetCamera.name}*...` },
         { quoted: msg }
       );
 
-      if (isVideo) {
-        const videoBuffer = await getNxVideo(client, token, targetCamera.id, 5);
+      if (action === "video") {
+        const videoBuffer = await getNxVideo(client, token, targetCamera.id, duration);
         const captionText =
-          `📹 *CCTV Video Clip (5s)*\n\n` +
+          `📹 *CCTV Video Clip (${duration}s)*\n\n` +
           `• *Nama Kamera:* ${targetCamera.name}\n` +
           `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
           `• *ID:* \`${targetCamera.id}\`\n\n` +
