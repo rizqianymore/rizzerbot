@@ -440,7 +440,14 @@ export default {
       );
 
       if (action === "video") {
-        const videoBuffer = await getNxVideo(client, token, targetCamera.id, duration);
+        let videoBuffer = await getNxVideo(client, token, targetCamera.id, duration);
+        try {
+          const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
+          videoBuffer = await transcodeToWhatsappVideo(videoBuffer);
+        } catch (transcodeErr) {
+          console.error("CCTV Transcoding Failed:", transcodeErr.message);
+        }
+
         const captionText =
           `📹 *CCTV Video Clip (${duration}s)*\n\n` +
           `• *Nama Kamera:* ${targetCamera.name}\n` +
@@ -448,41 +455,15 @@ export default {
           `• *ID:* \`${targetCamera.id}\`\n\n` +
           `⚡ _Via Nx Witness REST API_`;
 
-        const rawFilename = `cctv_raw_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
-        const rawPath = path.join(process.cwd(), "database", rawFilename);
-        const transFilename = `cctv_trans_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
-        const transPath = path.join(process.cwd(), "database", transFilename);
-        
-        fs.writeFileSync(rawPath, videoBuffer);
-
-        let finalPath = rawPath;
-        try {
-          const ffmpegPath = path.join(process.cwd(), "bin", "ffmpeg");
-          const cmd = `"${ffmpegPath}" -y -i "${rawPath}" -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v -map 0:a? "${transPath}"`;
-          await execPromise(cmd);
-          if (fs.existsSync(transPath) && fs.statSync(transPath).size > 0) {
-            finalPath = transPath;
-          }
-        } catch (transcodeErr) {
-          console.error("CCTV Transcoding Failed, sending raw:", transcodeErr.message);
-        }
-
-        const finalBuffer = fs.readFileSync(finalPath);
-
         await sock.sendMessage(
           jid,
           {
-            video: finalBuffer,
+            video: videoBuffer,
             caption: captionText,
             mimetype: "video/mp4",
           },
           { quoted: msg }
         );
-
-        try {
-          if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
-          if (fs.existsSync(transPath)) fs.unlinkSync(transPath);
-        } catch (_) {}
       } else {
         const imageBuffer = await getNxSnapshot(client, token, targetCamera.id);
         const captionText =
