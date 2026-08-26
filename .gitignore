@@ -19,6 +19,7 @@ sessions/
 # Database Files (Contains JIDs/User info)
 database/*.json
 !database/.gitkeep
+!database/jkt48.json
 config/database.json
 marketing.txt
 

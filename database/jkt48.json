@@ -1,0 +1,494 @@
+{
+    "status": true,
+    "message": "Berhasil mendapatkan data",
+    "data": [
+        {
+            "type": "PASSION",
+            "code": "ABIGAIL_RACHEL",
+            "name": "Abigail Rachel",
+            "nickname": "Aralie",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/abigail_rachel.jpg",
+            "jkt48_member_id": 1
+        },
+        {
+            "type": "DREAM",
+            "code": "ADELINE_WIJAYA",
+            "name": "Adeline Wijaya",
+            "nickname": "Delynn",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/adeline_wijaya.jpg",
+            "jkt48_member_id": 2
+        },
+        {
+            "type": "TRAINEE",
+            "code": "AFERA_THALIA",
+            "name": "Afera Thalia",
+            "nickname": "Fera",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/afera_thalia.jpg",
+            "jkt48_member_id": 6
+        },
+        {
+            "type": "LOVE",
+            "code": "ALYA_AMANDA",
+            "name": "Alya Amanda",
+            "nickname": "Alya",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/alya_amanda.jpg",
+            "jkt48_member_id": 13
+        },
+        {
+            "type": "PASSION",
+            "code": "ANGELINA_CHRISTY",
+            "name": "Angelina Christy",
+            "nickname": "Christy",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/angelina_christy.jpg",
+            "jkt48_member_id": 22
+        },
+        {
+            "type": "LOVE",
+            "code": "ANINDYA_RAMADHANI",
+            "name": "Anindya Ramadhani",
+            "nickname": "Anindya",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/anindya_ramadhani.jpg",
+            "jkt48_member_id": 26
+        },
+        {
+            "type": "TRAINEE",
+            "code": "ASTRELLA_VIRGIANANDA",
+            "name": "Astrella Virgiananda",
+            "nickname": "Virgi",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Astrella_Virgiananda.jpg",
+            "jkt48_member_id": 28
+        },
+        {
+            "type": "TRAINEE",
+            "code": "AULIA_RIZA",
+            "name": "Aulia Riza",
+            "nickname": "Auwia",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Aulia_Riza.jpg",
+            "jkt48_member_id": 30
+        },
+        {
+            "type": "LOVE",
+            "code": "AURELLIA",
+            "name": "Aurellia",
+            "nickname": "Lia",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurellia.jpg",
+            "jkt48_member_id": 31
+        },
+        {
+            "type": "LOVE",
+            "code": "AURHEL_ALANA",
+            "name": "Aurhel Alana",
+            "nickname": "Lana",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurhel_alana.jpg",
+            "jkt48_member_id": 33
+        },
+        {
+            "type": "TRAINEE",
+            "code": "BONG_APRILLI",
+            "name": "Bong Aprilli",
+            "nickname": "Rilly",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Bong_Aprilli.jpg",
+            "jkt48_member_id": 39
+        },
+        {
+            "type": "TRAINEE",
+            "code": "CARISSA_DINI",
+            "name": "Carissa Dini",
+            "nickname": "Carissa",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/carissa_dini.jpg",
+            "jkt48_member_id": 43
+        },
+        {
+            "type": "PASSION",
+            "code": "CATHERINA_VALLENCIA",
+            "name": "Catherina Vallencia",
+            "nickname": "Erine",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/catherina_vallencia.jpg",
+            "jkt48_member_id": 44
+        },
+        {
+            "type": "LOVE",
+            "code": "CELLINE_THEFANI",
+            "name": "Celline Thefani",
+            "nickname": "Elin",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/celline_thefani.jpg",
+            "jkt48_member_id": 46
+        },
+        {
+            "type": "TRAINEE",
+            "code": "CHRISTABELLA_BONITA",
+            "name": "Christabella Bonita",
+            "nickname": "Bella",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/christabella_bonita.jpg",
+            "jkt48_member_id": 52
+        },
+        {
+            "type": "PASSION",
+            "code": "CORNELIA_VANISA",
+            "name": "Cornelia Vanisa",
+            "nickname": "Oniel",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/cornelia_vanisa.jpg",
+            "jkt48_member_id": 59
+        },
+        {
+            "type": "LOVE",
+            "code": "CYNTHIA_YAPUTERA",
+            "name": "Cynthia Yaputera",
+            "nickname": "Cynthia",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/cynthia_yaputera.jpg",
+            "jkt48_member_id": 60
+        },
+        {
+            "type": "PASSION",
+            "code": "DENA_NATALIA",
+            "name": "Dena Natalia",
+            "nickname": "Danella",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/dena_natalia.jpg",
+            "jkt48_member_id": 64
+        },
+        {
+            "type": "PASSION",
+            "code": "DESY_NATALIA",
+            "name": "Desy Natalia",
+            "nickname": "Daisy",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/desy_natalia.jpg",
+            "jkt48_member_id": 67
+        },
+        {
+            "type": "TRAINEE",
+            "code": "FAHIRA_PUTRI",
+            "name": "Fahira Putri",
+            "nickname": "Fahira",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fahira_putri.jpg",
+            "jkt48_member_id": 82
+        },
+        {
+            "type": "TRAINEE",
+            "code": "FATIMAH_AZZAHRA",
+            "name": "Fatimah Azzahra",
+            "nickname": "Rara",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fatimah_azzahra.jpg",
+            "jkt48_member_id": 85
+        },
+        {
+            "type": "DREAM",
+            "code": "FEBRIOLA_SINAMBELA",
+            "name": "Febriola Sinambela",
+            "nickname": "Olla",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/febriola_sinambela.jpg",
+            "jkt48_member_id": 88
+        },
+        {
+            "type": "PASSION",
+            "code": "FENI_FITRIYANTI",
+            "name": "Feni Fitriyanti",
+            "nickname": "Feni",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/feni_fitriyanti.jpg",
+            "jkt48_member_id": 89
+        },
+        {
+            "type": "LOVE",
+            "code": "FIONY_ALVERIA",
+            "name": "Fiony Alveria",
+            "nickname": "Fiony",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fiony_alveria.jpg",
+            "jkt48_member_id": 91
+        },
+        {
+            "type": "DREAM",
+            "code": "FREYA_JAYAWARDANA",
+            "name": "Freya Jayawardana",
+            "nickname": "Freya",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/freya_jayawardana.jpg",
+            "jkt48_member_id": 94
+        },
+        {
+            "type": "LOVE",
+            "code": "FRITZY_ROSMERIAN",
+            "name": "Fritzy Rosmerian",
+            "nickname": "Fritzy",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fritzy_rosmerian.jpg",
+            "jkt48_member_id": 96
+        },
+        {
+            "type": "DREAM",
+            "code": "GABRIELA_ABIGAIL",
+            "name": "Gabriela Abigail",
+            "nickname": "Ella",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/gabriela_abigail.jpg",
+            "jkt48_member_id": 97
+        },
+        {
+            "type": "DREAM",
+            "code": "GITA_SEKAR_ANDARINI",
+            "name": "Gita Sekar Andarini",
+            "nickname": "Gita",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/gita_sekar_andarini.jpg",
+            "jkt48_member_id": 104
+        },
+        {
+            "type": "LOVE",
+            "code": "GRACE_OCTAVIANI",
+            "name": "Grace Octaviani",
+            "nickname": "Gracie",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/grace_octaviani.jpg",
+            "jkt48_member_id": 105
+        },
+        {
+            "type": "DREAM",
+            "code": "GREESELLA_ADHALIA",
+            "name": "Greesella Adhalia",
+            "nickname": "Greesel",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/greesella_adhalia.jpg",
+            "jkt48_member_id": 107
+        },
+        {
+            "type": "TRAINEE",
+            "code": "HAGIA_SOPIA",
+            "name": "Hagia Sopia",
+            "nickname": "Giaa",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Hagia_Sopia.jpg",
+            "jkt48_member_id": 108
+        },
+        {
+            "type": "TRAINEE",
+            "code": "HEIDI_SUYANGGA",
+            "name": "Heidi Suyangga",
+            "nickname": "Heidi",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/heidi_suyangga.jpg",
+            "jkt48_member_id": 111
+        },
+        {
+            "type": "DREAM",
+            "code": "HELISMA_PUTRI",
+            "name": "Helisma Putri",
+            "nickname": "Eli",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/helisma_putri.jpg",
+            "jkt48_member_id": 112
+        },
+        {
+            "type": "LOVE",
+            "code": "HILLARY_ABIGAIL",
+            "name": "Hillary Abigail",
+            "nickname": "Lily",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/hillary_abigail.jpg",
+            "jkt48_member_id": 114
+        },
+        {
+            "type": "TRAINEE",
+            "code": "HUMAIRA_RAMADHANI",
+            "name": "Humaira Ramadhani",
+            "nickname": "Maira",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Humaira_Ramadhani.jpg",
+            "jkt48_member_id": 115
+        },
+        {
+            "type": "LOVE",
+            "code": "INDAH_CAHYA",
+            "name": "Indah Cahya",
+            "nickname": "Indah",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/indah_cahya.jpg",
+            "jkt48_member_id": 116
+        },
+        {
+            "type": "TRAINEE",
+            "code": "JACQUELINE_IMMANUELA",
+            "name": "Jacqueline Immanuela",
+            "nickname": "Ekin",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jacqueline_Immanuela.jpg",
+            "jkt48_member_id": 120
+        },
+        {
+            "type": "LOVE",
+            "code": "JAZZLYN_TRISHA",
+            "name": "Jazzlyn Trisha",
+            "nickname": "Trisha",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jazzlyn_trisha.jpg",
+            "jkt48_member_id": 121
+        },
+        {
+            "type": "TRAINEE",
+            "code": "JEMIMA_EVODIE",
+            "name": "Jemima Evodie",
+            "nickname": "Jemima",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jemima_Evodie.jpg",
+            "jkt48_member_id": 123
+        },
+        {
+            "type": "PASSION",
+            "code": "JESSICA_CHANDRA",
+            "name": "Jessica Chandra",
+            "nickname": "Jessi",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jessica_chandra.jpg",
+            "jkt48_member_id": 127
+        },
+        {
+            "type": "DREAM",
+            "code": "JESSLYN_ELLY",
+            "name": "Jesslyn Elly",
+            "nickname": "Lyn",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jesslyn_elly.jpg",
+            "jkt48_member_id": 131
+        },
+        {
+            "type": "PASSION",
+            "code": "KATHRINA_IRENE",
+            "name": "Kathrina Irene",
+            "nickname": "Kathrina",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/kathrina_irene.jpg",
+            "jkt48_member_id": 143
+        },
+        {
+            "type": "PASSION",
+            "code": "LULU_SALSABILA",
+            "name": "Lulu Salsabila",
+            "nickname": "Lulu",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/lulu_salsabila.jpg",
+            "jkt48_member_id": 148
+        },
+        {
+            "type": "DREAM",
+            "code": "MARSHA_LENATHEA",
+            "name": "Marsha Lenathea",
+            "nickname": "Marsha",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/marsha_lenathea.jpg",
+            "jkt48_member_id": 152
+        },
+        {
+            "type": "TRAINEE",
+            "code": "MAXINE_FAYE",
+            "name": "Maxine Faye",
+            "nickname": "Maxine",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/maxine_faye_lee.jpg",
+            "jkt48_member_id": 155
+        },
+        {
+            "type": "LOVE",
+            "code": "MICHELLE_ALEXANDRA",
+            "name": "Michelle Alexandra",
+            "nickname": "Michie",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_alexandra.jpg",
+            "jkt48_member_id": 159
+        },
+        {
+            "type": "PASSION",
+            "code": "MICHELLE_LEVIA",
+            "name": "Michelle Levia",
+            "nickname": "Levi",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_levia.jpg",
+            "jkt48_member_id": 161
+        },
+        {
+            "type": "TRAINEE",
+            "code": "MIKAELA_KUSJANTO",
+            "name": "Mikaela Kusjanto",
+            "nickname": "Mikaela",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Mikaela_Kusjanto.jpg",
+            "jkt48_member_id": 162
+        },
+        {
+            "type": "PASSION",
+            "code": "MUTIARA_AZZAHRA",
+            "name": "Mutiara Azzahra",
+            "nickname": "Muthe",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/mutiara_azzahra.jpg",
+            "jkt48_member_id": 166
+        },
+        {
+            "type": "LOVE",
+            "code": "NAYLA_SUJI",
+            "name": "Nayla Suji",
+            "nickname": "Nayla",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/nayla_suji.jpg",
+            "jkt48_member_id": 175
+        },
+        {
+            "type": "DREAM",
+            "code": "NINA_TUTACHIA",
+            "name": "Nina Tutachia",
+            "nickname": "Nachia",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/nina_tutachia.jpg",
+            "jkt48_member_id": 178
+        },
+        {
+            "type": "TRAINEE",
+            "code": "NUR_INTAN",
+            "name": "Nur Intan",
+            "nickname": "Intan",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Nur_Intan.jpg",
+            "jkt48_member_id": 182
+        },
+        {
+            "type": "DREAM",
+            "code": "OLINE_MANUEL",
+            "name": "Oline Manuel",
+            "nickname": "Oline",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/oline_manuel.jpg",
+            "jkt48_member_id": 185
+        },
+        {
+            "type": "JKT48_VIRTUAL",
+            "code": "PIA_MERALEO",
+            "name": "Pia Meraleo",
+            "nickname": "Pia",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/pia_meraleo.jpg",
+            "jkt48_member_id": 187
+        },
+        {
+            "type": "TRAINEE",
+            "code": "PUTRY_JAZYTA",
+            "name": "Putry Jazyta",
+            "nickname": "Jazzy",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/putry_jazyta.jpg",
+            "jkt48_member_id": 194
+        },
+        {
+            "type": "PASSION",
+            "code": "RAISHA_SYIFA",
+            "name": "Raisha Syifa",
+            "nickname": "Raisha",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/raisha_syifa.jpg",
+            "jkt48_member_id": 195
+        },
+        {
+            "type": "TRAINEE",
+            "code": "RALYNE_VAN_IRWAN",
+            "name": "Ralyne Van Irwan",
+            "nickname": "Ralyne",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/ralyne_van_irwan.jpg",
+            "jkt48_member_id": 196
+        },
+        {
+            "type": "PASSION",
+            "code": "RIBKA_BUDIMAN",
+            "name": "Ribka Budiman",
+            "nickname": "Ribka",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/ribka_budiman.jpg",
+            "jkt48_member_id": 204
+        },
+        {
+            "type": "DREAM",
+            "code": "SHABILQIS_NAILA",
+            "name": "Shabilqis Naila",
+            "nickname": "Nala",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/shabilqis_naila.jpg",
+            "jkt48_member_id": 221
+        },
+        {
+            "type": "TRAINEE",
+            "code": "SONA_KALYANA",
+            "name": "Sona Kalyana",
+            "nickname": "Sona",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/sona_kalyana.jpg",
+            "jkt48_member_id": 231
+        },
+        {
+            "type": "PASSION",
+            "code": "VICTORIA_KIMBERLY",
+            "name": "Victoria Kimberly",
+            "nickname": "Kimmy",
+            "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/victoria_kimberly.jpg",
+            "jkt48_member_id": 244
+        }
+    ]
+}
