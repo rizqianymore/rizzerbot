@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 
 const getEnvVal = (key) => {
-  if (process.env[key]) return process.env[key];
   try {
     const envPath = path.join(process.cwd(), ".env");
     if (fs.existsSync(envPath)) {
@@ -22,7 +21,7 @@ const getEnvVal = (key) => {
       }
     }
   } catch (_) {}
-  return null;
+  return process.env[key] || null;
 };
 
 const createAxiosClient = () => {
