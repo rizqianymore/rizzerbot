@@ -444,15 +444,27 @@ export default {
           `• *ID:* \`${targetCamera.id}\`\n\n` +
           `⚡ _Via Nx Witness REST API_`;
 
+        const tempFilename = `cctv_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
+        const tempPath = path.join(process.cwd(), "database", tempFilename);
+        fs.writeFileSync(tempPath, videoBuffer);
+
         await sock.sendMessage(
           jid,
           {
-            video: videoBuffer,
+            video: { url: tempPath },
             caption: captionText,
             mimetype: "video/mp4",
           },
           { quoted: msg }
         );
+
+        setTimeout(() => {
+          try {
+            if (fs.existsSync(tempPath)) {
+              fs.unlinkSync(tempPath);
+            }
+          } catch (_) {}
+        }, 15000);
       } else {
         const imageBuffer = await getNxSnapshot(client, token, targetCamera.id);
         const captionText =
