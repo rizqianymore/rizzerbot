@@ -78,14 +78,22 @@ export default {
     const memberId = match.jkt48_member_id;
 
     if (memberId) {
+      const slugName = match.name
+        ? match.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+        : match.code?.toLowerCase();
+      const refererUrl = `https://jkt48.com/member/detail?member=${slugName}-${memberId}&type=`;
+
       try {
         const offRes = await customRequest(
           `https://jkt48.com/api/v1/members/${memberId}?lang=id`,
           {
             headers: {
-              Referer: `https://jkt48.com/member/detail?member=${match.code?.toLowerCase() || "detail"}&type=`,
+              Referer: refererUrl,
               Origin: "https://jkt48.com",
               Accept: "application/json, text/plain, */*",
+              "Sec-Fetch-Site": "same-origin",
+              "Sec-Fetch-Mode": "cors",
+              "Sec-Fetch-Dest": "empty",
             },
             timeout: 8000,
           }
