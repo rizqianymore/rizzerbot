@@ -1,272 +1,163 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { fetchJson } from "../../src/utils/scraping.js";
 
-const localMembersList = [
-  "Abigail Rachel",
-  "Adeline Wijaya",
-  "Afera Thalia",
-  "Alya Amanda",
-  "Angelina Christy",
-  "Anindya Ramadhani",
-  "Astrella Virgiananda",
-  "Aulia Riza",
-  "Aurellia",
-  "Aurhel Alana",
-  "Bong Aprilli",
-  "Carissa Dini",
-  "Catherina Vallencia",
-  "Cathleen Nixie",
-  "Celline Thefani",
-  "Chelsea Davina",
-  "Christabella Bonita",
-  "Cornelia Vanisa",
-  "Cynthia Yaputera",
-  "Dena Natalia",
-  "Desy Natalia",
-  "Fahira Putri",
-  "Fatimah Azzahra",
-  "Febriola Sinambela",
-  "Feni Fitriyanti",
-  "Fiony Alveria",
-  "Freya Jayawardana",
-  "Fritzy Rosmerian",
-  "Gabriela Abigail",
-  "Gendis Mayrannisa",
-  "Gita Sekar Andarini",
-  "Grace Octaviani",
-  "Greesella Adhalia",
-  "Hagia Sopia",
-  "Heidi Suyangga",
-  "Helisma Putri",
-  "Hillary Abigail",
-  "Humaira Ramadhani",
-  "Indah Cahya",
-  "Isha Kirana",
-  "Jacqueline Immanuela",
-  "Jazzlyn Trisha",
-  "Jemima Evodie",
-  "Jessica Chandra",
-  "Jesslyn Elly",
-  "Kathrina Irene",
-  "Lulu Salsabila",
-  "Marsha Lenathea",
-  "Maura Nilambari",
-  "Maxine Faye",
-  "Michelle Alexandra",
-  "Michelle Levia",
-  "Mikaela Kusjanto",
-  "Mutiara Azzahra",
-  "Nayla Suji",
-  "Nina Tutachia",
-  "Nur Intan",
-  "Oline Manuel",
-  "Pia Meraleo",
-  "Putry Jazyta",
-  "Raisha Syifa",
-  "Ralyne Van Irwan",
-  "Ribka Budiman",
-  "Sami Maono",
-  "Shabilqis Naila",
-  "Sona Kalyana",
-  "Tana Nona",
-  "Victoria Kimberly",
-];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getLocalJkt48Members() {
+  try {
+    const dbPath = path.join(__dirname, "..", "..", "database", "jkt48.json");
+    if (fs.existsSync(dbPath)) {
+      const raw = fs.readFileSync(dbPath, "utf8");
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.data)) {
+        return parsed.data;
+      }
+    }
+  } catch (_) {}
+  return [];
+}
 
 export default {
-  premiumOnly: true,
-  description: "Menampilkan profil member JKT48.",
-  usage: "<nama member>",
-  example: "Freya",
   name: "jkt48",
+  description: "Menampilkan informasi profil member JKT48.",
+  usage: "<nama member>",
+  example: "jkt48 oline",
   aliases: ["memberjkt", "jkt"],
   category: "OSINT",
+  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     const query = args.join(" ").trim();
     if (!query) {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `⚠️ *Harap masukkan nama member untuk dicari.*\n\n*Contoh:* \`.jkt Freya\``,
+          text: `⚠️ *Harap masukkan nama member JKT48.*\n\n*Contoh:* \`.jkt48 oline\` atau \`.jkt48 freya\``,
         },
-        { quoted: msg },
+        { quoted: msg }
       );
       return;
     }
 
     await sendTyping();
 
-    try {
-      const listRes = await fetchJson(
-        "https://jkt48.com/api/v1/members?lang=id",
-        { timeout: 8000 },
-      );
-      if (
-        !listRes.data ||
-        !listRes.data.status ||
-        !Array.isArray(listRes.data.data)
-      ) {
-        throw new Error("Invalid API response structure");
-      }
+    const localMembers = getLocalJkt48Members();
 
-      const apiMembers = listRes.data.data;
+    // 1. Coba cari di local database jkt48.json
+    let match = localMembers.find(
+      (m) =>
+        m.name?.toLowerCase() === query.toLowerCase() ||
+        m.nickname?.toLowerCase() === query.toLowerCase() ||
+        m.code?.toLowerCase() === query.toLowerCase()
+    );
 
-      const matches = apiMembers.filter(
+    if (!match) {
+      match = localMembers.find(
         (m) =>
-          (m.name && m.name.toLowerCase().includes(query.toLowerCase())) ||
-          (m.nickname &&
-            m.nickname.toLowerCase().includes(query.toLowerCase())) ||
-          (m.code && m.code.toLowerCase().includes(query.toLowerCase())),
-      );
-
-      if (matches.length === 0) {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            text: `❌ Member dengan kata kunci *"${query}"* tidak ditemukan di JKT48.`,
-          },
-          { quoted: msg },
-        );
-        return;
-      }
-
-      if (matches.length > 1) {
-        let responseText = `⚠️ *Menemukan beberapa member (${matches.length}). Harap lebih spesifik:*\n\n`;
-        matches.forEach((m, index) => {
-          responseText += `${index + 1}. *${m.name}* (${m.nickname})\n`;
-        });
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { text: responseText.trim() },
-          { quoted: msg },
-        );
-        return;
-      }
-
-      const targetMember = matches[0];
-      const memberId = targetMember.jkt48_member_id || targetMember.id;
-
-      if (!memberId) {
-        throw new Error("Member ID not found in API list");
-      }
-
-      const detailRes = await fetchJson(
-        `https://jkt48.com/api/v1/members/${memberId}?lang=id`,
-        { timeout: 8000 },
-      );
-
-      if (!detailRes.data || !detailRes.data.status || !detailRes.data.data) {
-        throw new Error("Failed to fetch member details");
-      }
-
-      const details = detailRes.data.data;
-
-      let birthDateStr = "-";
-      if (details.birth_date) {
-        try {
-          birthDateStr = new Date(details.birth_date).toLocaleDateString(
-            "id-ID",
-            {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            },
-          );
-        } catch (_) {
-          birthDateStr = details.birth_date;
-        }
-      }
-
-      const detailsText =
-        `🎤 *Profil Member JKT48*\n\n` +
-        `• *Nama Lengkap:* ${details.name || "-"}\n` +
-        `• *Nama Panggilan:* ${details.nickname || "-"}\n` +
-        `• *Tipe/Generasi:* ${details.type || "-"}\n` +
-        `• *Tanggal Lahir:* ${birthDateStr}\n` +
-        `• *Golongan Darah:* ${details.blood_type || "-"}\n` +
-        `• *Tinggi Badan:* ${details.body_height ? details.body_height + " cm" : "-"}\n` +
-        `• *Horoskop:* ${details.horoscope || "-"}\n\n` +
-        `📱 *Media Sosial:*\n` +
-        `• *Instagram:* ${details.instagram_account ? "@" + details.instagram_account : "-"}\n` +
-        `• *TikTok:* ${details.tiktok_account ? "@" + details.tiktok_account : "-"}\n` +
-        `• *Twitter:* ${details.twitter_account ? "@" + details.twitter_account : "-"}\n\n` +
-        `*ID Member:* ${memberId}\n\n` +
-        `⚡ _Via Kyros-MD API_`;
-
-      const photoUrl =
-        details.photo_1 ||
-        details.photo_2 ||
-        details.photo ||
-        targetMember.photo;
-
-      if (photoUrl) {
-        try {
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            {
-              image: { url: photoUrl },
-              caption: detailsText,
-            },
-            { quoted: msg },
-          );
-        } catch (imgError) {
-          console.error(
-            "Error sending JKT48 image, falling back to text:",
-            imgError,
-          );
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            { text: detailsText },
-            { quoted: msg },
-          );
-        }
-      } else {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { text: detailsText },
-          { quoted: msg },
-        );
-      }
-    } catch (err) {
-      console.error("JKT48 API lookup error:", err);
-
-      const localMatches = localMembersList.filter((name) =>
-        name.toLowerCase().includes(query.toLowerCase()),
-      );
-      if (localMatches.length === 0) {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            text: `❌ Member dengan nama *"${query}"* tidak ditemukan di JKT48 (dan database lokal).`,
-          },
-          { quoted: msg },
-        );
-        return;
-      }
-
-      if (localMatches.length > 1) {
-        let responseText = `⚠️ *Menemukan beberapa member lokal. Harap lebih spesifik:*\n\n`;
-        localMatches.forEach((name, index) => {
-          responseText += `${index + 1}. *${name}*\n`;
-        });
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { text: responseText.trim() },
-          { quoted: msg },
-        );
-        return;
-      }
-
-      const localName = localMatches[0];
-      const googleSearch = `https://www.google.com/search?q=${encodeURIComponent("JKT48 " + localName)}`;
-      const fallbackText =
-        `⚠️ *API JKT48 sedang gangguan. Menampilkan data lokal:*\n\n` +
-        `• *Nama:* ${localName}\n\n` +
-        `🔗 Info: ${googleSearch}`;
-
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { text: fallbackText },
-        { quoted: msg },
+          m.name?.toLowerCase().includes(query.toLowerCase()) ||
+          m.nickname?.toLowerCase().includes(query.toLowerCase()) ||
+          m.code?.toLowerCase().includes(query.toLowerCase())
       );
     }
+
+    // 2. Fetch detail info lengkap (via crstlnz API / jkt48 public feed)
+    let details = null;
+    try {
+      const crstlnzListRes = await fetchJson(
+        "https://api.crstlnz.my.id/api/member?group=jkt48",
+        { timeout: 6000 }
+      );
+      const list = crstlnzListRes?.data;
+      if (Array.isArray(list)) {
+        const found = list.find(
+          (m) =>
+            m.name?.toLowerCase().includes(query.toLowerCase()) ||
+            m.nicknames?.some((n) => n.toLowerCase().includes(query.toLowerCase())) ||
+            m.url?.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (found) {
+          details = found;
+          if (!match) {
+            match = {
+              name: found.name,
+              nickname: found.nicknames?.[0] || found.name,
+              type: found.team ? found.team.toUpperCase() : (found.generation || "MEMBER"),
+              photo: found.img || found.img_alt,
+              jkt48_member_id: found.jkt48_id,
+            };
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Jika sama sekali tidak ditemukan
+    if (!match && !details) {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text: `❌ Member dengan kata kunci *"${query}"* tidak ditemukan di database JKT48.`,
+        },
+        { quoted: msg }
+      );
+      return;
+    }
+
+    // Format profil
+    const memberName = details?.name || match.name || "-";
+    const nickname = details?.nicknames?.join(", ") || match.nickname || "-";
+    const teamType = details?.team ? details.team.toUpperCase() : (match.type || "-");
+    const generation = details?.generation ? details.generation.replace("-jkt48", "").toUpperCase() : "-";
+    const memberId = match.jkt48_member_id || details?.jkt48_id || "-";
+    const isGraduate = details?.is_graduate ? "Sudah Lulus (Graduate)" : "Aktif";
+
+    let socialsText = "";
+    if (details?.socials && Array.isArray(details.socials)) {
+      details.socials.forEach((s) => {
+        if (s.title && s.url) {
+          socialsText += `• *${s.title}:* ${s.url}\n`;
+        }
+      });
+    }
+
+    if (!socialsText && details?.idn_username) {
+      socialsText += `• *IDN Live:* @${details.idn_username}\n`;
+    }
+
+    const captionText =
+      `🎤 *PROFIL MEMBER JKT48*\n\n` +
+      `• *Nama Lengkap:* ${memberName}\n` +
+      `• *Panggilan:* ${nickname}\n` +
+      `• *Tim / Tipe:* ${teamType}\n` +
+      `• *Generasi:* ${generation}\n` +
+      `• *Status:* ${isGraduate}\n` +
+      `• *ID Member:* ${memberId}\n` +
+      (socialsText ? `\n📱 *Media Sosial:*\n${socialsText}` : "") +
+      `\n⚡ _Kyros-MD JKT48 Engine_`;
+
+    const photoUrl = details?.img || details?.img_alt || match.photo;
+
+    if (photoUrl) {
+      try {
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            image: { url: photoUrl },
+            caption: captionText,
+          },
+          { quoted: msg }
+        );
+        return;
+      } catch (_) {}
+    }
+
+    // Fallback text jika gambar gagal kirim
+    await sock.sendMessage(
+      msg.key.remoteJid,
+      { text: captionText },
+      { quoted: msg }
+    );
   },
 };
