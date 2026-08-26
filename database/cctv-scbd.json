@@ -1,0 +1,388 @@
+{
+    "data": [
+        {
+            "id": 6858,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GRANDLUCKY TO ENERGY",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0002?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22629722",
+            "lng": "106.80610278",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6859,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GRANDLUCKY TO BEI",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0003?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22611667",
+            "lng": "106.80710556",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6860,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "EQUITY TO BEI",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0004?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22596944",
+            "lng": "106.80895833",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6861,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "BEI TO PP",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0005?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22331111",
+            "lng": "106.80956111",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6862,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO GATSU",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0006?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22507500",
+            "lng": "106.81273056",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6863,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "PEREMPATAN LOT 23 BATIK KURING",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0007?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22669167",
+            "lng": "106.81248889",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6867,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "NINETEEN",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0011?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22830833",
+            "lng": "106.81058056",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6857,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "REVENUE",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0001?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22703611",
+            "lng": "106.80665000",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6869,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "AG TO KUSUMA",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0013?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22587778",
+            "lng": "106.81060278",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6870,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "ELECTRONIC CITY",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0014?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22672222",
+            "lng": "106.81061389",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6871,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SENOPATI TO SCBD IN 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0015?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23057500",
+            "lng": "106.80984444",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6872,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SENOPATI TO SCBD IN 1",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0016?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23027500",
+            "lng": "106.80962778",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6873,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SUDIRMAN TO ENERGY IN",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0017?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22553889",
+            "lng": "106.80561389",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6874,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "ENERGY TO SUDIRMAN OUT",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0018?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22528333",
+            "lng": "106.80521111",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6875,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO SUDIRMAN OUT 1",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0019?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22324167",
+            "lng": "106.80916389",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6876,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO SUDIRMAN OUT 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0020?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22288333",
+            "lng": "106.80889444",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6877,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SUDIRMAN TO SCBD IN 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0021?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22317500",
+            "lng": "106.80980000",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6878,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SUDIRMAN TO SCBD IN",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0022?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22271111",
+            "lng": "106.80930556",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6879,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO GATSU OUT 1",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0023?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22395556",
+            "lng": "106.81391389",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6880,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO GATSU OUT 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0024?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22364167",
+            "lng": "106.81440000",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6881,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GATSU TO SCBD IN 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0025?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22368056",
+            "lng": "106.81463889",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6882,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GATSU TO SCBD IN 1",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0026?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22409722",
+            "lng": "106.81419722",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6883,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "WIDYA TO SCBD IN",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0027?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22681944",
+            "lng": "106.81251944",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6884,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO WIDYA OUT",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0028?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22738889",
+            "lng": "106.81291667",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6885,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO SENOPATI OUT 1",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0029?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23079722",
+            "lng": "106.80966944",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6886,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SCBD TO SENOPATI OUT 2",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0030?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23086944",
+            "lng": "106.80983056",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6887,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SENOPATI TO LOT 17",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0031?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23031111",
+            "lng": "106.80962222",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6888,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "LOT 18 TO SENOPATI",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0032?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.23027222",
+            "lng": "106.80963611",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6864,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GATSU TO SCBD",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0008?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22505000",
+            "lng": "106.81274167",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6865,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "MANDIRI IN",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0009?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22483611",
+            "lng": "106.81283611",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6866,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "MANDIRI OUT",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0010?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22484722",
+            "lng": "106.81283056",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 6868,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "PUTARAN PP - LOT 6",
+            "url": "https:\/\/cscbd.synergics.digital\/v1\/view\/mqr-0012?token=MjAyLjcyLjIyMC45OTo3MDAx",
+            "lat": "-6.22580833",
+            "lng": "106.80935278",
+            "isActive": true,
+            "createdAt": null
+        }
+    ],
+    "links": {
+        "first": "https:\/\/api.mandalajaya.id\/v1\/cctv-scbd?page=1",
+        "last": "https:\/\/api.mandalajaya.id\/v1\/cctv-scbd?page=1",
+        "prev": null,
+        "next": null
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 1,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Sebelumnya",
+                "active": false
+            },
+            {
+                "url": "https:\/\/api.mandalajaya.id\/v1\/cctv-scbd?page=1",
+                "label": "1",
+                "active": true
+            },
+            {
+                "url": null,
+                "label": "Berikutnya &raquo;",
+                "active": false
+            }
+        ],
+        "path": "https:\/\/api.mandalajaya.id\/v1\/cctv-scbd",
+        "per_page": 4551,
+        "to": 32,
+        "total": 32
+    }
+}

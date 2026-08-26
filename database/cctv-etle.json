@@ -1,0 +1,586 @@
+{
+    "data": [
+        {
+            "id": 1,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 1",
+            "alamat": "A. Yani Margorejo Utara",
+            "lat": "-7.316941411078187",
+            "lng": "112.74384648472818",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 2,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 2",
+            "alamat": "A. Yani Siwalankerto",
+            "lat": "-7.337371450903015",
+            "lng": "112.73008997923542",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 3,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 3",
+            "alamat": "Adityawarman Indragiri Barat",
+            "lat": "-7.294447112492471",
+            "lng": "112.7316898052356",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 4,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 4",
+            "alamat": "Adityawarman Indragiri Timur",
+            "lat": "-7.292861276493132",
+            "lng": "112.72966754159594",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 5,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 5",
+            "alamat": "Airlangga Dharmawangsa Selatan",
+            "lat": "-7.270591165620606",
+            "lng": "112.75640262381144",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 6,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 6",
+            "alamat": "Airlangga Dharmawangsa Utara",
+            "lat": "-7.26587360690726",
+            "lng": "112.756719033996",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 7,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 7",
+            "alamat": "Ambengan Kusuma Bangsa Selatan",
+            "lat": "-7.256018388935846",
+            "lng": "112.7503914334411",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 8,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 8",
+            "alamat": "Bratang Nginden Selatan",
+            "lat": "-7.299311904800127",
+            "lng": "112.76196170312252",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 9,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 9",
+            "alamat": "Bratang Nginden Utara",
+            "lat": "-7.293956074991256",
+            "lng": "112.76229285028396",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 10,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 10",
+            "alamat": "Bubutan Pahlawan Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 11,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 11",
+            "alamat": "Darmo Alfalah Selatan",
+            "lat": "-7.295337124936273",
+            "lng": "112.73932049169379",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 12,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 12",
+            "alamat": "Darmo Alfalah Utara",
+            "lat": "-7.296123419846771",
+            "lng": "112.73903969427467",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 13,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 13",
+            "alamat": "Gunungsari Gajah Mada Barat",
+            "lat": "-7.307198102517425",
+            "lng": "112.7200228951135",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 14,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 14",
+            "alamat": "Gunungsari Gajah Mada Timur",
+            "lat": "-7.299697314311842",
+            "lng": "112.73180968997445",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 15,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 15",
+            "alamat": "Hayam Wuruk Kutai Barat",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 16,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 16",
+            "alamat": "Hayam Wuruk Kutai Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 17,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 17",
+            "alamat": "Jl. HM. Noer Kedungcowek Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 18,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 18",
+            "alamat": "Jl. HM. Noer Kedungcowek Utara",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 19,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 19",
+            "alamat": "Kertajaya depan UFO",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 20,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 20",
+            "alamat": "Kertajaya Dharmawangsa Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 21,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 21",
+            "alamat": "Kertajaya Dharmawangsa Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 22,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 22",
+            "alamat": "Kertajaya Dharmawangsa Utara",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 23,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 23",
+            "alamat": "Kertajaya Manyar Barat",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 24,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 24",
+            "alamat": "Kertajaya Manyar Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 25,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 25",
+            "alamat": "Manyar Nginden Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 26,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 26",
+            "alamat": "Manyar Nginden Utara",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 27,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 27",
+            "alamat": "Mastrip Wiyung Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 28,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 28",
+            "alamat": "Mastrip Wiyung Utara",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 29,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 29",
+            "alamat": "Mayjend Bintang Diponggo Barat",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 30,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 30",
+            "alamat": "Mayjend Bintang Diponggo Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 31,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 31",
+            "alamat": "Mayjend Sungkono Wonokitri Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 32,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 32",
+            "alamat": "Mayjend Sungkono Wonokitri Utara",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 33,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 33",
+            "alamat": "Merr Kenjeran Selatan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 34,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 34",
+            "alamat": "Merr Kertajaya Selatan\/KONI",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 35,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 35",
+            "alamat": "Merr Unair Kampus C",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 36,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 36",
+            "alamat": "Moestopo Dharmawangsa Barat",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 37,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 37",
+            "alamat": "Moestopo Dharmawangsa Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 38,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 38",
+            "alamat": "Tembaan Pahlawan Timur",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 39,
+            "idKabkota": 3578,
+            "kabkota": null,
+            "nama": "Titik Etle Surabaya 39",
+            "alamat": "Tunjungan Siola",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 40,
+            "idKabkota": 3515,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Sidoarjo 1",
+            "alamat": "Alun-alun Sidoarjo",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 41,
+            "idKabkota": 3515,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Sidoarjo 2",
+            "alamat": "perempatan Babalayar atau depan Ciplas, dan satu lagi di",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 42,
+            "idKabkota": 3515,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Sidoarjo 3",
+            "alamat": "Perempatan Airlangga.",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 43,
+            "idKabkota": 3519,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Madiun 1",
+            "alamat": "Jl. Citandui",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 44,
+            "idKabkota": 3519,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Madiun 2",
+            "alamat": "simpang empat Jl. H. Agus Salim",
+            "lat": "-7.639451656645374",
+            "lng": "111.51758068013137",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 45,
+            "idKabkota": 3519,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Madiun 3",
+            "alamat": "Jl. Sumber Karya",
+            "lat": "-7.641089019854181",
+            "lng": "111.53655972503621",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 46,
+            "idKabkota": 3519,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Madiun 4",
+            "alamat": "Jl. Kelapa Manis.",
+            "lat": "-7.642345227770187",
+            "lng": "111.54066107436931",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 47,
+            "idKabkota": 3525,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Gresik 1",
+            "alamat": "Simpang Empat Segoromadu",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 48,
+            "idKabkota": 3525,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Gresik 2",
+            "alamat": "Simpang Empat Sentolang",
+            "lat": "-7.171224688768255",
+            "lng": "112.65343113406655",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 49,
+            "idKabkota": 3525,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Gresik 3",
+            "alamat": "Simpang Tiga Bundaran GKB",
+            "lat": "-7.15953383785904",
+            "lng": "112.61862792677692",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 50,
+            "idKabkota": 3525,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Gresik 4",
+            "alamat": "Exit Tol Kebomas",
+            "lat": "-7.162020768815138",
+            "lng": "112.59694681330473",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 51,
+            "idKabkota": 3525,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Gresik 5",
+            "alamat": "Duduksampeyan",
+            "lat": null,
+            "lng": null,
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 52,
+            "idKabkota": 3524,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Lamongan 1",
+            "alamat": "Di Tugu Adipura, Jl. Jaksa Agung Suprapto",
+            "lat": "-7.112385477891018",
+            "lng": "112.41740180002252",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 53,
+            "idKabkota": 3524,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Lamongan 2",
+            "alamat": "Jl. Lamongrejo, perempatan Toko Family",
+            "lat": "-7.118570180601001",
+            "lng": "112.41659737903437",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 54,
+            "idKabkota": 3579,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Batu 1",
+            "alamat": "simpang BCA",
+            "lat": "-7.870142799884219",
+            "lng": "112.52396273849484",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        },
+        {
+            "id": 55,
+            "idKabkota": 3504,
+            "kabkota": null,
+            "nama": "Titik CCTV ETLE Tulungagung 1",
+            "alamat": "Simpang Empat Tamanan",
+            "lat": "-8.073136137791083",
+            "lng": "111.90197804043945",
+            "createdAt": "2025-04-16T14:40:40.000000Z"
+        }
+    ],
+    "links": {
+        "first": "https:\/\/api.mandalajaya.id\/v1\/etle?page=1",
+        "last": "https:\/\/api.mandalajaya.id\/v1\/etle?page=1",
+        "prev": null,
+        "next": null
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 1,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Sebelumnya",
+                "active": false
+            },
+            {
+                "url": "https:\/\/api.mandalajaya.id\/v1\/etle?page=1",
+                "label": "1",
+                "active": true
+            },
+            {
+                "url": null,
+                "label": "Berikutnya &raquo;",
+                "active": false
+            }
+        ],
+        "path": "https:\/\/api.mandalajaya.id\/v1\/etle",
+        "per_page": 55,
+        "to": 55,
+        "total": 55
+    }
+}

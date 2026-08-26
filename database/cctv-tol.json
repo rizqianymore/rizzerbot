@@ -1,0 +1,410 @@
+{
+    "data": [
+        {
+            "id": 17888,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SS SEDYATMO RAMP 2",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00001.m3u8",
+            "lat": "-6.101394",
+            "lng": "106.721947",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17889,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SS SEDYATMO RAMP 3 UJUNG",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00002.m3u8",
+            "lat": "-6.104910",
+            "lng": "106.723560",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17890,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SS SEDYATMO RAMP 3 TENGAH",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00003.m3u8",
+            "lat": "-6.101946",
+            "lng": "106.721989",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17891,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SS SEDYATMO RAMP 4",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00004.m3u8",
+            "lat": "-6.099800",
+            "lng": "106.718990",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17892,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GERBANG SEDYATMO A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00005.m3u8",
+            "lat": "-6.098006",
+            "lng": "106.720626",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17893,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GERBANG SEDYATMO B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00006.m3u8",
+            "lat": "-6.098221",
+            "lng": "106.720806",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17894,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 0+500 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00007.m3u8",
+            "lat": "-6.094941",
+            "lng": "106.719255",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17895,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 0+500 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00008.m3u8",
+            "lat": "-6.094941",
+            "lng": "106.719255",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17896,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+000 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00009.m3u8",
+            "lat": "-6.089888",
+            "lng": "106.719560",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17897,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+000 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00010.m3u8",
+            "lat": "-6.089888",
+            "lng": "106.719560",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17898,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+500 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00011.m3u8",
+            "lat": "-6.086678",
+            "lng": "106.719828",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17900,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+950 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00013.m3u8",
+            "lat": "-6.082010",
+            "lng": "106.719207",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17901,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+950 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00014.m3u8",
+            "lat": "-6.082010",
+            "lng": "106.719207",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17902,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 2+500 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00015.m3u8",
+            "lat": "-6.077615",
+            "lng": "106.716798",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17903,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 2+500 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00016.m3u8",
+            "lat": "-6.077615",
+            "lng": "106.716798",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17904,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 2+975 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00017.m3u8",
+            "lat": "-6.074089",
+            "lng": "106.714462",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17905,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 2+975 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00018.m3u8",
+            "lat": "-6.074089",
+            "lng": "106.714462",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17906,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 3+525 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00019.m3u8",
+            "lat": "-6.070148",
+            "lng": "106.711618",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17907,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 3+525 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00020.m3u8",
+            "lat": "-6.070148",
+            "lng": "106.711618",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17908,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 4+025 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00021.m3u8",
+            "lat": "-6.070153",
+            "lng": "106.707143",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17910,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 4+500 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00023.m3u8",
+            "lat": "-6.072713",
+            "lng": "106.703650",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17911,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 4+500 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00024.m3u8",
+            "lat": "-6.072713",
+            "lng": "106.703650",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17912,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 5+000 A",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00025.m3u8",
+            "lat": "-6.074904",
+            "lng": "106.699990",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17913,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 5+500 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00026.m3u8",
+            "lat": "-6.074049",
+            "lng": "106.695661",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17914,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "IC KOSAMBI RAMP 1",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00027.m3u8",
+            "lat": "-6.071120",
+            "lng": "106.693503",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17915,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "IC KOSAMBI RAMP 2",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00028.m3u8",
+            "lat": "-6.071050",
+            "lng": "106.691980",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17916,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "AKSES SUDIRMAN\/PIK",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00029.m3u8",
+            "lat": "-6.067860",
+            "lng": "106.696012",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17917,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "AKSES SALEMBARAN",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00030.m3u8",
+            "lat": "-6.075813",
+            "lng": "106.689992",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17918,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GB KOSAMBI 1",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00031.m3u8",
+            "lat": "-6.075475",
+            "lng": "106.698837",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17919,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "GB KOSAMBI 2",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00032.m3u8",
+            "lat": "-6.074095",
+            "lng": "106.696251",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17920,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "SS SEDYATMO RAMP 3 AWAL",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00033.m3u8",
+            "lat": "-6.099084",
+            "lng": "106.721643",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17921,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "IC KOSAMBI RAMP 3",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00034.m3u8",
+            "lat": "-6.070362",
+            "lng": "106.691997",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17899,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 1+500 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00012.m3u8",
+            "lat": "-6.086678",
+            "lng": "106.719828",
+            "isActive": true,
+            "createdAt": null
+        },
+        {
+            "id": 17909,
+            "idKabkota": null,
+            "kabkota": null,
+            "nama": "KM 4+025 B",
+            "url": "https:\/\/stream3.sigaplodaya.id\/dgk-kataraja\/LiveApp\/streams\/DGK00022.m3u8",
+            "lat": "-6.070153",
+            "lng": "106.707143",
+            "isActive": true,
+            "createdAt": null
+        }
+    ],
+    "links": {
+        "first": "https:\/\/api.mandalajaya.id\/v1\/cctv-tolkataraja?page=1",
+        "last": "https:\/\/api.mandalajaya.id\/v1\/cctv-tolkataraja?page=1",
+        "prev": null,
+        "next": null
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 1,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Sebelumnya",
+                "active": false
+            },
+            {
+                "url": "https:\/\/api.mandalajaya.id\/v1\/cctv-tolkataraja?page=1",
+                "label": "1",
+                "active": true
+            },
+            {
+                "url": null,
+                "label": "Berikutnya &raquo;",
+                "active": false
+            }
+        ],
+        "path": "https:\/\/api.mandalajaya.id\/v1\/cctv-tolkataraja",
+        "per_page": 4551,
+        "to": 34,
+        "total": 34
+    }
+}
