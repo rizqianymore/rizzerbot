@@ -232,9 +232,13 @@ export default {
       }
 
       if (!targetCamera) {
+        let errorMsg = `❌ Kamera dengan kata kunci *"${target}"* tidak ditemukan.\n\n*Kamera yang tersedia:* \n`;
+        cameras.forEach((cam, index) => {
+          errorMsg += `│ ${index + 1}. ${cam.name}\n`;
+        });
         await sock.sendMessage(
           jid,
-          { text: `❌ Kamera dengan kata kunci *"${target}"* tidak ditemukan.` },
+          { text: errorMsg },
           { quoted: msg }
         );
         return;
