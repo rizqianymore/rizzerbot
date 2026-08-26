@@ -4,7 +4,14 @@ import { fileURLToPath } from "url";
 import { exec } from "child_process";
 import axios from "axios";
 import https from "https";
-import ffmpegPath from "ffmpeg-static";
+
+let ffmpegPath = "ffmpeg";
+try {
+  const ffmpegStatic = await import("ffmpeg-static");
+  ffmpegPath = ffmpegStatic.default || "ffmpeg";
+} catch (_) {
+  ffmpegPath = "ffmpeg";
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

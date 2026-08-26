@@ -17,11 +17,11 @@ export function autoCleanSessionCache(logger) {
     let deletedCount = 0;
 
     const isTempFile = (name) => {
+      // PENTING: Jangan pernah menghapus session-* atau sender-key-* karena itu adalah state enkripsi Signal aktif
+      // Menghapus session-* akan menyebabkan MessageCounterError / Failed to decrypt message
       return (
         name.endsWith(".json") &&
         (name.startsWith("pre-key-") ||
-          name.startsWith("session-") ||
-          name.startsWith("sender-key-") ||
           name.startsWith("app-state-sync-key-"))
       );
     };

@@ -59,19 +59,25 @@ export async function dispatchMessage(sock, msg, logger) {
     msg.message.extendedTextMessage?.text ||
     msg.message.imageMessage?.caption ||
     msg.message.videoMessage?.caption ||
+    msg.message.documentMessage?.caption ||
+    msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
     msg.message.buttonsResponseMessage?.selectedButtonId ||
     msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
     msg.message.templateButtonReplyMessage?.selectedId ||
+    msg.message.viewOnceMessage?.message?.imageMessage?.caption ||
+    msg.message.viewOnceMessage?.message?.videoMessage?.caption ||
+    msg.message.viewOnceMessageV2?.message?.imageMessage?.caption ||
+    msg.message.viewOnceMessageV2?.message?.videoMessage?.caption ||
     "";
 
   if (!messageContent && msg.message.interactiveResponseMessage) {
     try {
-      const params = JSON.parse(
-        msg.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson
-      );
+      const nativeFlow = msg.message.interactiveResponseMessage.nativeFlowResponseMessage;
+      const params = nativeFlow?.paramsJson ? JSON.parse(nativeFlow.paramsJson) : {};
       messageContent =
         params.id ||
-        msg.message.interactiveResponseMessage.nativeFlowResponseMessage.id ||
+        nativeFlow?.id ||
+        msg.message.interactiveResponseMessage.body?.text ||
         "";
     } catch (_) {}
   }
@@ -88,6 +94,7 @@ export async function dispatchMessage(sock, msg, logger) {
   if (groupIntercepted) return;
 
   const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
+  messageContent = messageContent.trim();
   if (!messageContent.startsWith(activePrefix)) return;
 
   const args = messageContent.slice(activePrefix.length).trim().split(/ +/);
