@@ -2,6 +2,7 @@ import axios from "axios";
 import https from "https";
 import fs from "fs";
 import path from "path";
+import { db } from "@/src/core/database.js";
 
 const getEnvVal = (key) => {
   try {
@@ -145,6 +146,16 @@ export default {
         action = "list";
       } else if (firstArg === "help" || firstArg === "-h" || firstArg === "--help") {
         action = "help";
+      } else if (firstArg === "alias") {
+        action = "alias";
+        const aliasName = args[1];
+        const camKeyword = args.slice(2).join(" ").trim();
+        target = JSON.stringify({ aliasName, camKeyword });
+      } else if (firstArg === "unalias") {
+        action = "unalias";
+        target = args.slice(1).join(" ").trim();
+      } else if (firstArg === "aliases") {
+        action = "aliases";
       } else if (firstArg === "snap" || firstArg === "snapshot") {
         action = "snap";
         target = args.slice(1).join(" ").trim();
@@ -199,11 +210,14 @@ export default {
           `📹 *CCTV Nx Witness Help & Usage*\n\n` +
           `Format penggunaan:\n` +
           `│ .cctv list\n` +
-          `│ .cctv snap <nomor/nama>\n` +
-          `│ .cctv video <nomor/nama> [durasi]\n` +
-          `│ .cctv info <nomor/nama>\n` +
+          `│ .cctv snap <nomor/nama/alias>\n` +
+          `│ .cctv video <nomor/nama/alias> [durasi]\n` +
+          `│ .cctv info <nomor/nama/alias>\n` +
+          `│ .cctv alias <nama_alias> <nomor/nama/id>\n` +
+          `│ .cctv unalias <nama_alias>\n` +
+          `│ .cctv aliases\n` +
           `│ .cctv help\n\n` +
-          `*Contoh:* \`.cctv snap 1\` atau \`.cctv video Depan 10\`\n\n` +
+          `*Contoh:* \`.cctv alias dpr-depan 1\` lalu \`.cctv snap dpr-depan\`\n\n` +
           `Ketik *.cctv list* untuk melihat daftar kamera.`;
         await sock.sendMessage(jid, { text: helpText }, { quoted: msg });
         return;
@@ -220,15 +234,123 @@ export default {
         return;
       }
 
+      if (action === "alias") {
+        let parsed;
+        try {
+          parsed = JSON.parse(target);
+        } catch (_) {}
+
+        if (!parsed || !parsed.aliasName || !parsed.camKeyword) {
+          await sock.sendMessage(
+            jid,
+            { text: `⚠️ Format salah!\nGunakan: \`.cctv alias <nama_alias> <nomor/nama/id>\`` },
+            { quoted: msg }
+          );
+          return;
+        }
+
+        const { aliasName, camKeyword } = parsed;
+
+        let targetCamera = null;
+        const indexInput = parseInt(camKeyword, 10);
+        if (!isNaN(indexInput) && indexInput > 0 && indexInput <= cameras.length) {
+          targetCamera = cameras[indexInput - 1];
+        } else {
+          targetCamera = cameras.find((cam) =>
+            cam.name.toLowerCase().includes(camKeyword.toLowerCase()) ||
+            cam.id.toLowerCase() === camKeyword.toLowerCase()
+          );
+        }
+
+        if (!targetCamera) {
+          await sock.sendMessage(
+            jid,
+            { text: `❌ Kamera dengan kata kunci *"${camKeyword}"* tidak ditemukan.` },
+            { quoted: msg }
+          );
+          return;
+        }
+
+        db.setCctvAlias(aliasName, targetCamera.id);
+        await sock.sendMessage(
+          jid,
+          { text: `✅ Berhasil memetakan alias *"${aliasName}"* ke kamera *"${targetCamera.name}"* (ID: \`${targetCamera.id}\`).` },
+          { quoted: msg }
+        );
+        return;
+      }
+
+      if (action === "unalias") {
+        if (!target) {
+          await sock.sendMessage(
+            jid,
+            { text: `⚠️ Format salah!\nGunakan: \`.cctv unalias <nama_alias>\`` },
+            { quoted: msg }
+          );
+          return;
+        }
+
+        const existing = db.getCctvAlias(target);
+        if (!existing) {
+          await sock.sendMessage(
+            jid,
+            { text: `❌ Alias *"${target}"* tidak ditemukan di database.` },
+            { quoted: msg }
+          );
+          return;
+        }
+
+        db.deleteCctvAlias(target);
+        await sock.sendMessage(
+          jid,
+          { text: `✅ Berhasil menghapus alias *"${target}"*.` },
+          { quoted: msg }
+        );
+        return;
+      }
+
+      if (action === "aliases") {
+        const aliasesObj = db.data.cctvAliases || {};
+        const keys = Object.keys(aliasesObj);
+        if (keys.length === 0) {
+          await sock.sendMessage(
+            jid,
+            { text: `📹 *Daftar Alias CCTV kosong.*\nGunakan \`.cctv alias <nama_alias> <nomor/nama/id>\` untuk menambahkan.` },
+            { quoted: msg }
+          );
+          return;
+        }
+
+        let aliasList = `📹 *Daftar Alias CCTV Terdaftar*\n\n`;
+        keys.forEach((key, index) => {
+          const camId = aliasesObj[key];
+          const foundCam = cameras.find((cam) => cam.id === camId);
+          const camName = foundCam ? foundCam.name : "Kamera Terhapus/Tidak Ditemukan";
+          aliasList += `${index + 1}. *${key}* ➔ *${camName}* (ID: \`${camId}\`)\n`;
+        });
+
+        await sock.sendMessage(jid, { text: aliasList }, { quoted: msg });
+        return;
+      }
+
       // Find target camera
       let targetCamera = null;
-      const indexInput = parseInt(target, 10);
-      if (!isNaN(indexInput) && indexInput > 0 && indexInput <= cameras.length) {
-        targetCamera = cameras[indexInput - 1];
-      } else {
-        targetCamera = cameras.find((cam) =>
-          cam.name.toLowerCase().includes(target.toLowerCase())
-        );
+
+      // Check database alias
+      const aliasedId = db.getCctvAlias(target);
+      if (aliasedId) {
+        targetCamera = cameras.find((cam) => cam.id === aliasedId);
+      }
+
+      if (!targetCamera) {
+        const indexInput = parseInt(target, 10);
+        if (!isNaN(indexInput) && indexInput > 0 && indexInput <= cameras.length) {
+          targetCamera = cameras[indexInput - 1];
+        } else {
+          targetCamera = cameras.find((cam) =>
+            cam.name.toLowerCase().includes(target.toLowerCase())
+          );
+        }
       }
 
       if (!targetCamera) {

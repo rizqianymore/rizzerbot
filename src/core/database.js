@@ -14,6 +14,7 @@ const dbPaths = {
   channels: path.join(__dirname, "..", "..", "database", "channels.json"),
   groups: path.join(__dirname, "..", "..", "database", "groups.json"),
   blacklist: path.join(__dirname, "..", "..", "database", "blacklist.json"),
+  cctv: path.join(__dirname, "..", "..", "database", "cctv.json"),
 };
 
 const normalizeJidCache = new Map();
@@ -193,6 +194,14 @@ class Database {
         } catch (_) {}
       }
 
+      let cctvAliases = {};
+      if (fs.existsSync(dbPaths.cctv)) {
+        try {
+          const raw = fs.readFileSync(dbPaths.cctv, "utf8");
+          cctvAliases = raw ? JSON.parse(raw) : {};
+        } catch (_) {}
+      }
+
       this.data = {
         users: users,
         stats: {
@@ -209,6 +218,7 @@ class Database {
           jpmBlacklist: jpmBlacklist || [],
         },
         groups: groups,
+        cctvAliases: cctvAliases || {},
       };
       this.updatePrivilegedCache();
     } catch (err) {
@@ -288,6 +298,11 @@ class Database {
       this.safeWriteFileSync(
         dbPaths.blacklist,
         JSON.stringify(this.data.settings.jpmBlacklist || [], null, 4)
+      );
+
+      this.safeWriteFileSync(
+        dbPaths.cctv,
+        JSON.stringify(this.data.cctvAliases || {}, null, 4)
       );
     } catch (err) {
       console.error("Database writeToDisk error:", err.message);
@@ -396,6 +411,23 @@ class Database {
     this.data.stats.totalCommands++;
     this.data.stats.commands[cmdName] =
       (this.data.stats.commands[cmdName] || 0) + 1;
+    this.save();
+  }
+
+  getCctvAlias(alias) {
+    if (!this.data.cctvAliases) this.data.cctvAliases = {};
+    return this.data.cctvAliases[alias.toLowerCase()] || null;
+  }
+
+  setCctvAlias(alias, cameraId) {
+    if (!this.data.cctvAliases) this.data.cctvAliases = {};
+    this.data.cctvAliases[alias.toLowerCase()] = cameraId;
+    this.save();
+  }
+
+  deleteCctvAlias(alias) {
+    if (!this.data.cctvAliases) this.data.cctvAliases = {};
+    delete this.data.cctvAliases[alias.toLowerCase()];
     this.save();
   }
 }
