@@ -1,5 +1,29 @@
 import axios from "axios";
 import https from "https";
+import fs from "fs";
+import path from "path";
+
+const getEnvVal = (key) => {
+  if (process.env[key]) return process.env[key];
+  try {
+    const envPath = path.join(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, "utf-8");
+      const lines = envContent.split(/\r?\n/);
+      for (const line of lines) {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+          const k = match[1];
+          let v = match[2] || "";
+          if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
+          else if (v.startsWith("'") && v.endsWith("'")) v = v.slice(1, -1);
+          if (k === key) return v.trim();
+        }
+      }
+    }
+  } catch (_) {}
+  return null;
+};
 
 const createAxiosClient = () => {
   return axios.create({
@@ -11,13 +35,13 @@ const createAxiosClient = () => {
 };
 
 const loginToNx = async (client) => {
-  const baseUrl = process.env.CCTV_BASE_URL;
-  const username = process.env.CCTV_USER;
-  const password = process.env.CCTV_PASS;
+  const baseUrl = getEnvVal("CCTV_BASE_URL");
+  const username = getEnvVal("CCTV_USER");
+  const password = getEnvVal("CCTV_PASS");
 
   if (!baseUrl || !username || !password) {
     throw new Error(
-      "Kredensial Nx API belum lengkap di environment variable (CCTV_BASE_URL, CCTV_USER, CCTV_PASS)."
+      "Kredensial Nx API belum lengkap di environment variable atau file .env (CCTV_BASE_URL, CCTV_USER, CCTV_PASS)."
     );
   }
 
@@ -37,7 +61,7 @@ const loginToNx = async (client) => {
 };
 
 const getNxCameraList = async (client, token) => {
-  const baseUrl = process.env.CCTV_BASE_URL;
+  const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
     const response = await client.get(`${baseUrl}/rest/v1/cameras`, {
       headers: {
@@ -51,7 +75,7 @@ const getNxCameraList = async (client, token) => {
 };
 
 const getNxSnapshot = async (client, token, cameraId) => {
-  const baseUrl = process.env.CCTV_BASE_URL;
+  const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
     const response = await client.get(
       `${baseUrl}/rest/v1/cameras/${cameraId}/image`,
