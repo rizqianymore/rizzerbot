@@ -102,6 +102,8 @@ const getNxVideo = async (client, token, cameraId, duration = 5) => {
       {
         params: {
           duration: duration,
+          resolution: "480p",
+          codec: "h264",
         },
         headers: {
           Authorization: `Bearer ${token}`,
