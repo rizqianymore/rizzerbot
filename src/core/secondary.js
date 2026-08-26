@@ -227,20 +227,55 @@ export async function startSecondaryBot(authDirName, phoneNumber, logger) {
 
   if (!sock.authState.creds.registered) {
     return new Promise((resolve, reject) => {
-      pairingTimeout = setTimeout(async () => {
-        try {
-          if (logger) {
-            logger.info(`Requesting pairing code for secondary bot ${phoneNumber}...`);
-          }
-          const code = await sock.requestPairingCode(phoneNumber);
+      let isResolved = false;
+
+      const finishResolve = (code) => {
+        if (!isResolved) {
+          isResolved = true;
+          if (pairingTimeout) clearTimeout(pairingTimeout);
           runningBots.set(authDirName, sock);
           resolve(code);
-        } catch (err) {
+        }
+      };
+
+      const finishReject = (err) => {
+        if (!isResolved) {
+          isResolved = true;
+          if (pairingTimeout) clearTimeout(pairingTimeout);
           runningBots.delete(authDirName);
           deleteFolderRecursive(authDir);
           reject(err);
         }
-      }, 3000);
+      };
+
+      const requestPairing = async (retryCount = 0) => {
+        try {
+          if (logger) {
+            logger.info(`Requesting pairing code for secondary bot ${phoneNumber} (attempt ${retryCount + 1})...`);
+          }
+          const code = await sock.requestPairingCode(phoneNumber);
+          if (logger) {
+            logger.info(`Successfully generated pairing code for ${phoneNumber}: ${code}`);
+          }
+          finishResolve(code);
+        } catch (err) {
+          if (retryCount < 2) {
+            if (logger) {
+              logger.warn(`Pairing request attempt ${retryCount + 1} failed (${err.message}). Retrying in 2 seconds...`);
+            }
+            pairingTimeout = setTimeout(() => requestPairing(retryCount + 1), 2000);
+          } else {
+            finishReject(err);
+          }
+        }
+      };
+
+      // Set maximum overall timeout (20s) so it never hangs indefinitely
+      const maxTimeout = setTimeout(() => {
+        finishReject(new Error("Timeout: Gagal mendapatkan pairing code dari server WhatsApp setelah 20 detik."));
+      }, 20000);
+
+      pairingTimeout = setTimeout(() => requestPairing(0), 1500);
     });
   } else {
     runningBots.set(authDirName, sock);
