@@ -224,12 +224,21 @@ export default {
       }
 
       if (action === "list") {
+        const aliasesObj = db.data.cctvAliases || {};
+        const idToAlias = {};
+        for (const [alias, id] of Object.entries(aliasesObj)) {
+          if (!idToAlias[id]) idToAlias[id] = [];
+          idToAlias[id].push(alias);
+        }
+
         let menuText = "📹 *Daftar Kamera Nx Witness*\n\n";
         cameras.forEach((cam, index) => {
           const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
-          menuText += `${index + 1}. ${status} *${cam.name}* (ID: \`${cam.id}\`)\n`;
+          const camAliases = idToAlias[cam.id];
+          const aliasStr = camAliases ? ` [Alias: *${camAliases.join(", ")}*]` : "";
+          menuText += `${index + 1}. ${status} *${cam.name}*${aliasStr} (ID: \`${cam.id}\`)\n`;
         });
-        menuText += `\n💡 Ketik \`.cctv snap <nomor/nama>\` untuk mengambil gambar.`;
+        menuText += `\n💡 Ketik \`.cctv snap <nomor/nama/alias>\` untuk mengambil gambar.`;
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
         return;
       }
