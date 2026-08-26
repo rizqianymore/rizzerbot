@@ -5,7 +5,7 @@ import { commands } from "@/src/core/loader.js";
 import { handleStatusBroadcast } from "@/src/middleware/statusSaver.js";
 import { processGroupSecurity } from "@/src/middleware/groupSecurity.js";
 import { evaluatePermissions, isPublicCommand } from "@/src/middleware/auth.js";
-import { checkBurst, checkCooldown } from "@/src/middleware/antispam.js";
+import { checkBurst, checkCooldown, checkDuplicateMessage } from "@/src/middleware/antispam.js";
 
 function getLevenshteinDistance(a, b) {
   const la = a.length;
@@ -26,7 +26,15 @@ function getLevenshteinDistance(a, b) {
 }
 
 export async function dispatchMessage(sock, msg, logger) {
-  if (!msg.message) return;
+  if (!msg.message || !msg.key?.id) return;
+
+  // Anti-Duplikasi Pesan: Abaikan jika ID pesan ini sudah pernah diproses
+  if (checkDuplicateMessage(msg.key.id)) {
+    if (logger) {
+      logger.debug(`[Anti-Duplicate] Skipped already processed message ID: ${msg.key.id}`);
+    }
+    return;
+  }
 
   msg.message = extractMessageContent(msg.message);
   if (!msg.message) return;
