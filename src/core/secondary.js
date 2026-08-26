@@ -3,6 +3,7 @@ import makeWASocket, {
   DisconnectReason,
   Browsers,
   fetchLatestBaileysVersion,
+  BufferJSON,
 } from "baileys";
 import { Boom } from "@hapi/boom";
 import pino from "pino";
@@ -38,7 +39,6 @@ export async function isBotActive(phoneNumber) {
   if (!sock) return false;
   if (!sock.user?.id || !sock.authState?.creds?.registered) return false;
 
-  // Lakukan ping / query sederhana untuk memastikan koneksi hidup
   try {
     const isOnline = sock.ws?.isOpen || sock.ws?.readyState === 1;
     return isOnline;
@@ -63,21 +63,21 @@ export async function addSecondaryBot(phoneNumber, logger) {
     const active = await isBotActive(cleanNumber);
     if (active) {
       if (logger) logger.info(`Secondary bot ${cleanNumber} is already active & responsive.`);
-      return null; // Sudah aktif & responsif
+      return null;
     }
-    // Jika tidak responsif/mati di memori, hentikan & bersihkan
     if (logger) logger.warn(`Secondary bot ${cleanNumber} in memory is inactive/stale. Purging...`);
     await stopSecondaryBot(cleanNumber, false, logger);
   }
 
-  // 2. Cek apakah folder sesi ada di database/filesystem
+  // 2. Cek apakah folder sesi ada di filesystem dan valid sesuai Baileys auth
   if (fs.existsSync(authDir)) {
     const credsPath = path.join(authDir, "creds.json");
     let hasValidRegisteredCreds = false;
 
     if (fs.existsSync(credsPath)) {
       try {
-        const creds = JSON.parse(fs.readFileSync(credsPath, "utf8"));
+        const raw = fs.readFileSync(credsPath, "utf8");
+        const creds = JSON.parse(raw, BufferJSON.reviver);
         if (creds && creds.registered && creds.me?.id) {
           hasValidRegisteredCreds = true;
         }
@@ -85,7 +85,6 @@ export async function addSecondaryBot(phoneNumber, logger) {
     }
 
     if (!hasValidRegisteredCreds) {
-      // Sesi belum ter-register atau file creds rusak/hang -> Hapus dan minta pairing baru secara fresh
       if (logger) logger.warn(`Session folder for ${cleanNumber} exists but is unregistered/corrupted. Deleting for fresh pairing...`);
       deleteFolderRecursive(authDir);
     }
@@ -270,7 +269,6 @@ export async function startSecondaryBot(authDirName, phoneNumber, logger) {
         }
       };
 
-      // Set maximum overall timeout (20s) so it never hangs indefinitely
       const maxTimeout = setTimeout(() => {
         finishReject(new Error("Timeout: Gagal mendapatkan pairing code dari server WhatsApp setelah 20 detik."));
       }, 20000);
@@ -294,10 +292,10 @@ export function restoreSecondarySessions(logger) {
         const authDir = path.join(sessionsParentDir, folder);
         const credsPath = path.join(authDir, "creds.json");
 
-        // Cek apakah sesi ini memiliki creds valid
         if (fs.existsSync(credsPath)) {
           try {
-            const creds = JSON.parse(fs.readFileSync(credsPath, "utf8"));
+            const raw = fs.readFileSync(credsPath, "utf8");
+            const creds = JSON.parse(raw, BufferJSON.reviver);
             if (!creds || !creds.registered) {
               if (logger) logger.warn(`Pruning uncompleted session folder ${folder}...`);
               deleteFolderRecursive(authDir);
@@ -309,7 +307,6 @@ export function restoreSecondarySessions(logger) {
             continue;
           }
         } else {
-          // Folder sesi kosong tanpa creds
           deleteFolderRecursive(authDir);
           continue;
         }
