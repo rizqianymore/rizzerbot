@@ -18,14 +18,15 @@ export async function transcodeToWhatsappVideo(videoBuffer) {
 
   try {
     fs.writeFileSync(rawPath, videoBuffer);
-    const ffmpegPath = path.join(process.cwd(), "bin", "ffmpeg");
+    const localFfmpeg = path.join(process.cwd(), "bin", "ffmpeg");
+    const ffmpegPath = fs.existsSync(localFfmpeg) ? `"${localFfmpeg}"` : "ffmpeg";
     
     // Transcode video to:
     // -c:v libx264 (H.264 video codec)
     // -pix_fmt yuv420p (standard YUV color space compatible with Android/iOS/web)
     // -c:a aac (AAC audio codec, widely supported)
     // -map 0:v -map 0:a? (optional audio stream mapping)
-    const cmd = `"${ffmpegPath}" -y -i "${rawPath}" -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v -map 0:a? "${transPath}"`;
+    const cmd = `${ffmpegPath} -y -i "${rawPath}" -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v -map 0:a? "${transPath}"`;
     await execPromise(cmd);
 
     if (fs.existsSync(transPath) && fs.statSync(transPath).size > 0) {
