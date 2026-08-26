@@ -506,7 +506,7 @@ export default {
       await sock.sendMessage(
         jid,
         {
-          text: `❌ *Error CCTV:* ${error.message}\nPastikan konfigurasi CCTV_BASE_URL, CCTV_USER, dan CCTV_PASS di file .env sudah sesuai.`,
+          text: `❌ *Error CCTV:* ${error.message}\n\n*Stack Trace:*\n\`\`\`${error.stack}\`\`\``,
         },
         { quoted: msg }
       );
