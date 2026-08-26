@@ -13,7 +13,7 @@ export function autoCleanSessionCache(logger) {
     ];
 
     const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000;
+    const maxAge = 12 * 60 * 60 * 1000; // 12 jam
     let deletedCount = 0;
 
     const isTempFile = (name) => {
@@ -57,7 +57,7 @@ export function autoCleanSessionCache(logger) {
 
     if (deletedCount > 0 && logger) {
       logger.info(
-        `[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi Baileys (file > 1 hari).`
+        `[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi Baileys (file > 12 jam).`
       );
     }
   } catch (err) {
@@ -69,8 +69,8 @@ export function autoCleanSessionCache(logger) {
 
 export function startAutoCleanInterval(logger) {
   autoCleanSessionCache(logger);
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; // 12 jam
   setInterval(() => {
     autoCleanSessionCache(logger);
-  }, ONE_DAY_MS);
+  }, TWELVE_HOURS_MS);
 }
