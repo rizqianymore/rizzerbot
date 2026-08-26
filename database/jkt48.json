@@ -8,7 +8,15 @@
             "name": "Abigail Rachel",
             "nickname": "Aralie",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/abigail_rachel.jpg",
-            "jkt48_member_id": 1
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/abigail_rachel.jpg",
+            "jkt48_member_id": 1,
+            "birth_date": "2008-08-05T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "161",
+            "horoscope": "Leo",
+            "twitter_account": "Aralie_JKT48",
+            "instagram_account": "jkt48.aralie",
+            "tiktok_account": "araliejkt48"
         },
         {
             "type": "DREAM",
@@ -16,7 +24,15 @@
             "name": "Adeline Wijaya",
             "nickname": "Delynn",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/adeline_wijaya.jpg",
-            "jkt48_member_id": 2
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/adeline_wijaya.jpg",
+            "jkt48_member_id": 2,
+            "birth_date": "2007-08-31T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "166",
+            "horoscope": "Virgo",
+            "twitter_account": "Delynn_JKT48",
+            "instagram_account": "jkt48.delynn",
+            "tiktok_account": "delynnjkt48"
         },
         {
             "type": "TRAINEE",
@@ -24,7 +40,15 @@
             "name": "Afera Thalia",
             "nickname": "Fera",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/afera_thalia.jpg",
-            "jkt48_member_id": 6
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/afera_thalia.jpg",
+            "jkt48_member_id": 6,
+            "birth_date": "2007-10-18T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Libra",
+            "twitter_account": "Fera_JKT48",
+            "instagram_account": "jkt48.fera",
+            "tiktok_account": "ferajkt48"
         },
         {
             "type": "LOVE",
@@ -32,7 +56,15 @@
             "name": "Alya Amanda",
             "nickname": "Alya",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/alya_amanda.jpg",
-            "jkt48_member_id": 13
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/alya_amanda.jpg",
+            "jkt48_member_id": 13,
+            "birth_date": "2006-08-25T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "162",
+            "horoscope": "Virgo",
+            "twitter_account": "AA_AlyaJKT48",
+            "instagram_account": "jkt48.alya_",
+            "tiktok_account": "alyajkt48"
         },
         {
             "type": "PASSION",
@@ -40,7 +72,15 @@
             "name": "Angelina Christy",
             "nickname": "Christy",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/angelina_christy.jpg",
-            "jkt48_member_id": 22
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/angelina_christy.jpg",
+            "jkt48_member_id": 22,
+            "birth_date": "2005-12-04T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "163",
+            "horoscope": "Sagittarius",
+            "twitter_account": "A_ChristyJKT48",
+            "instagram_account": "jkt48.christy",
+            "tiktok_account": "christyjkt48"
         },
         {
             "type": "LOVE",
@@ -48,7 +88,15 @@
             "name": "Anindya Ramadhani",
             "nickname": "Anindya",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/anindya_ramadhani.jpg",
-            "jkt48_member_id": 26
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/anindya_ramadhani.jpg",
+            "jkt48_member_id": 26,
+            "birth_date": "2005-10-17T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "154",
+            "horoscope": "Libra",
+            "twitter_account": "AR_AnindyaJKT48",
+            "instagram_account": "jkt48.anindya_",
+            "tiktok_account": "anindyajkt48"
         },
         {
             "type": "TRAINEE",
@@ -56,7 +104,15 @@
             "name": "Astrella Virgiananda",
             "nickname": "Virgi",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Astrella_Virgiananda.jpg",
-            "jkt48_member_id": 28
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Astrella_Virgiananda.jpg",
+            "jkt48_member_id": 28,
+            "birth_date": "2010-09-13T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Virgo",
+            "twitter_account": "Virgi_JKT48",
+            "instagram_account": "jkt48.virgi",
+            "tiktok_account": "virgijkt48"
         },
         {
             "type": "TRAINEE",
@@ -64,7 +120,15 @@
             "name": "Aulia Riza",
             "nickname": "Auwia",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Aulia_Riza.jpg",
-            "jkt48_member_id": 30
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Aulia_Riza.jpg",
+            "jkt48_member_id": 30,
+            "birth_date": "2007-06-14T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "164",
+            "horoscope": "Gemini",
+            "twitter_account": "Auwia_JKT48",
+            "instagram_account": "jkt48.auwia",
+            "tiktok_account": "auwiajkt48"
         },
         {
             "type": "LOVE",
@@ -72,7 +136,15 @@
             "name": "Aurellia",
             "nickname": "Lia",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurellia.jpg",
-            "jkt48_member_id": 31
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurellia.jpg",
+            "jkt48_member_id": 31,
+            "birth_date": "2002-10-28T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "156",
+            "horoscope": "Scorpio",
+            "twitter_account": "A_LiaJKT48",
+            "instagram_account": "jkt48.lia",
+            "tiktok_account": "liajkt48"
         },
         {
             "type": "LOVE",
@@ -80,7 +152,15 @@
             "name": "Aurhel Alana",
             "nickname": "Lana",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurhel_alana.jpg",
-            "jkt48_member_id": 33
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/aurhel_alana.jpg",
+            "jkt48_member_id": 33,
+            "birth_date": "2006-09-13T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "163",
+            "horoscope": "Virgo",
+            "twitter_account": "AA_LanaJKT48",
+            "instagram_account": "jkt48.lana",
+            "tiktok_account": "lanajkt48"
         },
         {
             "type": "TRAINEE",
@@ -88,7 +168,15 @@
             "name": "Bong Aprilli",
             "nickname": "Rilly",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Bong_Aprilli.jpg",
-            "jkt48_member_id": 39
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Bong_Aprilli.jpg",
+            "jkt48_member_id": 39,
+            "birth_date": "2006-04-18T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Aries",
+            "twitter_account": "Rilly_JKT48",
+            "instagram_account": "jkt48.rilly",
+            "tiktok_account": "rillyjkt48"
         },
         {
             "type": "TRAINEE",
@@ -96,7 +184,15 @@
             "name": "Carissa Dini",
             "nickname": "Carissa",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/carissa_dini.jpg",
-            "jkt48_member_id": 43
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/carissa_dini.jpg",
+            "jkt48_member_id": 43,
+            "birth_date": "2006-12-14T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "160",
+            "horoscope": "Sagittarius",
+            "twitter_account": "Carissa_JKT48",
+            "instagram_account": "jkt48.carissa_",
+            "tiktok_account": "carissajkt48"
         },
         {
             "type": "PASSION",
@@ -104,7 +200,15 @@
             "name": "Catherina Vallencia",
             "nickname": "Erine",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/catherina_vallencia.jpg",
-            "jkt48_member_id": 44
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/catherina_vallencia.jpg",
+            "jkt48_member_id": 44,
+            "birth_date": "2007-08-20T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "163",
+            "horoscope": "Leo",
+            "twitter_account": "Erine_JKT48",
+            "instagram_account": "jkt48.erine",
+            "tiktok_account": "erinejkt48"
         },
         {
             "type": "LOVE",
@@ -112,7 +216,15 @@
             "name": "Celline Thefani",
             "nickname": "Elin",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/celline_thefani.jpg",
-            "jkt48_member_id": 46
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/celline_thefani.jpg",
+            "jkt48_member_id": 46,
+            "birth_date": "2007-04-08T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "163",
+            "horoscope": "Aries",
+            "twitter_account": "Elin_JKT48",
+            "instagram_account": "jkt48.elin",
+            "tiktok_account": "elinjkt48"
         },
         {
             "type": "TRAINEE",
@@ -120,7 +232,15 @@
             "name": "Christabella Bonita",
             "nickname": "Bella",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/christabella_bonita.jpg",
-            "jkt48_member_id": 52
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/christabella_bonita.jpg",
+            "jkt48_member_id": 52,
+            "birth_date": "2010-01-19T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "162",
+            "horoscope": "Capricorn",
+            "twitter_account": "Bella_JKT48",
+            "instagram_account": "jkt48.bella_",
+            "tiktok_account": "bellajkt48"
         },
         {
             "type": "PASSION",
@@ -128,7 +248,15 @@
             "name": "Cornelia Vanisa",
             "nickname": "Oniel",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/cornelia_vanisa.jpg",
-            "jkt48_member_id": 59
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/cornelia_vanisa.jpg",
+            "jkt48_member_id": 59,
+            "birth_date": "2002-07-25T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "162",
+            "horoscope": "Leo",
+            "twitter_account": "C_OnielJKT48",
+            "instagram_account": "jkt48.oniel",
+            "tiktok_account": "onieljkt48"
         },
         {
             "type": "LOVE",
@@ -136,7 +264,15 @@
             "name": "Cynthia Yaputera",
             "nickname": "Cynthia",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/cynthia_yaputera.jpg",
-            "jkt48_member_id": 60
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/cynthia_yaputera.jpg",
+            "jkt48_member_id": 60,
+            "birth_date": "2003-11-21T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Scorpio",
+            "twitter_account": "Cynthia_JKT48",
+            "instagram_account": "jkt48.cynthia",
+            "tiktok_account": "cynthiajkt48"
         },
         {
             "type": "PASSION",
@@ -144,7 +280,15 @@
             "name": "Dena Natalia",
             "nickname": "Danella",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/dena_natalia.jpg",
-            "jkt48_member_id": 64
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/dena_natalia.jpg",
+            "jkt48_member_id": 64,
+            "birth_date": "2005-12-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Sagittarius",
+            "twitter_account": "Danella_JKT48",
+            "instagram_account": "jkt48.danella",
+            "tiktok_account": "danellajkt48"
         },
         {
             "type": "PASSION",
@@ -152,7 +296,15 @@
             "name": "Desy Natalia",
             "nickname": "Daisy",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/desy_natalia.jpg",
-            "jkt48_member_id": 67
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/desy_natalia.jpg",
+            "jkt48_member_id": 67,
+            "birth_date": "2005-12-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "164",
+            "horoscope": "Sagittarius",
+            "twitter_account": "Daisy_JKT48",
+            "instagram_account": "jkt48.daisy",
+            "tiktok_account": "daisyjkt48"
         },
         {
             "type": "TRAINEE",
@@ -160,7 +312,15 @@
             "name": "Fahira Putri",
             "nickname": "Fahira",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fahira_putri.jpg",
-            "jkt48_member_id": 82
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/fahira_putri.jpg",
+            "jkt48_member_id": 82,
+            "birth_date": "2007-01-27T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "161",
+            "horoscope": "Aquarius",
+            "twitter_account": "Fahira_JKT48",
+            "instagram_account": "jkt48.fahira",
+            "tiktok_account": "fahirajkt48"
         },
         {
             "type": "TRAINEE",
@@ -168,7 +328,15 @@
             "name": "Fatimah Azzahra",
             "nickname": "Rara",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fatimah_azzahra.jpg",
-            "jkt48_member_id": 85
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/fatimah_azzahra.jpg",
+            "jkt48_member_id": 85,
+            "birth_date": "2008-08-01T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Leo",
+            "twitter_account": "Rara_JKT48",
+            "instagram_account": "jkt48.rara",
+            "tiktok_account": "rarajkt48"
         },
         {
             "type": "DREAM",
@@ -176,7 +344,15 @@
             "name": "Febriola Sinambela",
             "nickname": "Olla",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/febriola_sinambela.jpg",
-            "jkt48_member_id": 88
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/febriola_sinambela.jpg",
+            "jkt48_member_id": 88,
+            "birth_date": "2005-02-25T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "156",
+            "horoscope": "Pisces",
+            "twitter_account": "F_OllaJKT48",
+            "instagram_account": "jkt48.olla",
+            "tiktok_account": "ollajkt48"
         },
         {
             "type": "PASSION",
@@ -184,7 +360,15 @@
             "name": "Feni Fitriyanti",
             "nickname": "Feni",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/feni_fitriyanti.jpg",
-            "jkt48_member_id": 89
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/feni_fitriyanti.jpg",
+            "jkt48_member_id": 89,
+            "birth_date": "1999-01-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "162",
+            "horoscope": "Capricorn",
+            "twitter_account": "F_FeniJKT48",
+            "instagram_account": "jkt48feni",
+            "tiktok_account": "fenifitriyanti"
         },
         {
             "type": "LOVE",
@@ -192,7 +376,15 @@
             "name": "Fiony Alveria",
             "nickname": "Fiony",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fiony_alveria.jpg",
-            "jkt48_member_id": 91
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/fiony_alveria.jpg",
+            "jkt48_member_id": 91,
+            "birth_date": "2002-02-03T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Aquarius",
+            "twitter_account": "A_FionyJKT48",
+            "instagram_account": "jkt48.fiony",
+            "tiktok_account": "fionyalveria"
         },
         {
             "type": "DREAM",
@@ -200,7 +392,15 @@
             "name": "Freya Jayawardana",
             "nickname": "Freya",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/freya_jayawardana.jpg",
-            "jkt48_member_id": 94
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/freya_jayawardana.jpg",
+            "jkt48_member_id": 94,
+            "birth_date": "2006-02-12T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "154",
+            "horoscope": "Aquarius",
+            "twitter_account": "Freya_JKT48",
+            "instagram_account": "jkt48.freya",
+            "tiktok_account": "freyajkt48"
         },
         {
             "type": "LOVE",
@@ -208,7 +408,15 @@
             "name": "Fritzy Rosmerian",
             "nickname": "Fritzy",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/fritzy_rosmerian.jpg",
-            "jkt48_member_id": 96
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/fritzy_rosmerian.jpg",
+            "jkt48_member_id": 96,
+            "birth_date": "2008-07-27T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "157",
+            "horoscope": "Leo",
+            "twitter_account": "Fritzy_JKT48",
+            "instagram_account": "jkt48.fritzy",
+            "tiktok_account": "fritzyjkt48"
         },
         {
             "type": "DREAM",
@@ -216,7 +424,15 @@
             "name": "Gabriela Abigail",
             "nickname": "Ella",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/gabriela_abigail.jpg",
-            "jkt48_member_id": 97
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/gabriela_abigail.jpg",
+            "jkt48_member_id": 97,
+            "birth_date": "2006-08-06T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "160",
+            "horoscope": "Leo",
+            "twitter_account": "Ella_JKT48",
+            "instagram_account": "jkt48.ella",
+            "tiktok_account": "ellajkt48"
         },
         {
             "type": "DREAM",
@@ -224,7 +440,15 @@
             "name": "Gita Sekar Andarini",
             "nickname": "Gita",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/gita_sekar_andarini.jpg",
-            "jkt48_member_id": 104
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/gita_sekar_andarini.jpg",
+            "jkt48_member_id": 104,
+            "birth_date": "2001-06-29T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "165",
+            "horoscope": "Cancer",
+            "twitter_account": "A_GitaJKT48",
+            "instagram_account": "jkt48.gita",
+            "tiktok_account": "gitasekar"
         },
         {
             "type": "LOVE",
@@ -232,7 +456,15 @@
             "name": "Grace Octaviani",
             "nickname": "Gracie",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/grace_octaviani.jpg",
-            "jkt48_member_id": 105
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/grace_octaviani.jpg",
+            "jkt48_member_id": 105,
+            "birth_date": "2007-10-17T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "165",
+            "horoscope": "Libra",
+            "twitter_account": "Gracie_JKT48",
+            "instagram_account": "jkt48.gracie",
+            "tiktok_account": "graciejkt48"
         },
         {
             "type": "DREAM",
@@ -240,7 +472,15 @@
             "name": "Greesella Adhalia",
             "nickname": "Greesel",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/greesella_adhalia.jpg",
-            "jkt48_member_id": 107
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/greesella_adhalia.jpg",
+            "jkt48_member_id": 107,
+            "birth_date": "2006-01-27T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "165",
+            "horoscope": "Aquarius",
+            "twitter_account": "Greesel_JKT48",
+            "instagram_account": "jkt48.greesel",
+            "tiktok_account": "greeseljkt48"
         },
         {
             "type": "TRAINEE",
@@ -248,7 +488,15 @@
             "name": "Hagia Sopia",
             "nickname": "Giaa",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Hagia_Sopia.jpg",
-            "jkt48_member_id": 108
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Hagia_Sopia.jpg",
+            "jkt48_member_id": 108,
+            "birth_date": "2008-06-16T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "156",
+            "horoscope": "Gemini",
+            "twitter_account": "Giaa_JKT48",
+            "instagram_account": "jkt48.giaa",
+            "tiktok_account": "giaajkt48"
         },
         {
             "type": "TRAINEE",
@@ -256,7 +504,15 @@
             "name": "Heidi Suyangga",
             "nickname": "Heidi",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/heidi_suyangga.jpg",
-            "jkt48_member_id": 111
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/heidi_suyangga.jpg",
+            "jkt48_member_id": 111,
+            "birth_date": "2008-06-04T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Gemini",
+            "twitter_account": "Heidi_JKT48",
+            "instagram_account": "jkt48.heidi",
+            "tiktok_account": "heidijkt48"
         },
         {
             "type": "DREAM",
@@ -264,7 +520,15 @@
             "name": "Helisma Putri",
             "nickname": "Eli",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/helisma_putri.jpg",
-            "jkt48_member_id": 112
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/helisma_putri.jpg",
+            "jkt48_member_id": 112,
+            "birth_date": "2000-06-14T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "165",
+            "horoscope": "Gemini",
+            "twitter_account": "H_EliJKT48",
+            "instagram_account": "jkt48.eli",
+            "tiktok_account": "elijkt48"
         },
         {
             "type": "LOVE",
@@ -272,7 +536,15 @@
             "name": "Hillary Abigail",
             "nickname": "Lily",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/hillary_abigail.jpg",
-            "jkt48_member_id": 114
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/hillary_abigail.jpg",
+            "jkt48_member_id": 114,
+            "birth_date": "2007-10-18T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Libra",
+            "twitter_account": "Lily_JKT48",
+            "instagram_account": "jkt48.lily",
+            "tiktok_account": "lilyjkt48"
         },
         {
             "type": "TRAINEE",
@@ -280,7 +552,15 @@
             "name": "Humaira Ramadhani",
             "nickname": "Maira",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Humaira_Ramadhani.jpg",
-            "jkt48_member_id": 115
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Humaira_Ramadhani.jpg",
+            "jkt48_member_id": 115,
+            "birth_date": "2011-08-13T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "153",
+            "horoscope": "Leo",
+            "twitter_account": "Maira_JKT48",
+            "instagram_account": "jkt48.maira",
+            "tiktok_account": "mairajkt48"
         },
         {
             "type": "LOVE",
@@ -288,7 +568,15 @@
             "name": "Indah Cahya",
             "nickname": "Indah",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/indah_cahya.jpg",
-            "jkt48_member_id": 116
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/indah_cahya.jpg",
+            "jkt48_member_id": 116,
+            "birth_date": "2001-03-19T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "165",
+            "horoscope": "Pisces",
+            "twitter_account": "C_IndahJKT48",
+            "instagram_account": "jkt48.indah",
+            "tiktok_account": "indahjkt48"
         },
         {
             "type": "TRAINEE",
@@ -296,7 +584,15 @@
             "name": "Jacqueline Immanuela",
             "nickname": "Ekin",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jacqueline_Immanuela.jpg",
-            "jkt48_member_id": 120
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jacqueline_Immanuela.jpg",
+            "jkt48_member_id": 120,
+            "birth_date": "2009-09-17T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "160",
+            "horoscope": "Virgo",
+            "twitter_account": "Ekin_JKT48",
+            "instagram_account": "jkt48.ekin",
+            "tiktok_account": "ekinjkt48"
         },
         {
             "type": "LOVE",
@@ -304,7 +600,15 @@
             "name": "Jazzlyn Trisha",
             "nickname": "Trisha",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jazzlyn_trisha.jpg",
-            "jkt48_member_id": 121
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/jazzlyn_trisha.jpg",
+            "jkt48_member_id": 121,
+            "birth_date": "2011-02-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "164",
+            "horoscope": "Aquarius",
+            "twitter_account": "Trisha_JKT48",
+            "instagram_account": "jkt48.trisha",
+            "tiktok_account": "trishajkt48"
         },
         {
             "type": "TRAINEE",
@@ -312,7 +616,15 @@
             "name": "Jemima Evodie",
             "nickname": "Jemima",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jemima_Evodie.jpg",
-            "jkt48_member_id": 123
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Jemima_Evodie.jpg",
+            "jkt48_member_id": 123,
+            "birth_date": "2009-08-25T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "158",
+            "horoscope": "Virgo",
+            "twitter_account": "Jemima_JKT48",
+            "instagram_account": "jkt48.jemima",
+            "tiktok_account": "jemimajkt48"
         },
         {
             "type": "PASSION",
@@ -320,7 +632,15 @@
             "name": "Jessica Chandra",
             "nickname": "Jessi",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jessica_chandra.jpg",
-            "jkt48_member_id": 127
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/jessica_chandra.jpg",
+            "jkt48_member_id": 127,
+            "birth_date": "2005-09-22T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "163",
+            "horoscope": "Virgo",
+            "twitter_account": "J_JessiJKT48",
+            "instagram_account": "jkt48.jessi",
+            "tiktok_account": "jessijkt48"
         },
         {
             "type": "DREAM",
@@ -328,7 +648,15 @@
             "name": "Jesslyn Elly",
             "nickname": "Lyn",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/jesslyn_elly.jpg",
-            "jkt48_member_id": 131
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/jesslyn_elly.jpg",
+            "jkt48_member_id": 131,
+            "birth_date": "2001-09-12T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "155",
+            "horoscope": "Virgo",
+            "twitter_account": "Lyn_JKT48",
+            "instagram_account": "jkt48.lyn",
+            "tiktok_account": "lynjkt48"
         },
         {
             "type": "PASSION",
@@ -336,7 +664,15 @@
             "name": "Kathrina Irene",
             "nickname": "Kathrina",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/kathrina_irene.jpg",
-            "jkt48_member_id": 143
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/kathrina_irene.jpg",
+            "jkt48_member_id": 143,
+            "birth_date": "2006-07-23T17:00:00.000Z",
+            "blood_type": "A",
+            "body_height": "165",
+            "horoscope": "Leo",
+            "twitter_account": "I_KathrinaJKT48",
+            "instagram_account": "jkt48.kathrina",
+            "tiktok_account": "kathrinajkt48"
         },
         {
             "type": "PASSION",
@@ -344,7 +680,15 @@
             "name": "Lulu Salsabila",
             "nickname": "Lulu",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/lulu_salsabila.jpg",
-            "jkt48_member_id": 148
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/lulu_salsabila.jpg",
+            "jkt48_member_id": 148,
+            "birth_date": "2002-10-22T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "157",
+            "horoscope": "Libra",
+            "twitter_account": "S_LuluJKT48",
+            "instagram_account": "jkt48.lulu",
+            "tiktok_account": "lulujkt48"
         },
         {
             "type": "DREAM",
@@ -352,7 +696,15 @@
             "name": "Marsha Lenathea",
             "nickname": "Marsha",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/marsha_lenathea.jpg",
-            "jkt48_member_id": 152
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/marsha_lenathea.jpg",
+            "jkt48_member_id": 152,
+            "birth_date": "2006-01-08T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "163",
+            "horoscope": "Capricorn",
+            "twitter_account": "L_MarshaJKT48",
+            "instagram_account": "jkt48.marsha",
+            "tiktok_account": "marsha.jkt48"
         },
         {
             "type": "TRAINEE",
@@ -360,7 +712,15 @@
             "name": "Maxine Faye",
             "nickname": "Maxine",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/maxine_faye_lee.jpg",
-            "jkt48_member_id": 155
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/maxine_faye_lee.jpg",
+            "jkt48_member_id": 155,
+            "birth_date": "2007-06-27T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "165",
+            "horoscope": "Cancer",
+            "twitter_account": "Maxine_JKT48",
+            "instagram_account": "jkt48.maxine",
+            "tiktok_account": "maxinejkt48"
         },
         {
             "type": "LOVE",
@@ -368,7 +728,15 @@
             "name": "Michelle Alexandra",
             "nickname": "Michie",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_alexandra.jpg",
-            "jkt48_member_id": 159
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_alexandra.jpg",
+            "jkt48_member_id": 159,
+            "birth_date": "2009-04-21T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Taurus",
+            "twitter_account": "Michie_JKT48",
+            "instagram_account": "jkt48.michie",
+            "tiktok_account": "michiejkt48"
         },
         {
             "type": "PASSION",
@@ -376,7 +744,15 @@
             "name": "Michelle Levia",
             "nickname": "Levi",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_levia.jpg",
-            "jkt48_member_id": 161
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/michelle_levia.jpg",
+            "jkt48_member_id": 161,
+            "birth_date": "2009-01-23T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "168",
+            "horoscope": "Aquarius",
+            "twitter_account": "Levi_JKT48",
+            "instagram_account": "jkt48.levi",
+            "tiktok_account": "levijkt48"
         },
         {
             "type": "TRAINEE",
@@ -384,7 +760,15 @@
             "name": "Mikaela Kusjanto",
             "nickname": "Mikaela",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Mikaela_Kusjanto.jpg",
-            "jkt48_member_id": 162
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Mikaela_Kusjanto.jpg",
+            "jkt48_member_id": 162,
+            "birth_date": "2007-06-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Gemini",
+            "twitter_account": "Mikaela_JKT48",
+            "instagram_account": "jkt48.mikaela",
+            "tiktok_account": "mikaelajkt48"
         },
         {
             "type": "PASSION",
@@ -392,7 +776,15 @@
             "name": "Mutiara Azzahra",
             "nickname": "Muthe",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/mutiara_azzahra.jpg",
-            "jkt48_member_id": 166
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/mutiara_azzahra.jpg",
+            "jkt48_member_id": 166,
+            "birth_date": "2004-07-11T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "158",
+            "horoscope": "Cancer",
+            "twitter_account": "A_MutheJKT48",
+            "instagram_account": "jkt48.muthe_",
+            "tiktok_account": "muthejkt48"
         },
         {
             "type": "LOVE",
@@ -400,7 +792,15 @@
             "name": "Nayla Suji",
             "nickname": "Nayla",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/nayla_suji.jpg",
-            "jkt48_member_id": 175
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/nayla_suji.jpg",
+            "jkt48_member_id": 175,
+            "birth_date": "2007-06-18T17:00:00.000Z",
+            "blood_type": "AB",
+            "body_height": "161",
+            "horoscope": "Gemini",
+            "twitter_account": "Nayla_JKT48",
+            "instagram_account": "jkt48.nayla",
+            "tiktok_account": "naylajkt48"
         },
         {
             "type": "DREAM",
@@ -408,7 +808,15 @@
             "name": "Nina Tutachia",
             "nickname": "Nachia",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/nina_tutachia.jpg",
-            "jkt48_member_id": 178
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/nina_tutachia.jpg",
+            "jkt48_member_id": 178,
+            "birth_date": "2009-10-15T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "162",
+            "horoscope": "Libra",
+            "twitter_account": "Nachia_JKT48",
+            "instagram_account": "jkt48.nachia",
+            "tiktok_account": "nachiajkt48"
         },
         {
             "type": "TRAINEE",
@@ -416,7 +824,15 @@
             "name": "Nur Intan",
             "nickname": "Intan",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/Nur_Intan.jpg",
-            "jkt48_member_id": 182
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/Nur_Intan.jpg",
+            "jkt48_member_id": 182,
+            "birth_date": "2006-02-23T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "158",
+            "horoscope": "Pisces",
+            "twitter_account": "Intan_JKT48",
+            "instagram_account": "jkt48.intan_",
+            "tiktok_account": "intanjkt48"
         },
         {
             "type": "DREAM",
@@ -424,7 +840,15 @@
             "name": "Oline Manuel",
             "nickname": "Oline",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/oline_manuel.jpg",
-            "jkt48_member_id": 185
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/oline_manuel.jpg",
+            "jkt48_member_id": 185,
+            "birth_date": "2007-11-02T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "167",
+            "horoscope": "Scorpio",
+            "twitter_account": "Oline_JKT48",
+            "instagram_account": "jkt48.oline",
+            "tiktok_account": "olinejkt48"
         },
         {
             "type": "JKT48_VIRTUAL",
@@ -432,7 +856,15 @@
             "name": "Pia Meraleo",
             "nickname": "Pia",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/pia_meraleo.jpg",
-            "jkt48_member_id": 187
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/pia_meraleo.jpg",
+            "jkt48_member_id": 187,
+            "birth_date": "2005-05-04T17:00:00.000Z",
+            "blood_type": "AB",
+            "body_height": "158",
+            "horoscope": "Taurus",
+            "twitter_account": "Pia_JKT48",
+            "instagram_account": "jkt48.pia",
+            "tiktok_account": "piajkt48"
         },
         {
             "type": "TRAINEE",
@@ -440,7 +872,15 @@
             "name": "Putry Jazyta",
             "nickname": "Jazzy",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/putry_jazyta.jpg",
-            "jkt48_member_id": 194
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/putry_jazyta.jpg",
+            "jkt48_member_id": 194,
+            "birth_date": "2008-01-20T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "164",
+            "horoscope": "Aquarius",
+            "twitter_account": "Jazzy_JKT48",
+            "instagram_account": "jkt48.jazzy",
+            "tiktok_account": "jazzyjkt48"
         },
         {
             "type": "PASSION",
@@ -448,7 +888,15 @@
             "name": "Raisha Syifa",
             "nickname": "Raisha",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/raisha_syifa.jpg",
-            "jkt48_member_id": 195
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/raisha_syifa.jpg",
+            "jkt48_member_id": 195,
+            "birth_date": "2007-11-10T17:00:00.000Z",
+            "blood_type": "AB",
+            "body_height": "163",
+            "horoscope": "Scorpio",
+            "twitter_account": "Raisha_JKT48",
+            "instagram_account": "jkt48.raisha",
+            "tiktok_account": "raishajkt48"
         },
         {
             "type": "TRAINEE",
@@ -456,7 +904,15 @@
             "name": "Ralyne Van Irwan",
             "nickname": "Ralyne",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/ralyne_van_irwan.jpg",
-            "jkt48_member_id": 196
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/ralyne_van_irwan.jpg",
+            "jkt48_member_id": 196,
+            "birth_date": "2009-06-25T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Cancer",
+            "twitter_account": "Ralyne_JKT48",
+            "instagram_account": "jkt48.ralyne",
+            "tiktok_account": "ralynejkt48"
         },
         {
             "type": "PASSION",
@@ -464,7 +920,15 @@
             "name": "Ribka Budiman",
             "nickname": "Ribka",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/ribka_budiman.jpg",
-            "jkt48_member_id": 204
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/ribka_budiman.jpg",
+            "jkt48_member_id": 204,
+            "birth_date": "2009-01-13T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "160",
+            "horoscope": "Capricorn",
+            "twitter_account": "Ribka_JKT48",
+            "instagram_account": "jkt48.ribka",
+            "tiktok_account": "ribkajkt48"
         },
         {
             "type": "DREAM",
@@ -472,7 +936,15 @@
             "name": "Shabilqis Naila",
             "nickname": "Nala",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/shabilqis_naila.jpg",
-            "jkt48_member_id": 221
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/shabilqis_naila.jpg",
+            "jkt48_member_id": 221,
+            "birth_date": "2008-09-01T17:00:00.000Z",
+            "blood_type": "B",
+            "body_height": "160",
+            "horoscope": "Virgo",
+            "twitter_account": "Nala_JKT48",
+            "instagram_account": "jkt48.nala",
+            "tiktok_account": "nalajkt48"
         },
         {
             "type": "TRAINEE",
@@ -480,7 +952,15 @@
             "name": "Sona Kalyana",
             "nickname": "Sona",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/sona_kalyana.jpg",
-            "jkt48_member_id": 231
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/sona_kalyana.jpg",
+            "jkt48_member_id": 231,
+            "birth_date": "2008-11-13T17:00:00.000Z",
+            "blood_type": "O",
+            "body_height": "162",
+            "horoscope": "Scorpio",
+            "twitter_account": "Sona_JKT48",
+            "instagram_account": "jkt48.sona",
+            "tiktok_account": "sonajkt48"
         },
         {
             "type": "PASSION",
@@ -488,7 +968,15 @@
             "name": "Victoria Kimberly",
             "nickname": "Kimmy",
             "photo": "https://jkt48.com/api/v1/storages/media/jkt48-member/victoria_kimberly.jpg",
-            "jkt48_member_id": 244
+            "photo_1": "https://jkt48.com/api/v1/storages/media/jkt48-member/victoria_kimberly.jpg",
+            "jkt48_member_id": 244,
+            "birth_date": "2010-03-07T17:00:00.000Z",
+            "blood_type": "AB",
+            "body_height": "162",
+            "horoscope": "Pisces",
+            "twitter_account": "Kimmy_JKT48",
+            "instagram_account": "jkt48.kimmy",
+            "tiktok_account": "jkt48.kimmy"
         }
     ]
 }
