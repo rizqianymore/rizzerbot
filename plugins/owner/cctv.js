@@ -236,7 +236,7 @@ export default {
           const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           const camAliases = idToAlias[cam.id];
           const aliasStr = camAliases ? ` [Alias: *${camAliases.join(", ")}*]` : "";
-          menuText += `${index + 1}. ${status} *${cam.name}*${aliasStr} (ID: \`${cam.id}\`)\n`;
+          menuText += `${index + 1}. ${status} *${cam.name}*${aliasStr}\n`;
         });
         menuText += `\n💡 Ketik \`.cctv snap <nomor/nama/alias>\` untuk mengambil gambar.`;
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
