@@ -205,6 +205,25 @@ export default {
         return;
       }
 
+      // Sync cameras to database cctvAliases
+      const aliasesObj = db.data.cctvAliases || {};
+      let dbChanged = false;
+      cameras.forEach((cam) => {
+        if (!aliasesObj[cam.id]) {
+          aliasesObj[cam.id] = {
+            name: cam.name,
+            alias: ""
+          };
+          dbChanged = true;
+        } else if (aliasesObj[cam.id].name !== cam.name) {
+          aliasesObj[cam.id].name = cam.name;
+          dbChanged = true;
+        }
+      });
+      if (dbChanged) {
+        db.save();
+      }
+
       if (action === "help") {
         const helpText = 
           `📹 *CCTV Nx Witness Help & Usage*\n\n` +
@@ -224,19 +243,12 @@ export default {
       }
 
       if (action === "list") {
-        const aliasesObj = db.data.cctvAliases || {};
-        const idToAlias = {};
-        for (const [alias, id] of Object.entries(aliasesObj)) {
-          if (!idToAlias[id]) idToAlias[id] = [];
-          idToAlias[id].push(alias);
-        }
-
         let menuText = "📹 *Daftar Kamera Nx Witness*\n\n";
         cameras.forEach((cam, index) => {
           const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
-          const camAliases = idToAlias[cam.id];
-          const aliasStr = camAliases ? ` [Alias: *${camAliases.join(", ")}*]` : "";
-          menuText += `${index + 1}. ${status} *${cam.name}*${aliasStr}\n`;
+          const camData = aliasesObj[cam.id];
+          const displayName = camData && camData.alias ? `*${camData.alias.toUpperCase()}*` : `_${cam.name}_ (Belum ada alias)`;
+          menuText += `${index + 1}. ${status} ${displayName}\n`;
         });
         menuText += `\n💡 Ketik \`.cctv snap <nomor/nama/alias>\` untuk mengambil gambar.`;
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
@@ -280,7 +292,7 @@ export default {
           return;
         }
 
-        db.setCctvAlias(aliasName, targetCamera.id);
+        db.setCctvAlias(targetCamera.id, targetCamera.name, aliasName);
         await sock.sendMessage(
           jid,
           { text: `✅ Berhasil memetakan alias *"${aliasName}"* ke kamera *"${targetCamera.name}"* (ID: \`${targetCamera.id}\`).` },
@@ -319,9 +331,8 @@ export default {
       }
 
       if (action === "aliases") {
-        const aliasesObj = db.data.cctvAliases || {};
-        const keys = Object.keys(aliasesObj);
-        if (keys.length === 0) {
+        const entries = Object.entries(aliasesObj).filter(([id, data]) => data && data.alias);
+        if (entries.length === 0) {
           await sock.sendMessage(
             jid,
             { text: `📹 *Daftar Alias CCTV kosong.*\nGunakan \`.cctv alias <nama_alias> <nomor/nama/id>\` untuk menambahkan.` },
@@ -331,11 +342,8 @@ export default {
         }
 
         let aliasList = `📹 *Daftar Alias CCTV Terdaftar*\n\n`;
-        keys.forEach((key, index) => {
-          const camId = aliasesObj[key];
-          const foundCam = cameras.find((cam) => cam.id === camId);
-          const camName = foundCam ? foundCam.name : "Kamera Terhapus/Tidak Ditemukan";
-          aliasList += `${index + 1}. *${key}* ➔ *${camName}* (ID: \`${camId}\`)\n`;
+        entries.forEach(([id, data], index) => {
+          aliasList += `${index + 1}. *${data.alias}* ➔ *${data.name}* (ID: \`${id}\`)\n`;
         });
 
         await sock.sendMessage(jid, { text: aliasList }, { quoted: msg });
@@ -365,7 +373,9 @@ export default {
       if (!targetCamera) {
         let errorMsg = `❌ Kamera dengan kata kunci *"${target}"* tidak ditemukan.\n\n*Kamera yang tersedia:* \n`;
         cameras.forEach((cam, index) => {
-          errorMsg += `│ ${index + 1}. ${cam.name}\n`;
+          const camData = aliasesObj[cam.id];
+          const displayName = camData && camData.alias ? `${camData.alias.toUpperCase()} (Asli: ${cam.name})` : cam.name;
+          errorMsg += `│ ${index + 1}. ${displayName}\n`;
         });
         await sock.sendMessage(
           jid,
@@ -377,9 +387,12 @@ export default {
 
       if (action === "info") {
         const status = targetCamera.status === "Online" || targetCamera.statusFlags === "CSF_NoFlags" || !targetCamera.statusFlags ? "🟢 Online" : "🔴 Offline";
+        const camData = aliasesObj[targetCamera.id];
+        const currentAlias = camData && camData.alias ? camData.alias.toUpperCase() : "N/A";
         const infoText = 
           `📹 *Informasi Detail Kamera*\n\n` +
-          `• *Nama:* ${targetCamera.name}\n` +
+          `• *Alias:* *${currentAlias}*\n` +
+          `• *Nama Asli:* ${targetCamera.name}\n` +
           `• *Status:* ${status}\n` +
           `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
           `• *Model:* ${targetCamera.model || "Unknown"}\n` +
