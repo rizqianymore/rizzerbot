@@ -237,7 +237,7 @@ async function calculateLayout(rawText) {
 }
 
 async function createTextSvg(text, themeName) {
-  const theme = THEMES[themeName] || THEMES.green;
+  const theme = THEMES[themeName] || THEMES.white;
   const { optimalSize, lines, allEmojis } = await calculateLayout(text.trim());
 
   const lineHeight = optimalSize * 1.15;
@@ -318,7 +318,7 @@ function parseArgs(raw) {
     };
   }
   return {
-    theme: "green",
+    theme: "white",
     text: normalized,
   };
 }
@@ -346,8 +346,8 @@ export default {
   name: "brat",
   description:
     "Membuat stiker teks bergaya album Brat autentik dengan dukungan tema warna & emoji.",
-  usage: "[green|white|black|blue] <teks>",
-  example: "white deluxe edition ✨",
+  usage: "[white|green|black|blue] <teks>",
+  example: "deluxe edition ✨",
   aliases: ["sbrat", "bratmaker", "brats", "bratsticker"],
   category: "Media",
   premiumOnly: true,
@@ -358,7 +358,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Masukkan teks untuk stiker brat.\n\n*Format:* `.brat [tema] <teks>`\n*Pilihan tema:* `green` (default), `white`, `black`, `blue`\n*Contoh:* `.brat white 365 party girl 🔥`",
+          text: "⚠️ Masukkan teks untuk stiker brat.\n\n*Format:* `.brat [tema] <teks>`\n*Pilihan tema:* `white` (default), `green`, `black`, `blue`\n*Contoh:* `.brat 365 party girl 🔥`",
         },
         { quoted: msg }
       );
