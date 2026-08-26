@@ -195,9 +195,9 @@ export default {
 
     try {
       const token = await loginToNx(client);
-      const cameras = await getNxCameraList(client, token);
+      const rawCameras = await getNxCameraList(client, token);
 
-      if (!cameras || cameras.length === 0) {
+      if (!rawCameras || rawCameras.length === 0) {
         await sock.sendMessage(
           jid,
           { text: "⚠️ Tidak ada kamera yang ditemukan di sistem Nx Witness." },
@@ -205,6 +205,9 @@ export default {
         );
         return;
       }
+
+      // Sort cameras alphabetically by name
+      const cameras = [...rawCameras].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
 
       // Sync cameras to database cctvAliases
       const aliasesObj = db.data.cctvAliases || {};
