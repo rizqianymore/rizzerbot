@@ -467,22 +467,22 @@ export default {
           console.error("CCTV Transcoding Failed, sending raw:", transcodeErr.message);
         }
 
+        const finalBuffer = fs.readFileSync(finalPath);
+
         await sock.sendMessage(
           jid,
           {
-            video: { url: finalPath },
+            video: finalBuffer,
             caption: captionText,
             mimetype: "video/mp4",
           },
           { quoted: msg }
         );
 
-        setTimeout(() => {
-          try {
-            if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
-            if (fs.existsSync(transPath)) fs.unlinkSync(transPath);
-          } catch (_) {}
-        }, 15000);
+        try {
+          if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
+          if (fs.existsSync(transPath)) fs.unlinkSync(transPath);
+        } catch (_) {}
       } else {
         const imageBuffer = await getNxSnapshot(client, token, targetCamera.id);
         const captionText =
