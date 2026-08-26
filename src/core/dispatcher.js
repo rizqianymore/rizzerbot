@@ -49,7 +49,7 @@ export async function dispatchMessage(sock, msg, logger) {
 
   const senderJid = db.normalizeJid(msg.key.participant || remoteJid);
   const senderName = msg.pushName || "User";
-  const { isOwner, userProfile } = evaluatePermissions(sock, msg, senderJid);
+  const { isOwner, isPremium, isLimited, userProfile } = evaluatePermissions(sock, msg, senderJid);
 
   if (userProfile.banned && !isOwner) return;
   if (db.data.settings.selfMode && !isOwner) return;
@@ -158,8 +158,18 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
+  // Safeguard: Limited Only
+  if (cmd.limitedOnly && !isLimited && !isOwner) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "🔒 *Khusus Limited Access:* Perintah ini memerlukan role *Limited* atau *Owner*." },
+      { quoted: msg }
+    );
+    return;
+  }
+
   // Safeguard: Premium Only
-  if (cmd.premiumOnly && !isOwner && !userProfile.premium) {
+  if (cmd.premiumOnly && !isOwner && !isPremium) {
     await sock.sendMessage(
       remoteJid,
       { text: "👑 *Khusus Premium:* Perintah ini memerlukan status Premium." },
@@ -207,7 +217,7 @@ export async function dispatchMessage(sock, msg, logger) {
 
     if (cmd.cooldown || isMarketing) {
       let duration = cmd.cooldown || settings.cooldownTime || 3000;
-      if (userProfile.premium) {
+      if (isPremium) {
         duration = Math.max(1000, Math.floor(duration / 2));
       }
       const cooldownRemaining = checkCooldown(senderJid, duration);
@@ -230,6 +240,8 @@ export async function dispatchMessage(sock, msg, logger) {
     senderName,
     senderJid,
     isOwner,
+    isPremium,
+    isLimited,
     isGroup,
     userProfile,
     activePrefix,

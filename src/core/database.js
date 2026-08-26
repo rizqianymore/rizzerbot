@@ -31,6 +31,7 @@ function createDefaultSchema() {
       maintenance: false,
       registrationOpen: true,
       admins: [],
+      limited: [],
       jpmChannels: [],
       jpmBlacklist: [],
     },

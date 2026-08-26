@@ -129,8 +129,9 @@ export default {
   example: "cctv snap 1",
   aliases: ["monitor", "cam", "nx"],
   category: "Owner",
+  limitedOnly: true,
   premiumOnly: false,
-  ownerOnly: true,
+  ownerOnly: false,
 
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix } = context;

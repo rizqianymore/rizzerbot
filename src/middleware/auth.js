@@ -36,7 +36,14 @@ export function evaluatePermissions(sock, msg, senderJid) {
   const userProfile = db.getUser(senderJid);
   const isPremium = Boolean(isOwner || userProfile?.premium);
 
-  return { isOwner, isPremium, userProfile, isBotAdmin };
+  const isLimited =
+    isOwner ||
+    (db.data.settings.limited || []).some(
+      (l) => db.normalizeJid(l) === senderJid
+    ) ||
+    Boolean(userProfile?.limited);
+
+  return { isOwner, isPremium, isLimited, userProfile, isBotAdmin };
 }
 
 export function isPublicCommand(commandName) {
