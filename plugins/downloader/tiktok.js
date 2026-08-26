@@ -69,7 +69,7 @@ export default {
       const isVideo = images.length === 0;
 
       if (isVideo) {
-        const downloadUrl = data.hdplay || data.play || data.wmplay;
+        const downloadUrl = data.play || data.hdplay || data.wmplay;
         if (!downloadUrl) {
           throw new Error("URL download video tidak ditemukan.");
         }

@@ -70,7 +70,7 @@ export default {
         output: {
           type: "video",
           format: "mp4",
-          quality: "720p" // Default ke 720p untuk keseimbangan kualitas & ukuran file agar tidak melebihi limit WA
+          quality: "480p" // Default ke 480p untuk keseimbangan kualitas & ukuran file agar tidak melebihi limit WA
         },
         audio: {
           bitrate: "128k"
