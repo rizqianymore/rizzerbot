@@ -2,7 +2,11 @@ import axios from "axios";
 import https from "https";
 import fs from "fs";
 import path from "path";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { db } from "@/src/core/database.js";
+
+const execPromise = promisify(exec);
 
 const getEnvVal = (key) => {
   try {
@@ -444,14 +448,29 @@ export default {
           `• *ID:* \`${targetCamera.id}\`\n\n` +
           `⚡ _Via Nx Witness REST API_`;
 
-        const tempFilename = `cctv_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
-        const tempPath = path.join(process.cwd(), "database", tempFilename);
-        fs.writeFileSync(tempPath, videoBuffer);
+        const rawFilename = `cctv_raw_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
+        const rawPath = path.join(process.cwd(), "database", rawFilename);
+        const transFilename = `cctv_trans_${targetCamera.id.replace(/[{}]/g, "")}_${Date.now()}.mp4`;
+        const transPath = path.join(process.cwd(), "database", transFilename);
+        
+        fs.writeFileSync(rawPath, videoBuffer);
+
+        let finalPath = rawPath;
+        try {
+          const ffmpegPath = path.join(process.cwd(), "bin", "ffmpeg");
+          const cmd = `"${ffmpegPath}" -y -i "${rawPath}" -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v -map 0:a? "${transPath}"`;
+          await execPromise(cmd);
+          if (fs.existsSync(transPath) && fs.statSync(transPath).size > 0) {
+            finalPath = transPath;
+          }
+        } catch (transcodeErr) {
+          console.error("CCTV Transcoding Failed, sending raw:", transcodeErr.message);
+        }
 
         await sock.sendMessage(
           jid,
           {
-            video: { url: tempPath },
+            video: { url: finalPath },
             caption: captionText,
             mimetype: "video/mp4",
           },
@@ -460,9 +479,8 @@ export default {
 
         setTimeout(() => {
           try {
-            if (fs.existsSync(tempPath)) {
-              fs.unlinkSync(tempPath);
-            }
+            if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
+            if (fs.existsSync(transPath)) fs.unlinkSync(transPath);
           } catch (_) {}
         }, 15000);
       } else {
