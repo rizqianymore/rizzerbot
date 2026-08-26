@@ -239,10 +239,7 @@ async function calculateLayout(rawText) {
   return { optimalSize, lines: optimalLines, allEmojis };
 }
 
-async function createTextSvg(text, themeName) {
-  const theme = THEMES[themeName] || THEMES.white;
-  const { optimalSize, lines, allEmojis } = await calculateLayout(text.trim());
-
+function buildSvgForLines(lines, optimalSize, theme) {
   const lineHeight = optimalSize * 1.15;
   const totalTextHeight = lines.length * lineHeight;
   const startY = (CANVAS_SIZE - totalTextHeight) / 2;
@@ -250,31 +247,37 @@ async function createTextSvg(text, themeName) {
   const svgElements = [];
 
   lines.forEach((line, lineIdx) => {
-    const adjustedTokens = [];
-    for (let i = 0; i < line.length; i++) {
-      const tok = line[i];
-      adjustedTokens.push(tok);
-      const nextTok = line[i + 1];
-      if (
-        (tok.type === "text" && nextTok && nextTok.type === "emoji") ||
-        (tok.type === "emoji" && nextTok && nextTok.type === "text")
-      ) {
-        adjustedTokens.push({
-          type: "space",
-          value: " ",
-          width: optimalSize * 0.15,
-        });
-      }
-    }
-
-    const lineWidth = adjustedTokens.reduce(
+    const spaceTokens = line.filter((t) => t.type === "space");
+    const nonSpaceTokens = line.filter((t) => t.type !== "space");
+    const contentWidth = nonSpaceTokens.reduce(
       (acc, tok) => acc + (tok.width || 0),
       0
     );
-    let currentX = (CANVAS_SIZE - lineWidth) / 2;
+    const isLastLine = lineIdx === lines.length - 1;
+
+    let currentX;
+    let extraSpace = 0;
+
+    // Apply auto justify across lines if multiple words exist
+    if (
+      spaceTokens.length > 0 &&
+      (!isLastLine || contentWidth >= MAX_CONTENT_WIDTH * 0.75)
+    ) {
+      extraSpace = (MAX_CONTENT_WIDTH - contentWidth) / spaceTokens.length;
+      currentX = PADDING;
+    } else {
+      const lineWidth = line.reduce((acc, tok) => acc + (tok.width || 0), 0);
+      currentX = (CANVAS_SIZE - lineWidth) / 2;
+    }
+
     const lineY = startY + lineIdx * lineHeight;
 
-    for (const token of adjustedTokens) {
+    for (const token of line) {
+      if (token.type === "space") {
+        currentX += (token.width || 0) + extraSpace;
+        continue;
+      }
+
       const tokenW = token.width || 0;
       if (token.type === "emoji") {
         const b64 = emojiBase64Cache.get(emojiToCodePoints(token.value));
@@ -299,19 +302,17 @@ async function createTextSvg(text, themeName) {
     }
   });
 
-  const svg = `
+  return `
     <svg width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="${theme.bg}"/>
       ${svgElements.join("\n")}
     </svg>
   `;
-
-  return { svg: Buffer.from(svg), blur: theme.blur, allEmojis };
 }
 
 function parseArgs(raw) {
   const normalized = raw.trim();
-  const match = normalized.match(/^(green|white|black|blue)\s+([\s\S]+)$/i);
+  const match = normalized.match(/^(white|green|black|blue)\s+([\s\S]+)$/i);
   if (match) {
     const theme = match[1].toLowerCase();
     return {
@@ -326,10 +327,11 @@ function parseArgs(raw) {
 }
 
 async function createSbratSticker(text, theme) {
-  const { svg, blur, allEmojis } = await createTextSvg(text, theme);
-  let sharpInstance = sharp(svg);
-  if (blur > 0) {
-    sharpInstance = sharpInstance.blur(blur);
+  const { optimalSize, lines, allEmojis } = await calculateLayout(text.trim());
+  const svgString = buildSvgForLines(lines, optimalSize, theme);
+  let sharpInstance = sharp(Buffer.from(svgString));
+  if (theme.blur > 0) {
+    sharpInstance = sharpInstance.blur(theme.blur);
   }
   let webpBuffer = await sharpInstance.webp({ quality: 92 }).toBuffer();
 
@@ -347,7 +349,7 @@ async function createSbratSticker(text, theme) {
 export default {
   name: "brat",
   description:
-    "Membuat stiker teks bergaya album Brat autentik dengan dukungan tema warna & emoji.",
+    "Membuat stiker teks bergaya album Brat autentik dengan dukungan auto justify, tema warna & emoji.",
   usage: "[white|green|black|blue] <teks>",
   example: "deluxe edition ✨",
   aliases: ["sbrat", "bratmaker", "brats", "bratsticker"],
@@ -379,7 +381,8 @@ export default {
     await sendTyping();
 
     try {
-      const { theme, text } = parseArgs(rawInput);
+      const { theme: themeName, text } = parseArgs(rawInput);
+      const theme = THEMES[themeName] || THEMES.white;
       const stickerBuffer = await createSbratSticker(text, theme);
 
       await sock.sendMessage(

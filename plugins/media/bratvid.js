@@ -249,31 +249,37 @@ function buildSvgForLines(lines, optimalSize, theme) {
   const svgElements = [];
 
   lines.forEach((line, lineIdx) => {
-    const adjustedTokens = [];
-    for (let i = 0; i < line.length; i++) {
-      const tok = line[i];
-      adjustedTokens.push(tok);
-      const nextTok = line[i + 1];
-      if (
-        (tok.type === "text" && nextTok && nextTok.type === "emoji") ||
-        (tok.type === "emoji" && nextTok && nextTok.type === "text")
-      ) {
-        adjustedTokens.push({
-          type: "space",
-          value: " ",
-          width: optimalSize * 0.15,
-        });
-      }
-    }
-
-    const lineWidth = adjustedTokens.reduce(
+    const spaceTokens = line.filter((t) => t.type === "space");
+    const nonSpaceTokens = line.filter((t) => t.type !== "space");
+    const contentWidth = nonSpaceTokens.reduce(
       (acc, tok) => acc + (tok.width || 0),
       0
     );
-    let currentX = (CANVAS_SIZE - lineWidth) / 2;
+    const isLastLine = lineIdx === lines.length - 1;
+
+    let currentX;
+    let extraSpace = 0;
+
+    // Apply auto justify across lines if multiple words exist
+    if (
+      spaceTokens.length > 0 &&
+      (!isLastLine || contentWidth >= MAX_CONTENT_WIDTH * 0.75)
+    ) {
+      extraSpace = (MAX_CONTENT_WIDTH - contentWidth) / spaceTokens.length;
+      currentX = PADDING;
+    } else {
+      const lineWidth = line.reduce((acc, tok) => acc + (tok.width || 0), 0);
+      currentX = (CANVAS_SIZE - lineWidth) / 2;
+    }
+
     const lineY = startY + lineIdx * lineHeight;
 
-    for (const token of adjustedTokens) {
+    for (const token of line) {
+      if (token.type === "space") {
+        currentX += (token.width || 0) + extraSpace;
+        continue;
+      }
+
       const tokenW = token.width || 0;
       if (token.type === "emoji") {
         const b64 = emojiBase64Cache.get(emojiToCodePoints(token.value));
@@ -333,7 +339,7 @@ async function renderFrameBuffer(svgString, blur) {
 export default {
   name: "bratvid",
   description:
-    "Membuat stiker video/animasi teks Brat autentik dengan tema dan dukungan emoji.",
+    "Membuat stiker video/animasi teks Brat autentik dengan auto justify, tema warna dan dukungan emoji.",
   usage: "[white|green|black|blue] <teks>",
   example: "party girl 🔥 💅",
   aliases: ["bratgif", "bratanim", "bratvideo"],
