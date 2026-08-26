@@ -10,6 +10,9 @@ const PUBLIC_COMMANDS = new Set([
   "donate",
   "donasi",
   "sawer",
+  "rules",
+  "owner",
+  "bot",
 ]);
 
 export function evaluatePermissions(sock, msg, senderJid) {
@@ -31,8 +34,9 @@ export function evaluatePermissions(sock, msg, senderJid) {
     isBotAdmin;
 
   const userProfile = db.getUser(senderJid);
+  const isPremium = Boolean(isOwner || userProfile?.premium);
 
-  return { isOwner, userProfile };
+  return { isOwner, isPremium, userProfile, isBotAdmin };
 }
 
 export function isPublicCommand(commandName) {

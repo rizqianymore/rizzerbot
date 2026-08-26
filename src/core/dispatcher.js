@@ -148,12 +148,42 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
-  if (cmd.ownerOnly && !isOwner) return;
+  // Safeguard: Owner Only
+  if (cmd.ownerOnly && !isOwner) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "👑 *Khusus Owner:* Perintah ini hanya dapat dijalankan oleh Owner/Admin Bot." },
+      { quoted: msg }
+    );
+    return;
+  }
 
+  // Safeguard: Premium Only
   if (cmd.premiumOnly && !isOwner && !userProfile.premium) {
     await sock.sendMessage(
       remoteJid,
       { text: "👑 *Khusus Premium:* Perintah ini memerlukan status Premium." },
+      { quoted: msg }
+    );
+    return;
+  }
+
+  // Safeguard: Group Only
+  const isGroup = remoteJid.endsWith("@g.us");
+  if (cmd.groupOnly && !isGroup) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "👥 *Khusus Grup:* Perintah ini hanya dapat digunakan di dalam grup WhatsApp." },
+      { quoted: msg }
+    );
+    return;
+  }
+
+  // Safeguard: Private Chat Only
+  if (cmd.privateOnly && isGroup) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "👤 *Khusus Private Chat:* Perintah ini hanya dapat digunakan di chat pribadi bot." },
       { quoted: msg }
     );
     return;
@@ -200,6 +230,7 @@ export async function dispatchMessage(sock, msg, logger) {
     senderName,
     senderJid,
     isOwner,
+    isGroup,
     userProfile,
     activePrefix,
     commandName,
