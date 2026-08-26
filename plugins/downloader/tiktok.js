@@ -79,7 +79,13 @@ export default {
           edit: loadingMsg.key,
         });
 
-        const videoBuffer = await fetchBuffer(downloadUrl);
+        let videoBuffer = await fetchBuffer(downloadUrl);
+        try {
+          const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
+          videoBuffer = await transcodeToWhatsappVideo(videoBuffer);
+        } catch (err) {
+          console.error("TikTok transcoding failed:", err);
+        }
 
         const caption =
           `📥 *TikTok Downloader*\n\n` +

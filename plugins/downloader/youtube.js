@@ -118,12 +118,18 @@ export default {
         edit: loadingMsg.key,
       });
 
-      const videoBuffer = await fetchBuffer(downloadUrl, { headers });
+      let videoBuffer = await fetchBuffer(downloadUrl, { headers });
+      try {
+        const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
+        videoBuffer = await transcodeToWhatsappVideo(videoBuffer);
+      } catch (err) {
+        console.error("YouTube transcoding failed:", err);
+      }
 
       const caption =
         `📥 *YouTube Downloader*\n\n` +
         `📝 *Title:* ${title}\n` +
-        `⚡ *Quality:* 720p\n\n` +
+        `⚡ *Quality:* 480p\n\n` +
         `⚡ _Via ytmp3.gg API_`;
 
       await sock.sendMessage(

@@ -106,9 +106,16 @@ export default {
 
       for (let i = 0; i < mediaUrls.length; i++) {
         const media = mediaUrls[i];
-        const buffer = await fetchBuffer(media.url);
+        let buffer = await fetchBuffer(media.url);
         
         if (media.isVideo) {
+          try {
+            const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
+            buffer = await transcodeToWhatsappVideo(buffer);
+          } catch (err) {
+            console.error("Instagram transcoding failed:", err);
+          }
+
           await sock.sendMessage(
             msg.key.remoteJid,
             {
