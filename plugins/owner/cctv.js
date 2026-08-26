@@ -104,7 +104,6 @@ const getNxVideo = async (client, token, cameraId, duration = 5) => {
       {
         params: {
           duration: duration,
-          resolution: "480p",
           codec: "h264",
         },
         headers: {
@@ -396,6 +395,19 @@ export default {
           { quoted: msg }
         );
         return;
+      }
+
+      // Check if camera is Online for snap and video actions
+      if (action === "snap" || action === "video") {
+        const isOnline = targetCamera.status === "Online" || targetCamera.statusFlags === "CSF_NoFlags" || !targetCamera.statusFlags;
+        if (!isOnline) {
+          await sock.sendMessage(
+            jid,
+            { text: `❌ Kamera *"${targetCamera.name}"* sedang Offline. Tidak dapat mengambil snapshot atau video.` },
+            { quoted: msg }
+          );
+          return;
+        }
       }
 
       if (action === "info") {
