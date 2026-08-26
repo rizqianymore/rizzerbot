@@ -46,7 +46,7 @@ const loginToNx = async (client) => {
   }
 
   try {
-    const response = await client.post(`${baseUrl}/rest/v1/login`, {
+    const response = await client.post(`${baseUrl}/rest/v1/login/sessions`, {
       username,
       password,
     });
@@ -63,9 +63,9 @@ const loginToNx = async (client) => {
 const getNxCameraList = async (client, token) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
-    const response = await client.get(`${baseUrl}/rest/v1/cameras`, {
+    const response = await client.get(`${baseUrl}/ec2/getCamerasList`, {
       headers: {
-        "x-runtime-key": token,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data || [];
@@ -78,10 +78,13 @@ const getNxSnapshot = async (client, token, cameraId) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
     const response = await client.get(
-      `${baseUrl}/rest/v1/cameras/${cameraId}/image`,
+      `${baseUrl}/ec2/cameraThumbnail`,
       {
+        params: {
+          cameraId: cameraId,
+        },
         headers: {
-          "x-runtime-key": token,
+          Authorization: `Bearer ${token}`,
         },
         responseType: "arraybuffer",
       }
@@ -125,7 +128,7 @@ export default {
       if (!input) {
         let menuText = "📹 *Daftar Kamera Nx Witness*\n\n";
         cameras.forEach((cam, index) => {
-          const status = cam.status === "Online" ? "🟢" : "🔴";
+          const status = cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           menuText += `${index + 1}. ${status} *${cam.name}* (ID: \`${cam.id}\`)\n`;
         });
         menuText += "\n*Cara penggunaan:* Ketik `.cctv <nomor>` atau `.cctv <nama kamera>` untuk mengambil snapshot.";
@@ -165,7 +168,7 @@ export default {
       const captionText =
         `📹 *CCTV Snapshot*\n\n` +
         `• *Nama Kamera:* ${targetCamera.name}\n` +
-        `• *Status:* ${targetCamera.status || "Unknown"}\n` +
+        `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
         `• *ID:* \`${targetCamera.id}\`\n\n` +
         `⚡ _Via Nx Witness REST API_`;
 
