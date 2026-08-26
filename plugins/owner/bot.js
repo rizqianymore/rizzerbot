@@ -1,9 +1,11 @@
-import { runningBots } from "../../src/core/secondary.js";
+import { runningBots, addSecondaryBot, stopSecondaryBot } from "../../src/core/secondary.js";
 
 export default {
   name: "bot",
-  description: "Manajemen bot sekunder (sub-bot).",
+  description: "Manajemen multi-session bot sekunder (sub-bot).",
   usage: "<add/stop/del/list/status> [nomor]",
+  example: "bot add 628123456789",
+  aliases: ["subbot", "jadibot"],
   category: "Owner",
   ownerOnly: true,
   premiumOnly: true,
@@ -13,12 +15,12 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `🤖 *MANAJEMEN SUB-BOT*\n\n` +
-                `• *.bot add <nomor>* - Tambah/pasangkan bot sekunder baru\n` +
-                `• *.bot stop <nomor>* - Hentikan bot sekunder aktif\n` +
-                `• *.bot del <nomor>* - Hentikan dan hapus data sesi bot sekunder\n` +
-                `• *.bot list* - List semua nomor bot sekunder aktif\n` +
-                `• *.bot status* - Status bot sekunder aktif`
+          text: `🤖 *MANAJEMEN MULTI-BOT (SUB-BOT)*\n\n` +
+                `│ .bot add <nomor> - Pasangkan bot sekunder baru\n` +
+                `│ .bot stop <nomor> - Hentikan bot sekunder tanpa hapus sesi\n` +
+                `│ .bot del <nomor> - Hentikan dan hapus permanen data sesi\n` +
+                `│ .bot list - Daftar semua bot sekunder aktif\n` +
+                `│ .bot status - Cek status konektivitas multi-bot`
         },
         { quoted: msg }
       );
@@ -29,10 +31,10 @@ export default {
 
     if (action === "add") {
       const targetNumber = args[1]?.replace(/[^0-9]/g, "");
-      if (!targetNumber) {
+      if (!targetNumber || targetNumber.length < 7) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { text: "⚠️ Harap tentukan nomor telepon bot sekunder. Contoh: *.bot add 628xxx*" },
+          { text: "⚠️ Harap tentukan nomor telepon bot sekunder yang valid (min 7 digit).\nContoh: *.bot add 628123456789*" },
           { quoted: msg }
         );
         return;
@@ -40,32 +42,34 @@ export default {
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `⏳ Sedang menginisialisasi sesi baru untuk ${targetNumber}...` },
+        { text: `⏳ Sedang menginisialisasi sesi & meminta Pairing Code untuk nomor *${targetNumber}*...` },
         { quoted: msg }
       );
 
       try {
-        const { addSecondaryBot } = await import("../../index.js");
         const code = await addSecondaryBot(targetNumber);
         if (code) {
           await sock.sendMessage(
             msg.key.remoteJid,
             {
-              text: `🔑 *PAIRING CODE BOT BARU (${targetNumber}):*\n\n*Code:* \`${code}\`\n\nMasukkan kode di atas pada WhatsApp di nomor tersebut (Perangkat Tertaut > Tautkan dengan nomor telepon).`,
+              text: `🔑 *PAIRING CODE SUB-BOT BARU*\n\n` +
+                    `• Nomor: *${targetNumber}*\n` +
+                    `• Pairing Code: \`${code}\`\n\n` +
+                    `_Buka WhatsApp di nomor tersebut > Perangkat Tertaut > Tautkan dengan nomor telepon > Masukkan kode di atas._`,
             },
             { quoted: msg }
           );
         } else {
           await sock.sendMessage(
             msg.key.remoteJid,
-            { text: `✅ Sesi untuk nomor ${targetNumber} sudah terhubung sebelumnya dan aktif!` },
+            { text: `✅ Sesi untuk nomor *${targetNumber}* sudah terhubung dan sedang aktif!` },
             { quoted: msg }
           );
         }
       } catch (err) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { text: `❌ Gagal menambahkan bot sekunder: ${err.message}` },
+          { text: `❌ Gagal menambahkan sub-bot: ${err.message || err}` },
           { quoted: msg }
         );
       }
@@ -74,14 +78,16 @@ export default {
       if (!targetNumber) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { text: `⚠️ Harap tentukan nomor telepon bot sekunder. Contoh: *.bot ${action} 628xxx*` },
+          { text: `⚠️ Harap tentukan nomor telepon bot sekunder.\nContoh: *.bot ${action} 628123456789*` },
           { quoted: msg }
         );
         return;
       }
 
       const authDirName = `session_${targetNumber}`;
-      if (!runningBots.has(authDirName) && action === "stop") {
+      const isRunning = runningBots.has(authDirName);
+
+      if (!isRunning && action === "stop") {
         await sock.sendMessage(
           msg.key.remoteJid,
           { text: `⚠️ Bot dengan nomor ${targetNumber} tidak ditemukan sedang berjalan.` },
@@ -91,17 +97,17 @@ export default {
       }
 
       try {
-        const { stopSecondaryBot } = await import("../../index.js");
-        await stopSecondaryBot(targetNumber);
+        const deleteSession = action === "del";
+        await stopSecondaryBot(targetNumber, deleteSession);
         await sock.sendMessage(
           msg.key.remoteJid,
-          { text: `✅ Berhasil menghentikan ${action === "del" ? "dan menghapus sesi " : ""}bot sekunder nomor ${targetNumber}.` },
+          { text: `✅ Berhasil ${deleteSession ? "menghentikan dan menghapus sesi" : "menghentikan"} bot sekunder *${targetNumber}*.` },
           { quoted: msg }
         );
       } catch (err) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { text: `❌ Gagal memproses: ${err.message}` },
+          { text: `❌ Gagal memproses: ${err.message || err}` },
           { quoted: msg }
         );
       }
@@ -116,21 +122,26 @@ export default {
       }
 
       let textList = `🤖 *DAFTAR BOT SEKUNDER AKTIF (${runningBots.size})*\n\n`;
+      const mentions = [];
       let i = 1;
-      for (const [key] of runningBots.entries()) {
+
+      for (const [key, botSock] of runningBots.entries()) {
         const num = key.replace("session_", "");
-        textList += `${i++}. @${num}\n`;
+        const isOnline = Boolean(botSock?.user?.id);
+        const jid = `${num}@s.whatsapp.net`;
+        mentions.push(jid);
+        textList += `${i++}. @${num} - Status: ${isOnline ? "🟢 *Connected*" : "🟡 *Connecting*"}\n`;
       }
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: textList, mentions: Array.from(runningBots.keys()).map(k => k.replace("session_", "") + "@s.whatsapp.net") },
+        { text: textList.trim(), mentions },
         { quoted: msg }
       );
     } else {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: "⚠️ Aksi tidak valid! Gunakan: add, stop, del, list, atau status." },
+        { text: "⚠️ Aksi tidak valid! Gunakan: *add*, *stop*, *del*, *list*, atau *status*." },
         { quoted: msg }
       );
     }
