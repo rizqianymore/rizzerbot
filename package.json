@@ -4,6 +4,7 @@
   "description": "Professional and Modular WhatsApp Bot built with Baileys",
   "main": "index.js",
   "type": "module",
+
   "scripts": {
     "prestart": "node -e \"import fs from 'fs'; const sym = 'node_modules/@'; if (fs.existsSync(sym)) { try { fs.rmSync(sym, { recursive: true, force: true }); } catch (_) {} } fs.symlinkSync('../', sym, 'junction')\"",
     "start": "npm run prestart && node index.js",
