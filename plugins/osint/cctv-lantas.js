@@ -305,13 +305,49 @@ async function captureCctvSnapshot(streamUrl, timeoutMs = 6000) {
   }
 }
 
+async function captureCctvVideo(streamUrl, duration = 10) {
+  if (!streamUrl || streamUrl === "-") {
+    throw new Error("URL stream kamera tidak tersedia.");
+  }
+
+  let targetUrl = streamUrl;
+  if (targetUrl.includes("embed.html")) {
+    targetUrl = targetUrl.replace(/embed\.html(\?token=.*)?$/, "index.m3u8$1");
+  }
+
+  const tmpId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const tmpMp4 = path.join("/tmp", `cctv_vid_${tmpId}.mp4`);
+
+  try {
+    await new Promise((resolve, reject) => {
+      const cmd = `"${ffmpegPath}" -y -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 -i "${targetUrl}" -t ${duration} -c:v libx264 -preset veryfast -pix_fmt yuv420p -movflags +faststart -an "${tmpMp4}"`;
+      exec(cmd, { timeout: 20000 }, (err) => {
+        if (err) reject(err);
+        else resolve(true);
+      });
+    });
+
+    if (fs.existsSync(tmpMp4)) {
+      const vidBuffer = fs.readFileSync(tmpMp4);
+      if (vidBuffer.length > 1000) {
+        return vidBuffer;
+      }
+    }
+    throw new Error("Video rekaman kosong.");
+  } finally {
+    try {
+      if (fs.existsSync(tmpMp4)) fs.unlinkSync(tmpMp4);
+    } catch (_) {}
+  }
+}
+
 export default {
-  name: "cctv",
+  name: "cctvlantas",
   description:
-    "Monitoring, live snapshot & pencarian CCTV Lalu Lintas, Tol, Dishub, Korlantas Polri, & ETLE se-Indonesia.",
-  usage: "[snap/check/list/info] [kategori] <keyword | id | url>",
-  example: "cctv public dpr",
-  aliases: ["cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan", "cctvlive"],
+    "Monitoring, live snapshot & rekaman video 10 detik CCTV Lalu Lintas, Tol, Dishub, Korlantas Polri, & ETLE se-Indonesia.",
+  usage: "[snap/video/check/list/info] [kategori] <keyword | id | url>",
+  example: "cctvlantas snap semanggi",
+  aliases: ["lantas", "cctv-lantas", "cctvjalan", "cctvindonesia", "cctvlive"],
   category: "OSINT",
   premiumOnly: true,
   ownerOnly: false,
@@ -334,7 +370,7 @@ export default {
       }
 
       let helpText =
-        `📹 *PANDUAN LENGKAP FITUR CCTV*\n` +
+        `📹 *PANDUAN CCTV LALU LINTAS & JALAN RAYA*\n` +
         `Total Kamera Terindeks: *${allData.length.toLocaleString("id-ID")} Titik*\n\n` +
         `📊 *Kategori & Database Terdaftar:*\n`;
 
@@ -344,28 +380,30 @@ export default {
 
       helpText +=
         `\n╭─── . ݁₊ ⊹ *Format Perintah* ⊹ ₊ ݁.\n` +
-        `│ ${activePrefix}cctv <nama_lokasi / kota / km>\n` +
-        `│ ${activePrefix}cctv <kategori> <nama_lokasi>\n` +
-        `│ ${activePrefix}cctv snap <ID / nama_lokasi>\n` +
-        `│ ${activePrefix}cctv check <ID / nama_lokasi>\n` +
-        `│ ${activePrefix}cctv list [kategori/kota] [halaman]\n` +
-        `│ ${activePrefix}cctv info <ID>\n` +
+        `│ ${activePrefix}cctvlantas <nama_lokasi / kota / km>\n` +
+        `│ ${activePrefix}cctvlantas <kategori> <nama_lokasi>\n` +
+        `│ ${activePrefix}cctvlantas snap <ID / nama_lokasi>\n` +
+        `│ ${activePrefix}cctvlantas video <ID / nama_lokasi>\n` +
+        `│ ${activePrefix}cctvlantas check <ID / nama_lokasi>\n` +
+        `│ ${activePrefix}cctvlantas list [kategori/kota] [halaman]\n` +
+        `│ ${activePrefix}cctvlantas info <ID>\n` +
         `╰──────────────\n\n` +
+        `*Durasi Video:* 10 detik tetap (fixed duration)\n\n` +
         `📖 *Panduan Penggunaan Singkat:*\n\n` +
         `1️⃣ *Melihat Daftar Kamera:*\n` +
-        `• \`${activePrefix}cctv list public 1\` — List CCTV Publik hal. 1\n` +
-        `• \`${activePrefix}cctv list tol 2\` — List CCTV Tol hal. 2\n` +
-        `• \`${activePrefix}cctv list dishub\` — List CCTV Dishub\n\n` +
+        `• \`${activePrefix}cctvlantas list public 1\` — List CCTV Publik hal. 1\n` +
+        `• \`${activePrefix}cctvlantas list tol 2\` — List CCTV Tol hal. 2\n\n` +
         `2️⃣ *Mencari Kamera (Nama / Area):*\n` +
-        `• \`${activePrefix}cctv public dpr\` — Cari DPR di kategori Publik\n` +
-        `• \`${activePrefix}cctv semanggi\` — Cari Semanggi di semua kategori\n` +
-        `• \`${activePrefix}cctv km 58\` — Cari Tol KM 58\n\n` +
-        `3️⃣ *Mengambil Gambar / Snapshot:*\n` +
-        `• \`${activePrefix}cctv snap 10253\` — Snapshot via ID kamera\n` +
-        `• \`${activePrefix}cctv snap monas\` — Snapshot via nama\n\n` +
-        `4️⃣ *Cek Status Live & Latency (Timeout 4s):*\n` +
-        `• \`${activePrefix}cctv check 10253\`\n` +
-        `• \`${activePrefix}cctv check public dpr\`\n\n` +
+        `• \`${activePrefix}cctvlantas public dpr\` — Cari DPR di kategori Publik\n` +
+        `• \`${activePrefix}cctvlantas semanggi\` — Cari Semanggi di semua kategori\n\n` +
+        `3️⃣ *Mengambil Snapshot Gambar:*\n` +
+        `• \`${activePrefix}cctvlantas snap 10253\` — Snapshot via ID kamera\n` +
+        `• \`${activePrefix}cctvlantas snap monas\` — Snapshot via nama\n\n` +
+        `4️⃣ *Merekam Video Live 10 Detik:*\n` +
+        `• \`${activePrefix}cctvlantas video 10253\`\n` +
+        `• \`${activePrefix}cctvlantas video semanggi\`\n\n` +
+        `5️⃣ *Cek Status Live & Latency (Timeout 4s):*\n` +
+        `• \`${activePrefix}cctvlantas check 10253\`\n\n` +
         `📁 *Kode Kategori:* \`public\`, \`tol\`, \`dishub\`, \`etle\`, \`lantas\`, \`korlantas\`, \`scbd\`\n\n` +
         `⚡ _Kyros-MD Traffic Intelligence_`;
 
@@ -373,6 +411,7 @@ export default {
     }
 
     let isSnapAction = false;
+    let isVideoAction = false;
     let isInfoOnly = false;
     let isCheckAction = false;
     let isListAction = false;
@@ -380,13 +419,16 @@ export default {
     let page = 1;
     let workingArgs = [...args];
 
-    // 1. Extract action flags if present in the first tokens
     for (let i = 0; i < Math.min(3, workingArgs.length); i++) {
       const token = workingArgs[i]?.toLowerCase();
       if (!token) continue;
 
       if (token === "snap" || token === "snapshot" || token === "live") {
         isSnapAction = true;
+        workingArgs.splice(i, 1);
+        i--;
+      } else if (token === "video" || token === "vid" || token === "rekam") {
+        isVideoAction = true;
         workingArgs.splice(i, 1);
         i--;
       } else if (token === "check" || token === "test" || token === "ping") {
@@ -404,7 +446,6 @@ export default {
       }
     }
 
-    // 2. Extract category filter (support alias e.g. public, publik, tol, dishub, etc.)
     for (let i = 0; i < Math.min(2, workingArgs.length); i++) {
       const token = workingArgs[i]?.toLowerCase();
       if (token && SOURCE_ALIASES[token]) {
@@ -414,7 +455,6 @@ export default {
       }
     }
 
-    // 3. Handle List Action
     if (isListAction) {
       if (workingArgs.length > 0 && !isNaN(workingArgs[workingArgs.length - 1])) {
         page = Math.max(1, parseInt(workingArgs.pop(), 10));
@@ -460,8 +500,9 @@ export default {
       });
 
       listText +=
-        `\n💡 *Untuk snapshot:* \`${activePrefix}cctv snap <ID>\`\n` +
-        `💡 *Halaman lain:* \`${activePrefix}cctv list ${filterSource || ""} ${currentPage + 1}\``;
+        `\n💡 *Snapshot:* \`${activePrefix}cctvlantas snap <ID>\`\n` +
+        `💡 *Video (10s):* \`${activePrefix}cctvlantas video <ID>\`\n` +
+        `💡 *Halaman lain:* \`${activePrefix}cctvlantas list ${filterSource || ""} ${currentPage + 1}\``;
 
       return sock.sendMessage(jid, { text: listText.trim() }, { quoted: msg });
     }
@@ -473,7 +514,7 @@ export default {
         return sock.sendMessage(
           jid,
           {
-            text: `💡 Anda memilih kategori *${CCTV_SOURCES[filterSource].name}*.\n\nKetik:\n• \`${activePrefix}cctv list ${filterSource}\` — Melihat semua kamera\n• \`${activePrefix}cctv ${filterSource} <kata_kunci>\` — Cari kamera di kategori ini`,
+            text: `💡 Anda memilih kategori *${CCTV_SOURCES[filterSource].name}*.\n\nKetik:\n• \`${activePrefix}cctvlantas list ${filterSource}\` — Melihat semua kamera\n• \`${activePrefix}cctvlantas ${filterSource} <kata_kunci>\` — Cari kamera di kategori ini`,
           },
           { quoted: msg }
         );
@@ -481,13 +522,12 @@ export default {
       return sock.sendMessage(
         jid,
         {
-          text: `⚠️ Harap masukkan nama lokasi, ID kamera, atau kata kunci!\nContoh: \`${activePrefix}cctv public dpr\` atau \`${activePrefix}cctv snap semanggi\``,
+          text: `⚠️ Harap masukkan nama lokasi, ID kamera, atau kata kunci!\nContoh: \`${activePrefix}cctvlantas public dpr\` atau \`${activePrefix}cctvlantas video semanggi\``,
         },
         { quoted: msg }
       );
     }
 
-    // Direct Stream Target
     if (query.startsWith("http://") || query.startsWith("https://") || query.startsWith("rtsp://")) {
       const customCam = {
         id: "CUSTOM_URL",
@@ -499,10 +539,9 @@ export default {
       if (isCheckAction) {
         return handleCheckCamera(sock, msg, customCam);
       }
-      return handleCameraOutput(sock, msg, customCam, activePrefix, isInfoOnly);
+      return handleCameraOutput(sock, msg, customCam, activePrefix, isInfoOnly, isVideoAction);
     }
 
-    // Direct search by ID
     const matchedById = allData.find(
       (item) => String(item.id).toLowerCase() === query.toLowerCase()
     );
@@ -510,10 +549,9 @@ export default {
       if (isCheckAction) {
         return handleCheckCamera(sock, msg, matchedById);
       }
-      return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly);
+      return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly, isVideoAction);
     }
 
-    // Search dataset with fuzzy ranking
     let dataset = allData;
     if (filterSource) {
       dataset = allData.filter((i) => i.sourceKey === filterSource);
@@ -555,18 +593,18 @@ export default {
         {
           text: `❌ Tidak ditemukan CCTV dengan kata kunci *"${query}"*${
             filterSource ? ` pada kategori *${CCTV_SOURCES[filterSource].name}*` : ""
-          }.\n\n💡 Coba kata kunci lain atau ketik \`${activePrefix}cctv list ${filterSource || ""}\` untuk melihat daftar semua kamera.`,
+          }.\n\n💡 Coba kata kunci lain atau ketik \`${activePrefix}cctvlantas list ${filterSource || ""}\` untuk melihat daftar semua kamera.`,
         },
         { quoted: msg }
       );
     }
 
-    if (matches.length === 1 || isSnapAction || isCheckAction) {
+    if (matches.length === 1 || isSnapAction || isVideoAction || isCheckAction) {
       const targetCam = matches[0];
       if (isCheckAction) {
         return handleCheckCamera(sock, msg, targetCam);
       }
-      return handleCameraOutput(sock, msg, targetCam, activePrefix, isInfoOnly);
+      return handleCameraOutput(sock, msg, targetCam, activePrefix, isInfoOnly, isVideoAction);
     }
 
     const listLimit = 15;
@@ -590,8 +628,9 @@ export default {
     }
 
     listText +=
-      `\n💡 *Snapshot:* \`${activePrefix}cctv snap <ID>\`\n` +
-      `💡 *Cek Aktif:* \`${activePrefix}cctv check <ID>\``;
+      `\n💡 *Snapshot:* \`${activePrefix}cctvlantas snap <ID>\`\n` +
+      `💡 *Video (10s):* \`${activePrefix}cctvlantas video <ID>\`\n` +
+      `💡 *Cek Aktif:* \`${activePrefix}cctvlantas check <ID>\``;
 
     return sock.sendMessage(jid, { text: listText.trim() }, { quoted: msg });
   },
@@ -630,7 +669,7 @@ async function handleCheckCamera(sock, msg, camera) {
   );
 }
 
-async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = false) {
+async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = false, isVideoAction = false) {
   const jid = msg.key.remoteJid;
   const nama = camera.nama || camera.name || camera.alias || "CCTV Kamera";
   const kabkota = camera.kabkota || "Wilayah Terdaftar";
@@ -663,6 +702,36 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
 
   if (isInfoOnly || !camera.url) {
     return sock.sendMessage(jid, { text: caption }, { quoted: msg });
+  }
+
+  if (isVideoAction) {
+    await sock.sendMessage(
+      jid,
+      { text: `⏳ Sedang merekam video clip live 10 detik dari kamera *${nama}*...` },
+      { quoted: msg }
+    );
+
+    try {
+      const vidBuffer = await captureCctvVideo(camera.url, 10);
+      if (vidBuffer && vidBuffer.length > 0) {
+        return sock.sendMessage(
+          jid,
+          {
+            video: vidBuffer,
+            caption: `📹 *CCTV Live Video Clip (10s)*\n\n• *Lokasi:* ${nama}\n• *Sumber:* ${badge} ${source}\n• *ID:* \`${camera.id}\`\n\n⚡ _Kyros-MD Traffic Intelligence_`,
+            mimetype: "video/mp4",
+          },
+          { quoted: msg }
+        );
+      }
+    } catch (vidErr) {
+      console.error(`Video capture failed for camera ${camera.id}:`, vidErr.message);
+      return sock.sendMessage(
+        jid,
+        { text: `❌ Gagal merekam video dari kamera *${nama}* (${vidErr.message}). Server stream pusat mungkin tidak mendukung rekaman langsung.` },
+        { quoted: msg }
+      );
+    }
   }
 
   try {

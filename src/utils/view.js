@@ -112,7 +112,7 @@ ${getHeader("Premium Menu")}
 │ ${activePrefix}rvo <balas media sekali lihat>
 │
 ├─  *OSINT / Intel*
-│ ${activePrefix}cctv <lokasi/id>
+│ ${activePrefix}cctvlantas <lokasi/id>
 │ ${activePrefix}github <username>
 │ ${activePrefix}iplookup <ip>
 │ ${activePrefix}whois <domain>
@@ -137,6 +137,7 @@ ${getHeader("Owner Menu")}
 │ ${activePrefix}premium <add/remove/list>
 │ ${activePrefix}limited <add/remove/list>
 │ ${activePrefix}user <ban/unban/register/unregister/list>
+│ ${activePrefix}cctv <snap/video/list/alias>
 │ ${activePrefix}bot <add/stop/del/list/status>
 │ ${activePrefix}addplugin <nama>
 ╰──────────────

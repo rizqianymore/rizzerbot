@@ -1,33 +1,8 @@
 import axios from "axios";
 import https from "https";
-import fs from "fs";
-import path from "path";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { db } from "@/src/core/database.js";
 
-const execPromise = promisify(exec);
-
-const getEnvVal = (key) => {
-  try {
-    const envPath = path.join(process.cwd(), ".env");
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, "utf-8");
-      const lines = envContent.split(/\r?\n/);
-      for (const line of lines) {
-        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-        if (match) {
-          const k = match[1];
-          let v = match[2] || "";
-          if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
-          else if (v.startsWith("'") && v.endsWith("'")) v = v.slice(1, -1);
-          if (k === key) return v.trim();
-        }
-      }
-    }
-  } catch (_) {}
-  return process.env[key] || null;
-};
+const getEnvVal = (key) => process.env[key] || "";
 
 const createAxiosClient = () => {
   return axios.create({
@@ -38,44 +13,43 @@ const createAxiosClient = () => {
   });
 };
 
-const loginToNx = async (client) => {
+const getNxToken = async (client) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
-  const username = getEnvVal("CCTV_USER");
-  const password = getEnvVal("CCTV_PASS");
+  const username = getEnvVal("CCTV_USERNAME");
+  const password = getEnvVal("CCTV_PASSWORD");
 
   if (!baseUrl || !username || !password) {
-    throw new Error(
-      "Kredensial Nx API belum lengkap di environment variable atau file .env (CCTV_BASE_URL, CCTV_USER, CCTV_PASS)."
-    );
+    throw new Error("Konfigurasi CCTV (CCTV_BASE_URL, CCTV_USERNAME, CCTV_PASSWORD) belum diatur di .env!");
   }
 
   try {
-    const response = await client.post(`${baseUrl}/rest/v1/login/sessions`, {
-      username,
-      password,
+    const response = await client.post(`${baseUrl}/rest/v2/login/sessions`, {
+      username: username,
+      password: password,
     });
-
     if (response.data && response.data.token) {
       return response.data.token;
     }
-    throw new Error("Gagal mendapatkan session token dari Nx Witness API.");
+    throw new Error("Respon login tidak mengembalikan token.");
   } catch (error) {
-    throw new Error(`Login Nx Gagal: ${error.response?.data?.errorString || error.message}`);
+    throw new Error(`Gagal login ke server Nx: ${error.message}`);
   }
 };
 
-const getNxCameraList = async (client, token) => {
+const getNxCameras = async (client, token) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
-    const response = await client.get(`${baseUrl}/rest/v1/devices`, {
+    const response = await client.get(`${baseUrl}/rest/v2/devices`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const devices = response.data || [];
-    return devices.filter((d) => d.deviceType === "Camera");
+    if (Array.isArray(response.data)) {
+      return response.data.filter((device) => device.deviceType === "camera" || device.flags !== undefined);
+    }
+    return [];
   } catch (error) {
-    throw new Error(`Gagal mengambil daftar kamera Nx: ${error.message}`);
+    throw new Error(`Gagal mengambil daftar kamera: ${error.message}`);
   }
 };
 
@@ -87,6 +61,8 @@ const getNxSnapshot = async (client, token, cameraId) => {
       {
         params: {
           cameraId: cameraId,
+          width: 1280,
+          height: 720,
         },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -100,14 +76,14 @@ const getNxSnapshot = async (client, token, cameraId) => {
   }
 };
 
-const getNxVideo = async (client, token, cameraId, duration = 5) => {
+const getNxVideo = async (client, token, cameraId, duration = 10) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
   try {
     const response = await client.get(
       `${baseUrl}/media/${cameraId}.mp4`,
       {
         params: {
-          duration: duration,
+          duration: 10,
           codec: "h264",
         },
         headers: {
@@ -123,15 +99,15 @@ const getNxVideo = async (client, token, cameraId, duration = 5) => {
 };
 
 export default {
-  name: "cctvnx",
+  name: "cctv",
   description: "Monitoring CCTV Nx Witness (Network Optix) dengan pemilihan kamera.",
-  usage: "[snap/list/addalias/delalias] [args]",
-  example: "cctvnx snap 1",
-  aliases: ["nx", "cctvpriv", "cctvserver"],
+  usage: "[snap/video/list/alias/unalias/info] [args]",
+  example: "cctv snap 1",
+  aliases: ["monitor", "cam", "nx"],
   category: "Owner",
-  limitedOnly: false,
-  premiumOnly: false,
-  ownerOnly: true,
+  limitedOnly: true,
+  premiumOnly: true,
+  ownerOnly: false,
 
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix } = context;
@@ -140,12 +116,11 @@ export default {
     const jid = msg.key.remoteJid;
     const client = createAxiosClient();
 
-    // Re-parse args to respect double/single quotes
     const text =
-      msg.message.conversation ||
-      msg.message.extendedTextMessage?.text ||
-      msg.message.imageMessage?.caption ||
-      msg.message.videoMessage?.caption ||
+      msg.message?.conversation ||
+      msg.message?.extendedTextMessage?.text ||
+      msg.message?.imageMessage?.caption ||
+      msg.message?.videoMessage?.caption ||
       "";
     const matchArgs = text.slice(activePrefix.length).trim().match(/[^\s"']+|"([^"]*)"|'([^']*)'/g) || [];
     const parsedArgs = matchArgs.map(arg => {
@@ -153,90 +128,64 @@ export default {
       if (arg.startsWith("'") && arg.endsWith("'")) return arg.slice(1, -1);
       return arg;
     });
-    // Shift command name
     parsedArgs.shift();
     args = parsedArgs;
 
-    let action = "snap"; // default action
-    let target = "";
-    let duration = 5;
+    let action = "snap";
+    let target = null;
+    const duration = 10;
+
+    const actionKeywords = ["list", "snap", "video", "vid", "info", "alias", "unalias", "aliases", "help"];
 
     if (args.length === 0) {
       action = "help";
-    } else {
-      const firstArg = args[0].toLowerCase();
-      if (firstArg === "list") {
-        action = "list";
-      } else if (firstArg === "help" || firstArg === "-h" || firstArg === "--help") {
-        action = "help";
-      } else if (firstArg === "alias") {
-        action = "alias";
-        const aliasName = args[1];
-        const camKeyword = args.slice(2).join(" ").trim();
-        target = JSON.stringify({ aliasName, camKeyword });
-      } else if (firstArg === "unalias") {
-        action = "unalias";
-        target = args.slice(1).join(" ").trim();
-      } else if (firstArg === "aliases") {
-        action = "aliases";
-      } else if (firstArg === "snap" || firstArg === "snapshot") {
-        action = "snap";
-        target = args.slice(1).join(" ").trim();
-      } else if (firstArg === "info") {
-        action = "info";
-        target = args.slice(1).join(" ").trim();
-      } else if (firstArg === "video" || firstArg === "v") {
-        action = "video";
-        // Check if last argument is a number (duration)
-        const lastArg = args[args.length - 1];
-        const parsedDuration = parseInt(lastArg, 10);
-        if (args.length > 2 && !isNaN(parsedDuration) && parsedDuration > 0 && parsedDuration <= 60) {
-          duration = parsedDuration;
-          target = args.slice(1, -1).join(" ").trim();
-        } else {
-          target = args.slice(1).join(" ").trim();
+    } else if (actionKeywords.includes(args[0].toLowerCase())) {
+      action = args[0].toLowerCase();
+      if (action === "vid") action = "video";
+
+      if (action === "alias") {
+        if (args.length < 3) {
+          await sock.sendMessage(
+            jid,
+            { text: `⚠️ Format salah!\nGunakan: \`${activePrefix}cctv alias <nama_alias> <nomor/nama/id>\`` },
+            { quoted: msg }
+          );
+          return;
         }
+        target = JSON.stringify({
+          aliasName: args[1].toLowerCase(),
+          camKeyword: args.slice(2).join(" ")
+        });
       } else {
-        // Fallback or legacy syntax: `.cctv 1` or `.cctv 1 video`
-        let fullInput = args.join(" ").trim();
-        if (/\s+(video|v|vid)$/i.test(fullInput)) {
-          action = "video";
-          target = fullInput.replace(/\s+(video|v|vid)$/i, "").trim();
-          const match = target.match(/(.*)\s+(\d+)$/);
-          if (match) {
-            target = match[1].trim();
-            const dur = parseInt(match[2], 10);
-            if (dur > 0 && dur <= 60) duration = dur;
-          }
-        } else {
-          action = "snap";
-          target = fullInput;
-        }
+        target = args.slice(1).join(" ").trim();
       }
+    } else {
+      action = "snap";
+      target = args.join(" ").trim();
     }
 
     try {
-      const token = await loginToNx(client);
-      const rawCameras = await getNxCameraList(client, token);
+      const token = await getNxToken(client);
+      const cameras = await getNxCameras(client, token);
 
-      if (!rawCameras || rawCameras.length === 0) {
+      if (cameras.length === 0) {
         await sock.sendMessage(
           jid,
-          { text: "⚠️ Tidak ada kamera yang ditemukan di sistem Nx Witness." },
+          { text: "❌ Tidak ada kamera yang ditemukan pada server Nx Witness." },
           { quoted: msg }
         );
         return;
       }
 
-      // Sort cameras alphabetically by name
-      const cameras = [...rawCameras].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+      if (!db.data.cctvAliases) {
+        db.data.cctvAliases = {};
+      }
+      const aliasesObj = db.data.cctvAliases;
 
-      // Sync cameras to database cctvAliases
-      const aliasesObj = db.data.cctvAliases || {};
       let dbChanged = false;
       cameras.forEach((cam) => {
-        const defaultAlias = cam.name.toLowerCase().trim();
         if (!aliasesObj[cam.id]) {
+          const defaultAlias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
           aliasesObj[cam.id] = {
             name: cam.name,
             alias: defaultAlias
@@ -249,7 +198,7 @@ export default {
             updated = true;
           }
           if (!aliasesObj[cam.id].alias) {
-            aliasesObj[cam.id].alias = defaultAlias;
+            aliasesObj[cam.id].alias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
             updated = true;
           }
           if (updated) dbChanged = true;
@@ -261,18 +210,18 @@ export default {
 
       if (action === "help") {
         const helpText = 
-          `📹 *CCTV Nx Witness Help & Usage*\n\n` +
+          `📹 *CCTV NX WITNESS MONITORING*\n\n` +
           `Format penggunaan:\n` +
-          `│ .cctv list\n` +
-          `│ .cctv snap <nomor/nama/alias>\n` +
-          `│ .cctv video <nomor/nama/alias> [durasi]\n` +
-          `│ .cctv info <nomor/nama/alias>\n` +
-          `│ .cctv alias <nama_alias> <nomor/nama/id>\n` +
-          `│ .cctv unalias <nama_alias>\n` +
-          `│ .cctv aliases\n` +
-          `│ .cctv help\n\n` +
-          `*Contoh:* \`.cctv alias dpr-depan 1\` lalu \`.cctv snap dpr-depan\`\n\n` +
-          `Ketik *.cctv list* untuk melihat daftar kamera.`;
+          `│ ${activePrefix}cctv list\n` +
+          `│ ${activePrefix}cctv snap <nomor/nama/alias>\n` +
+          `│ ${activePrefix}cctv video <nomor/nama/alias>\n` +
+          `│ ${activePrefix}cctv info <nomor/nama/alias>\n` +
+          `│ ${activePrefix}cctv alias <nama_alias> <nomor/nama/id>\n` +
+          `│ ${activePrefix}cctv unalias <nama_alias>\n` +
+          `│ ${activePrefix}cctv aliases\n` +
+          `│ ${activePrefix}cctv help\n\n` +
+          `*Durasi Video:* 10 detik (tetap/fixed)\n` +
+          `*Contoh:* \`${activePrefix}cctv snap 1\` atau \`${activePrefix}cctv video 1\``;
         await sock.sendMessage(jid, { text: helpText }, { quoted: msg });
         return;
       }
@@ -282,10 +231,10 @@ export default {
         cameras.forEach((cam, index) => {
           const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           const camData = aliasesObj[cam.id];
-          const displayName = camData && camData.alias ? `*${camData.alias.toUpperCase()}*` : `_${cam.name}_ (Belum ada alias)`;
+          const displayName = camData && camData.alias ? `*${camData.alias.toUpperCase()}*` : `_${cam.name}_`;
           menuText += `${index + 1}. ${status} ${displayName}\n`;
         });
-        menuText += `\n💡 Ketik \`.cctv snap <nomor/nama/alias>\` untuk mengambil gambar.`;
+        menuText += `\n💡 Ketik \`${activePrefix}cctv snap <nomor/alias>\` atau \`${activePrefix}cctv video <nomor/alias>\``;
         await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
         return;
       }
@@ -299,7 +248,7 @@ export default {
         if (!parsed || !parsed.aliasName || !parsed.camKeyword) {
           await sock.sendMessage(
             jid,
-            { text: `⚠️ Format salah!\nGunakan: \`.cctv alias <nama_alias> <nomor/nama/id>\`` },
+            { text: `⚠️ Format salah!\nGunakan: \`${activePrefix}cctv alias <nama_alias> <nomor/nama/id>\`` },
             { quoted: msg }
           );
           return;
@@ -340,7 +289,7 @@ export default {
         if (!target) {
           await sock.sendMessage(
             jid,
-            { text: `⚠️ Format salah!\nGunakan: \`.cctv unalias <nama_alias>\`` },
+            { text: `⚠️ Format salah!\nGunakan: \`${activePrefix}cctv unalias <nama_alias>\`` },
             { quoted: msg }
           );
           return;
@@ -350,7 +299,7 @@ export default {
         if (!existing) {
           await sock.sendMessage(
             jid,
-            { text: `❌ Alias *"${target}"* tidak ditemukan di database.` },
+            { text: `⚠️ Alias *"${target}"* tidak ditemukan.` },
             { quoted: msg }
           );
           return;
@@ -366,67 +315,65 @@ export default {
       }
 
       if (action === "aliases") {
-        const entries = Object.entries(aliasesObj).filter(([id, data]) => data && data.alias);
-        if (entries.length === 0) {
-          await sock.sendMessage(
-            jid,
-            { text: `📹 *Daftar Alias CCTV kosong.*\nGunakan \`.cctv alias <nama_alias> <nomor/nama/id>\` untuk menambahkan.` },
-            { quoted: msg }
-          );
-          return;
+        let aliasText = "🏷️ *Daftar Pemetaan Alias Kamera*\n\n";
+        let count = 0;
+        for (const [, data] of Object.entries(aliasesObj)) {
+          if (data.alias) {
+            aliasText += `• *${data.alias}* -> ${data.name}\n`;
+            count++;
+          }
         }
-
-        let aliasList = `📹 *Daftar Alias CCTV Terdaftar*\n\n`;
-        entries.forEach(([id, data], index) => {
-          aliasList += `${index + 1}. *${data.alias}* ➔ *${data.name}* (ID: \`${id}\`)\n`;
-        });
-
-        await sock.sendMessage(jid, { text: aliasList }, { quoted: msg });
+        if (count === 0) {
+          aliasText += "_Belum ada alias yang disimpan._\n";
+        }
+        await sock.sendMessage(jid, { text: aliasText }, { quoted: msg });
         return;
       }
 
-      // Find target camera
       let targetCamera = null;
 
-      // Check database alias
-      const aliasedId = db.getCctvAlias(target);
-      if (aliasedId) {
-        targetCamera = cameras.find((cam) => cam.id === aliasedId);
+      if (!target) {
+        await sock.sendMessage(
+          jid,
+          { text: `⚠️ Tentukan kamera yang ingin diakses!\nContoh: \`${activePrefix}cctv snap 1\` atau \`${activePrefix}cctv video 1\`` },
+          { quoted: msg }
+        );
+        return;
+      }
+
+      const aliasCamId = db.getCctvAlias(target);
+      if (aliasCamId) {
+        targetCamera = cameras.find((cam) => cam.id === aliasCamId);
       }
 
       if (!targetCamera) {
         const indexInput = parseInt(target, 10);
         if (!isNaN(indexInput) && indexInput > 0 && indexInput <= cameras.length) {
           targetCamera = cameras[indexInput - 1];
-        } else {
-          targetCamera = cameras.find((cam) =>
-            cam.name.toLowerCase().includes(target.toLowerCase())
-          );
         }
       }
 
       if (!targetCamera) {
-        let errorMsg = `❌ Kamera dengan kata kunci *"${target}"* tidak ditemukan.\n\n*Kamera yang tersedia:* \n`;
-        cameras.forEach((cam, index) => {
-          const camData = aliasesObj[cam.id];
-          const displayName = camData && camData.alias ? `${camData.alias.toUpperCase()} (Asli: ${cam.name})` : cam.name;
-          errorMsg += `│ ${index + 1}. ${displayName}\n`;
-        });
+        targetCamera = cameras.find((cam) =>
+          cam.name.toLowerCase().includes(target.toLowerCase()) ||
+          cam.id.toLowerCase() === target.toLowerCase()
+        );
+      }
+
+      if (!targetCamera) {
         await sock.sendMessage(
           jid,
-          { text: errorMsg },
+          { text: `❌ Kamera dengan kata kunci atau nomor *"${target}"* tidak ditemukan.\nKetik \`${activePrefix}cctv list\` untuk melihat daftar.` },
           { quoted: msg }
         );
         return;
       }
 
-      // Check if camera is Online for snap and video actions
-      if (action === "snap" || action === "video") {
-        const isOnline = targetCamera.status === "Online" || targetCamera.statusFlags === "CSF_NoFlags" || !targetCamera.statusFlags;
-        if (!isOnline) {
+      if (targetCamera.status && targetCamera.status !== "Online" && targetCamera.statusFlags !== "CSF_NoFlags" && targetCamera.statusFlags) {
+        if (action !== "info") {
           await sock.sendMessage(
             jid,
-            { text: `❌ Kamera *"${targetCamera.name}"* sedang Offline. Tidak dapat mengambil snapshot atau video.` },
+            { text: `⚠️ Kamera *${targetCamera.name}* sedang offline/tidak dapat dihubungi!` },
             { quoted: msg }
           );
           return;
@@ -444,9 +391,6 @@ export default {
           `• *Status:* ${status}\n` +
           `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
           `• *Model:* ${targetCamera.model || "Unknown"}\n` +
-          `• *IP Address:* ${targetCamera.ipAddress || targetCamera.url || "N/A"}\n` +
-          `• *Firmware:* ${targetCamera.firmware || "N/A"}\n` +
-          `• *MAC Address:* ${targetCamera.mac || "N/A"}\n` +
           `• *ID:* \`${targetCamera.id}\``;
         await sock.sendMessage(jid, { text: infoText }, { quoted: msg });
         return;
@@ -454,12 +398,12 @@ export default {
 
       await sock.sendMessage(
         jid,
-        { text: `⏳ Mengambil ${action === "video" ? `video clip ${duration} detik` : "snapshot"} dari kamera *${targetCamera.name}*...` },
+        { text: `⏳ Mengambil ${action === "video" ? `video clip 10 detik` : "snapshot"} dari kamera *${targetCamera.name}*...` },
         { quoted: msg }
       );
 
       if (action === "video") {
-        let videoBuffer = await getNxVideo(client, token, targetCamera.id, duration);
+        let videoBuffer = await getNxVideo(client, token, targetCamera.id, 10);
         try {
           const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
           videoBuffer = await transcodeToWhatsappVideo(videoBuffer);
@@ -468,7 +412,7 @@ export default {
         }
 
         const captionText =
-          `📹 *CCTV Video Clip (${duration}s)*\n\n` +
+          `📹 *CCTV Video Clip (10s)*\n\n` +
           `• *Nama Kamera:* ${targetCamera.name}\n` +
           `• *Vendor:* ${targetCamera.vendor || "Unknown"}\n` +
           `• *ID:* \`${targetCamera.id}\`\n\n` +
@@ -501,13 +445,11 @@ export default {
           { quoted: msg }
         );
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error("CCTV Execution Error:", err.message);
       await sock.sendMessage(
         jid,
-        {
-          text: `❌ *Error CCTV:* ${error.message}\n\n*Stack Trace:*\n\`\`\`${error.stack}\`\`\``,
-        },
+        { text: `❌ Terjadi kesalahan: ${err.message}` },
         { quoted: msg }
       );
     }
