@@ -54,6 +54,29 @@ const CCTV_SOURCES = {
   },
 };
 
+const SOURCE_ALIASES = {
+  publik: "publik",
+  public: "publik",
+  kawasan: "publik",
+  lantas: "lantas",
+  traffic: "lantas",
+  polda: "lantas",
+  polantas: "lantas",
+  korlantas: "korlantas",
+  polri: "korlantas",
+  jasamarga: "korlantas",
+  dishub: "dishub",
+  dki: "dishub",
+  jakarta: "dishub",
+  etle: "etle",
+  tilang: "etle",
+  tol: "tol",
+  toll: "tol",
+  sigap: "tol",
+  scbd: "scbd",
+  sudirman: "scbd",
+};
+
 let cachedDatabase = null;
 let cacheTime = 0;
 const CACHE_TTL = 10 * 60 * 1000;
@@ -286,8 +309,8 @@ export default {
   name: "cctv",
   description:
     "Monitoring, live snapshot & pencarian CCTV Lalu Lintas, Tol, Dishub, Korlantas Polri, & ETLE se-Indonesia.",
-  usage: "[snap/check/list/info] <keyword | id | url>",
-  example: "cctv snap semanggi",
+  usage: "[snap/check/list/info] [kategori] <keyword | id | url>",
+  example: "cctv public dpr",
   aliases: ["cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan", "cctvlive"],
   category: "OSINT",
   premiumOnly: true,
@@ -322,16 +345,17 @@ export default {
       helpText +=
         `\n📌 *Fitur & Perintah:*\n` +
         `│ ${activePrefix}cctv <nama_lokasi / kota / km>\n` +
+        `│ ${activePrefix}cctv [kategori] <nama_lokasi>\n` +
         `│ ${activePrefix}cctv snap <ID / nama_lokasi>\n` +
         `│ ${activePrefix}cctv check <ID / nama_lokasi>\n` +
         `│ ${activePrefix}cctv list [kategori/kota] [halaman]\n` +
         `│ ${activePrefix}cctv info <ID>\n\n` +
+        `📁 *Kategori:* \`public\` / \`publik\`, \`tol\`, \`dishub\`, \`etle\`, \`lantas\`, \`korlantas\`, \`scbd\`\n\n` +
         `💡 *Contoh:*\n` +
-        `• \`${activePrefix}cctv semanggi\`\n` +
-        `• \`${activePrefix}cctv snap 10253\`\n` +
+        `• \`${activePrefix}cctv public dpr\`\n` +
+        `• \`${activePrefix}cctv snap semanggi\`\n` +
         `• \`${activePrefix}cctv check 10253\` (Cek status aktif & latency)\n` +
-        `• \`${activePrefix}cctv list tol 1\`\n` +
-        `• \`${activePrefix}cctv km 58\`\n\n` +
+        `• \`${activePrefix}cctv list public 1\`\n\n` +
         `⚡ _Kyros-MD Traffic Intelligence_`;
 
       return sock.sendMessage(jid, { text: helpText }, { quoted: msg });
@@ -345,26 +369,41 @@ export default {
     let page = 1;
     let workingArgs = [...args];
 
-    const firstLower = workingArgs[0].toLowerCase();
-    if (firstLower === "snap" || firstLower === "snapshot" || firstLower === "live") {
-      isSnapAction = true;
-      workingArgs.shift();
-    } else if (firstLower === "check" || firstLower === "test" || firstLower === "ping") {
-      isCheckAction = true;
-      workingArgs.shift();
-    } else if (firstLower === "info" || firstLower === "detail") {
-      isInfoOnly = true;
-      workingArgs.shift();
-    } else if (firstLower === "list" || firstLower === "daftar") {
-      isListAction = true;
-      workingArgs.shift();
+    // 1. Extract action flags if present in the first tokens
+    for (let i = 0; i < Math.min(3, workingArgs.length); i++) {
+      const token = workingArgs[i]?.toLowerCase();
+      if (!token) continue;
+
+      if (token === "snap" || token === "snapshot" || token === "live") {
+        isSnapAction = true;
+        workingArgs.splice(i, 1);
+        i--;
+      } else if (token === "check" || token === "test" || token === "ping") {
+        isCheckAction = true;
+        workingArgs.splice(i, 1);
+        i--;
+      } else if (token === "info" || token === "detail") {
+        isInfoOnly = true;
+        workingArgs.splice(i, 1);
+        i--;
+      } else if (token === "list" || token === "daftar") {
+        isListAction = true;
+        workingArgs.splice(i, 1);
+        i--;
+      }
     }
 
-    if (workingArgs.length > 0 && CCTV_SOURCES[workingArgs[0].toLowerCase()]) {
-      filterSource = workingArgs[0].toLowerCase();
-      workingArgs.shift();
+    // 2. Extract category filter (support alias e.g. public, publik, tol, dishub, etc.)
+    for (let i = 0; i < Math.min(2, workingArgs.length); i++) {
+      const token = workingArgs[i]?.toLowerCase();
+      if (token && SOURCE_ALIASES[token]) {
+        filterSource = SOURCE_ALIASES[token];
+        workingArgs.splice(i, 1);
+        break;
+      }
     }
 
+    // 3. Handle List Action
     if (isListAction) {
       if (workingArgs.length > 0 && !isNaN(workingArgs[workingArgs.length - 1])) {
         page = Math.max(1, parseInt(workingArgs.pop(), 10));
@@ -376,7 +415,7 @@ export default {
       } else if (workingArgs.length > 0) {
         const catQuery = workingArgs.join(" ").toLowerCase();
         listDataset = allData.filter((item) => {
-          const nama = (item.nama || item.name || "").toLowerCase();
+          const nama = (item.nama || item.name || item.alias || "").toLowerCase();
           const kab = (item.kabkota || item.kota || "").toLowerCase();
           return nama.includes(catQuery) || kab.includes(catQuery);
         });
@@ -398,7 +437,9 @@ export default {
 
       let listText =
         `📋 *DAFTAR KAMERA CCTV (Hal ${currentPage}/${totalPages})*\n` +
-        `Total: *${listDataset.length} Titik*\n\n`;
+        `Total: *${listDataset.length} Titik*${
+          filterSource ? ` [Kategori: ${CCTV_SOURCES[filterSource].name}]` : ""
+        }\n\n`;
 
       sliced.forEach((item, index) => {
         const idx = startIdx + index + 1;
@@ -417,15 +458,25 @@ export default {
     const query = workingArgs.join(" ").trim();
 
     if (!query) {
+      if (filterSource) {
+        return sock.sendMessage(
+          jid,
+          {
+            text: `💡 Anda memilih kategori *${CCTV_SOURCES[filterSource].name}*.\n\nKetik:\n• \`${activePrefix}cctv list ${filterSource}\` — Melihat semua kamera\n• \`${activePrefix}cctv ${filterSource} <kata_kunci>\` — Cari kamera di kategori ini`,
+          },
+          { quoted: msg }
+        );
+      }
       return sock.sendMessage(
         jid,
         {
-          text: `⚠️ Harap masukkan nama lokasi, ID kamera, atau kata kunci!\nContoh: \`${activePrefix}cctv snap semanggi\` atau \`${activePrefix}cctv check 10253\``,
+          text: `⚠️ Harap masukkan nama lokasi, ID kamera, atau kata kunci!\nContoh: \`${activePrefix}cctv public dpr\` atau \`${activePrefix}cctv snap semanggi\``,
         },
         { quoted: msg }
       );
     }
 
+    // Direct Stream Target
     if (query.startsWith("http://") || query.startsWith("https://") || query.startsWith("rtsp://")) {
       const customCam = {
         id: "CUSTOM_URL",
@@ -440,6 +491,7 @@ export default {
       return handleCameraOutput(sock, msg, customCam, activePrefix, isInfoOnly);
     }
 
+    // Direct search by ID
     const matchedById = allData.find(
       (item) => String(item.id).toLowerCase() === query.toLowerCase()
     );
@@ -450,6 +502,7 @@ export default {
       return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly);
     }
 
+    // Search dataset with fuzzy ranking
     let dataset = allData;
     if (filterSource) {
       dataset = allData.filter((i) => i.sourceKey === filterSource);
@@ -458,14 +511,32 @@ export default {
     const queryLower = query.toLowerCase();
     const queryParts = queryLower.split(/\s+/).filter(Boolean);
 
-    const matches = dataset.filter((item) => {
+    const scoredMatches = dataset.map((item) => {
       const nama = (item.nama || item.name || item.alias || "").toLowerCase();
       const kabkota = (item.kabkota || item.kota || item.wilayah || "").toLowerCase();
       const alamat = (item.alamat || item.lokasi || "").toLowerCase();
       const combined = `${nama} ${kabkota} ${alamat}`;
 
-      return queryParts.every((part) => combined.includes(part));
-    });
+      let matchCount = 0;
+      for (const part of queryParts) {
+        if (combined.includes(part)) {
+          matchCount++;
+        }
+      }
+
+      let score = matchCount;
+      if (combined.includes(queryLower)) {
+        score += 10;
+      }
+      if (nama.includes(queryLower)) {
+        score += 20;
+      }
+
+      return { item, score, matchCount };
+    }).filter((res) => res.matchCount > 0);
+
+    scoredMatches.sort((a, b) => b.score - a.score);
+    const matches = scoredMatches.map((res) => res.item);
 
     if (matches.length === 0) {
       return sock.sendMessage(
@@ -473,7 +544,7 @@ export default {
         {
           text: `❌ Tidak ditemukan CCTV dengan kata kunci *"${query}"*${
             filterSource ? ` pada kategori *${CCTV_SOURCES[filterSource].name}*` : ""
-          }.\n\n💡 Coba kata kunci seperti: \`tol\`, \`semanggi\`, \`km 58\`, \`monas\`, \`cikampek\`, dsb.`,
+          }.\n\n💡 Coba kata kunci lain atau ketik \`${activePrefix}cctv list ${filterSource || ""}\` untuk melihat daftar semua kamera.`,
         },
         { quoted: msg }
       );
@@ -492,7 +563,9 @@ export default {
 
     let listText =
       `🔍 *HASIL PENCARIAN CCTV*\n` +
-      `Kata Kunci: *"${query}"*\n` +
+      `Kata Kunci: *"${query}"*${
+        filterSource ? ` [Kategori: ${CCTV_SOURCES[filterSource].name}]` : ""
+      }\n` +
       `Ditemukan: *${matches.length} Titik Kamera*\n\n`;
 
     sliced.forEach((item, index) => {
@@ -515,7 +588,7 @@ export default {
 
 async function handleCheckCamera(sock, msg, camera) {
   const jid = msg.key.remoteJid;
-  const nama = camera.nama || camera.name || "CCTV Kamera";
+  const nama = camera.nama || camera.name || camera.alias || "CCTV Kamera";
   const badge = camera.badge || "📹 CCTV";
   const streamUrl = camera.url || "-";
 
@@ -548,7 +621,7 @@ async function handleCheckCamera(sock, msg, camera) {
 
 async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = false) {
   const jid = msg.key.remoteJid;
-  const nama = camera.nama || camera.name || "CCTV Kamera";
+  const nama = camera.nama || camera.name || camera.alias || "CCTV Kamera";
   const kabkota = camera.kabkota || "Wilayah Terdaftar";
   const alamat = camera.alamat ? `\n• *Alamat:* ${camera.alamat}` : "";
   const source = camera.sourceName || "Lalu Lintas";
