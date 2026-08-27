@@ -723,23 +723,15 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
   const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : null;
   const mapsText = mapsUrl ? `\n• *Koordinat & Peta:* [Buka Google Maps](${mapsUrl})` : "";
 
-  const streamUrl = camera.url || "-";
-
   let caption =
     `📹 *DETAIL KAMERA CCTV*\n\n` +
     `• *ID:* \`${camera.id}\`\n` +
     `• *Nama Lokasi:* ${nama}\n` +
-    `• *Sumber / Jaringan:* ${badge} ${source}\n` +
     `• *Wilayah / Kota:* ${kabkota}` +
     `${alamat}` +
     `${mapsText}\n` +
-    `• *Status:* ${camera.isActive !== false ? "🟢 Terdaftar (Live)" : "🔴 Nonaktif"}\n\n`;
-
-  if (streamUrl !== "-") {
-    caption += `🔗 *Stream URL:* ${streamUrl}\n\n`;
-  }
-
-  caption += `⚡ _Kyros-MD Traffic Intelligence_`;
+    `• *Status:* ${camera.isActive !== false ? "🟢 Terdaftar (Live)" : "🔴 Nonaktif"}\n\n` +
+    `⚡ _Kyros-MD Traffic Intelligence_`;
 
   if (isInfoOnly || !camera.url) {
     return sock.sendMessage(jid, { text: caption }, { quoted: msg });
@@ -759,7 +751,7 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
           jid,
           {
             video: vidBuffer,
-            caption: `📹 *CCTV Live Video Clip (10s)*\n\n• *Lokasi:* ${nama}\n• *Sumber:* ${badge} ${source}\n• *ID:* \`${camera.id}\`\n\n⚡ _Kyros-MD Traffic Intelligence_`,
+            caption: `📹 *CCTV Live Video Clip (10s)*\n\n• *Lokasi:* ${nama}\n• *ID:* \`${camera.id}\`\n\n⚡ _Kyros-MD Traffic Intelligence_`,
             mimetype: "video/mp4",
           },
           { quoted: msg }
