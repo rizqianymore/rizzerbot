@@ -6,86 +6,6 @@ const AIHUBMIX_API_KEY =
   process.env.AIHUBMIX_API_KEY ||
   "sk-CtXrMk37pKQe4JoP71A415F56e6a48279c6c3dC14cF3F341";
 
-export const POPULAR_FREE_MODELS = {
-  "gemini-3.7-flash-free": {
-    name: "Gemini 3.7 Flash Free",
-    provider: "Google",
-    alias: ["gemini", "gemini37", "gemini-flash"],
-    fast: true,
-  },
-  "coding-glm-5.3-free": {
-    name: "GLM 5.3 Free",
-    provider: "Zhipu AI",
-    alias: ["glm", "glm53", "glm-5.3"],
-    fast: true,
-  },
-  "coding-glm-4.6-free": {
-    name: "GLM 4.6 Free",
-    provider: "Zhipu AI",
-    alias: ["glm46", "glm-4.6"],
-    fast: true,
-  },
-  "gpt-4.1-mini-free": {
-    name: "GPT 4.1 Mini Free",
-    provider: "OpenAI",
-    alias: ["gpt", "gpt4", "gpt-mini"],
-    fast: true,
-  },
-  "coding-kimi-k3-free": {
-    name: "Kimi K3 Coding Free",
-    provider: "Moonshot",
-    alias: ["kimi", "kimi-k3"],
-    fast: true,
-  },
-  "coding-minimax-m3-free": {
-    name: "MiniMax M3 Free",
-    provider: "MiniMax",
-    alias: ["minimax", "minimax-m3"],
-    fast: true,
-  },
-  "qwen3.6-plus-preview-free": {
-    name: "Qwen 3.6 Plus Free",
-    provider: "Qwen / Alibaba",
-    alias: ["qwen", "qwen36"],
-    fast: true,
-  },
-  "mimo-v2-flash-free": {
-    name: "Xiaomi MiMo V2 Flash Free",
-    provider: "Xiaomi",
-    alias: ["mimo", "xiaomi"],
-    fast: true,
-  },
-};
-
-const DEFAULT_MODEL = "gemini-3.7-flash-free";
-
-/**
- * Normalisasi nama/alias model yang diinput user
- */
-function resolveModelName(input) {
-  if (!input) return DEFAULT_MODEL;
-  const clean = input.toLowerCase().trim().replace(/^--?/, "");
-
-  if (POPULAR_FREE_MODELS[clean]) return clean;
-
-  for (const [modelId, meta] of Object.entries(POPULAR_FREE_MODELS)) {
-    if (meta.alias && meta.alias.includes(clean)) {
-      return modelId;
-    }
-  }
-
-  // Jika input berakhiran -free atau berupa nama model valid
-  if (clean.includes("gemini") && clean.includes("3.7")) return "gemini-3.7-flash-free";
-  if (clean.includes("gemini") && clean.includes("3.6")) return "gemini-3.6-flash-free";
-  if (clean.includes("glm") && clean.includes("5.3")) return "coding-glm-5.3-free";
-  if (clean.includes("glm") && clean.includes("4.6")) return "coding-glm-4.6-free";
-  if (clean.includes("gpt")) return "gpt-4.1-mini-free";
-  if (clean.includes("kimi")) return "coding-kimi-k3-free";
-  if (clean.includes("minimax")) return "coding-minimax-m3-free";
-
-  return clean.endsWith("-free") ? clean : DEFAULT_MODEL;
-}
-
 /**
  * Ekstrak teks quote dari pesan yang di-reply
  */
@@ -104,20 +24,32 @@ function getQuotedText(msg) {
 }
 
 /**
- * Format menu daftar model
+ * Format menu daftar model dari database/listai.json
  */
 function getModelListText(activePrefix, userModel) {
-  let text = `╭─── . ݁₊ ⊹ *AI Models (AIHubMix Free)* ⊹ ₊ ݁.\n│ Model aktif kamu: \`${userModel}\`\n│\n`;
+  const models = db.getAiModels();
+  const categories = {};
 
-  for (const [id, meta] of Object.entries(POPULAR_FREE_MODELS)) {
-    const isCurrent = id === userModel ? " *(Active)*" : "";
-    text += `├─ *${meta.name}* (${meta.provider})${isCurrent}\n`;
-    text += `│  • ID: \`${id}\`\n`;
-    text += `│  • Alias: \`${meta.alias.join("`, `")}\`\n│\n`;
+  for (const [id, meta] of Object.entries(models)) {
+    const cat = meta.category || "Other Models";
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push({ id, ...meta });
+  }
+
+  let text = `╭─── . ݁₊ ⊹ *AI Models (Database Free)* ⊹ ₊ ݁.\n│ Model aktif kamu: \`${userModel}\`\n│\n`;
+
+  for (const [catName, list] of Object.entries(categories)) {
+    text += `├─  *${catName}*\n`;
+    for (const item of list) {
+      const isCurrent = item.id === userModel ? " *(Active)*" : "";
+      const aliasStr = item.aliases && item.aliases.length ? ` (\`${item.aliases.join("`, `")}\`)` : "";
+      text += `│  • \`${item.id}\`${aliasStr}${isCurrent}\n`;
+    }
+    text += `│\n`;
   }
 
   text += `╰──────────────\n\n`;
-  text += `💡 *Cara Ganti Model:*\n`;
+  text += `💡 *Cara Penggunaan:*\n`;
   text += `• Set default: \`${activePrefix}ai --set <model_id/alias>\`\n`;
   text += `• Panggil langsung: \`${activePrefix}ai -<alias> <pertanyaan>\`\n`;
   text += `  _Contoh:_ \`${activePrefix}ai -glm Apa itu quantum computing?\`\n`;
@@ -128,7 +60,7 @@ function getModelListText(activePrefix, userModel) {
 
 export default {
   name: "ai",
-  description: "Bertanya atau berinteraksi dengan AI berkecepatan tinggi dengan multi-model switcher.",
+  description: "Bertanya atau berinteraksi dengan AI (50+ Model dari database/listai.json).",
   usage: "[--set <model> | -<model>] <prompt>",
   example: "ai -gemini Jelaskan cara kerja AI",
   aliases: ["aimodel", "gemini", "glm", "chatgpt", "ask", "botai", "gpt"],
@@ -139,14 +71,16 @@ export default {
     const { sendTyping, sendUsage, activePrefix, senderJid, commandName } = context;
 
     const userProfile = db.getUser(senderJid) || {};
-    let selectedModel = userProfile.aiModel || DEFAULT_MODEL;
+    const defaultModel = db.getAiDefaultModel();
+    let selectedModel = userProfile.aiModel || defaultModel;
 
     // Subcommand: .ai models / .ai --list / .aimodel
     if (
       commandName === "aimodel" ||
       args[0] === "models" ||
       args[0] === "--list" ||
-      args[0] === "-l"
+      args[0] === "-l" ||
+      args[0] === "list"
     ) {
       await sendTyping();
       const listText = getModelListText(activePrefix, selectedModel);
@@ -154,7 +88,7 @@ export default {
     }
 
     // Subcommand: .ai --set <model> / .ai setmodel <model>
-    if (args[0] === "--set" || args[0] === "setmodel" || args[0] === "-s") {
+    if (args[0] === "--set" || args[0] === "setmodel" || args[0] === "-s" || args[0] === "set") {
       const targetModelInput = args[1];
       if (!targetModelInput) {
         return sock.sendMessage(
@@ -166,7 +100,7 @@ export default {
         );
       }
 
-      const resolved = resolveModelName(targetModelInput);
+      const resolved = db.resolveAiModel(targetModelInput);
       db.updateUser(senderJid, { aiModel: resolved });
 
       return sock.sendMessage(
@@ -192,7 +126,7 @@ export default {
 
       if (firstArg === "-m" || firstArg === "--model") {
         if (remainingArgs[1]) {
-          selectedModel = resolveModelName(remainingArgs[1]);
+          selectedModel = db.resolveAiModel(remainingArgs[1]);
           remainingArgs = remainingArgs.slice(2);
         }
       } else if (firstArg.startsWith("-") && firstArg.length > 1) {
@@ -201,7 +135,7 @@ export default {
           enableThinking = true;
           remainingArgs = remainingArgs.slice(1);
         } else {
-          const resolved = resolveModelName(potentialModel);
+          const resolved = db.resolveAiModel(potentialModel);
           if (resolved) {
             selectedModel = resolved;
             remainingArgs = remainingArgs.slice(1);
@@ -278,8 +212,9 @@ export default {
       }
 
       const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
+      const allModels = db.getAiModels();
       const modelDisplayName =
-        POPULAR_FREE_MODELS[selectedModel]?.name || selectedModel;
+        allModels[selectedModel]?.name || selectedModel;
 
       const finalMessage = `${replyContent}\n\n⚡ _${durationSec}s • ${modelDisplayName}_`;
 
