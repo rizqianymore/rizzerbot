@@ -7,16 +7,18 @@ function getHeader(title) {
 }
 
 export function buildDynamicMenuCategory(categoryName, commandsMap = defaultCommandsMap, filterFn) {
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   const list = [];
   const map = commandsMap || defaultCommandsMap;
+  const seen = new Set();
 
   if (map) {
     for (const [key, cmd] of map.entries()) {
-      if (cmd && cmd.name && cmd.name.toLowerCase() === key) {
+      if (cmd && cmd.name && cmd.name.toLowerCase() === key && !seen.has(cmd.name)) {
         const catMatches = (cmd.category || "Utilities").toLowerCase() === categoryName.toLowerCase();
         const matchesFilter = filterFn ? filterFn(cmd) : true;
         if (catMatches && matchesFilter) {
+          seen.add(cmd.name);
           list.push(cmd);
         }
       }
@@ -34,20 +36,20 @@ export function buildDynamicMenuCategory(categoryName, commandsMap = defaultComm
 }
 
 export function getMenu(senderName = settings.ownerName) {
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
-  const botName = settings.botName;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
+  const botName = settings.botName || "Kyros-MD";
 
   return `
-Welcome ${senderName} back to ${botName} 
+Halo *${senderName}*, selamat datang di *${botName}*
 
-╭─── . ݁₊ ⊹ *List Menu* ⊹ ₊ ݁.
+╭─── . ݁₊ ⊹ *Daftar Menu* ⊹ ₊ ݁.
 │ ${activePrefix}usermenu
 │ ${activePrefix}premiummenu
 │ ${activePrefix}ownermenu
 │ ${activePrefix}plugins
 ╰──────────────
 
-💡 *Tips:* Ketik salah satu perintah di atas untuk melihat menu secara detail.
+💡 *Tips:* Ketik salah satu perintah di atas untuk melihat detail fitur.
 `.trim();
 }
 
@@ -58,9 +60,11 @@ export function getUserMenu(commandsMap = defaultCommandsMap) {
     return `${getHeader("User Menu")}\n│\n${userCategoryText}╰──────────────`.trim();
   }
 
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   return `
 ${getHeader("User Menu")}
+│
+├─  *User*
 │ ${activePrefix}help
 │ ${activePrefix}usermenu
 │ ${activePrefix}ping
@@ -86,7 +90,7 @@ export function getPremiumMenu(commandsMap = defaultCommandsMap) {
     return `${getHeader("Premium Menu")}\n│\n${body}╰──────────────`.trim();
   }
 
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   return `
 ${getHeader("Premium Menu")}
 │
@@ -97,31 +101,22 @@ ${getHeader("Premium Menu")}
 │ ${activePrefix}sw <balas status>
 │
 ├─  *Media / Tools*
-│ ${activePrefix}plugins
 │ ${activePrefix}sticker
 │ ${activePrefix}brat <teks>
 │ ${activePrefix}bratvid <teks>
 │ ${activePrefix}chatmaker <teks>
 │ ${activePrefix}kolase
-│ ${activePrefix}addkolase
-│ ${activePrefix}cancelkolase
 │ ${activePrefix}confess
 │ ${activePrefix}qr <teks>
-│ ${activePrefix}react <emoji>
 │ ${activePrefix}ss <url>
-│ ${activePrefix}trx
-│ ${activePrefix}delete
-│ ${activePrefix}edit
 │ ${activePrefix}rvo <balas media sekali lihat>
 │
-├─  *OSINT / Informasi*
-│ ${activePrefix}cekpkl <nomor>
+├─  *OSINT / Intel*
+│ ${activePrefix}cctv <lokasi/id>
 │ ${activePrefix}github <username>
 │ ${activePrefix}iplookup <ip>
-│ ${activePrefix}jkt48 <nama member>
-│ ${activePrefix}nik <nik>
-│ ${activePrefix}numberlookup <nomor>
 │ ${activePrefix}whois <domain>
+│ ${activePrefix}numberlookup <nomor>
 ╰──────────────
 `.trim();
 }
@@ -133,70 +128,31 @@ export function getOwnerMenu(commandsMap = defaultCommandsMap) {
     return `${getHeader("Owner Menu")}\n│\n${ownerCatText}╰──────────────`.trim();
   }
 
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   return `
 ${getHeader("Owner Menu")}
 │
-├─  *System / Bot Control*
-│ ${activePrefix}addbot
-│ ${activePrefix}delbot
-│ ${activePrefix}listbot
-│ ${activePrefix}addadmin
-│ ${activePrefix}deladmin
-│ ${activePrefix}listadmin
-│ ${activePrefix}addprem
-│ ${activePrefix}delprem
-│ ${activePrefix}ban
-│ ${activePrefix}unban
-│ ${activePrefix}block
-│ ${activePrefix}unblock
-│ ${activePrefix}listuser
-│ ${activePrefix}deluser
-│ ${activePrefix}getdb
-│ ${activePrefix}resetdb
-│ ${activePrefix}shutdown
-│ ${activePrefix}stats
-│ ${activePrefix}self
-│ ${activePrefix}public
-│ ${activePrefix}setprefix
-│ ${activePrefix}setbotname
-│ ${activePrefix}setownername
-│ ${activePrefix}maintenance
-│ ${activePrefix}broadcast
-│ ${activePrefix}addplugin
-│
-├─  *Group Control*
-│ ${activePrefix}add
-│ ${activePrefix}delmember
-│ ${activePrefix}promote
-│ ${activePrefix}demote
-│ ${activePrefix}group
-│ ${activePrefix}groupinfo
-│ ${activePrefix}linkgc
-│ ${activePrefix}revoke
-│ ${activePrefix}setname
-│ ${activePrefix}setdesc
-│ ${activePrefix}tagall
-│ ${activePrefix}hidetag
-│ ${activePrefix}antilink
-│ ${activePrefix}antibot
-│ ${activePrefix}jagagrup
-│
-├─  *Marketing*
-│ ${activePrefix}jpm
-│ ${activePrefix}pushkontak
+├─  *Owner*
+│ ${activePrefix}admin <add/remove/list>
+│ ${activePrefix}premium <add/remove/list>
+│ ${activePrefix}limited <add/remove/list>
+│ ${activePrefix}user <ban/unban/register/unregister/list>
+│ ${activePrefix}bot <add/stop/del/list/status>
+│ ${activePrefix}addplugin <nama>
 ╰──────────────
 `.trim();
 }
 
 export function getPluginsMenu(commandsMap = defaultCommandsMap) {
-  const activePrefix = db.data.settings?.prefix || settings.prefix;
+  const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   const map = commandsMap || defaultCommandsMap;
   const categories = {};
+  const seen = new Set();
 
   if (map) {
     for (const [name, cmd] of map.entries()) {
-      if (cmd && cmd.name && cmd.name.toLowerCase() === name) {
+      if (cmd && cmd.name && cmd.name.toLowerCase() === name && !seen.has(cmd.name)) {
+        seen.add(cmd.name);
         const cat = cmd.category || "Utilities";
         if (!categories[cat]) categories[cat] = [];
         categories[cat].push(cmd);

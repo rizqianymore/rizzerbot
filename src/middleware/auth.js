@@ -12,7 +12,7 @@ const PUBLIC_COMMANDS = new Set([
   "sawer",
   "rules",
   "owner",
-  "bot",
+  "developer",
 ]);
 
 export function evaluatePermissions(sock, msg, senderJid) {
@@ -20,30 +20,41 @@ export function evaluatePermissions(sock, msg, senderJid) {
   const normalizedOwner = db.normalizeJid(settings.ownerNumber);
   const normalizedPairing = db.normalizeJid(settings.pairingNumber);
 
-  const isBotAdmin = (db.data.settings.admins || []).some(
-    (a) => db.normalizeJid(a) === senderJid
+  const isSuperOwner = Boolean(
+    msg.key.fromMe ||
+    (normalizedOwner && senderJid.split("@")[0] === normalizedOwner.split("@")[0]) ||
+    (normalizedPairing && senderJid.split("@")[0] === normalizedPairing.split("@")[0]) ||
+    (botJid && senderJid.split("@")[0] === botJid.split("@")[0])
   );
 
-  const isOwner =
-    msg.key.fromMe ||
-    (normalizedOwner &&
-      senderJid.split("@")[0] === normalizedOwner.split("@")[0]) ||
-    (normalizedPairing &&
-      senderJid.split("@")[0] === normalizedPairing.split("@")[0]) ||
-    (botJid && senderJid.split("@")[0] === botJid.split("@")[0]) ||
-    isBotAdmin;
+  const isBotAdmin = Boolean(
+    (db.data?.settings?.admins || []).some(
+      (a) => db.normalizeJid(a) === senderJid
+    )
+  );
 
+  const isOwner = Boolean(isSuperOwner || isBotAdmin);
   const userProfile = db.getUser(senderJid);
-  const isPremium = Boolean(isOwner || userProfile?.premium);
-
-  const isLimited =
-    isOwner ||
-    (db.data.settings.limited || []).some(
+  const isLimited = Boolean(
+    isSuperOwner ||
+    isBotAdmin ||
+    (db.data?.settings?.limited || []).some(
       (l) => db.normalizeJid(l) === senderJid
     ) ||
-    Boolean(userProfile?.limited);
+    userProfile?.limited
+  );
+  const isPremium = Boolean(isSuperOwner || isBotAdmin || isLimited || userProfile?.premium);
+  const isRegistered = Boolean(isSuperOwner || isBotAdmin || userProfile?.registered);
 
-  return { isOwner, isPremium, isLimited, userProfile, isBotAdmin };
+  return {
+    isSuperOwner,
+    isBotAdmin,
+    isOwner,
+    isLimited,
+    isPremium,
+    isRegistered,
+    userProfile,
+  };
 }
 
 export function isPublicCommand(commandName) {

@@ -11,9 +11,9 @@ const MAX_CONTENT_WIDTH = CANVAS_SIZE - PADDING * 2;
 const MAX_CONTENT_HEIGHT = CANVAS_SIZE - PADDING * 2;
 
 const THEMES = {
-  white: { bg: "#FFFFFF", text: "#000000", blur: 1.6 },
-  green: { bg: "#8ACF00", text: "#000000", blur: 1.6 },
-  black: { bg: "#000000", text: "#FFFFFF", blur: 1.6 },
+  white: { bg: "#FFFFFF", text: "#000000", blur: 1.5 },
+  green: { bg: "#8ACF00", text: "#000000", blur: 1.5 },
+  black: { bg: "#000000", text: "#FFFFFF", blur: 1.5 },
   blue: { bg: "#0000FF", text: "#DE0100", blur: 0 },
 };
 
@@ -21,7 +21,7 @@ const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 const emojiBase64Cache = new Map();
 const textMeasureCache = new Map();
 
-const FONT_FAMILY = "Arial, 'Helvetica Neue', Helvetica, sans-serif";
+const FONT_FAMILY = "Arial, 'Arial Narrow', 'Helvetica Neue', Helvetica, sans-serif";
 
 function isEmojiChar(char) {
   return /\p{Extended_Pictographic}/u.test(char);
@@ -91,7 +91,7 @@ async function measureText(text, fontSize) {
     textMeasureCache.set(key, w);
     return w;
   } catch {
-    const fallback = text.length * fontSize * 0.55;
+    const fallback = text.length * fontSize * 0.52;
     textMeasureCache.set(key, fallback);
     return fallback;
   }
@@ -129,10 +129,10 @@ function tokenizeLine(lineStr) {
 
 async function getTokenWidth(token, fontSize) {
   if (token.type === "emoji") {
-    return fontSize * 1.1;
+    return fontSize * 1.05;
   }
   if (token.type === "space") {
-    return fontSize * 0.28;
+    return fontSize * 0.25;
   }
   return await measureText(token.value, fontSize);
 }
@@ -209,7 +209,7 @@ async function calculateLayout(rawText) {
       allLinesForTest.push(...wrapped);
     }
 
-    const lineHeight = testSize * 1.15;
+    const lineHeight = testSize * 1.12;
     const totalHeight = allLinesForTest.length * lineHeight;
     const maxLineWidth = Math.max(
       ...allLinesForTest.map((line) =>
@@ -242,7 +242,7 @@ async function calculateLayout(rawText) {
 }
 
 function buildSvgForLines(lines, optimalSize, theme) {
-  const lineHeight = optimalSize * 1.15;
+  const lineHeight = optimalSize * 1.12;
   const totalTextHeight = lines.length * lineHeight;
   const startY = (CANVAS_SIZE - totalTextHeight) / 2;
 
@@ -255,28 +255,28 @@ function buildSvgForLines(lines, optimalSize, theme) {
       (acc, tok) => acc + (tok.width || 0),
       0
     );
-    const isLastLine = lineIdx === lines.length - 1;
 
     let currentX;
     let extraSpace = 0;
 
-    // Apply auto justify across lines if multiple words exist
-    if (
-      spaceTokens.length > 0 &&
-      (!isLastLine || contentWidth >= MAX_CONTENT_WIDTH * 0.75)
-    ) {
+    // Brat Album Style: Always justify words across full width if 2+ words exist
+    if (spaceTokens.length > 0 && nonSpaceTokens.length > 1) {
       extraSpace = (MAX_CONTENT_WIDTH - contentWidth) / spaceTokens.length;
       currentX = PADDING;
     } else {
-      const lineWidth = line.reduce((acc, tok) => acc + (tok.width || 0), 0);
-      currentX = (CANVAS_SIZE - lineWidth) / 2;
+      if (lines.length === 1) {
+        const lineWidth = line.reduce((acc, tok) => acc + (tok.width || 0), 0);
+        currentX = (CANVAS_SIZE - lineWidth) / 2;
+      } else {
+        currentX = PADDING;
+      }
     }
 
     const lineY = startY + lineIdx * lineHeight;
 
     for (const token of line) {
       if (token.type === "space") {
-        currentX += (token.width || 0) + extraSpace;
+        currentX += extraSpace;
         continue;
       }
 
@@ -339,7 +339,7 @@ async function renderFrameBuffer(svgString, blur) {
 export default {
   name: "bratvid",
   description:
-    "Membuat stiker video/animasi teks Brat autentik dengan auto justify, tema warna dan dukungan emoji.",
+    "Membuat stiker video/animasi teks Brat autentik dengan full justify, tema warna dan dukungan emoji.",
   usage: "[white|green|black|blue] <teks>",
   example: "party girl 🔥 💅",
   aliases: ["bratgif", "bratanim", "bratvideo"],

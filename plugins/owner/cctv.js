@@ -123,15 +123,15 @@ const getNxVideo = async (client, token, cameraId, duration = 5) => {
 };
 
 export default {
-  name: "cctv",
+  name: "cctvnx",
   description: "Monitoring CCTV Nx Witness (Network Optix) dengan pemilihan kamera.",
-  usage: "[command] [args]",
-  example: "cctv snap 1",
-  aliases: ["monitor", "cam", "nx"],
+  usage: "[snap/list/addalias/delalias] [args]",
+  example: "cctvnx snap 1",
+  aliases: ["nx", "cctvpriv", "cctvserver"],
   category: "Owner",
-  limitedOnly: true,
+  limitedOnly: false,
   premiumOnly: false,
-  ownerOnly: false,
+  ownerOnly: true,
 
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix } = context;

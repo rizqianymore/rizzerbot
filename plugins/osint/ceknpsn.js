@@ -1,13 +1,13 @@
 import axios from "axios";
 
 export default {
-  premiumOnly: false,
+  name: "ceknpsn",
   description: "Cek data sekolah berdasarkan NPSN (Kemendikdasmen).",
   usage: "<npsn>",
-  example: "20104462",
-  name: "cek-npsn",
+  example: "ceknpsn 20104462",
   aliases: ["npsn", "sekolah"],
-  category: "Education",
+  category: "OSINT",
+  premiumOnly: true,
   ownerOnly: false,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix } = context;
@@ -18,7 +18,7 @@ export default {
       return sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `❌ Format salah! Gunakan: *${activePrefix}cek-npsn <nomor_npsn>*\nContoh: ${activePrefix}cek-npsn 20104462`,
+          text: `⚠️ Format salah! Gunakan: *${activePrefix}ceknpsn <nomor_npsn>*\nContoh: \`${activePrefix}ceknpsn 20104462\``,
         },
         { quoted: msg },
       );
@@ -73,9 +73,8 @@ export default {
         `• *Provinsi:* ${s.provinsi}\n` +
         `• *Kode Pos:* ${s.kode_pos}\n` +
         `• *Koordinat:* ${s.lintang}, ${s.bujur}\n\n` +
-        `⚡ _Via Kyros-MD API_`;
+        `⚡ _Via Kyros-MD OSINT_`;
 
-      // Kirim foto sekolah jika tersedia, fallback ke teks
       if (s.path_file) {
         await sock.sendMessage(
           msg.key.remoteJid,
@@ -95,10 +94,11 @@ export default {
     } catch (err) {
       console.error("Cek NPSN Error:", err.message);
       let errMsg = "❌ Gagal mengambil data sekolah.";
-      if (err.response?.status === 429)
+      if (err.response?.status === 429) {
         errMsg = "⚠️ Rate limit tercapai. Coba lagi dalam 1 menit.";
-      else if (err.code === "ECONNABORTED")
+      } else if (err.code === "ECONNABORTED") {
         errMsg = "⚠️ Request timeout. Server Kemendikdasmen sedang lambat.";
+      }
 
       await sock.sendMessage(
         msg.key.remoteJid,

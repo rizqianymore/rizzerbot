@@ -7,7 +7,7 @@ export default {
   example: "https://google.com",
   name: "ss",
   aliases: ["screenshot", "webshot", "ssweb"],
-  category: "Tools",
+  category: "Media",
   run: async (sock, msg, args, { sendTyping }) => {
     const url = args[0];
     if (!url) {

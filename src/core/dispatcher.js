@@ -10,7 +10,6 @@ import { checkBurst, checkCooldown, checkDuplicateMessage } from "@/src/middlewa
 function getLevenshteinDistance(a, b) {
   const la = a.length;
   const lb = b.length;
-
   let prev = Array.from({ length: la + 1 }, (_, i) => i);
   for (let j = 1; j <= lb; j++) {
     const curr = [j];
@@ -28,13 +27,7 @@ function getLevenshteinDistance(a, b) {
 export async function dispatchMessage(sock, msg, logger) {
   if (!msg.message || !msg.key?.id) return;
 
-  // Anti-Duplikasi Pesan: Abaikan jika ID pesan ini sudah pernah diproses
-  if (checkDuplicateMessage(msg.key.id)) {
-    if (logger) {
-      logger.debug(`[Anti-Duplicate] Skipped already processed message ID: ${msg.key.id}`);
-    }
-    return;
-  }
+  if (checkDuplicateMessage(msg.key.id)) return;
 
   msg.message = extractMessageContent(msg.message);
   if (!msg.message) return;
@@ -49,10 +42,18 @@ export async function dispatchMessage(sock, msg, logger) {
 
   const senderJid = db.normalizeJid(msg.key.participant || remoteJid);
   const senderName = msg.pushName || "User";
-  const { isOwner, isPremium, isLimited, userProfile } = evaluatePermissions(sock, msg, senderJid);
+  const {
+    isSuperOwner,
+    isBotAdmin,
+    isOwner,
+    isLimited,
+    isPremium,
+    isRegistered,
+    userProfile,
+  } = evaluatePermissions(sock, msg, senderJid);
 
-  if (userProfile.banned && !isOwner) return;
-  if (db.data.settings.selfMode && !isOwner) return;
+  if (userProfile.banned && !isSuperOwner) return;
+  if (db.data?.settings?.selfMode && !isOwner) return;
 
   let messageContent =
     msg.message.conversation ||
@@ -101,8 +102,6 @@ export async function dispatchMessage(sock, msg, logger) {
   const commandName = args.shift()?.toLowerCase() || "";
   if (!commandName) return;
 
-  logger.debug(`[Cmd Dispatch] ${commandName} from ${senderJid}`);
-
   const cmd = commands.get(commandName);
   if (!cmd) {
     const allCmds = Array.from(commands.keys());
@@ -132,75 +131,77 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
-  const isRegistered = userProfile.registered || isOwner;
   const isPublic = isPublicCommand(commandName);
-
   if (!isRegistered && !isPublic) {
     await sock.sendMessage(
       remoteJid,
       {
-        text: `⚠️ *Akses Ditolak*\n\nAnda belum terdaftar. Ketik: *${activePrefix}register*\n\n_${settings.botName}_`,
+        text: `⚠️ *Akses Ditolak*\n\nAnda belum terdaftar dalam sistem.\nKetik *${activePrefix}register* untuk mendaftar.`,
       },
       { quoted: msg }
     );
     return;
   }
 
-  if (db.data.settings.maintenance && !isOwner) {
+  if (db.data?.settings?.maintenance && !isOwner) {
     await sock.sendMessage(
       remoteJid,
-      { text: "⚠️ *Kyros-MD sedang dalam pemeliharaan (maintenance).*" },
+      { text: "🛠️ *Pemeliharaan Sistem*\n\nBot saat ini sedang dalam mode maintenance." },
       { quoted: msg }
     );
     return;
   }
 
-  // Safeguard: Owner Only
+  if (cmd.superOwnerOnly && !isSuperOwner) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "👑 *Super Owner Only:* Perintah ini khusus untuk pemilik utama bot." },
+      { quoted: msg }
+    );
+    return;
+  }
+
   if (cmd.ownerOnly && !isOwner) {
     await sock.sendMessage(
       remoteJid,
-      { text: "👑 *Khusus Owner:* Perintah ini hanya dapat dijalankan oleh Owner/Admin Bot." },
+      { text: "👑 *Owner Only:* Perintah ini hanya dapat dijalankan oleh Owner atau Admin Bot." },
       { quoted: msg }
     );
     return;
   }
 
-  // Safeguard: Limited Only
-  if (cmd.limitedOnly && !isLimited && !isOwner) {
+  if (cmd.limitedOnly && !isLimited) {
     await sock.sendMessage(
       remoteJid,
-      { text: "🔒 *Khusus Limited Access:* Perintah ini memerlukan role *Limited* atau *Owner*." },
+      { text: "🔒 *Limited Access:* Fitur ini memerlukan role *Limited* atau hak akses khusus." },
       { quoted: msg }
     );
     return;
   }
 
-  // Safeguard: Premium Only
-  if (cmd.premiumOnly && !isOwner && !isPremium) {
+  if (cmd.premiumOnly && !isPremium) {
     await sock.sendMessage(
       remoteJid,
-      { text: "👑 *Khusus Premium:* Perintah ini memerlukan status Premium." },
+      { text: `⭐ *Premium Only:* Perintah ini memerlukan status *Premium*.\nHubungi Owner untuk upgrade akun.` },
       { quoted: msg }
     );
     return;
   }
 
-  // Safeguard: Group Only
   const isGroup = remoteJid.endsWith("@g.us");
   if (cmd.groupOnly && !isGroup) {
     await sock.sendMessage(
       remoteJid,
-      { text: "👥 *Khusus Grup:* Perintah ini hanya dapat digunakan di dalam grup WhatsApp." },
+      { text: "👥 *Group Only:* Perintah ini hanya dapat digunakan di dalam grup WhatsApp." },
       { quoted: msg }
     );
     return;
   }
 
-  // Safeguard: Private Chat Only
   if (cmd.privateOnly && isGroup) {
     await sock.sendMessage(
       remoteJid,
-      { text: "👤 *Khusus Private Chat:* Perintah ini hanya dapat digunakan di chat pribadi bot." },
+      { text: "👤 *Private Chat Only:* Perintah ini hanya dapat digunakan di chat pribadi." },
       { quoted: msg }
     );
     return;
@@ -212,7 +213,7 @@ export async function dispatchMessage(sock, msg, logger) {
       const secs = (burstRemaining / 1000).toFixed(0);
       await sock.sendMessage(
         remoteJid,
-        { text: `🚫 *Anti-Spam:* Terlalu banyak perintah sekaligus. Tunggu *${secs}s* dulu.` },
+        { text: `🚫 *Anti-Spam:* Terlalu banyak permintaan. Tunggu *${secs}s* lagi.` },
         { quoted: msg }
       );
       return;
@@ -232,7 +233,7 @@ export async function dispatchMessage(sock, msg, logger) {
         const secs = (cooldownRemaining / 1000).toFixed(1);
         await sock.sendMessage(
           remoteJid,
-          { text: `⏳ *Anti-Spam:* Harap tunggu *${secs}s*.` },
+          { text: `⏳ *Cooldown:* Harap tunggu *${secs}s*.` },
           { quoted: msg }
         );
         return;
@@ -246,21 +247,23 @@ export async function dispatchMessage(sock, msg, logger) {
     logger,
     senderName,
     senderJid,
+    isSuperOwner,
+    isBotAdmin,
     isOwner,
     isPremium,
     isLimited,
+    isRegistered,
     isGroup,
     userProfile,
     activePrefix,
     commandName,
-    getTargetJid: (args) => {
-      const mentioned =
-        msg.message.extendedTextMessage?.contextInfo?.mentionedJid;
-      if (mentioned?.length > 0) return db.normalizeJid(mentioned[0]);
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.participant;
+    getTargetJid: (targetArgs) => {
+      const mentioned = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid;
+      if (mentioned && mentioned.length > 0) return db.normalizeJid(mentioned[0]);
+      const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
       if (quoted) return db.normalizeJid(quoted);
-      if (args?.[0]) {
-        const cleaned = args[0].replace(/[^0-9]/g, "");
+      if (targetArgs?.[0]) {
+        const cleaned = targetArgs[0].replace(/[^0-9]/g, "");
         if (cleaned.length >= 7) return cleaned + "@s.whatsapp.net";
       }
       return null;
@@ -269,20 +272,14 @@ export async function dispatchMessage(sock, msg, logger) {
       sock.sendPresenceUpdate("composing", remoteJid).catch(() => {});
     },
     sendUsage: async () => {
-      const descText = cmd.description
-        ? `📝 *Deskripsi:* ${cmd.description}\n\n`
-        : "";
-      const usageText = cmd.usage
-        ? `👉 *Format:*  \`${activePrefix}${commandName} ${cmd.usage}\`\n`
-        : "";
-      const exampleText = cmd.example
-        ? `👉 *Contoh:* \`${activePrefix}${commandName} ${cmd.example}\``
-        : "";
+      const descText = cmd.description ? `📝 *Deskripsi:* ${cmd.description}\n\n` : "";
+      const usageText = cmd.usage ? `👉 *Format:* \`${activePrefix}${commandName} ${cmd.usage}\`\n` : "";
+      const exampleText = cmd.example ? `👉 *Contoh:* \`${activePrefix}${commandName} ${cmd.example}\`` : "";
       await sock.sendMessage(
         remoteJid,
         {
           text: (
-            `⚠️ *Cara Penggunaan ${activePrefix}${commandName}*\n\n` +
+            `⚠️ *Panduan Penggunaan ${activePrefix}${commandName}*\n\n` +
             descText +
             usageText +
             exampleText
@@ -305,8 +302,7 @@ export async function dispatchMessage(sock, msg, logger) {
         {
           text:
             `❌ *Terjadi kesalahan pada perintah ${cmd.name}:*\n\n` +
-            `*Pesan:* ${err.message || err}\n\n` +
-            `*Stack Trace:*\n\`\`\`\n${err.stack || "Tidak ada stack trace."}\n\`\`\``,
+            `*Pesan:* ${err.message || err}`,
         },
         { quoted: msg }
       );

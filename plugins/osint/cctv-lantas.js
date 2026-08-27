@@ -16,7 +16,6 @@ try {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Database path mappings
 const CCTV_SOURCES = {
   lantas: {
     name: "Lalu Lintas / Polda Metro",
@@ -55,10 +54,9 @@ const CCTV_SOURCES = {
   },
 };
 
-// Cache memory to prevent repetitive fs disk reads
 let cachedDatabase = null;
 let cacheTime = 0;
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 10 * 60 * 1000;
 
 function loadAllCctvData() {
   const now = Date.now();
@@ -134,17 +132,56 @@ function getHeadersForUrl(url) {
   return headers;
 }
 
-/**
- * Extract a high-quality live snapshot (JPEG Buffer) from any CCTV feed
- */
-async function captureCctvSnapshot(streamUrl) {
+async function checkCctvStatus(streamUrl, timeoutMs = 4000) {
+  if (!streamUrl || streamUrl === "-") {
+    return { online: false, latency: 0, reason: "Stream URL tidak tersedia" };
+  }
+
+  const startTime = Date.now();
+  const headers = getHeadersForUrl(streamUrl);
+
+  try {
+    let targetM3u8 = streamUrl;
+    if (targetM3u8.includes("embed.html")) {
+      targetM3u8 = targetM3u8.replace(/embed\.html(\?token=.*)?$/, "index.m3u8$1");
+    }
+
+    const res = await axios.get(targetM3u8, {
+      headers,
+      httpsAgent,
+      timeout: timeoutMs,
+    });
+
+    const latency = Date.now() - startTime;
+
+    if (res.status >= 200 && res.status < 400) {
+      if (typeof res.data === "string" && targetM3u8.includes(".m3u8")) {
+        const hasSegments = res.data.includes("#EXTINF") || res.data.includes(".ts") || res.data.includes(".m3u8");
+        if (!hasSegments) {
+          return { online: false, latency, reason: "Playlist m3u8 kosong (Stream idle)" };
+        }
+      }
+      return { online: true, latency, reason: "OK (Live)" };
+    }
+
+    return { online: false, latency, reason: `HTTP Status ${res.status}` };
+  } catch (err) {
+    const latency = Date.now() - startTime;
+    let reason = err.message || "Connection failed";
+    if (err.code === "ECONNABORTED" || latency >= timeoutMs) {
+      reason = `Timeout (${timeoutMs / 1000}s)`;
+    }
+    return { online: false, latency, reason };
+  }
+}
+
+async function captureCctvSnapshot(streamUrl, timeoutMs = 6000) {
   if (!streamUrl) {
     throw new Error("URL stream kamera tidak tersedia.");
   }
 
   const headers = getHeadersForUrl(streamUrl);
 
-  // 1. Direct Image Stream (Synergics / Static JPG / PNG / MJPG)
   if (
     streamUrl.includes("/img") ||
     streamUrl.endsWith(".jpg") ||
@@ -155,29 +192,27 @@ async function captureCctvSnapshot(streamUrl) {
       headers,
       httpsAgent,
       responseType: "arraybuffer",
-      timeout: 8000,
+      timeout: timeoutMs,
     });
     if (imgRes.status === 200 && imgRes.data && imgRes.data.length > 500) {
       return Buffer.from(imgRes.data);
     }
-    throw new Error(`Gagal mengambil gambar dari sumber (Status: ${imgRes.status})`);
+    throw new Error(`Gagal mengambil gambar (Status: ${imgRes.status})`);
   }
 
-  // 2. Flussonic Web Player embed.html -> convert to index.m3u8
   let targetM3u8 = streamUrl;
   if (targetM3u8.includes("embed.html")) {
     targetM3u8 = targetM3u8.replace(/embed\.html(\?token=.*)?$/, "index.m3u8$1");
   }
 
-  // 3. HLS Stream (.m3u8 / Flussonic / Jasa Marga / Sigaplodaya)
   const m3u8Res = await axios.get(targetM3u8, {
     headers,
     httpsAgent,
-    timeout: 8000,
+    timeout: timeoutMs,
   });
 
   if (!m3u8Res.data || typeof m3u8Res.data !== "string") {
-    throw new Error("Response playlist m3u8 tidak valid.");
+    throw new Error("Playlist m3u8 tidak valid.");
   }
 
   let lines = m3u8Res.data
@@ -186,38 +221,35 @@ async function captureCctvSnapshot(streamUrl) {
     .filter((l) => l && !l.startsWith("#"));
 
   if (lines.length === 0) {
-    throw new Error("Playlist m3u8 kosong atau kamera sedang offline di server pusat.");
+    throw new Error("Playlist kosong (Kamera offline).");
   }
 
   let segmentUrl = new URL(lines[lines.length - 1], targetM3u8).href;
 
-  // Handle nested sub-playlists (e.g. tracks-v1/mono.ts.m3u8)
   if (segmentUrl.includes(".m3u8")) {
-    const subRes = await axios.get(segmentUrl, { headers, httpsAgent, timeout: 8000 });
+    const subRes = await axios.get(segmentUrl, { headers, httpsAgent, timeout: timeoutMs });
     const subLines = subRes.data
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l && !l.startsWith("#"));
 
     if (subLines.length === 0) {
-      throw new Error("Sub-playlist m3u8 kosong.");
+      throw new Error("Sub-playlist kosong.");
     }
     segmentUrl = new URL(subLines[subLines.length - 1], segmentUrl).href;
   }
 
-  // Fetch actual TS video segment
   const tsRes = await axios.get(segmentUrl, {
     headers,
     httpsAgent,
     responseType: "arraybuffer",
-    timeout: 10000,
+    timeout: timeoutMs,
   });
 
   if (!tsRes.data || tsRes.data.length < 1000) {
-    throw new Error("Segment video TS kosong atau rusak.");
+    throw new Error("Segment video TS kosong.");
   }
 
-  // Temporary file names
   const tmpId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const tmpTs = path.join("/tmp", `cctv_snap_${tmpId}.ts`);
   const tmpJpg = path.join("/tmp", `cctv_snap_${tmpId}.jpg`);
@@ -225,10 +257,9 @@ async function captureCctvSnapshot(streamUrl) {
   try {
     fs.writeFileSync(tmpTs, tsRes.data);
 
-    // Extract first frame as crisp JPEG via ffmpeg
     await new Promise((resolve, reject) => {
       const cmd = `"${ffmpegPath}" -y -i "${tmpTs}" -vframes 1 -q:v 2 "${tmpJpg}"`;
-      exec(cmd, { timeout: 10000 }, (err) => {
+      exec(cmd, { timeout: 6000 }, (err) => {
         if (err) reject(err);
         else resolve(true);
       });
@@ -240,7 +271,7 @@ async function captureCctvSnapshot(streamUrl) {
         return imgBuffer;
       }
     }
-    throw new Error("Gagal mengonversi frame video menjadi gambar.");
+    throw new Error("Gagal mengonversi frame video.");
   } finally {
     try {
       if (fs.existsSync(tmpTs)) fs.unlinkSync(tmpTs);
@@ -252,12 +283,12 @@ async function captureCctvSnapshot(streamUrl) {
 }
 
 export default {
-  name: "cctv-lantas",
+  name: "cctv",
   description:
     "Monitoring, live snapshot & pencarian CCTV Lalu Lintas, Tol, Dishub, Korlantas Polri, & ETLE se-Indonesia.",
-  usage: "[snap/info] <keyword | id | url | source>",
+  usage: "[snap/check/list/info] <keyword | id | url>",
   example: "cctv snap semanggi",
-  aliases: ["cctv", "cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan", "cctvlive"],
+  aliases: ["cctvlantas", "lantas", "cctv-traffic", "cctvindonesia", "cctvjalan", "cctvlive"],
   category: "OSINT",
   premiumOnly: true,
   ownerOnly: false,
@@ -281,26 +312,26 @@ export default {
 
       let helpText =
         `📹 *CCTV LALU LINTAS & JALAN RAYA INDONESIA*\n` +
-        `Total Kamera Terpantau: *${allData.length.toLocaleString("id-ID")} Titik*\n\n` +
-        `📊 *Database Terdaftar:*\n`;
+        `Total Kamera Terindeks: *${allData.length.toLocaleString("id-ID")} Titik*\n\n` +
+        `📊 *Database Kategori:*\n`;
 
       for (const [, s] of Object.entries(stats)) {
-        helpText += `• ${s.badge} *${s.name}:* ${s.count} kamera\n`;
+        helpText += `• ${s.badge} *${s.name}:* ${s.count} titik\n`;
       }
 
       helpText +=
         `\n📌 *Fitur & Perintah:*\n` +
-        `│ ${activePrefix}cctv <nama_jalan / area / kota / km>\n` +
-        `│ ${activePrefix}cctv snap <id / nama_lokasi / url>\n` +
-        `│ ${activePrefix}cctv info <id>\n` +
-        `│ ${activePrefix}cctv <kategori> <keyword>\n\n` +
-        `📁 *Kategori Tersedia:* \`lantas\`, \`korlantas\`, \`dishub\`, \`etle\`, \`tol\`, \`scbd\`, \`publik\`\n\n` +
+        `│ ${activePrefix}cctv <nama_lokasi / kota / km>\n` +
+        `│ ${activePrefix}cctv snap <ID / nama_lokasi>\n` +
+        `│ ${activePrefix}cctv check <ID / nama_lokasi>\n` +
+        `│ ${activePrefix}cctv list [kategori/kota] [halaman]\n` +
+        `│ ${activePrefix}cctv info <ID>\n\n` +
         `💡 *Contoh:*\n` +
         `• \`${activePrefix}cctv semanggi\`\n` +
         `• \`${activePrefix}cctv snap 10253\`\n` +
-        `• \`${activePrefix}cctv km 58\`\n` +
-        `• \`${activePrefix}cctv dishub monas\`\n` +
-        `• \`${activePrefix}cctv snap https://example.com/live.m3u8\`\n\n` +
+        `• \`${activePrefix}cctv check 10253\` (Cek status aktif & latency)\n` +
+        `• \`${activePrefix}cctv list tol 1\`\n` +
+        `• \`${activePrefix}cctv km 58\`\n\n` +
         `⚡ _Kyros-MD Traffic Intelligence_`;
 
       return sock.sendMessage(jid, { text: helpText }, { quoted: msg });
@@ -308,15 +339,24 @@ export default {
 
     let isSnapAction = false;
     let isInfoOnly = false;
+    let isCheckAction = false;
+    let isListAction = false;
     let filterSource = null;
+    let page = 1;
     let workingArgs = [...args];
 
     const firstLower = workingArgs[0].toLowerCase();
     if (firstLower === "snap" || firstLower === "snapshot" || firstLower === "live") {
       isSnapAction = true;
       workingArgs.shift();
+    } else if (firstLower === "check" || firstLower === "test" || firstLower === "ping") {
+      isCheckAction = true;
+      workingArgs.shift();
     } else if (firstLower === "info" || firstLower === "detail") {
       isInfoOnly = true;
+      workingArgs.shift();
+    } else if (firstLower === "list" || firstLower === "daftar") {
+      isListAction = true;
       workingArgs.shift();
     }
 
@@ -325,19 +365,67 @@ export default {
       workingArgs.shift();
     }
 
+    if (isListAction) {
+      if (workingArgs.length > 0 && !isNaN(workingArgs[workingArgs.length - 1])) {
+        page = Math.max(1, parseInt(workingArgs.pop(), 10));
+      }
+
+      let listDataset = allData;
+      if (filterSource) {
+        listDataset = allData.filter((i) => i.sourceKey === filterSource);
+      } else if (workingArgs.length > 0) {
+        const catQuery = workingArgs.join(" ").toLowerCase();
+        listDataset = allData.filter((item) => {
+          const nama = (item.nama || item.name || "").toLowerCase();
+          const kab = (item.kabkota || item.kota || "").toLowerCase();
+          return nama.includes(catQuery) || kab.includes(catQuery);
+        });
+      }
+
+      if (listDataset.length === 0) {
+        return sock.sendMessage(
+          jid,
+          { text: "❌ Tidak ada daftar kamera yang sesuai kriteria pencarian." },
+          { quoted: msg }
+        );
+      }
+
+      const pageSize = 15;
+      const totalPages = Math.ceil(listDataset.length / pageSize);
+      const currentPage = Math.min(page, totalPages);
+      const startIdx = (currentPage - 1) * pageSize;
+      const sliced = listDataset.slice(startIdx, startIdx + pageSize);
+
+      let listText =
+        `📋 *DAFTAR KAMERA CCTV (Hal ${currentPage}/${totalPages})*\n` +
+        `Total: *${listDataset.length} Titik*\n\n`;
+
+      sliced.forEach((item, index) => {
+        const idx = startIdx + index + 1;
+        const nama = item.nama || item.name || item.alias || "Kamera";
+        const kab = item.kabkota ? ` (${item.kabkota})` : "";
+        listText += `*${idx}.* [ID: \`${item.id}\`] ${item.badge} *${nama}*${kab}\n`;
+      });
+
+      listText +=
+        `\n💡 *Untuk snapshot:* \`${activePrefix}cctv snap <ID>\`\n` +
+        `💡 *Halaman lain:* \`${activePrefix}cctv list ${filterSource || ""} ${currentPage + 1}\``;
+
+      return sock.sendMessage(jid, { text: listText.trim() }, { quoted: msg });
+    }
+
     const query = workingArgs.join(" ").trim();
 
     if (!query) {
       return sock.sendMessage(
         jid,
         {
-          text: `⚠️ Harap masukkan nama lokasi, URL stream, atau ID kamera!\nContoh: \`${activePrefix}cctv snap semanggi\` atau \`${activePrefix}cctv 10253\``,
+          text: `⚠️ Harap masukkan nama lokasi, ID kamera, atau kata kunci!\nContoh: \`${activePrefix}cctv snap semanggi\` atau \`${activePrefix}cctv check 10253\``,
         },
         { quoted: msg }
       );
     }
 
-    // 0. Direct URL Stream (.m3u8, .mp4, direct http/https stream)
     if (query.startsWith("http://") || query.startsWith("https://") || query.startsWith("rtsp://")) {
       const customCam = {
         id: "CUSTOM_URL",
@@ -346,18 +434,22 @@ export default {
         sourceName: "Custom URL Stream",
         badge: "📡 STREAM",
       };
+      if (isCheckAction) {
+        return handleCheckCamera(sock, msg, customCam);
+      }
       return handleCameraOutput(sock, msg, customCam, activePrefix, isInfoOnly);
     }
 
-    // 1. Direct search by ID
     const matchedById = allData.find(
       (item) => String(item.id).toLowerCase() === query.toLowerCase()
     );
     if (matchedById) {
+      if (isCheckAction) {
+        return handleCheckCamera(sock, msg, matchedById);
+      }
       return handleCameraOutput(sock, msg, matchedById, activePrefix, isInfoOnly);
     }
 
-    // 2. Search dataset by keyword
     let dataset = allData;
     if (filterSource) {
       dataset = allData.filter((i) => i.sourceKey === filterSource);
@@ -381,24 +473,25 @@ export default {
         {
           text: `❌ Tidak ditemukan CCTV dengan kata kunci *"${query}"*${
             filterSource ? ` pada kategori *${CCTV_SOURCES[filterSource].name}*` : ""
-          }.\n\n💡 Coba kata kunci lain, seperti: \`tol\`, \`sudirman\`, \`km 10\`, \`monas\`, \`cikampek\`, dsb.`,
+          }.\n\n💡 Coba kata kunci seperti: \`tol\`, \`semanggi\`, \`km 58\`, \`monas\`, \`cikampek\`, dsb.`,
         },
         { quoted: msg }
       );
     }
 
-    // If exactly 1 match or snap keyword requested with single best match
-    if (matches.length === 1 || isSnapAction) {
+    if (matches.length === 1 || isSnapAction || isCheckAction) {
       const targetCam = matches[0];
+      if (isCheckAction) {
+        return handleCheckCamera(sock, msg, targetCam);
+      }
       return handleCameraOutput(sock, msg, targetCam, activePrefix, isInfoOnly);
     }
 
-    // Multiple matches -> render list
     const listLimit = 15;
     const sliced = matches.slice(0, listLimit);
 
     let listText =
-      `🔍 *HASIL PENCARIAN CCTV LANTAS*\n` +
+      `🔍 *HASIL PENCARIAN CCTV*\n` +
       `Kata Kunci: *"${query}"*\n` +
       `Ditemukan: *${matches.length} Titik Kamera*\n\n`;
 
@@ -413,12 +506,45 @@ export default {
     }
 
     listText +=
-      `\n💡 *Untuk mengambil snapshot:* Ketik \`${activePrefix}cctv snap <ID>\`\n` +
-      `Contoh: \`${activePrefix}cctv snap ${sliced[0].id}\``;
+      `\n💡 *Snapshot:* \`${activePrefix}cctv snap <ID>\`\n` +
+      `💡 *Cek Aktif:* \`${activePrefix}cctv check <ID>\``;
 
-    return sock.sendMessage(jid, { text: listText }, { quoted: msg });
+    return sock.sendMessage(jid, { text: listText.trim() }, { quoted: msg });
   },
 };
+
+async function handleCheckCamera(sock, msg, camera) {
+  const jid = msg.key.remoteJid;
+  const nama = camera.nama || camera.name || "CCTV Kamera";
+  const badge = camera.badge || "📹 CCTV";
+  const streamUrl = camera.url || "-";
+
+  const pingMsg = await sock.sendMessage(
+    jid,
+    { text: `⏳ Sedang memeriksa konektivitas & status aktif kamera *${nama}* (Timeout: 4s)...` },
+    { quoted: msg }
+  );
+
+  const status = await checkCctvStatus(streamUrl, 4000);
+
+  const statusIcon = status.online ? "🟢 *LIVE (AKTIF)*" : "🔴 *OFFLINE / GAGAL*";
+  const reportText =
+    `📡 *LAPORAN STATUS KONEKTIVITAS CCTV*\n\n` +
+    `• *ID:* \`${camera.id}\`\n` +
+    `• *Nama:* ${nama}\n` +
+    `• *Kategori:* ${badge} ${camera.sourceName || "Lantas"}\n` +
+    `• *Status:* ${statusIcon}\n` +
+    `• *Latency:* ${status.latency} ms\n` +
+    `• *Keterangan:* ${status.reason}\n` +
+    (streamUrl !== "-" ? `• *URL:* ${streamUrl}\n` : "") +
+    `\n⚡ _Kyros-MD Traffic Intelligence_`;
+
+  return sock.sendMessage(
+    jid,
+    { text: reportText, edit: pingMsg.key },
+    { quoted: msg }
+  );
+}
 
 async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = false) {
   const jid = msg.key.remoteJid;
@@ -455,9 +581,8 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
     return sock.sendMessage(jid, { text: caption }, { quoted: msg });
   }
 
-  // Attempt live snapshot extraction
   try {
-    const imageBuffer = await captureCctvSnapshot(camera.url);
+    const imageBuffer = await captureCctvSnapshot(camera.url, 6000);
     if (imageBuffer && imageBuffer.length > 0) {
       return sock.sendMessage(
         jid,
@@ -469,9 +594,7 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
       );
     }
   } catch (snapErr) {
-    console.error(`Snapshot failed for camera ${camera.id} (${camera.url}):`, snapErr.message);
-
-    caption += `\n\n⚠️ _Catatan: Snapshot live gagal diambil (${snapErr.message}). Server kamera pusat mungkin sedang offline._`;
+    caption += `\n\n⚠️ _Catatan: Snapshot live tidak tersedia (${snapErr.message}). Kamera mungkin sedang offline di server pusat._`;
   }
 
   return sock.sendMessage(jid, { text: caption }, { quoted: msg });
