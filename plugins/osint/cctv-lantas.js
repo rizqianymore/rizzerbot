@@ -323,7 +323,7 @@ export default {
 
     const allData = loadAllCctvData();
 
-    if (!args || args.length === 0) {
+    if (!args || args.length === 0 || args[0]?.toLowerCase() === "help") {
       const stats = {};
       for (const [key, meta] of Object.entries(CCTV_SOURCES)) {
         stats[key] = {
@@ -334,28 +334,39 @@ export default {
       }
 
       let helpText =
-        `📹 *CCTV LALU LINTAS & JALAN RAYA INDONESIA*\n` +
+        `📹 *PANDUAN LENGKAP FITUR CCTV*\n` +
         `Total Kamera Terindeks: *${allData.length.toLocaleString("id-ID")} Titik*\n\n` +
-        `📊 *Database Kategori:*\n`;
+        `📊 *Kategori & Database Terdaftar:*\n`;
 
       for (const [, s] of Object.entries(stats)) {
-        helpText += `• ${s.badge} *${s.name}:* ${s.count} titik\n`;
+        helpText += `• ${s.badge} *${s.name}:* ${s.count} kamera\n`;
       }
 
       helpText +=
-        `\n📌 *Fitur & Perintah:*\n` +
+        `\n╭─── . ݁₊ ⊹ *Format Perintah* ⊹ ₊ ݁.\n` +
         `│ ${activePrefix}cctv <nama_lokasi / kota / km>\n` +
-        `│ ${activePrefix}cctv [kategori] <nama_lokasi>\n` +
+        `│ ${activePrefix}cctv <kategori> <nama_lokasi>\n` +
         `│ ${activePrefix}cctv snap <ID / nama_lokasi>\n` +
         `│ ${activePrefix}cctv check <ID / nama_lokasi>\n` +
         `│ ${activePrefix}cctv list [kategori/kota] [halaman]\n` +
-        `│ ${activePrefix}cctv info <ID>\n\n` +
-        `📁 *Kategori:* \`public\` / \`publik\`, \`tol\`, \`dishub\`, \`etle\`, \`lantas\`, \`korlantas\`, \`scbd\`\n\n` +
-        `💡 *Contoh:*\n` +
-        `• \`${activePrefix}cctv public dpr\`\n` +
-        `• \`${activePrefix}cctv snap semanggi\`\n` +
-        `• \`${activePrefix}cctv check 10253\` (Cek status aktif & latency)\n` +
-        `• \`${activePrefix}cctv list public 1\`\n\n` +
+        `│ ${activePrefix}cctv info <ID>\n` +
+        `╰──────────────\n\n` +
+        `📖 *Panduan Penggunaan Singkat:*\n\n` +
+        `1️⃣ *Melihat Daftar Kamera:*\n` +
+        `• \`${activePrefix}cctv list public 1\` — List CCTV Publik hal. 1\n` +
+        `• \`${activePrefix}cctv list tol 2\` — List CCTV Tol hal. 2\n` +
+        `• \`${activePrefix}cctv list dishub\` — List CCTV Dishub\n\n` +
+        `2️⃣ *Mencari Kamera (Nama / Area):*\n` +
+        `• \`${activePrefix}cctv public dpr\` — Cari DPR di kategori Publik\n` +
+        `• \`${activePrefix}cctv semanggi\` — Cari Semanggi di semua kategori\n` +
+        `• \`${activePrefix}cctv km 58\` — Cari Tol KM 58\n\n` +
+        `3️⃣ *Mengambil Gambar / Snapshot:*\n` +
+        `• \`${activePrefix}cctv snap 10253\` — Snapshot via ID kamera\n` +
+        `• \`${activePrefix}cctv snap monas\` — Snapshot via nama\n\n` +
+        `4️⃣ *Cek Status Live & Latency (Timeout 4s):*\n` +
+        `• \`${activePrefix}cctv check 10253\`\n` +
+        `• \`${activePrefix}cctv check public dpr\`\n\n` +
+        `📁 *Kode Kategori:* \`public\`, \`tol\`, \`dishub\`, \`etle\`, \`lantas\`, \`korlantas\`, \`scbd\`\n\n` +
         `⚡ _Kyros-MD Traffic Intelligence_`;
 
       return sock.sendMessage(jid, { text: helpText }, { quoted: msg });
