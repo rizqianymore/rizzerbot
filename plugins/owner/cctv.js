@@ -1,8 +1,31 @@
+import fs from "fs";
+import path from "path";
 import axios from "axios";
-import https from "https";
-import { db } from "@/src/core/database.js";
+import { db } from "../../src/core/database.js";
 
-const getEnvVal = (key) => process.env[key] || "";
+const getEnvVal = (key) => {
+  if (process.env[key]) return process.env[key];
+  const envPath = path.join(process.cwd(), ".env");
+  if (fs.existsSync(envPath)) {
+    try {
+      const content = fs.readFileSync(envPath, "utf8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const k = trimmed.slice(0, eqIdx).trim();
+          let v = trimmed.slice(eqIdx + 1).trim();
+          if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+            v = v.slice(1, -1);
+          }
+          if (k === key) return v;
+        }
+      }
+    } catch (_) {}
+  }
+  return "";
+};
 
 const createAxiosClient = () => {
   return axios.create({
@@ -45,7 +68,10 @@ const getNxCameras = async (client, token) => {
       },
     });
     if (Array.isArray(response.data)) {
-      return response.data.filter((device) => device.deviceType === "camera" || device.flags !== undefined);
+      return response.data.filter((device) => {
+        const type = String(device.deviceType || "").toLowerCase();
+        return type === "camera" || Boolean(device.name);
+      });
     }
     return [];
   } catch (error) {
@@ -55,6 +81,24 @@ const getNxCameras = async (client, token) => {
 
 const getNxSnapshot = async (client, token, cameraId) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
+
+  // 1. Primary: REST v2 device image endpoint
+  try {
+    const response = await client.get(
+      `${baseUrl}/rest/v2/devices/${cameraId}/image`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "arraybuffer",
+      }
+    );
+    if (response.data && response.data.length > 500) {
+      return Buffer.from(response.data);
+    }
+  } catch (_) {}
+
+  // 2. Fallback: EC2 cameraThumbnail endpoint
   try {
     const response = await client.get(
       `${baseUrl}/ec2/cameraThumbnail`,
@@ -70,7 +114,10 @@ const getNxSnapshot = async (client, token, cameraId) => {
         responseType: "arraybuffer",
       }
     );
-    return Buffer.from(response.data);
+    if (response.data && response.data.length > 500) {
+      return Buffer.from(response.data);
+    }
+    throw new Error("Snapshot buffer kosong.");
   } catch (error) {
     throw new Error(`Gagal mengambil snapshot kamera ${cameraId}: ${error.message}`);
   }
@@ -133,15 +180,15 @@ export default {
 
     let action = "snap";
     let target = null;
-    const duration = 10;
 
-    const actionKeywords = ["list", "snap", "video", "vid", "info", "alias", "unalias", "aliases", "help"];
+    const actionKeywords = ["list", "daftar", "snap", "video", "vid", "info", "alias", "unalias", "aliases", "help"];
 
     if (args.length === 0) {
       action = "help";
     } else if (actionKeywords.includes(args[0].toLowerCase())) {
       action = args[0].toLowerCase();
       if (action === "vid") action = "video";
+      if (action === "daftar") action = "list";
 
       if (action === "alias") {
         if (args.length < 3) {
@@ -210,24 +257,25 @@ export default {
 
       if (action === "help") {
         const helpText = 
-          `📹 *CCTV NX WITNESS MONITORING*\n\n` +
-          `Format penggunaan:\n` +
+          `📹 *CCTV NX WITNESS MONITORING*\n` +
+          `Total Kamera Terhubung: *${cameras.length} Kamera*\n\n` +
+          `╭─── . ݁₊ ⊹ *Format Perintah* ⊹ ₊ ݁.\n` +
           `│ ${activePrefix}cctv list\n` +
-          `│ ${activePrefix}cctv snap <nomor/nama/alias>\n` +
-          `│ ${activePrefix}cctv video <nomor/nama/alias>\n` +
-          `│ ${activePrefix}cctv info <nomor/nama/alias>\n` +
-          `│ ${activePrefix}cctv alias <nama_alias> <nomor/nama/id>\n` +
+          `│ ${activePrefix}cctv snap <nomor / nama / alias>\n` +
+          `│ ${activePrefix}cctv video <nomor / nama / alias>\n` +
+          `│ ${activePrefix}cctv info <nomor / nama / alias>\n` +
+          `│ ${activePrefix}cctv alias <nama_alias> <nomor/id>\n` +
           `│ ${activePrefix}cctv unalias <nama_alias>\n` +
           `│ ${activePrefix}cctv aliases\n` +
-          `│ ${activePrefix}cctv help\n\n` +
-          `*Durasi Video:* 10 detik (tetap/fixed)\n` +
+          `╰──────────────\n\n` +
+          `*Durasi Video:* 10 detik tetap (fixed)\n` +
           `*Contoh:* \`${activePrefix}cctv snap 1\` atau \`${activePrefix}cctv video 1\``;
         await sock.sendMessage(jid, { text: helpText }, { quoted: msg });
         return;
       }
 
       if (action === "list") {
-        let menuText = "📹 *Daftar Kamera Nx Witness*\n\n";
+        let menuText = `📹 *DAFTAR KAMERA NX WITNESS (${cameras.length})*\n\n`;
         cameras.forEach((cam, index) => {
           const status = cam.status === "Online" || cam.statusFlags === "CSF_NoFlags" || !cam.statusFlags ? "🟢" : "🔴";
           const camData = aliasesObj[cam.id];
@@ -235,7 +283,7 @@ export default {
           menuText += `${index + 1}. ${status} ${displayName}\n`;
         });
         menuText += `\n💡 Ketik \`${activePrefix}cctv snap <nomor/alias>\` atau \`${activePrefix}cctv video <nomor/alias>\``;
-        await sock.sendMessage(jid, { text: menuText }, { quoted: msg });
+        await sock.sendMessage(jid, { text: menuText.trim() }, { quoted: msg });
         return;
       }
 
@@ -326,7 +374,7 @@ export default {
         if (count === 0) {
           aliasText += "_Belum ada alias yang disimpan._\n";
         }
-        await sock.sendMessage(jid, { text: aliasText }, { quoted: msg });
+        await sock.sendMessage(jid, { text: aliasText.trim() }, { quoted: msg });
         return;
       }
 
@@ -369,17 +417,6 @@ export default {
         return;
       }
 
-      if (targetCamera.status && targetCamera.status !== "Online" && targetCamera.statusFlags !== "CSF_NoFlags" && targetCamera.statusFlags) {
-        if (action !== "info") {
-          await sock.sendMessage(
-            jid,
-            { text: `⚠️ Kamera *${targetCamera.name}* sedang offline/tidak dapat dihubungi!` },
-            { quoted: msg }
-          );
-          return;
-        }
-      }
-
       if (action === "info") {
         const status = targetCamera.status === "Online" || targetCamera.statusFlags === "CSF_NoFlags" || !targetCamera.statusFlags ? "🟢 Online" : "🔴 Offline";
         const camData = aliasesObj[targetCamera.id];
@@ -405,7 +442,7 @@ export default {
       if (action === "video") {
         let videoBuffer = await getNxVideo(client, token, targetCamera.id, 10);
         try {
-          const { transcodeToWhatsappVideo } = await import("@/src/utils/media.js");
+          const { transcodeToWhatsappVideo } = await import("../../src/utils/media.js");
           videoBuffer = await transcodeToWhatsappVideo(videoBuffer);
         } catch (transcodeErr) {
           console.error("CCTV Transcoding Failed:", transcodeErr.message);

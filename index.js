@@ -1,6 +1,14 @@
 import fs from "fs";
 import path from "path";
 
+// Ensure @ symlink in node_modules exists for seamless alias resolution
+const symlinkPath = path.join(process.cwd(), "node_modules", "@");
+if (!fs.existsSync(symlinkPath)) {
+  try {
+    fs.symlinkSync(process.cwd(), symlinkPath, "junction");
+  } catch (_) {}
+}
+
 // Auto load .env if exists
 const envPath = path.join(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
@@ -30,7 +38,7 @@ import {
   stopSecondaryBot,
   runningBots,
   logger,
-} from "@/src/core/connection.js";
+} from "./src/core/connection.js";
 
 process.env.FFMPEG_PATH = path.join(process.cwd(), "bin", "ffmpeg");
 
