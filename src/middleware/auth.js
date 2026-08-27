@@ -13,14 +13,6 @@ const PUBLIC_COMMANDS = new Set([
   "rules",
   "owner",
   "developer",
-  "ai",
-  "aimodel",
-  "gemini",
-  "glm",
-  "chatgpt",
-  "ask",
-  "botai",
-  "gpt",
 ]);
 
 export function evaluatePermissions(sock, msg, senderJid) {

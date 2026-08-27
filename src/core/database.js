@@ -15,7 +15,6 @@ const dbPaths = {
   groups: path.join(__dirname, "..", "..", "database", "groups.json"),
   blacklist: path.join(__dirname, "..", "..", "database", "blacklist.json"),
   cctv: path.join(__dirname, "..", "..", "database", "cctv.json"),
-  listai: path.join(__dirname, "..", "..", "database", "listai.json"),
 };
 
 const normalizeJidCache = new Map();
@@ -37,10 +36,6 @@ function createDefaultSchema() {
       jpmBlacklist: [],
     },
     groups: {},
-    listai: {
-      default_model: "gemini-3.7-flash-free",
-      models: {},
-    },
   };
 }
 
@@ -208,14 +203,6 @@ class Database {
         } catch (_) {}
       }
 
-      let listaiData = { default_model: "gemini-3.7-flash-free", models: {} };
-      if (fs.existsSync(dbPaths.listai)) {
-        try {
-          const raw = fs.readFileSync(dbPaths.listai, "utf8");
-          listaiData = raw ? JSON.parse(raw) : listaiData;
-        } catch (_) {}
-      }
-
       this.data = {
         users: users,
         stats: {
@@ -233,7 +220,6 @@ class Database {
         },
         groups: groups,
         cctvAliases: cctvAliases || {},
-        listai: listaiData || { default_model: "gemini-3.7-flash-free", models: {} },
       };
       this.updatePrivilegedCache();
     } catch (err) {
@@ -318,11 +304,6 @@ class Database {
       this.safeWriteFileSync(
         dbPaths.cctv,
         JSON.stringify(this.data.cctvAliases || {}, null, 4)
-      );
-
-      this.safeWriteFileSync(
-        dbPaths.listai,
-        JSON.stringify(this.data.listai || { default_model: "gemini-3.7-flash-free", models: {} }, null, 4)
       );
     } catch (err) {
       console.error("Database writeToDisk error:", err.message);
@@ -465,36 +446,6 @@ class Database {
       }
     }
     return false;
-  }
-
-  getAiModels() {
-    if (!this.data.listai) {
-      this.data.listai = { default_model: "gemini-3.7-flash-free", models: {} };
-    }
-    return this.data.listai.models || {};
-  }
-
-  getAiDefaultModel() {
-    return this.data.listai?.default_model || "gemini-3.7-flash-free";
-  }
-
-  resolveAiModel(query) {
-    if (!query) return this.getAiDefaultModel();
-    const clean = query.toLowerCase().trim().replace(/^--?/, "");
-    const models = this.getAiModels();
-
-    if (models[clean]) return clean;
-
-    for (const [modelId, meta] of Object.entries(models)) {
-      if (meta.aliases && Array.isArray(meta.aliases)) {
-        if (meta.aliases.map((a) => a.toLowerCase()).includes(clean)) {
-          return modelId;
-        }
-      }
-    }
-
-    if (clean.endsWith("-free") && models[clean]) return clean;
-    return this.getAiDefaultModel();
   }
 }
 

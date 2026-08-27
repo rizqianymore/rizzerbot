@@ -21,7 +21,6 @@ database/*.json
 !database/.gitkeep
 !database/jkt48.json
 !database/cctv-*.json
-!database/listai.json
 config/database.json
 marketing.txt
 bin/
