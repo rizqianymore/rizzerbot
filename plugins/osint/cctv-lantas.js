@@ -155,7 +155,16 @@ function getHeadersForUrl(url) {
   return headers;
 }
 
-async function checkCctvStatus(streamUrl, timeoutMs = 4000) {
+function getFfmpegHeadersOption(headersObj) {
+  let headerStr = "";
+  for (const [k, v] of Object.entries(headersObj)) {
+    if (k.toLowerCase() === "user-agent") continue;
+    headerStr += `${k}: ${v}\r\n`;
+  }
+  return headerStr ? `-headers "${headerStr.replace(/"/g, '\\"')}"` : "";
+}
+
+async function checkCctvStatus(streamUrl, timeoutMs = 3500) {
   if (!streamUrl || streamUrl === "-") {
     return { online: false, latency: 0, reason: "Stream URL tidak tersedia" };
   }
@@ -173,38 +182,54 @@ async function checkCctvStatus(streamUrl, timeoutMs = 4000) {
       headers,
       httpsAgent,
       timeout: timeoutMs,
+      validateStatus: () => true,
     });
 
     const latency = Date.now() - startTime;
 
-    if (res.status >= 200 && res.status < 400) {
+    if (res.status >= 200 && res.status < 300) {
       if (typeof res.data === "string" && targetM3u8.includes(".m3u8")) {
         const hasSegments = res.data.includes("#EXTINF") || res.data.includes(".ts") || res.data.includes(".m3u8");
         if (!hasSegments) {
-          return { online: false, latency, reason: "Playlist m3u8 kosong (Stream idle)" };
+          return { online: false, latency, reason: "Stream Idle (Playlist kosong)" };
         }
       }
-      return { online: true, latency, reason: "OK (Live)" };
+      return { online: true, latency, reason: "🟢 Live (Aktif)" };
+    }
+
+    if (res.status === 521) {
+      return { online: false, latency, reason: "🔴 Server Host Down (Cloudflare 521)" };
+    }
+    if (res.status === 404) {
+      return { online: false, latency, reason: "🔴 Stream Not Found (404)" };
+    }
+    if (res.status === 403) {
+      return { online: false, latency, reason: "🔒 Akses Ditolak (403 Forbidden)" };
     }
 
     return { online: false, latency, reason: `HTTP Status ${res.status}` };
   } catch (err) {
     const latency = Date.now() - startTime;
-    let reason = err.message || "Connection failed";
+    let reason = err.message || "Koneksi gagal";
     if (err.code === "ECONNABORTED" || latency >= timeoutMs) {
-      reason = `Timeout (${timeoutMs / 1000}s)`;
+      reason = `Timeout Server (> ${(timeoutMs / 1000).toFixed(1)}s)`;
+    } else if (err.code === "ECONNREFUSED") {
+      reason = "Server Offline (Koneksi Ditolak)";
+    } else if (err.code === "ENOTFOUND") {
+      reason = "Domain Tidak Ditemukan";
     }
     return { online: false, latency, reason };
   }
 }
 
 async function captureCctvSnapshot(streamUrl, timeoutMs = 6000) {
-  if (!streamUrl) {
+  if (!streamUrl || streamUrl === "-") {
     throw new Error("URL stream kamera tidak tersedia.");
   }
 
   const headers = getHeadersForUrl(streamUrl);
 
+  // 1. Direct Image endpoints (.jpg, .png, /img)
   if (
     streamUrl.includes("/img") ||
     streamUrl.endsWith(".jpg") ||
@@ -220,73 +245,85 @@ async function captureCctvSnapshot(streamUrl, timeoutMs = 6000) {
     if (imgRes.status === 200 && imgRes.data && imgRes.data.length > 500) {
       return Buffer.from(imgRes.data);
     }
-    throw new Error(`Gagal mengambil gambar (Status: ${imgRes.status})`);
+    throw new Error(`Gagal mengambil gambar (Status HTTP: ${imgRes.status})`);
   }
 
+  // 2. HLS Playlist (.m3u8 / embed.html)
   let targetM3u8 = streamUrl;
   if (targetM3u8.includes("embed.html")) {
     targetM3u8 = targetM3u8.replace(/embed\.html(\?token=.*)?$/, "index.m3u8$1");
   }
 
-  const m3u8Res = await axios.get(targetM3u8, {
-    headers,
-    httpsAgent,
-    timeout: timeoutMs,
-  });
+  let tsBuffer = null;
 
-  if (!m3u8Res.data || typeof m3u8Res.data !== "string") {
-    throw new Error("Playlist m3u8 tidak valid.");
-  }
+  try {
+    const m3u8Res = await axios.get(targetM3u8, {
+      headers,
+      httpsAgent,
+      timeout: Math.min(timeoutMs, 4000),
+    });
 
-  let lines = m3u8Res.data
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
+    if (m3u8Res.data && typeof m3u8Res.data === "string") {
+      let lines = m3u8Res.data
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith("#"));
 
-  if (lines.length === 0) {
-    throw new Error("Playlist kosong (Kamera offline).");
-  }
+      if (lines.length > 0) {
+        let segmentUrl = new URL(lines[lines.length - 1], targetM3u8).href;
 
-  let segmentUrl = new URL(lines[lines.length - 1], targetM3u8).href;
+        if (segmentUrl.includes(".m3u8")) {
+          const subRes = await axios.get(segmentUrl, { headers, httpsAgent, timeout: 3000 });
+          const subLines = subRes.data
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith("#"));
 
-  if (segmentUrl.includes(".m3u8")) {
-    const subRes = await axios.get(segmentUrl, { headers, httpsAgent, timeout: timeoutMs });
-    const subLines = subRes.data
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith("#"));
+          if (subLines.length > 0) {
+            segmentUrl = new URL(subLines[subLines.length - 1], segmentUrl).href;
+          }
+        }
 
-    if (subLines.length === 0) {
-      throw new Error("Sub-playlist kosong.");
+        const tsRes = await axios.get(segmentUrl, {
+          headers,
+          httpsAgent,
+          responseType: "arraybuffer",
+          timeout: 4000,
+        });
+
+        if (tsRes.data && tsRes.data.length >= 1000) {
+          tsBuffer = Buffer.from(tsRes.data);
+        }
+      }
     }
-    segmentUrl = new URL(subLines[subLines.length - 1], segmentUrl).href;
-  }
-
-  const tsRes = await axios.get(segmentUrl, {
-    headers,
-    httpsAgent,
-    responseType: "arraybuffer",
-    timeout: timeoutMs,
-  });
-
-  if (!tsRes.data || tsRes.data.length < 1000) {
-    throw new Error("Segment video TS kosong.");
-  }
+  } catch (_) {}
 
   const tmpId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const tmpTs = path.join("/tmp", `cctv_snap_${tmpId}.ts`);
   const tmpJpg = path.join("/tmp", `cctv_snap_${tmpId}.jpg`);
 
   try {
-    fs.writeFileSync(tmpTs, tsRes.data);
-
-    await new Promise((resolve, reject) => {
-      const cmd = `"${ffmpegPath}" -y -i "${tmpTs}" -vframes 1 -q:v 2 "${tmpJpg}"`;
-      exec(cmd, { timeout: 6000 }, (err) => {
-        if (err) reject(err);
-        else resolve(true);
+    if (tsBuffer) {
+      fs.writeFileSync(tmpTs, tsBuffer);
+      await new Promise((resolve, reject) => {
+        const cmd = `"${ffmpegPath}" -y -i "${tmpTs}" -vframes 1 -q:v 2 "${tmpJpg}"`;
+        exec(cmd, { timeout: 5000 }, (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
       });
-    });
+    } else {
+      // Fallback: direct ffmpeg HLS snapshot capture
+      const headerOption = getFfmpegHeadersOption(headers);
+      const userAgent = headers["User-Agent"] || "Mozilla/5.0";
+      await new Promise((resolve, reject) => {
+        const cmd = `"${ffmpegPath}" -y -rw_timeout 5000000 -user_agent "${userAgent}" ${headerOption} -i "${targetM3u8}" -vframes 1 -q:v 2 "${tmpJpg}"`;
+        exec(cmd, { timeout: 7000 }, (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        });
+      });
+    }
 
     if (fs.existsSync(tmpJpg)) {
       const imgBuffer = fs.readFileSync(tmpJpg);
@@ -294,12 +331,10 @@ async function captureCctvSnapshot(streamUrl, timeoutMs = 6000) {
         return imgBuffer;
       }
     }
-    throw new Error("Gagal mengonversi frame video.");
+    throw new Error("Gagal mengonversi frame video / Stream offline.");
   } finally {
     try {
       if (fs.existsSync(tmpTs)) fs.unlinkSync(tmpTs);
-    } catch (_) {}
-    try {
       if (fs.existsSync(tmpJpg)) fs.unlinkSync(tmpJpg);
     } catch (_) {}
   }
@@ -315,13 +350,19 @@ async function captureCctvVideo(streamUrl, duration = 10) {
     targetUrl = targetUrl.replace(/embed\.html(\?token=.*)?$/, "index.m3u8$1");
   }
 
+  const headers = getHeadersForUrl(streamUrl);
+  const headerOption = getFfmpegHeadersOption(headers);
+  const userAgent = headers["User-Agent"] || "Mozilla/5.0";
+
   const tmpId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const tmpMp4 = path.join("/tmp", `cctv_vid_${tmpId}.mp4`);
 
   try {
     await new Promise((resolve, reject) => {
-      const cmd = `"${ffmpegPath}" -y -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 -i "${targetUrl}" -t ${duration} -c:v libx264 -preset veryfast -pix_fmt yuv420p -movflags +faststart -an "${tmpMp4}"`;
-      exec(cmd, { timeout: 20000 }, (err) => {
+      // -rw_timeout 8000000 : 8s socket timeout
+      // -reconnect 1 : auto reconnect
+      const cmd = `"${ffmpegPath}" -y -rw_timeout 8000000 -user_agent "${userAgent}" ${headerOption} -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 2 -i "${targetUrl}" -t ${duration} -c:v libx264 -preset veryfast -pix_fmt yuv420p -movflags +faststart -an "${tmpMp4}"`;
+      exec(cmd, { timeout: (duration + 10) * 1000 }, (err) => {
         if (err) reject(err);
         else resolve(true);
       });
@@ -333,7 +374,7 @@ async function captureCctvVideo(streamUrl, duration = 10) {
         return vidBuffer;
       }
     }
-    throw new Error("Video rekaman kosong.");
+    throw new Error("Video rekaman kosong atau server kamera tidak merespons.");
   } finally {
     try {
       if (fs.existsSync(tmpMp4)) fs.unlinkSync(tmpMp4);
