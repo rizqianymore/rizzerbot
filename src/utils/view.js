@@ -133,6 +133,7 @@ export function getOwnerMenu(commandsMap = defaultCommandsMap) {
 ${getHeader("Owner Menu")}
 │
 ├─  *Owner*
+│ ${activePrefix}mode <self/maint/onlygc/onlypc/antispam>
 │ ${activePrefix}admin <add/remove/list>
 │ ${activePrefix}premium <add/remove/list>
 │ ${activePrefix}limited <add/remove/list>

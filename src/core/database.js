@@ -29,6 +29,9 @@ function createDefaultSchema() {
     settings: {
       selfMode: false,
       maintenance: false,
+      onlyGroup: false,
+      onlyPrivate: false,
+      antiSpam: true,
       registrationOpen: true,
       admins: [],
       limited: [],
@@ -213,6 +216,9 @@ class Database {
         settings: {
           selfMode: ownerSettings.selfMode || false,
           maintenance: ownerSettings.maintenance || false,
+          onlyGroup: ownerSettings.onlyGroup || false,
+          onlyPrivate: ownerSettings.onlyPrivate || false,
+          antiSpam: ownerSettings.antiSpam !== false,
           prefix: ownerSettings.prefix || undefined,
           admins: ownerSettings.admins || [],
           registrationOpen: ownerSettings.registrationOpen !== false,
@@ -282,6 +288,9 @@ class Database {
         admins: this.data.settings.admins || [],
         selfMode: this.data.settings.selfMode || false,
         maintenance: this.data.settings.maintenance || false,
+        onlyGroup: this.data.settings.onlyGroup || false,
+        onlyPrivate: this.data.settings.onlyPrivate || false,
+        antiSpam: this.data.settings.antiSpam !== false,
         prefix: this.data.settings.prefix || settings.prefix,
         registrationOpen: this.data.settings.registrationOpen !== false,
       };
@@ -455,6 +464,16 @@ class Database {
       }
     }
     return false;
+  }
+
+  getSettings() {
+    return this.data.settings || {};
+  }
+
+  updateSettings(props) {
+    this.data.settings = { ...(this.data.settings || {}), ...props };
+    this.save();
+    return this.data.settings;
   }
 }
 

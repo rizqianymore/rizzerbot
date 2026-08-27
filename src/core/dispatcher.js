@@ -146,9 +146,24 @@ export async function dispatchMessage(sock, msg, logger) {
   if (db.data?.settings?.maintenance && !isOwner) {
     await sock.sendMessage(
       remoteJid,
-      { text: "🛠️ *Pemeliharaan Sistem*\n\nBot saat ini sedang dalam mode maintenance." },
+      { text: "🛠️ *Pemeliharaan Sistem*\n\nBot saat ini sedang dalam mode maintenance. Silakan coba lagi nanti." },
       { quoted: msg }
     );
+    return;
+  }
+
+  const isGroup = remoteJid.endsWith("@g.us");
+
+  if (db.data?.settings?.onlyGroup && !isGroup && !isOwner) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: "👥 *Group Only Mode*\n\nSaat ini bot hanya dapat digunakan di dalam grup WhatsApp." },
+      { quoted: msg }
+    );
+    return;
+  }
+
+  if (db.data?.settings?.onlyPrivate && isGroup && !isOwner) {
     return;
   }
 
@@ -188,7 +203,6 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
-  const isGroup = remoteJid.endsWith("@g.us");
   if (cmd.groupOnly && !isGroup) {
     await sock.sendMessage(
       remoteJid,
@@ -207,7 +221,7 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
-  if (!isOwner) {
+  if (!isOwner && db.data?.settings?.antiSpam !== false) {
     const burstRemaining = checkBurst(senderJid);
     if (burstRemaining > 0) {
       const secs = (burstRemaining / 1000).toFixed(0);
