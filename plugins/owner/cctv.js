@@ -403,10 +403,39 @@ export default {
       }
 
       if (!targetCamera) {
-        targetCamera = cameras.find((cam) =>
-          cam.name.toLowerCase().includes(target.toLowerCase()) ||
-          cam.id.toLowerCase() === target.toLowerCase()
-        );
+        const targetLower = target.toLowerCase();
+        const targetParts = targetLower.split(/\s+/).filter(Boolean);
+
+        const scored = cameras
+          .map((cam) => {
+            const nameLower = (cam.name || "").toLowerCase();
+            const idLower = (cam.id || "").toLowerCase();
+            const aliasLower = (aliasesObj[cam.id]?.alias || "").toLowerCase();
+            const combined = `${nameLower} ${aliasLower} ${idLower}`;
+
+            let matchCount = 0;
+            for (const part of targetParts) {
+              if (combined.includes(part)) {
+                matchCount++;
+              }
+            }
+
+            let score = matchCount;
+            if (nameLower === targetLower || aliasLower === targetLower) {
+              score += 100;
+            } else if (nameLower.includes(targetLower)) {
+              score += 50;
+            }
+
+            return { cam, score, matchCount };
+          })
+          .filter((item) => item.matchCount > 0);
+
+        scored.sort((a, b) => b.score - a.score);
+
+        if (scored.length > 0) {
+          targetCamera = scored[0].cam;
+        }
       }
 
       if (!targetCamera) {
