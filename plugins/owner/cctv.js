@@ -233,7 +233,7 @@ export default {
       let dbChanged = false;
       cameras.forEach((cam) => {
         if (!aliasesObj[cam.id]) {
-          const defaultAlias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+          const defaultAlias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
           aliasesObj[cam.id] = {
             name: cam.name,
             alias: defaultAlias
@@ -246,7 +246,7 @@ export default {
             updated = true;
           }
           if (!aliasesObj[cam.id].alias) {
-            aliasesObj[cam.id].alias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+            aliasesObj[cam.id].alias = cam.name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
             updated = true;
           }
           if (updated) dbChanged = true;
