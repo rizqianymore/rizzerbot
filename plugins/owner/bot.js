@@ -1,4 +1,5 @@
 import { runningBots, addSecondaryBot, stopSecondaryBot } from "../../src/core/secondary.js";
+import { cleanNumber } from "@/src/utils/helper.js";
 
 export default {
   name: "bot",
@@ -30,7 +31,7 @@ export default {
     await sendTyping();
 
     if (action === "add") {
-      const targetNumber = args[1]?.replace(/[^0-9]/g, "");
+      const targetNumber = cleanNumber(args[1]);
       if (!targetNumber || targetNumber.length < 7) {
         await sock.sendMessage(
           msg.key.remoteJid,
@@ -74,7 +75,7 @@ export default {
         );
       }
     } else if (action === "stop" || action === "del") {
-      const targetNumber = args[1]?.replace(/[^0-9]/g, "");
+      const targetNumber = cleanNumber(args[1]);
       if (!targetNumber) {
         await sock.sendMessage(
           msg.key.remoteJid,

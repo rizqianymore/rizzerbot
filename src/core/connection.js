@@ -13,7 +13,6 @@ import qrcode from "qrcode-terminal";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { loadPlugins } from "@/src/core/loader.js";
 import { settings } from "@/config/settings.js";
-import { db } from "@/src/core/database.js";
 import { registerGroupGuard } from "@/src/middleware/groupGuard.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
 import {
@@ -22,6 +21,8 @@ import {
   restoreSecondarySessions,
   runningBots,
 } from "@/src/core/secondary.js";
+import { db } from "@/src/core/database.js";
+import { deleteFolderRecursive, cleanNumber } from "@/src/utils/helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,14 +44,6 @@ let _cleanIntervalStarted = false;
 let primarySock = null;
 let isStarting = false;
 let reconnectTimer = null;
-
-function deleteFolderRecursive(dirPath) {
-  if (fs.existsSync(dirPath)) {
-    try {
-      fs.rmSync(dirPath, { recursive: true, force: true });
-    } catch (_) {}
-  }
-}
 
 export async function startBot() {
   if (isStarting) {

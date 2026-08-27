@@ -1,6 +1,41 @@
+import fs from "fs";
+import path from "path";
 import { settings } from "@/config/settings.js";
 import { db } from "@/src/core/database.js";
 import { commands as defaultCommandsMap } from "@/src/core/loader.js";
+
+export function getMenuBanner() {
+  const imgPath = settings.linkImage || settings.image;
+  if (!imgPath) return null;
+  if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
+    return { url: imgPath };
+  }
+  const resolvedPath = path.resolve(process.cwd(), imgPath);
+  if (fs.existsSync(resolvedPath)) {
+    return { url: resolvedPath };
+  }
+  const relativePath = path.join(process.cwd(), imgPath);
+  if (fs.existsSync(relativePath)) {
+    return { url: relativePath };
+  }
+  return null;
+}
+
+export async function sendMenuMessage(sock, msg, menuText) {
+  const bannerImage = getMenuBanner();
+  if (bannerImage) {
+    return await sock.sendMessage(
+      msg.key.remoteJid,
+      { image: bannerImage, caption: menuText },
+      { quoted: msg }
+    );
+  }
+  return await sock.sendMessage(
+    msg.key.remoteJid,
+    { text: menuText },
+    { quoted: msg }
+  );
+}
 
 function getHeader(title) {
   return `╭─── . ݁₊ ⊹ *${title}* ⊹ ₊ ݁.`;

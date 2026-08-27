@@ -1,8 +1,12 @@
+import { db } from "@/src/core/database.js";
+import { cleanNumber } from "@/src/utils/helper.js";
+
 export default {
   name: "add",
   description: "Menambahkan nomor baru ke dalam grup.",
   usage: "<nomor hp>",
   category: "Owner",
+  ownerOnly: false,
   premiumOnly: true,
   run: async (sock, msg, args, { isOwner, senderJid, sendUsage }) => {
     const remoteJid = msg.key.remoteJid;
@@ -18,7 +22,7 @@ export default {
       const groupMetadata = await sock.groupMetadata(remoteJid);
       const participants = groupMetadata.participants || [];
       const sender = participants.find(
-        (p) => p.id.replace(/:.*@/, "@") === senderJid.replace(/:.*@/, "@")
+        (p) => db.normalizeJid(p.id) === senderJid
       );
       const isSenderAdmin =
         sender?.admin === "admin" || sender?.admin === "superadmin" || isOwner;
@@ -32,9 +36,9 @@ export default {
         return;
       }
 
-      const botJid = sock.user.id.replace(/:.*@/, "@");
+      const botJid = sock.user?.id ? db.normalizeJid(sock.user.id) : "";
       const botParticipant = participants.find(
-        (p) => p.id.replace(/:.*@/, "@") === botJid
+        (p) => db.normalizeJid(p.id) === botJid
       );
       const isBotAdmin =
         botParticipant?.admin === "admin" || botParticipant?.admin === "superadmin";
@@ -47,7 +51,7 @@ export default {
         return;
       }
 
-      let targetNumber = args[0]?.replace(/[^0-9]/g, "");
+      let targetNumber = cleanNumber(args[0]);
       if (!targetNumber) {
         await sendUsage();
         return;

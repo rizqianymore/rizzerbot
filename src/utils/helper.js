@@ -1,3 +1,18 @@
+import fs from "fs";
+
+export function cleanNumber(input) {
+  if (!input) return "";
+  return String(input).replace(/[^0-9]/g, "");
+}
+
+export function deleteFolderRecursive(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    try {
+      fs.rmSync(dirPath, { recursive: true, force: true });
+    } catch (_) {}
+  }
+}
+
 export function getUptimeString() {
   const uptimeSec = Math.floor(process.uptime());
   const hours = Math.floor(uptimeSec / 3600);

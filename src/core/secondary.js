@@ -13,6 +13,7 @@ import { fileURLToPath } from "url";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { settings } from "@/config/settings.js";
 import { registerGroupGuard } from "@/src/middleware/groupGuard.js";
+import { deleteFolderRecursive, cleanNumber } from "@/src/utils/helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,20 +21,12 @@ const __dirname = path.dirname(__filename);
 export const runningBots = new Map();
 const reconnectTimers = new Map();
 
-function deleteFolderRecursive(dirPath) {
-  if (fs.existsSync(dirPath)) {
-    try {
-      fs.rmSync(dirPath, { recursive: true, force: true });
-    } catch (_) {}
-  }
-}
-
 /**
  * Cek apakah bot dengan nomor tersebut benar-benar aktif & responsif
  */
 export async function isBotActive(phoneNumber) {
-  const cleanNumber = phoneNumber.replace(/[^0-9]/g, "");
-  const authDirName = `session_${cleanNumber}`;
+  const num = cleanNumber(phoneNumber);
+  const authDirName = `session_${num}`;
   const sock = runningBots.get(authDirName);
 
   if (!sock) return false;
