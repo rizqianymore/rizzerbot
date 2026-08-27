@@ -15,11 +15,11 @@ const createAxiosClient = () => {
 
 const getNxToken = async (client) => {
   const baseUrl = getEnvVal("CCTV_BASE_URL");
-  const username = getEnvVal("CCTV_USERNAME");
-  const password = getEnvVal("CCTV_PASSWORD");
+  const username = getEnvVal("CCTV_USER") || getEnvVal("CCTV_USERNAME");
+  const password = getEnvVal("CCTV_PASS") || getEnvVal("CCTV_PASSWORD");
 
   if (!baseUrl || !username || !password) {
-    throw new Error("Konfigurasi CCTV (CCTV_BASE_URL, CCTV_USERNAME, CCTV_PASSWORD) belum diatur di .env!");
+    throw new Error("Konfigurasi CCTV (CCTV_BASE_URL, CCTV_USER, CCTV_PASS) belum diatur di .env!");
   }
 
   try {
