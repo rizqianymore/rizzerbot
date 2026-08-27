@@ -34,6 +34,8 @@ async function processQueue(jid, logger) {
   chatQueues.delete(jid);
 }
 
+const MAX_QUEUE_PER_CHAT = 50;
+
 export function enqueueMessage(sock, msg, logger) {
   if (!msg.key || !msg.key.remoteJid) return;
 
@@ -42,11 +44,18 @@ export function enqueueMessage(sock, msg, logger) {
   if (!chatQueues.has(jid)) {
     chatQueues.set(jid, {
       tasks: [],
-      processing: false
+      processing: false,
     });
   }
 
   const queue = chatQueues.get(jid);
+  if (queue.tasks.length >= MAX_QUEUE_PER_CHAT) {
+    if (logger) {
+      logger.warn(`[Queue Overflow] Chat ${jid} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`);
+    }
+    queue.tasks.shift();
+  }
+
   queue.tasks.push({ sock, msg });
 
   // Start processing loop asynchronously

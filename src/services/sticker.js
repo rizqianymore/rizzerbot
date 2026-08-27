@@ -53,14 +53,23 @@ export async function addStickerMetadata(
         .toBuffer();
     }
 
+    if (!Buffer.isBuffer(webpBuffer) || webpBuffer.length === 0) {
+      return webpBuffer;
+    }
+
     const json = {
       "sticker-pack-id": `kyros-md-${Date.now()}`,
-      "sticker-pack-name": packName,
-      "sticker-pack-publisher": author,
-      emojis: Array.isArray(emojis) ? emojis : ["🤩", "🎉"],
+      "sticker-pack-name": String(packName || settings.stickerPackName || ""),
+      "sticker-pack-publisher": String(author || settings.stickerAuthor || ""),
+      emojis: Array.isArray(emojis) && emojis.length ? emojis : ["🤩", "🎉"],
     };
 
     const jsonBuffer = Buffer.from(JSON.stringify(json), "utf-8");
+    if (jsonBuffer.length > 65535) {
+      // Exif length safety threshold
+      return webp;
+    }
+
     const exifHeader = Buffer.from([
       0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57,
       0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,

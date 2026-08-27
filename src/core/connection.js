@@ -40,6 +40,9 @@ export const logger = pino({
 
 let isPluginsLoaded = false;
 let _cleanIntervalStarted = false;
+let primarySock = null;
+let isStarting = false;
+let reconnectTimer = null;
 
 function deleteFolderRecursive(dirPath) {
   if (fs.existsSync(dirPath)) {
@@ -50,37 +53,62 @@ function deleteFolderRecursive(dirPath) {
 }
 
 export async function startBot() {
-  if (!isPluginsLoaded) {
-    await loadPlugins();
-    isPluginsLoaded = true;
-    db.ensurePrivilegedUsers();
+  if (isStarting) {
+    logger.warn("startBot is already initializing in the background. Skipping redundant call.");
+    return primarySock;
+  }
+  isStarting = true;
+
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
   }
 
-  if (!_cleanIntervalStarted) {
-    _cleanIntervalStarted = true;
-    startAutoCleanInterval(logger);
+  if (primarySock) {
+    try {
+      primarySock.ev.removeAllListeners("connection.update");
+      primarySock.ev.removeAllListeners("messages.upsert");
+      primarySock.ev.removeAllListeners("creds.update");
+      primarySock.end();
+    } catch (_) {}
+    primarySock = null;
   }
 
-  const authDir = path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot");
-  const { state, saveCreds } = await useMultiFileAuthState(authDir);
-  const { version } = await fetchLatestBaileysVersion().catch(() => ({
-    version: [2, 3000, 1043857760],
-  }));
+  try {
+    if (!isPluginsLoaded) {
+      await loadPlugins();
+      isPluginsLoaded = true;
+      db.ensurePrivilegedUsers();
+    }
 
-  logger.info(`Initializing primary Kyros-MD connection (WA Version: ${version ? version.join('.') : 'default'})...`);
+    if (!_cleanIntervalStarted) {
+      _cleanIntervalStarted = true;
+      startAutoCleanInterval(logger);
+    }
 
-  const usePairingCode = settings.usePairingCode;
+    const authDir = path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot");
+    const { state, saveCreds } = await useMultiFileAuthState(authDir);
+    const { version } = await fetchLatestBaileysVersion().catch(() => ({
+      version: [2, 3000, 1043857760],
+    }));
 
-  const sock = makeWASocket({
-    version,
-    auth: state,
-    logger: pino({ level: "silent" }),
-    printQRInTerminal: !usePairingCode,
-    browser: Browsers.ubuntu("Chrome"),
-    markOnlineOnConnect: settings.autoOnline,
-    syncFullHistory: false,
-    keepAliveIntervalMs: 30000,
-  });
+    logger.info(`Initializing primary Kyros-MD connection (WA Version: ${version ? version.join('.') : 'default'})...`);
+
+    const usePairingCode = settings.usePairingCode;
+
+    const sock = makeWASocket({
+      version,
+      auth: state,
+      logger: pino({ level: "silent" }),
+      printQRInTerminal: !usePairingCode,
+      browser: Browsers.ubuntu("Chrome"),
+      markOnlineOnConnect: settings.autoOnline,
+      syncFullHistory: false,
+      keepAliveIntervalMs: 30000,
+    });
+
+    primarySock = sock;
+    isStarting = false;
 
   sock.ev.on("creds.update", saveCreds);
   registerGroupGuard(sock);
@@ -142,8 +170,12 @@ export async function startBot() {
 
       if (shouldReconnect) {
         logger.info("Attempting to reconnect primary in 5 seconds...");
-        setTimeout(() => {
-          startBot();
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          startBot().catch((err) => {
+            logger.error("Failed to restart primary bot:", err);
+          });
         }, 5000);
       } else {
         logger.error("Log out detected. Cleaning up primary session files...");
@@ -158,8 +190,12 @@ export async function startBot() {
         logger.info(
           "Re-initializing bot connection with fresh state in 3 seconds..."
         );
-        setTimeout(() => {
-          startBot();
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          startBot().catch((err) => {
+            logger.error("Failed to restart primary bot with fresh state:", err);
+          });
         }, 3000);
       }
     } else if (connection === "open") {
@@ -186,6 +222,16 @@ export async function startBot() {
 
   restoreSecondarySessions(logger);
   return sock;
+  } catch (error) {
+    isStarting = false;
+    logger.error("Fatal error during startBot initialization:", error);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      startBot().catch(() => {});
+    }, 5000);
+    return null;
+  }
 }
 
 export { addSecondaryBot, stopSecondaryBot, runningBots };

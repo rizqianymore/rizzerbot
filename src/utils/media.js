@@ -11,10 +11,16 @@ const execPromise = promisify(exec);
  * @returns {Promise<Buffer>} - Transcoded or fallback original video buffer
  */
 export async function transcodeToWhatsappVideo(videoBuffer) {
+  const tmpDir = path.join(process.cwd(), "tmp");
+  if (!fs.existsSync(tmpDir)) {
+    try {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    } catch (_) {}
+  }
   const rawFilename = `raw_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.mp4`;
-  const rawPath = path.join(process.cwd(), "database", rawFilename);
+  const rawPath = path.join(tmpDir, rawFilename);
   const transFilename = `trans_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.mp4`;
-  const transPath = path.join(process.cwd(), "database", transFilename);
+  const transPath = path.join(tmpDir, transFilename);
 
   try {
     fs.writeFileSync(rawPath, videoBuffer);
@@ -61,10 +67,16 @@ export async function webpToImage(webpBuffer) {
  * @returns {Promise<Buffer>} - MP4 video buffer
  */
 export async function animatedWebpToMp4(webpBuffer) {
+  const tmpDir = path.join(process.cwd(), "tmp");
+  if (!fs.existsSync(tmpDir)) {
+    try {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    } catch (_) {}
+  }
   const rawFilename = `raw_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
-  const rawPath = path.join(process.cwd(), "database", rawFilename);
+  const rawPath = path.join(tmpDir, rawFilename);
   const outFilename = `out_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.mp4`;
-  const outPath = path.join(process.cwd(), "database", outFilename);
+  const outPath = path.join(tmpDir, outFilename);
 
   try {
     fs.writeFileSync(rawPath, webpBuffer);

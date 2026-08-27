@@ -94,6 +94,19 @@ export async function reloadPluginFile(absolutePath, relativePath) {
   }
 }
 
+const reloadDebounceTimers = new Map();
+
+function debouncedReload(absolutePath, relativePath) {
+  if (reloadDebounceTimers.has(absolutePath)) {
+    clearTimeout(reloadDebounceTimers.get(absolutePath));
+  }
+  const timer = setTimeout(async () => {
+    reloadDebounceTimers.delete(absolutePath);
+    await reloadPluginFile(absolutePath, relativePath);
+  }, 150);
+  reloadDebounceTimers.set(absolutePath, timer);
+}
+
 function watchDirectory(dirPath, baseDir) {
   if (watchers.has(dirPath)) return;
 
@@ -104,10 +117,7 @@ function watchDirectory(dirPath, baseDir) {
       if (filename && filename.endsWith(".js")) {
         const absolutePath = path.join(dirPath, filename);
         const relativePath = path.relative(baseDir, absolutePath);
-
-        setTimeout(async () => {
-          await reloadPluginFile(absolutePath, relativePath);
-        }, 100);
+        debouncedReload(absolutePath, relativePath);
       }
     });
     watchers.set(dirPath, watcher);

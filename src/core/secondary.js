@@ -153,6 +153,16 @@ export async function startSecondaryBot(authDirName, phoneNumber, logger) {
     reconnectTimers.delete(authDirName);
   }
 
+  const oldSock = runningBots.get(authDirName);
+  if (oldSock) {
+    try {
+      oldSock.ev.removeAllListeners("connection.update");
+      oldSock.ev.removeAllListeners("messages.upsert");
+      oldSock.ev.removeAllListeners("creds.update");
+      oldSock.end();
+    } catch (_) {}
+  }
+
   const sock = makeWASocket({
     version,
     auth: state,

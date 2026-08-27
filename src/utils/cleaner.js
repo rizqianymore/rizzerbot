@@ -69,8 +69,11 @@ export function autoCleanSessionCache(logger) {
 
 export function startAutoCleanInterval(logger) {
   autoCleanSessionCache(logger);
-  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; // 12 jam
-  setInterval(() => {
+  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; // 12 hour
+  const timer = setInterval(() => {
     autoCleanSessionCache(logger);
   }, TWELVE_HOURS_MS);
+  if (timer && typeof timer.unref === "function") {
+    timer.unref();
+  }
 }

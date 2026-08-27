@@ -167,10 +167,42 @@ async function executeWithRetry(requestFn, retries = 3, baseDelay = 1500) {
   }
 }
 
+function isPrivateIpOrHost(hostname) {
+  if (!hostname) return true;
+  const lower = hostname.toLowerCase();
+  if (
+    lower === "localhost" ||
+    lower === "127.0.0.1" ||
+    lower === "::1" ||
+    lower === "0.0.0.0" ||
+    lower.endsWith(".local") ||
+    lower.endsWith(".internal")
+  ) {
+    return true;
+  }
+
+  // IPv4 Private & Link-Local check
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const match = lower.match(ipv4Regex);
+  if (match) {
+    const [, a, b] = match.map(Number);
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 169 && b === 254) return true; // 169.254.0.0/16 (Link Local & AWS/GCP Metadata)
+    if (a === 127) return true; // 127.0.0.0/8
+    if (a === 0) return true;
+  }
+
+  return false;
+}
+
 function isValidUrl(url) {
   try {
     const parsed = new URL(url);
-    return ["http:", "https:"].includes(parsed.protocol);
+    if (!["http:", "https:"].includes(parsed.protocol)) return false;
+    if (isPrivateIpOrHost(parsed.hostname)) return false;
+    return true;
   } catch {
     return false;
   }

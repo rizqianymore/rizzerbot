@@ -8,7 +8,7 @@ const BURST_BLOCK_MS = 60_000;
 const DEDUP_TTL_MS = 60_000; // Simpan history ID pesan selama 60 detik
 
 // Pembersihan rutin cache memori setiap 2 menit
-setInterval(() => {
+const antispamCleanerTimer = setInterval(() => {
   const now = Date.now();
   for (const [jid, time] of cooldowns.entries()) {
     if (now - time > 60_000) cooldowns.delete(jid);
@@ -24,6 +24,10 @@ setInterval(() => {
     }
   }
 }, 120_000);
+
+if (antispamCleanerTimer && typeof antispamCleanerTimer.unref === "function") {
+  antispamCleanerTimer.unref();
+}
 
 /**
  * Cek apakah ID pesan sudah pernah diproses sebelumnya (Anti-Duplikasi Pesan)

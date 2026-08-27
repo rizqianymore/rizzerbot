@@ -65,6 +65,7 @@ class Database {
 
   normalizeJid(jid) {
     if (!jid) return "";
+    if (typeof jid !== "string") jid = String(jid);
     const cached = normalizeJidCache.get(jid);
     if (cached !== undefined) return cached;
     let cleaned = jid.replace(/:.*@/, "@");
@@ -235,6 +236,14 @@ class Database {
       this._saveTimeout = null;
       this.writeToDisk();
     }, 3000);
+  }
+
+  flushSync() {
+    if (this._saveTimeout) {
+      clearTimeout(this._saveTimeout);
+      this._saveTimeout = null;
+    }
+    this.writeToDisk();
   }
 
   safeWriteFileSync(filePath, content) {
