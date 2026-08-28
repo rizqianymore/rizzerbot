@@ -81,3 +81,7 @@ temp/
 index.html
 worker.js
 
+# Submodules / Reference repos
+OmniRoute/
+
+
