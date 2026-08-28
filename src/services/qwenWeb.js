@@ -147,6 +147,17 @@ export async function askQwenWeb({
   }
 
   const rawCred = (cookie || "").trim();
+  if (!rawCred) {
+    throw new Error(
+      "Cookie sesi Qwen belum dikonfigurasi.\n\n" +
+      "👉 *Cara Mengatur Cookie:*\n" +
+      "1. Login ke https://chat.qwen.ai di browser\n" +
+      "2. Salin isi header Cookie (F12 > Network / Storage)\n" +
+      "3. Ketik perintah: `.ai --cookie <paste_cookie_disini>`\n" +
+      "*(atau isi variabel `QWEN_COOKIE` di file `.env`)*"
+    );
+  }
+
   const cookieHeader = buildQwenCookieHeader(rawCred);
   const token = extractQwenToken(rawCred);
   const modelId = mapModel(model);
