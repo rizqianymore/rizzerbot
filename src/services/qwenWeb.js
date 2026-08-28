@@ -106,8 +106,13 @@ function isWafResponse(status, contentType = "", bodyText = "") {
 }
 
 const WAF_ERROR_MESSAGE =
-  "⚠️ *Sesi Qwen Cookie kedaluwarsa atau terkena proteksi WAF/Captcha Alibaba.*\n" +
-  "Silakan perbarui Cookie Qwen via web https://chat.qwen.ai (pastikan memuat token, cna, ssxmod_itna).";
+  "⚠️ *Verifikasi Keamanan Alibaba (Captcha Challenge):*\n" +
+  "Akun Qwen terkena proteksi Alibaba WAF/Slider Captcha (x5sec).\n\n" +
+  "👉 *Solusi:*\n" +
+  "1. Buka https://chat.qwen.ai di browser & kirim 1 pesan tes.\n" +
+  "2. Selesaikan verifikasi/captcha jika muncul di browser.\n" +
+  "3. Salin Cookie baru lalu perbarui via `.ai --cookie <cookie_baru>`\n\n" +
+  "💡 *Tips:* Anda juga bisa menggunakan API Key DashScope Alibaba (`sk-...`) via `.ai --cookie sk-...` untuk akses bebas Captcha.";
 
 function parseSseDelta(line) {
   if (!line.startsWith("data:")) return null;
@@ -133,12 +138,12 @@ function parseSseDelta(line) {
 }
 
 /**
- * Eksekusi tanya jawab Qwen Web (OmniRoute Port)
+ * Eksekusi tanya jawab Qwen Web (OmniRoute Port) & DashScope Fallback
  */
 export async function askQwenWeb({
   prompt,
   model = DEFAULT_MODEL,
-  cookie = process.env.QWEN_COOKIE || db.data?.settings?.qwenCookie || "",
+  cookie = process.env.QWEN_COOKIE || process.env.DASHSCOPE_API_KEY || db.data?.settings?.qwenCookie || "",
   includeThinking = false,
   signal,
 }) {
@@ -154,10 +159,42 @@ export async function askQwenWeb({
       "1. Login ke https://chat.qwen.ai di browser\n" +
       "2. Salin isi header Cookie (F12 > Network / Storage)\n" +
       "3. Ketik perintah: `.ai --cookie <paste_cookie_disini>`\n" +
-      "*(atau isi variabel `QWEN_COOKIE` di file `.env`)*"
+      "*(atau gunakan API Key Alibaba DashScope: `.ai --cookie sk-...`)*"
     );
   }
 
+  // ── Mode: DashScope Official API Key (sk-...) ─────────────────────────────
+  if (rawCred.startsWith("sk-")) {
+    const modelId = mapModel(model);
+    const dashscopeUrl = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+    const res = await fetch(dashscopeUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${rawCred}`,
+      },
+      body: JSON.stringify({
+        model: modelId.includes("qwen") ? modelId : "qwen-plus",
+        messages: [{ role: "user", content: prompt.trim() }],
+      }),
+      signal,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`DashScope API Error (${res.status}): ${errText.slice(0, 200)}`);
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    return {
+      content: content.trim() || "*(Tidak ada balasan)*",
+      reasoning: "",
+      model: modelId,
+    };
+  }
+
+  // ── Mode: Qwen Web Session (OmniRoute Engine) ─────────────────────────────
   const cookieHeader = buildQwenCookieHeader(rawCred);
   const token = extractQwenToken(rawCred);
   const modelId = mapModel(model);
@@ -183,15 +220,23 @@ export async function askQwenWeb({
     });
 
     const ct = newChatRes.headers.get("content-type") || "";
-    if (!newChatRes.ok || ct.includes("text/html")) {
-      const text = await newChatRes.text().catch(() => "");
-      if (isWafResponse(newChatRes.status, ct, text)) {
-        throw new Error(WAF_ERROR_MESSAGE);
-      }
+    const text = await newChatRes.text().catch(() => "");
+
+    if (isWafResponse(newChatRes.status, ct, text)) {
+      throw new Error(WAF_ERROR_MESSAGE);
+    }
+
+    if (!newChatRes.ok) {
       throw new Error(`Gagal membuat sesi chat Qwen (${newChatRes.status}): ${text.slice(0, 200)}`);
     }
 
-    const data = await newChatRes.json();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Respon inisialisasi sesi Qwen tidak valid.");
+    }
+
     chatId = data?.data?.id || data?.id || data?.chat_id || "";
     if (!chatId) {
       throw new Error("Upstream Qwen tidak mengembalikan Chat ID.");
@@ -249,7 +294,36 @@ export async function askQwenWeb({
   }
 
   const ct = upstream.headers.get("content-type") || "";
-  if (!upstream.ok || ct.includes("text/html")) {
+
+  // Pre-check for JSON WAF challenge responses
+  if (ct.includes("application/json") || ct.includes("text/html")) {
+    const rawText = await upstream.text().catch(() => "");
+    if (isWafResponse(upstream.status, ct, rawText)) {
+      throw new Error(WAF_ERROR_MESSAGE);
+    }
+    if (!upstream.ok) {
+      throw new Error(`Qwen upstream error (${upstream.status}): ${rawText.slice(0, 200)}`);
+    }
+
+    try {
+      const json = JSON.parse(rawText);
+      if (json.ret?.some?.((r) => r.includes("FAIL_SYS_USER_VALIDATE") || r.includes("RGV587_ERROR"))) {
+        throw new Error(WAF_ERROR_MESSAGE);
+      }
+      const directContent = json.choices?.[0]?.message?.content || json.data?.choices?.[0]?.message?.content || "";
+      if (directContent) {
+        return {
+          content: directContent.trim(),
+          reasoning: "",
+          model: modelId,
+        };
+      }
+    } catch (e) {
+      if (e.message.includes("WAF") || e.message.includes("Captcha")) throw e;
+    }
+  }
+
+  if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
     if (isWafResponse(upstream.status, ct, errText)) {
       throw new Error(WAF_ERROR_MESSAGE);
@@ -303,7 +377,7 @@ export async function askQwenWeb({
   const finalReasoning = reasoning.trim();
 
   if (!finalContent && !finalReasoning) {
-    throw new Error("Respon Qwen kosong. Sesi mungkin kedaluwarsa.");
+    throw new Error(WAF_ERROR_MESSAGE);
   }
 
   return {
