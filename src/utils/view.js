@@ -112,11 +112,13 @@ ${getHeader("User Menu")}
 
 export function getPremiumMenu(commandsMap = defaultCommandsMap) {
   const map = commandsMap || defaultCommandsMap;
+  const aiText = buildDynamicMenuCategory("AI", map);
   const dlText = buildDynamicMenuCategory("Downloader", map);
   const mediaText = buildDynamicMenuCategory("Media", map);
   const osintText = buildDynamicMenuCategory("OSINT", map);
 
   let body = "";
+  if (aiText) body += aiText;
   if (dlText) body += dlText;
   if (mediaText) body += mediaText;
   if (osintText) body += osintText;
@@ -128,6 +130,9 @@ export function getPremiumMenu(commandsMap = defaultCommandsMap) {
   const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   return `
 ${getHeader("Premium Menu")}
+│
+├─  *AI*
+│ ${activePrefix}qwen3 <pertanyaan>
 │
 ├─  *Downloader*
 │ ${activePrefix}instagram <link>
