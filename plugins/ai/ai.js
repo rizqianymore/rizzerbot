@@ -1,12 +1,13 @@
-import { askQwenWeb, MODEL_ALIASES, DEFAULT_MODEL } from "@/src/services/qwenWeb.js";
+import { askKimiWeb } from "@/src/services/kimiWeb.js";
+import { askQwenWeb } from "@/src/services/qwenWeb.js";
 import { db } from "@/src/core/database.js";
 
 export default {
   name: "ai",
-  description: "Tanya jawab cerdas dengan AI (Qwen Web Engine via OmniRoute).",
-  usage: "<pertanyaan> [--model <model>] [--think]",
-  example: "ai jelaskan teori relativitas --think",
-  aliases: ["qwen", "tanya", "ask"],
+  description: "Tanya jawab cerdas dengan AI (Kimi AI & Qwen Web OmniRoute).",
+  usage: "<pertanyaan> [--model kimi|qwen] [--think]",
+  example: "ai jelaskan apa itu quantum computing --think",
+  aliases: ["kimi", "qwen", "tanya", "ask"],
   category: "AI",
   premiumOnly: true,
   ownerOnly: false,
@@ -20,63 +21,69 @@ export default {
 
     const rawInput = args.join(" ").trim();
 
-    // ── Subcommand: Owner Update Cookie ────────────────────────────────────
-    if (args[0] === "--cookie" || args[0] === "--setcookie") {
+    // ── Subcommand: Owner Update Token / Cookie ─────────────────────────────
+    if (args[0] === "--token" || args[0] === "--cookie" || args[0] === "--settoken") {
       if (!isOwner) {
         return await sock.sendMessage(
           remoteJid,
-          { text: "👑 *Owner Only:* Pengaturan cookie AI hanya dapat dilakukan oleh Owner." },
+          { text: "👑 *Owner Only:* Pengaturan token AI hanya dapat dilakukan oleh Owner." },
           { quoted: msg }
         );
       }
 
-      const cookieVal = args.slice(1).join(" ").trim();
-      if (!cookieVal) {
+      const inputVal = args.slice(1).join(" ").trim();
+      if (!inputVal) {
         return await sock.sendMessage(
           remoteJid,
-          { text: `⚠️ *Format:* \`${activePrefix}ai --cookie <nilai_cookie>\`` },
+          { text: `⚠️ *Format:* \`${activePrefix}ai --token <access_token_kimi_atau_cookie>\`` },
           { quoted: msg }
         );
       }
 
       if (!db.data.settings) db.data.settings = {};
-      db.data.settings.qwenCookie = cookieVal;
+
+      // Simpan token untuk Kimi & Qwen
+      db.data.settings.kimiToken = inputVal;
+      db.data.settings.qwenCookie = inputVal;
       await db.save();
 
       return await sock.sendMessage(
         remoteJid,
-        { text: "✅ *Berhasil:* Cookie Qwen Web berhasil disimpan ke database!" },
+        { text: "✅ *Berhasil:* Token AI berhasil disimpan ke database!" },
         { quoted: msg }
       );
     }
 
-    // ── Subcommand: List Available Models ───────────────────────────────────
+    // ── Subcommand: List Models ─────────────────────────────────────────────
     if (args[0] === "--models" || args[0] === "-models") {
       const modelList = [
-        "• *qwen3.7-max* (Default - High Intelligence)",
-        "• *qwen3.7-plus* / *plus* (Balanced Speed & Quality)",
-        "• *qwen3.6-plus* / *turbo* (Fast & Lightweight)",
-        "• *qwen3.8-max* (Deep Thinking / Reasoning)",
-        "• *qwen3-coder-plus* / *coder* (Specialized for Programming)",
+        "• *kimi* / *k2* (Default - Kimi K2.6, Super Cepat & Tanpa WAF)",
+        "• *qwen* / *qwen3.7-max* (Qwen High Intelligence / DashScope)",
+        "• *coder* (Specialized for Programming)",
       ].join("\n");
 
       return await sock.sendMessage(
         remoteJid,
         {
-          text: `🤖 *Daftar Model Qwen Web OmniRoute:*\n\n${modelList}\n\n*Cara Pakai:* \`${activePrefix}ai Jelaskan konsep OOP --model coder\``,
+          text: `🤖 *Pilihan Engine AI OmniRoute:*\n\n${modelList}\n\n*Contoh:* \`${activePrefix}ai Buat kode web scraping --model kimi\``,
         },
         { quoted: msg }
       );
     }
 
-    // ── Parse Flags (--model, --think) ─────────────────────────────────────
-    let model = DEFAULT_MODEL;
+    // ── Parse Arguments & Flags ─────────────────────────────────────────────
+    let selectedEngine = "kimi"; // Default to Kimi as it is simple and has NO WAF
     let includeThinking = false;
     let cleanPrompt = rawInput;
 
     const modelMatch = cleanPrompt.match(/(?:--model|-m)\s+([a-zA-Z0-9.\-_]+)/i);
     if (modelMatch) {
-      model = modelMatch[1];
+      const specifiedModel = modelMatch[1].toLowerCase();
+      if (specifiedModel.includes("qwen") || specifiedModel.includes("dashscope") || specifiedModel.includes("coder")) {
+        selectedEngine = "qwen";
+      } else {
+        selectedEngine = "kimi";
+      }
       cleanPrompt = cleanPrompt.replace(modelMatch[0], "").trim();
     }
 
@@ -96,13 +103,20 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askQwenWeb({
-        prompt: cleanPrompt,
-        model,
-        includeThinking,
-      });
+      let result;
+      if (selectedEngine === "kimi") {
+        result = await askKimiWeb({
+          prompt: cleanPrompt,
+          enableThinking: includeThinking,
+        });
+      } else {
+        result = await askQwenWeb({
+          prompt: cleanPrompt,
+          includeThinking,
+        });
+      }
 
-      let responseText = `🤖 *Qwen AI (${result.model})*\n\n`;
+      let responseText = `🤖 *AI Assistant (${result.model})*\n\n`;
 
       if (includeThinking && result.reasoning) {
         responseText += `💭 *Thinking Process:*\n_${result.reasoning}_\n\n──────────────\n\n`;
