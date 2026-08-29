@@ -3,9 +3,9 @@ import { fetchBuffer } from "@/src/utils/scraping.js";
 export default {
   premiumOnly: true,
   name: "chatmaker",
-  description: "Membuat gambar bertema menu popup chat iOS/iPhone.",
-  usage: "<teks | waktu (opsional)>",
-  example: "OK | 12:38 PM",
+  description: "Membuat gambar bertema menu popup chat iOS/iPhone dengan background percakapan custom.",
+  usage: "<teks | waktu (opsional) | background (opsional)>",
+  example: "icikwir | 10:30 AM | Pesan 1|sent|text;Pesan 2|received|text",
   aliases: ["cm", "chatmake", "popupchat"],
   category: "Media",
   cooldown: 8000,
@@ -15,23 +15,25 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Harap tentukan teks gambar. Contoh: *.chatmaker OK* atau *.chatmaker Keren | 10:00 AM*",
+          text:
+            `⚠️ *Format Perintah Chat Maker*\n\n` +
+            `• *.chatmaker <teks>*\n` +
+            `• *.chatmaker <teks> | <waktu>*\n` +
+            `• *.chatmaker <teks> | <waktu> | <bg_chats>*\n\n` +
+            `*Contoh:* \`.chatmaker icikwir | 10:30 AM | Pesan 1|sent|text;Pesan 2|received|text\``,
         },
-        { quoted: msg },
+        { quoted: msg }
       );
       return;
     }
 
     await sendTyping();
 
-    // Parse text and optional time separated by "|"
-    let text = input.trim();
-    let time = "";
-    if (input.includes("|")) {
-      const parts = input.split("|");
-      text = parts[0].trim();
-      time = parts[1].trim();
-    }
+    // Parse text, time, and background chats
+    const parts = input.split("|").map((p) => p.trim());
+    let text = parts[0] || "Halo";
+    let time = parts[1] || "";
+    let bg = parts.slice(2).join("|").trim();
 
     // Default current local time formatted if not provided
     if (!time) {
@@ -45,9 +47,15 @@ export default {
     }
 
     let imgBuffer = null;
-    const workerUrl = `https://photoboth.rakarizqi-cv.workers.dev/chat?text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}&cb=${Date.now()}`;
+    let queryParams = `text=${encodeURIComponent(text)}&time=${encodeURIComponent(time)}`;
+    if (bg) {
+      queryParams += `&bg=${encodeURIComponent(bg)}`;
+    }
+    queryParams += `&cb=${Date.now()}`;
 
-    // 1. Try fast Cloud Screenshot API first (fast & reliable, targeting #captureScreen element)
+    const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?${queryParams}`;
+
+    // 1. Try fast Cloud Screenshot API first (targeting #captureScreen element)
     try {
       const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&element=%23captureScreen&embed=screenshot.url`;
       imgBuffer = await fetchBuffer(microUrl, { timeout: 15000 });
@@ -78,8 +86,8 @@ export default {
 
         const page = await browser.newPage();
         await page.setViewport({
-          width: 320,
-          height: 568,
+          width: 375,
+          height: 812,
           deviceScaleFactor: 2,
         });
 
@@ -108,9 +116,9 @@ export default {
         msg.key.remoteJid,
         {
           image: imgBuffer,
-          caption: `⚡ *iOS Popup Chat Maker*\n💬 Teks: ${text}\n⏰ Waktu: ${time}`,
+          caption: `⚡ *iOS Popup Chat Maker*\n💬 *Teks:* ${text}\n⏰ *Waktu:* ${time}`,
         },
-        { quoted: msg },
+        { quoted: msg }
       );
     } else {
       await sock.sendMessage(
@@ -118,10 +126,8 @@ export default {
         {
           text: `❌ Gagal membuat gambar popup chat. Silakan coba beberapa saat lagi.`,
         },
-        { quoted: msg },
+        { quoted: msg }
       );
     }
   },
 };
-
-
