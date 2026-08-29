@@ -247,35 +247,12 @@ function buildSvgForLines(lines, optimalSize, theme) {
   const svgElements = [];
 
   lines.forEach((line, lineIdx) => {
-    const spaceTokens = line.filter((t) => t.type === "space");
-    const nonSpaceTokens = line.filter((t) => t.type !== "space");
-    const contentWidth = nonSpaceTokens.reduce(
-      (acc, tok) => acc + (tok.width || 0),
-      0
-    );
-
-    let currentX;
-    let extraSpace = 0;
-
-    // Brat Album Style: Always justify words across full width if 2+ words exist
-    if (spaceTokens.length > 0 && nonSpaceTokens.length > 1) {
-      extraSpace = (MAX_CONTENT_WIDTH - contentWidth) / spaceTokens.length;
-      currentX = PADDING;
-    } else {
-      // Single word line: center if single-line sticker, or left align with padding
-      if (lines.length === 1) {
-        const lineWidth = line.reduce((acc, tok) => acc + (tok.width || 0), 0);
-        currentX = (CANVAS_SIZE - lineWidth) / 2;
-      } else {
-        currentX = PADDING;
-      }
-    }
-
+    let currentX = PADDING;
     const lineY = startY + lineIdx * lineHeight;
 
     for (const token of line) {
       if (token.type === "space") {
-        currentX += extraSpace;
+        currentX += token.width || optimalSize * 0.25;
         continue;
       }
 
