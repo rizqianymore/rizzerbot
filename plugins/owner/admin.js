@@ -139,7 +139,7 @@ export default {
     }
 
     // 4. REPORT
-    let reportText = `👑 *LAPORAN UPDATE ADMIN BOT (${action.toUpperCase()})*\n\n`;
+    let reportText = `👑 *Laporan Pembaruan Admin Bot (${action.charAt(0).toUpperCase() + action.slice(1)})*\n\n`;
 
     if (successList.length > 0) {
       reportText += `✅ *Berhasil Diproses (${successList.length}):*\n`;

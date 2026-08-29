@@ -62,7 +62,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `📊 *DATABASE USER DIRECTORY*\n\n` +
+          text: `📊 *Direktori Pengguna Database*\n\n` +
                 `• Total Terdaftar : *${registered}* pengguna\n` +
                 `• Total Premium   : *${premium}* pengguna\n` +
                 `• Total Diblokir  : *${banned}* pengguna\n` +
@@ -112,13 +112,13 @@ export default {
       const existsOnWa = checkWa && checkWa.length > 0 && checkWa[0].exists;
 
       const report =
-        `👤 *USER PROFILE INSPECTOR*\n\n` +
+        `👤 *Detail Profil Pengguna*\n\n` +
         `• JID           : \`${targetJid}\`\n` +
         `• Nomor         : +${targetNum}\n` +
         `• WhatsApp Aktif: ${existsOnWa ? "✅ Terdaftar" : "❌ Tidak Terdaftar"}\n` +
         `• Nama Terdaftar: ${user.name || "-"}\n` +
         `• Terdaftar DB  : ${user.registered ? "✅ Ya" : "❌ Belum"}\n` +
-        `• Status Akun   : ${user.banned ? "🚫 BANNED" : "🟢 AKTIF"}\n` +
+        `• Status Akun   : ${user.banned ? "🚫 Diblokir (Banned)" : "🟢 Aktif"}\n` +
         `• Role Premium  : ${user.premium ? "⭐ Ya" : "❌ Tidak"}\n` +
         `• Akses Khusus  : ${isPrivileged ? "👑 Privileged / Owner" : "👤 Reguler"}\n` +
         `• Limit Kuota   : ${user.limit ?? 100}\n` +
@@ -168,7 +168,7 @@ export default {
     }
 
     // 5. LAPORAN HASIL BATCH
-    let reportText = `📋 *LAPORAN MANAJEMEN USER (${action.toUpperCase()})*\n\n`;
+    let reportText = `📋 *Laporan Manajemen Pengguna (${action.charAt(0).toUpperCase() + action.slice(1)})*\n\n`;
 
     if (successList.length > 0) {
       reportText += `✅ *Berhasil Diproses (${successList.length}):*\n`;

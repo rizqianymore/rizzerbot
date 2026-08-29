@@ -31,12 +31,12 @@ export default {
         msg.key.remoteJid,
         {
           text:
-            `⚠️ *PERINGATAN SISTEM: RESET DATABASE TOTAL*\n\n` +
+            `⚠️ *Peringatan Sistem: Reset Database Total*\n\n` +
             `Tindakan ini akan:\n` +
             `• Mengosongkan data seluruh user biasa dan histori percakapan.\n` +
             `• Mengosongkan pengaturan grup lama.\n` +
             `• Otomatis mencadangkan (*snapshot backup*) data saat ini ke folder \`database/backups/\`.\n` +
-            `• *Menjaga nomor Owner & nomor Bot tetap AKTIF, Terdaftar, dan berstatus Premium.*\n\n` +
+            `• *Menjaga nomor Owner & nomor Bot tetap aktif, terdaftar, dan berstatus Premium.*\n\n` +
             `Ketik: *.resetdb confirm* dalam 30 detik untuk mengeksekusi.`
         },
         { quoted: msg }
@@ -66,7 +66,7 @@ export default {
       msg.key.remoteJid,
       {
         text:
-          `✅ *DATABASE SYSTEM BERHASIL DI-RESET*\n\n` +
+          `✅ *Database Sistem Berhasil Di-Reset*\n\n` +
           `• *Snapshot Backup:* \`${result.backupFile.split("/").pop()}\`\n` +
           `• *Integritas:* Atomic Clean State (Default Enterprise Schema)\n` +
           `• *Akun Terpreservasi & Auto-Aktif:*\n` +
