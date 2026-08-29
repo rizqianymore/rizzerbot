@@ -88,6 +88,7 @@ export async function startBot() {
     logger.info(`Initializing primary Kyros-MD connection (WA Version: ${version ? version.join('.') : 'default'})...`);
 
     const usePairingCode = settings.usePairingCode;
+    const msgRetryCounterCache = new Map();
 
     const sock = makeWASocket({
       version,
@@ -97,7 +98,15 @@ export async function startBot() {
       browser: Browsers.ubuntu("Chrome"),
       markOnlineOnConnect: settings.autoOnline,
       syncFullHistory: false,
-      keepAliveIntervalMs: 30000,
+      msgRetryCounterCache,
+      generateHighQualityLinkPreview: false,
+      shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
+      keepAliveIntervalMs: 25000,
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 60000,
+      emitOwnEvents: false,
+      fireInitQueries: true,
+      retryRequestDelayMs: 250,
     });
 
     primarySock = sock;

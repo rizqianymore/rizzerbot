@@ -1,7 +1,7 @@
 import { handleMessage } from "@/src/core/handler.js";
 
 const chatQueues = new Map();
-const QUEUE_DELAY_MS = 200; 
+const QUEUE_DELAY_MS = 50; 
 
 async function processQueue(jid, logger) {
   const queue = chatQueues.get(jid);
