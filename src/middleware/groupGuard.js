@@ -28,7 +28,6 @@ export function registerGroupGuard(sock) {
 
             await sock.sendMessage(anu.id, {
               text:
-                `🛡️ *[GROUP GUARD ALERT]* 🛡️\n\n` +
                 `Percobaan demote Admin/Owner oleh @${anu.author.split("@")[0]} telah digagalkan.\n` +
                 `• Target: @${normalizedParticipant.split("@")[0]}\n` +
                 `• Sanksi: Pelaku di-demote otomatis oleh sistem.`,
