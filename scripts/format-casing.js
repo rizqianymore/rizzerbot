@@ -6,6 +6,64 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pluginsDir = path.join(__dirname, "..", "plugins");
 
+// Daftar singkatan teknis/resmi yang boleh tetap huruf besar
+const PRESERVED_ACRONYMS = new Set([
+  "ID",
+  "IP",
+  "DNS",
+  "URL",
+  "WA",
+  "DB",
+  "RAM",
+  "CPU",
+  "VPS",
+  "PID",
+  "RSS",
+  "AI",
+  "JKT48",
+  "NIS",
+  "NISN",
+  "OVO",
+  "QR",
+  "HD",
+  "TTL",
+  "SSL",
+  "API",
+  "OSINT",
+  "CCTV",
+  "ETLE",
+  "SCBD",
+  "DPR",
+  "PKL",
+  "NPSN",
+  "MP3",
+  "MP4",
+  "GIF",
+  "PNG",
+  "JPG",
+  "JPEG",
+  "WEBP",
+  "JSON",
+  "PDF",
+  "DMCA",
+]);
+
+// Helper untuk mengubah string kalimat/frasa ALL-CAPS menjadi Title Case / Sentence Case presisi
+export function formatToCleanTitleCase(text) {
+  if (!text) return "";
+  return text.replace(/\b[A-Za-z0-9_-]+\b/g, (word) => {
+    const upperWord = word.toUpperCase();
+    if (PRESERVED_ACRONYMS.has(upperWord)) {
+      return upperWord;
+    }
+    // Jika kata berisi kombinasi huruf & angka seperti JKT48
+    if (PRESERVED_ACRONYMS.has(word)) {
+      return word;
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+}
+
 function getJsFilesRecursive(dir) {
   let results = [];
   if (!fs.existsSync(dir)) return results;
@@ -21,74 +79,53 @@ function getJsFilesRecursive(dir) {
   return results;
 }
 
-function toTitleCase(str) {
-  return str.replace(/\b[A-Za-z0-9]+/g, (txt) => {
-    // Kecualikan akronim tertentu jika diinginkan
-    if (["ID", "IP", "DNS", "URL", "WA", "DB", "RAM", "CPU", "VPS", "PID", "RSS", "AI", "JKT48", "NIS", "NISN", "OVO", "QR", "HD"].includes(txt)) {
-      return txt;
-    }
-    return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
-  });
-}
+export function autoCleanAllPluginCasing(targetDir = pluginsDir) {
+  const files = getJsFilesRecursive(targetDir);
+  let totalModifications = 0;
 
-// Replacement pairs for uppercase text phrases inside markdown bold (*TEXT*)
-const knownPhrases = [
-  ["*PHOTOBOOTH RESULT*", "*Photobooth Result*"],
-  ["*MANAJEMEN ADMIN BOT (ENTERPRISE)*", "*Manajemen Admin Bot (Enterprise)*"],
-  ["*HASIL KONVERSI TEKS*", "*Hasil Konversi Teks*"],
-  ["*PROFIL RESMI MEMBER JKT48*", "*Profil Resmi Member JKT48*"],
-  ["*SPOTIFY TRACK DOWNLOADER*", "*Spotify Track Downloader*"],
-  ["*EVAL EXECUTION OUTPUT*", "*Eval Execution Output*"],
-  ["*EVAL ERROR*", "*Eval Error*"],
-  ["*TAG ALL MEMBERS*", "*Tag All Members*"],
-  ["*LINK UNDANGAN GRUP*", "*Link Undangan Grup*"],
-  ["*PLUGIN RUNTIME CONTROLLER*", "*Plugin Runtime Controller*"],
-  ["*DASHBOARD OPERASIONAL BOT*", "*Dashboard Operasional Bot*"],
-  ["*MANAJEMEN PENGGUNA (ENTERPRISE)*", "*Manajemen Pengguna (Enterprise)*"],
-  ["*MANAJEMEN PENGGUNA PREMIUM (ENTERPRISE)*", "*Manajemen Pengguna Premium (Enterprise)*"],
-  ["*MANAJEMEN MULTI-BOT (SUB-BOT)*", "*Manajemen Multi-Bot (Sub-Bot)*"],
-  ["*PAIRING CODE SUB-BOT BARU*", "*Pairing Code Sub-Bot Baru*"],
-  ["*HASIL PENCARIAN CCTV*", "*Hasil Pencarian CCTV*"],
-  ["*LAPORAN STATUS KONEKTIVITAS CCTV*", "*Laporan Status Konektivitas CCTV*"],
-  ["*DETAIL KAMERA CCTV*", "*Detail Kamera CCTV*"],
-  ["*CCTV NX WITNESS MONITORING*", "*CCTV NX Witness Monitoring*"],
-  ["*LIVE (AKTIF)*", "*Live (Aktif)*"],
-  ["*OFFLINE / GAGAL*", "*Offline / Gagal*"],
-  ["*TERBUKA*", "*Terbuka*"],
-  ["*DITUTUP*", "*Ditutup*"],
-  ["*AKTIF (Self Only)*", "*Aktif (Self Only)*"],
-  ["*AKTIF (Maintenance)*", "*Aktif (Maintenance)*"],
-  ["*AKTIF (Grup Saja)*", "*Aktif (Grup Saja)*"],
-  ["*AKTIF (Private Saja)*", "*Aktif (Private Saja)*"],
-  ["*AKTIF (Proteksi Nyala)*", "*Aktif (Proteksi Nyala)*"],
-  ["*KICKED - ANTILINK*", "*Kicked - Anti-Link*"],
-  ["*PERINGATAN ANTILINK*", "*Peringatan Anti-Link*"],
-  ["*DAFTAR PENGGUNA PREMIUM*", "*Daftar Pengguna Premium*"],
-  ["*DAFTAR ADMIN BOT*", "*Daftar Admin Bot*"],
-  ["*DAFTAR PENGGUNA LIMITED*", "*Daftar Pengguna Limited*"],
-  ["*DAFTAR PLUGIN YANG DINONAKTIFKAN*", "*Daftar Plugin yang Dinonaktifkan*"],
-  ["*VPS & SERVER TELEMETRY REPORT*", "*VPS & Server Telemetry Report*"],
-];
+  for (const file of files) {
+    let content = fs.readFileSync(file, "utf8");
+    let original = content;
 
-const files = getJsFilesRecursive(pluginsDir);
-let changedCount = 0;
+    // 1. Regex mendeteksi bold header ALL CAPS: *TEXT WITH 2+ WORDS IN CAPS*
+    // Contoh: *MANAJEMEN PENGGUNA* -> *Manajemen Pengguna*
+    content = content.replace(/\*([A-Z0-9\s/:\-—–\(\)&]+)\*/g, (match, inner) => {
+      const trimmed = inner.trim();
+      // Jangan ubah jika hanya 1 kata pendek atau jika hanya simbol/akronim
+      if (!trimmed || trimmed.length < 3) return match;
+      if (PRESERVED_ACRONYMS.has(trimmed)) return match;
+      if (/^[0-9]+$/.test(trimmed)) return match;
 
-for (const file of files) {
-  let content = fs.readFileSync(file, "utf8");
-  let modified = false;
+      // Jika mengandung minimal 1 huruf kapital dan bukan camelCase
+      if (/[A-Z]/.test(trimmed) && trimmed === trimmed.toUpperCase()) {
+        const formatted = formatToCleanTitleCase(trimmed);
+        return `*${formatted}*`;
+      }
+      return match;
+    });
 
-  for (const [target, replacement] of knownPhrases) {
-    if (content.includes(target)) {
-      content = content.replaceAll(target, replacement);
-      modified = true;
+    // 2. Normalisasi status tag seperti [KICKED - ANTILINK] -> [Kicked - Anti-Link]
+    content = content.replace(/\[([A-Z0-9\s/:\-—–\(\)&]+)\]/g, (match, inner) => {
+      const trimmed = inner.trim();
+      if (!trimmed || trimmed.length < 3) return match;
+      if (PRESERVED_ACRONYMS.has(trimmed)) return match;
+      if (trimmed === trimmed.toUpperCase()) {
+        const formatted = formatToCleanTitleCase(trimmed);
+        return `[${formatted}]`;
+      }
+      return match;
+    });
+
+    if (content !== original) {
+      fs.writeFileSync(file, content, "utf8");
+      console.log(`✨ Formatted: ${path.relative(process.cwd(), file)}`);
+      totalModifications++;
     }
   }
 
-  if (modified) {
-    fs.writeFileSync(file, content, "utf8");
-    console.log(`✓ Updated casing: ${path.relative(process.cwd(), file)}`);
-    changedCount++;
-  }
+  console.log(`\n🎉 Selesai! Berhasil meng-auto-format ${totalModifications} file plugin.`);
 }
 
-console.log(`\nSelesai! Berhasil merapikan ${changedCount} file plugin.`);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  autoCleanAllPluginCasing();
+}

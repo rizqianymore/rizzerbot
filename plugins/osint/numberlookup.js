@@ -180,7 +180,7 @@ export default {
         `• *Operator:* ${numInfo.carrier}\n` +
         `• *Tipe Line:* ${numInfo.type}\n` +
         `• *Estimasi Area:* ${numInfo.city}\n` +
-        `• *JID:* \`${resolvedJid}\`\n` +
+        `• *Jid:* \`${resolvedJid}\`\n` +
         `• *Tipe Akun:* ${isBusiness ? "Akun Bisnis" : "Akun Personal"}\n` +
         `• *Bio/Status:* ${bio}\n` +
         `• *Diperbarui:* ${bioTime}\n` +

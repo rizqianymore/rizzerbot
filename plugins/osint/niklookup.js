@@ -87,7 +87,7 @@ export default {
       const birthInfo = parseBirthDate(nik.substring(6, 12));
 
       let replyText = `📋 *Hasil Pencarian NIK*\n\n`;
-      replyText += `• *NIK:* \`${nik}\`\n`;
+      replyText += `• *Nik:* \`${nik}\`\n`;
       replyText += `• *Provinsi:* ${province?.name || "-"}\n`;
       replyText += `• *Kabupaten/Kota:* ${regency?.name || "-"}\n`;
       replyText += `• *Kecamatan:* ${district.name}\n`;

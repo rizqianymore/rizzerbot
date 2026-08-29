@@ -67,7 +67,7 @@ export default {
         `• *Status:* ${s.status_sekolah}\n` +
         `• *Akreditasi:* ${s.akreditasi || "-"}\n` +
         `• *Alamat:* ${s.alamat_jalan}, ${s.nama_dusun || ""}\n` +
-        `• *RT/RW:* ${s.rt}/${s.rw}\n` +
+        `• *Rt/Rw:* ${s.rt}/${s.rw}\n` +
         `• *Kecamatan:* ${s.kecamatan}\n` +
         `• *Kab/Kota:* ${s.kabupaten}\n` +
         `• *Provinsi:* ${s.provinsi}\n` +

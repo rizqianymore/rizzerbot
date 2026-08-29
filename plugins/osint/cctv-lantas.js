@@ -411,7 +411,7 @@ export default {
       }
 
       let helpText =
-        `📹 *PANDUAN CCTV LALU LINTAS & JALAN RAYA*\n` +
+        `📹 *Panduan CCTV Lalu Lintas & Jalan Raya*\n` +
         `Total Kamera Terindeks: *${allData.length.toLocaleString("id-ID")} Titik*\n\n` +
         `📊 *Kategori & Database Terdaftar:*\n`;
 

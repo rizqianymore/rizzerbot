@@ -80,7 +80,7 @@ export default {
         `• *Port Terbuka:* ${openPorts.length}\n\n` +
         `📌 *Hasil Pemindaian:* \n` +
         results
-          .map((r) => `  • Port ${r.port} (${r.service}): ${r.isOpen ? "🟢 *OPEN*" : "🔴 CLOSED"}`)
+          .map((r) => `  • Port ${r.port} (${r.service}): ${r.isOpen ? "🟢 *Open*" : "🔴 CLOSED"}`)
           .join("\n") +
         `\n\n_Dicari oleh: ${senderName}_\n\n⚡ _Via Kyros-MD OSINT_`;
 

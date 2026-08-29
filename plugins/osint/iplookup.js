@@ -25,7 +25,7 @@ export default {
     }
 
     const ipRegex =
-      /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/i;
+      /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[A-f0-9]{1,4}:){7}[A-f0-9]{1,4}$/i;
     if (!ipRegex.test(ip)) {
       return sock.sendMessage(
         msg.key.remoteJid,

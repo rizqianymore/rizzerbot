@@ -36,7 +36,7 @@ export default {
         msg.key.remoteJid,
         {
           text:
-            `🔒 *MANAJEMEN ROLE LIMITED (CCTV & FITUR KHUSUS)*\n\n` +
+            `🔒 *Manajemen Role Limited (CCTV & Fitur Khusus)*\n\n` +
             `│ ${activePrefix}limited add <nomor1 nomor2... | tag>\n` +
             `│ ${activePrefix}limited remove <nomor1 nomor2... | tag>\n` +
             `│ ${activePrefix}limited list\n\n` +
