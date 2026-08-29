@@ -8,7 +8,6 @@ const __dirname = path.dirname(__filename);
 
 const dbPaths = {
   users: path.join(__dirname, "..", "..", "database", "users.json"),
-  premium: path.join(__dirname, "..", "..", "database", "premium.json"),
   owner: path.join(__dirname, "..", "..", "database", "owner.json"),
   command: path.join(__dirname, "..", "..", "database", "command.json"),
   channels: path.join(__dirname, "..", "..", "database", "channels.json"),
@@ -33,8 +32,6 @@ function createDefaultSchema() {
       onlyPrivate: false,
       antiSpam: true,
       registrationOpen: true,
-      admins: [],
-      limited: [],
       disabledPlugins: [],
       jpmChannels: [],
       jpmBlacklist: [],
@@ -87,9 +84,12 @@ class Database {
     const pairingNum = settings.pairingNumber
       ? this.normalizeJid(settings.pairingNumber).split("@")[0]
       : "";
-    const adminNums = (this.data?.settings?.admins || []).map(
-      (a) => this.normalizeJid(a).split("@")[0]
-    );
+
+    // Ambil list admin langsung dari profil di users.json
+    const adminNums = Object.keys(this.data?.users || {})
+      .filter((k) => this.data.users[k]?.admin || this.data.users[k]?.role === "admin")
+      .map((a) => this.normalizeJid(a).split("@")[0]);
+
     this._privilegedSet = new Set(
       [ownerNum, pairingNum, ...adminNums].filter(Boolean)
     );
@@ -126,37 +126,39 @@ class Database {
         } catch (_) {}
       }
 
-      let premiumList = [];
-      if (fs.existsSync(dbPaths.premium)) {
-        try {
-          const raw = fs.readFileSync(dbPaths.premium, "utf8");
-          premiumList = raw ? JSON.parse(raw) : [];
-        } catch (_) {}
-      }
+      // Normalisasi & Unifikasi seluruh role ke dalam schema terpusat users.json
+      for (const [jid, u] of Object.entries(users)) {
+        const cleanJid = this.normalizeJid(jid);
+        const isOwner =
+          cleanJid.split("@")[0] === this.normalizeJid(settings.ownerNumber).split("@")[0] ||
+          cleanJid.split("@")[0] === this.normalizeJid(settings.pairingNumber).split("@")[0];
 
-      if (Array.isArray(premiumList)) {
-        premiumList.forEach((jid) => {
-          const key = this.normalizeJid(jid);
-          if (key) {
-            if (!users[key]) {
-              users[key] = {
-                registered: false,
-                name: "",
-                banned: false,
-                premium: true,
-                limit: 100,
-                joinedAt: new Date().toISOString(),
-              };
-            } else {
-              users[key].premium = true;
-            }
-          }
-        });
+        users[cleanJid] = {
+          name: u.name || (isOwner ? settings.ownerName : ""),
+          role: isOwner
+            ? "owner"
+            : u.admin
+            ? "admin"
+            : u.limited
+            ? "limited"
+            : u.premium
+            ? "premium"
+            : "user",
+          registered: Boolean(u.registered || isOwner),
+          owner: Boolean(u.owner || isOwner),
+          admin: Boolean(u.admin || false),
+          premium: Boolean(u.premium || isOwner || u.admin),
+          limited: Boolean(u.limited || isOwner || u.admin),
+          banned: Boolean(u.banned && !isOwner),
+          limit: isOwner ? 999999 : typeof u.limit === "number" ? u.limit : 100,
+          premiumExpiresAt: u.premiumExpiresAt || null,
+          joinedAt: u.joinedAt || new Date().toISOString(),
+          lastSeen: u.lastSeen || new Date().toISOString(),
+        };
       }
 
       let ownerSettings = {
         owner: settings.ownerNumber,
-        admins: [],
         selfMode: false,
         maintenance: false,
         registrationOpen: true,
@@ -221,14 +223,16 @@ class Database {
           onlyPrivate: ownerSettings.onlyPrivate || false,
           antiSpam: ownerSettings.antiSpam !== false,
           prefix: ownerSettings.prefix || undefined,
-          admins: ownerSettings.admins || [],
           registrationOpen: ownerSettings.registrationOpen !== false,
+          disabledPlugins: [],
           jpmChannels: jpmChannels || [],
           jpmBlacklist: jpmBlacklist || [],
         },
         groups: groups,
         cctvAliases: cctvAliases || {},
       };
+
+      this.ensurePrivilegedUsers();
       this.updatePrivilegedCache();
     } catch (err) {
       console.error("Database load error, resetting:", err.message);
@@ -271,22 +275,14 @@ class Database {
         fs.mkdirSync(dbDir, { recursive: true });
       }
 
+      // Single source of truth untuk seluruh user: users.json
       this.safeWriteFileSync(
         dbPaths.users,
         JSON.stringify(this.data.users, null, 4)
       );
 
-      const premiumJids = Object.keys(this.data.users).filter(
-        (jid) => this.data.users[jid].premium
-      );
-      this.safeWriteFileSync(
-        dbPaths.premium,
-        JSON.stringify(premiumJids, null, 4)
-      );
-
       const ownerSettings = {
         owner: settings.ownerNumber,
-        admins: this.data.settings.admins || [],
         selfMode: this.data.settings.selfMode || false,
         maintenance: this.data.settings.maintenance || false,
         onlyGroup: this.data.settings.onlyGroup || false,
@@ -335,12 +331,18 @@ class Database {
 
     if (!this.data.users[key]) {
       this.data.users[key] = {
-        registered: privileged,
         name: privileged ? settings.ownerName : "",
-        banned: false,
+        role: privileged ? "owner" : "user",
+        registered: privileged,
+        owner: privileged,
+        admin: false,
         premium: privileged,
-        limit: 100,
+        limited: privileged,
+        banned: false,
+        limit: privileged ? 999999 : 100,
+        premiumExpiresAt: null,
         joinedAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
       };
       this.save();
     } else if (privileged) {
@@ -351,6 +353,10 @@ class Database {
       }
       if (!this.data.users[key].premium) {
         this.data.users[key].premium = true;
+        changed = true;
+      }
+      if (!this.data.users[key].owner) {
+        this.data.users[key].owner = true;
         changed = true;
       }
       if (!this.data.users[key].name && privileged) {
@@ -372,8 +378,23 @@ class Database {
       this.data.users[key].registered = true;
       this.data.users[key].premium = true;
       this.data.users[key].banned = false;
+      this.data.users[key].owner = true;
     }
 
+    // Perbarui role otomatis jika flag berubah
+    if (this.data.users[key].owner) {
+      this.data.users[key].role = "owner";
+    } else if (this.data.users[key].admin) {
+      this.data.users[key].role = "admin";
+    } else if (this.data.users[key].limited) {
+      this.data.users[key].role = "limited";
+    } else if (this.data.users[key].premium) {
+      this.data.users[key].role = "premium";
+    } else {
+      this.data.users[key].role = "user";
+    }
+
+    this.updatePrivilegedCache();
     this.save();
   }
 
@@ -381,33 +402,36 @@ class Database {
     const privilegedNumbers = [
       this.normalizeJid(settings.ownerNumber),
       this.normalizeJid(settings.pairingNumber),
-      ...(this.data.settings.admins || []).map((a) => this.normalizeJid(a)),
     ].filter(Boolean);
 
     let changed = false;
     for (const jid of privilegedNumbers) {
       if (!this.data.users[jid]) {
         this.data.users[jid] = {
+          name: settings.ownerName || "Owner",
+          role: "owner",
           registered: true,
-          name:
-            jid === this.normalizeJid(settings.ownerNumber) ||
-            jid === this.normalizeJid(settings.pairingNumber)
-              ? settings.ownerName
-              : "",
-          banned: false,
+          owner: true,
+          admin: true,
           premium: true,
-          limit: 100,
+          limited: true,
+          banned: false,
+          limit: 999999,
+          premiumExpiresAt: null,
           joinedAt: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
         };
         changed = true;
-        console.log(`[DB] Seeded privileged user: ${jid}`);
       } else {
-        if (!this.data.users[jid].registered || !this.data.users[jid].premium) {
+        if (!this.data.users[jid].registered || !this.data.users[jid].premium || !this.data.users[jid].owner) {
           this.data.users[jid].registered = true;
           this.data.users[jid].premium = true;
+          this.data.users[jid].owner = true;
+          this.data.users[jid].limited = true;
           this.data.users[jid].banned = false;
+          this.data.users[jid].role = "owner";
+          this.data.users[jid].limit = 999999;
           changed = true;
-          console.log(`[DB] Updated privileged flags for: ${jid}`);
         }
       }
     }
@@ -505,12 +529,18 @@ class Database {
 
     for (const jid of privilegedNumbers) {
       this.data.users[jid] = {
-        registered: true,
         name: settings.ownerName || "Owner",
-        banned: false,
+        role: "owner",
+        registered: true,
+        owner: true,
+        admin: true,
         premium: true,
+        limited: true,
+        banned: false,
         limit: 999999,
+        premiumExpiresAt: null,
         joinedAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
       };
     }
 

@@ -27,23 +27,11 @@ export function evaluatePermissions(sock, msg, senderJid) {
     (botJid && senderJid.split("@")[0] === botJid.split("@")[0])
   );
 
-  const isBotAdmin = Boolean(
-    (db.data?.settings?.admins || []).some(
-      (a) => db.normalizeJid(a) === senderJid
-    )
-  );
-
-  const isOwner = Boolean(isSuperOwner || isBotAdmin);
   const userProfile = db.getUser(senderJid);
-  const isLimited = Boolean(
-    isSuperOwner ||
-    isBotAdmin ||
-    (db.data?.settings?.limited || []).some(
-      (l) => db.normalizeJid(l) === senderJid
-    ) ||
-    userProfile?.limited
-  );
-  const isPremium = Boolean(isSuperOwner || isBotAdmin || isLimited || userProfile?.premium);
+  const isBotAdmin = Boolean(userProfile?.admin || userProfile?.role === "admin");
+  const isOwner = Boolean(isSuperOwner || isBotAdmin || userProfile?.owner);
+  const isLimited = Boolean(isSuperOwner || isBotAdmin || userProfile?.limited || userProfile?.role === "limited");
+  const isPremium = Boolean(isSuperOwner || isBotAdmin || isLimited || userProfile?.premium || userProfile?.role === "premium");
   const isRegistered = Boolean(isSuperOwner || isBotAdmin || userProfile?.registered);
 
   return {
