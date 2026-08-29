@@ -3,7 +3,7 @@ export default {
   description: "Mengedit pesan teks yang dikirim oleh bot.",
   usage: "<teks baru>",
   example: "Halo Dunia",
-  category: "Media",
+  category: "Tools",
   premiumOnly: true,
   run: async (sock, msg, args) => {
     const quotedCtx = msg.message.extendedTextMessage?.contextInfo;

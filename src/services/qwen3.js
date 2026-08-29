@@ -5,9 +5,6 @@ const API = "https://api.overchat.ai/v1/chat/completions";
 const USER_AGENT =
   "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36";
 
-/**
- * Tanya jawab AI Qwen3 80B via OverChat (Public & Keyless)
- */
 export async function askQwen3(prompt, options = {}) {
   if (!prompt || !prompt.trim()) {
     throw new Error("Pertanyaan/prompt tidak boleh kosong.");

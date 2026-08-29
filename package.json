@@ -4,11 +4,11 @@
   "description": "Professional and Modular WhatsApp Bot built with Baileys",
   "main": "index.js",
   "type": "module",
-
   "scripts": {
     "prestart": "node -e \"import fs from 'fs'; const sym = 'node_modules/@'; if (fs.existsSync(sym)) { try { fs.rmSync(sym, { recursive: true, force: true }); } catch (_) {} } fs.symlinkSync('../', sym, 'junction')\"",
-    "start": "npm run prestart && node index.js",
-    "clean:comments": "node scripts/clean-comments.js",
+    "start": "bun run index.js",
+    "start:node": "node index.js",
+    "clean:comments": "bun run scripts/clean-comments.js",
     "postinstall": "node -e \"import fs from 'fs'; const sym = 'node_modules/@'; if (fs.existsSync(sym)) { try { fs.rmSync(sym, { recursive: true, force: true }); } catch (_) {} } fs.symlinkSync('../', sym, 'junction')\""
   },
   "dependencies": {
@@ -17,6 +17,7 @@
     "baileys": "file:./package",
     "canvas": "^3.2.3",
     "ffmpeg-static": "^5.3.0",
+    "file-type": "18.7.0",
     "gif-encoder-2": "^1.0.5",
     "https-proxy-agent": "^9.1.0",
     "node-webpmux": "^3.2.1",
@@ -30,7 +31,6 @@
   },
   "overrides": {
     "axios": "^1.19.0",
-    "sharp": "^0.33.5",
-    "file-type": "^21.3.4"
+    "sharp": "^0.33.5"
   }
 }

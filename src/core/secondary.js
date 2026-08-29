@@ -21,9 +21,6 @@ const __dirname = path.dirname(__filename);
 export const runningBots = new Map();
 const reconnectTimers = new Map();
 
-/**
- * Cek apakah bot dengan nomor tersebut benar-benar aktif & responsif
- */
 export async function isBotActive(phoneNumber) {
   const num = cleanNumber(phoneNumber);
   const authDirName = `session_${num}`;

@@ -6,7 +6,7 @@ export default {
   usage: "<NIS>",
   example: "539241013",
   aliases: ["pkl", "cek-pkl"],
-  category: "OSINT",
+  category: "Tools",
   premiumOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;

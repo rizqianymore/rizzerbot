@@ -25,7 +25,7 @@ export default {
   usage: "<nama member>",
   example: "jkt48 oline",
   aliases: ["memberjkt", "jkt"],
-  category: "OSINT",
+  category: "Tools",
   premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     const query = args.join(" ").trim();

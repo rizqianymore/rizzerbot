@@ -7,7 +7,7 @@ export default {
   example: "https://github.com/",
   name: "qr",
   aliases: ["qrmaker", "qrcode"],
-  category: "Media",
+  category: "Tools",
   run: async (sock, msg, args, { sendTyping }) => {
     const text = args.join(" ");
     if (!text) {

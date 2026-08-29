@@ -6,7 +6,7 @@ export default {
   usage: "<npsn>",
   example: "ceknpsn 20104462",
   aliases: ["npsn", "sekolah"],
-  category: "OSINT",
+  category: "Tools",
   premiumOnly: true,
   ownerOnly: false,
   run: async (sock, msg, args, context) => {

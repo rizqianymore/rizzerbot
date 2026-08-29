@@ -13,12 +13,12 @@ export function autoCleanSessionCache(logger) {
     ];
 
     const now = Date.now();
-    const maxAge = 12 * 60 * 60 * 1000; // 12 jam
+    const maxAge = 12 * 60 * 60 * 1000; 
     let deletedCount = 0;
 
     const isTempFile = (name) => {
-      // PENTING: Jangan pernah menghapus session-* atau sender-key-* karena itu adalah state enkripsi Signal aktif
-      // Menghapus session-* akan menyebabkan MessageCounterError / Failed to decrypt message
+      
+      
       return (
         name.endsWith(".json") &&
         (name.startsWith("pre-key-") ||

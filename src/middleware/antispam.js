@@ -1,13 +1,12 @@
 const cooldowns = new Map();
 const burstGuard = new Map();
-const processedMessageIds = new Map(); // Message ID deduplication map
+const processedMessageIds = new Map(); 
 
 const BURST_LIMIT = 5;
 const BURST_WINDOW = 10_000;
 const BURST_BLOCK_MS = 60_000;
-const DEDUP_TTL_MS = 60_000; // Simpan history ID pesan selama 60 detik
+const DEDUP_TTL_MS = 60_000; 
 
-// Pembersihan rutin cache memori setiap 2 menit
 const antispamCleanerTimer = setInterval(() => {
   const now = Date.now();
   for (const [jid, time] of cooldowns.entries()) {
@@ -29,22 +28,18 @@ if (antispamCleanerTimer && typeof antispamCleanerTimer.unref === "function") {
   antispamCleanerTimer.unref();
 }
 
-/**
- * Cek apakah ID pesan sudah pernah diproses sebelumnya (Anti-Duplikasi Pesan)
- * Mengembalikan true jika pesan DUPLIKAT, false jika pesan BARU
- */
 export function checkDuplicateMessage(msgId) {
   if (!msgId) return false;
   const now = Date.now();
 
   if (processedMessageIds.has(msgId)) {
-    return true; // Duplikat terdeteksi!
+    return true; 
   }
 
-  // Tandai pesan sudah diproses
+  
   processedMessageIds.set(msgId, now);
 
-  // Batasi ukuran map memori maksimal 5.000 entri untuk efisiensi
+  
   if (processedMessageIds.size > 5000) {
     const firstKey = processedMessageIds.keys().next().value;
     processedMessageIds.delete(firstKey);

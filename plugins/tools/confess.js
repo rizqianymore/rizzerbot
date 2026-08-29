@@ -10,7 +10,7 @@ export default {
   usage: "<untuk> | <pesan> | <dari> [--theme pink/blue/purple]",
   example:
     "Alya | Aku suka kamu sejak pertama kali kita sekelompok tugas | Rahasia --theme purple",
-  category: "Media",
+  category: "Tools",
   cooldown: 5000,
   run: async (sock, msg, args, { sendTyping, senderName, activePrefix }) => {
     let text = args.join(" ");

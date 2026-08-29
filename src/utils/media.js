@@ -5,11 +5,6 @@ import path from "path";
 
 const execPromise = promisify(exec);
 
-/**
- * Transcodes a video buffer to a highly compatible H.264/AAC MP4 format for WhatsApp.
- * @param {Buffer} videoBuffer - Raw input video buffer
- * @returns {Promise<Buffer>} - Transcoded or fallback original video buffer
- */
 export async function transcodeToWhatsappVideo(videoBuffer) {
   const tmpDir = path.join(process.cwd(), "tmp");
   if (!fs.existsSync(tmpDir)) {

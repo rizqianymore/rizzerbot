@@ -4,7 +4,7 @@ export default {
   usage: "<balas pesan bot>",
   example: "",
   aliases: ["del"],
-  category: "Media",
+  category: "Tools",
   premiumOnly: true,
   run: async (sock, msg, args) => {
     const quotedCtx = msg.message.extendedTextMessage?.contextInfo;

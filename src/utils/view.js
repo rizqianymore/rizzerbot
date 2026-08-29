@@ -115,12 +115,14 @@ export function getPremiumMenu(commandsMap = defaultCommandsMap) {
   const aiText = buildDynamicMenuCategory("AI", map);
   const dlText = buildDynamicMenuCategory("Downloader", map);
   const mediaText = buildDynamicMenuCategory("Media", map);
+  const toolsText = buildDynamicMenuCategory("Tools", map);
   const osintText = buildDynamicMenuCategory("OSINT", map);
 
   let body = "";
   if (aiText) body += aiText;
   if (dlText) body += dlText;
   if (mediaText) body += mediaText;
+  if (toolsText) body += toolsText;
   if (osintText) body += osintText;
 
   if (body) {
