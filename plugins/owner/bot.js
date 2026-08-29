@@ -16,7 +16,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `🤖 *MANAJEMEN MULTI-BOT (SUB-BOT)*\n\n` +
+          text: `🤖 *Manajemen Multi-Bot (Sub-Bot)*\n\n` +
                 `│ .bot add <nomor> - Pasangkan bot sekunder baru\n` +
                 `│ .bot stop <nomor> - Hentikan bot sekunder tanpa hapus sesi\n` +
                 `│ .bot del <nomor> - Hentikan dan hapus permanen data sesi\n` +
@@ -53,7 +53,7 @@ export default {
           await sock.sendMessage(
             msg.key.remoteJid,
             {
-              text: `🔑 *PAIRING CODE SUB-BOT BARU*\n\n` +
+              text: `🔑 *Pairing Code Sub-Bot Baru*\n\n` +
                     `• Nomor: *${targetNumber}*\n` +
                     `• Pairing Code: \`${code}\`\n\n` +
                     `_Buka WhatsApp di nomor tersebut > Perangkat Tertaut > Tautkan dengan nomor telepon > Masukkan kode di atas._`,

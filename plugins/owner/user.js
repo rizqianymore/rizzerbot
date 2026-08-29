@@ -36,7 +36,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `👥 *MANAJEMEN PENGGUNA (ENTERPRISE)*\n\n` +
+          text: `👥 *Manajemen Pengguna (Enterprise)*\n\n` +
                 `│ .user ban <nomor/tag...> [alasan]\n` +
                 `│ .user unban <nomor/tag...>\n` +
                 `│ .user register <nomor/tag...>\n` +

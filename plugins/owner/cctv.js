@@ -258,7 +258,7 @@ export default {
 
       if (action === "help") {
         const helpText = 
-          `📹 *CCTV NX WITNESS MONITORING*\n` +
+          `📹 *CCTV NX Witness Monitoring*\n` +
           `Total Kamera Terhubung: *${cameras.length} Kamera*\n\n` +
           `╭─── . ݁₊ ⊹ *Format Perintah* ⊹ ₊ ݁.\n` +
           `│ ${activePrefix}cctv list\n` +

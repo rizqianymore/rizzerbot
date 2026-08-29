@@ -52,7 +52,7 @@ export default {
     const totalUsers = Object.keys(db.data.users || {}).length;
 
     const report =
-      `🖥️ *VPS & SERVER TELEMETRY REPORT*\n\n` +
+      `🖥️ *VPS & Server Telemetry Report*\n\n` +
       `📌 *Hardware & OS Specs*\n` +
       `├─ Hostname   : \`${os.hostname()}\`\n` +
       `├─ Platform   : ${os.type()} ${os.arch()} (${os.release()})\n` +

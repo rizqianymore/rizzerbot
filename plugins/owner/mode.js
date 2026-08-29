@@ -42,15 +42,15 @@ export default {
     // Dashboard Status (.mode)
     if (!action || action === "status" || action === "info" || action === "list") {
       const activeP = currentSettings.prefix || settings.prefix || ".";
-      const sSelf = currentSettings.selfMode ? "🔴 *AKTIF (Self Only)*" : "🟢 *Nonaktif (Public)*";
-      const sMaint = currentSettings.maintenance ? "🔴 *AKTIF (Maintenance)*" : "🟢 *Nonaktif (Normal)*";
-      const sGroup = currentSettings.onlyGroup ? "🟡 *AKTIF (Grup Saja)*" : "⚪ *Nonaktif*";
-      const sPrive = currentSettings.onlyPrivate ? "🟡 *AKTIF (Private Saja)*" : "⚪ *Nonaktif*";
-      const sSpam = currentSettings.antiSpam !== false ? "🟢 *AKTIF (Proteksi Nyala)*" : "🔴 *Nonaktif*";
-      const sReg = currentSettings.registrationOpen !== false ? "🟢 *TERBUKA*" : "🔴 *DITUTUP*";
+      const sSelf = currentSettings.selfMode ? "🔴 *Aktif (Self Only)*" : "🟢 *Nonaktif (Public)*";
+      const sMaint = currentSettings.maintenance ? "🔴 *Aktif (Maintenance)*" : "🟢 *Nonaktif (Normal)*";
+      const sGroup = currentSettings.onlyGroup ? "🟡 *Aktif (Grup Saja)*" : "⚪ *Nonaktif*";
+      const sPrive = currentSettings.onlyPrivate ? "🟡 *Aktif (Private Saja)*" : "⚪ *Nonaktif*";
+      const sSpam = currentSettings.antiSpam !== false ? "🟢 *Aktif (Proteksi Nyala)*" : "🔴 *Nonaktif*";
+      const sReg = currentSettings.registrationOpen !== false ? "🟢 *Terbuka*" : "🔴 *Ditutup*";
 
       const dashboard =
-        `🎛️ *DASHBOARD OPERASIONAL BOT*\n\n` +
+        `🎛️ *Dashboard Operasional Bot*\n\n` +
         `├─ 👤 *Self Mode:* ${sSelf}\n` +
         `├─ 🛠️ *Maintenance:* ${sMaint}\n` +
         `├─ 👥 *Only Group:* ${sGroup}\n` +

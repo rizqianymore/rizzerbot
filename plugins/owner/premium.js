@@ -36,7 +36,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `⭐ *MANAJEMEN PENGGUNA PREMIUM (ENTERPRISE)*\n\n` +
+          text: `⭐ *Manajemen Pengguna Premium (Enterprise)*\n\n` +
                 `│ .prem add <nomor1 nomor2... | tag> [durasi]\n` +
                 `│ .prem del <nomor1 nomor2... | tag>\n` +
                 `│ .prem list\n\n` +

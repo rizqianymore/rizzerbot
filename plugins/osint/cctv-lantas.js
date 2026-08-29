@@ -652,7 +652,7 @@ export default {
     const sliced = matches.slice(0, listLimit);
 
     let listText =
-      `🔍 *HASIL PENCARIAN CCTV*\n` +
+      `🔍 *Hasil Pencarian CCTV*\n` +
       `Kata Kunci: *"${query}"*${
         filterSource ? ` [Kategori: ${CCTV_SOURCES[filterSource].name}]` : ""
       }\n` +
@@ -691,9 +691,9 @@ async function handleCheckCamera(sock, msg, camera) {
 
   const status = await checkCctvStatus(streamUrl, 4000);
 
-  const statusIcon = status.online ? "🟢 *LIVE (AKTIF)*" : "🔴 *OFFLINE / GAGAL*";
+  const statusIcon = status.online ? "🟢 *Live (Aktif)*" : "🔴 *Offline / Gagal*";
   const reportText =
-    `📡 *LAPORAN STATUS KONEKTIVITAS CCTV*\n\n` +
+    `📡 *Laporan Status Konektivitas CCTV*\n\n` +
     `• *ID:* \`${camera.id}\`\n` +
     `• *Nama:* ${nama}\n` +
     `• *Kategori:* ${badge} ${camera.sourceName || "Lantas"}\n` +
@@ -724,7 +724,7 @@ async function handleCameraOutput(sock, msg, camera, activePrefix, isInfoOnly = 
   const mapsText = mapsUrl ? `\n• *Koordinat & Peta:* [Buka Google Maps](${mapsUrl})` : "";
 
   let caption =
-    `📹 *DETAIL KAMERA CCTV*\n\n` +
+    `📹 *Detail Kamera CCTV*\n\n` +
     `• *ID:* \`${camera.id}\`\n` +
     `• *Nama Lokasi:* ${nama}\n` +
     `• *Wilayah / Kota:* ${kabkota}` +

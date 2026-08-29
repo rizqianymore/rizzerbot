@@ -235,7 +235,7 @@ export default [
           {
             image: resultBuffer,
             caption:
-              `📸 *PHOTOBOOTH RESULT*\n\n` +
+              `📸 *Photobooth Result*\n\n` +
               `├─ ✨ *Total Foto:* ${uploadedPhotoUrls.length}\n` +
               `├─ 🏷️ *Judul:* ${title}\n` +
               `├─ 🎨 *Tema:* ${theme}\n` +

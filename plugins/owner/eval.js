@@ -63,13 +63,13 @@ export default {
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `💻 *EVAL EXECUTION OUTPUT*\n\n\`\`\`javascript\n${result}\n\`\`\`` },
+        { text: `💻 *Eval Execution Output*\n\n\`\`\`javascript\n${result}\n\`\`\`` },
         { quoted: msg }
       );
     } catch (err) {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `❌ *EVAL ERROR*\n\n\`\`\`text\n${err.stack || err.message || err}\n\`\`\`` },
+        { text: `❌ *Eval Error*\n\n\`\`\`text\n${err.stack || err.message || err}\n\`\`\`` },
         { quoted: msg }
       );
     }

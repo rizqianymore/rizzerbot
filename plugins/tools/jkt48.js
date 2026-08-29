@@ -101,7 +101,7 @@ export default {
     const tiktok = match.tiktok_account ? `@${match.tiktok_account.replace(/^@/, "")}` : "-";
 
     const captionText =
-      `🎤 *PROFIL RESMI MEMBER JKT48*\n\n` +
+      `🎤 *Profil Resmi Member JKT48*\n\n` +
       `• *Nama Lengkap:* ${name}\n` +
       `• *Panggilan:* ${nickname}\n` +
       `• *Tim / Tipe:* ${type}\n` +

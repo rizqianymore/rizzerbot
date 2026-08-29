@@ -67,7 +67,7 @@ export default {
         msg.key.remoteJid,
         {
           text:
-            `🔤 *TEXT CASE CONVERTER & STYLER*\n\n` +
+            `🔤 *Text Case Converter & Styler*\n\n` +
             `Gunakan perintah ini untuk merapikan teks kapital:\n\n` +
             `│ ${activePrefix}case title <teks> (Contoh: APA KABAR -> Apa Kabar)\n` +
             `│ ${activePrefix}case sentence <teks> (Contoh: APA KABAR. SAYA BAIK -> Apa kabar. Saya baik)\n` +
@@ -116,7 +116,7 @@ export default {
       msg.key.remoteJid,
       {
         text:
-          `🔤 *HASIL KONVERSI TEKS*\n\n` +
+          `🔤 *Hasil Konversi Teks*\n\n` +
           `├─ 🏷️ *Tipe:* ${modeLabel}\n` +
           `└─ 📝 *Hasil:*\n\n${result}`,
       },

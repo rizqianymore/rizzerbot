@@ -19,7 +19,7 @@ export default {
         msg.key.remoteJid,
         {
           text:
-            `🔌 *PLUGIN RUNTIME CONTROLLER*\n\n` +
+            `🔌 *Plugin Runtime Controller*\n\n` +
             `│ ${activePrefix}plugintoggle disable <nama_plugin>\n` +
             `│ ${activePrefix}plugintoggle enable <nama_plugin>\n` +
             `│ ${activePrefix}plugintoggle list\n\n` +

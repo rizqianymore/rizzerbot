@@ -136,7 +136,7 @@ export default {
       }
 
       const captionText =
-        `🎵 *SPOTIFY TRACK DOWNLOADER*\n\n` +
+        `🎵 *Spotify Track Downloader*\n\n` +
         `├─ 🏷️ *Judul:* ${track.title}\n` +
         `├─ 👤 *Artis:* ${track.artist}\n` +
         `├─ 💿 *Album:* ${track.album}\n` +

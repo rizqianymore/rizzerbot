@@ -214,7 +214,7 @@ export default [
 
       await sendTyping();
       const mentions = participants.map((p) => p.id);
-      const outputText = `📢 *TAG ALL MEMBERS*\n\n*Pesan:* ${customMessage}\n\n` + 
+      const outputText = `📢 *Tag All Members*\n\n*Pesan:* ${customMessage}\n\n` + 
         participants.map((p) => `• @${p.id.split("@")[0]}`).join("\n");
 
       await sock.sendMessage(
@@ -301,7 +301,7 @@ export default [
         const link = `https://chat.whatsapp.com/${inviteCode}`;
         await sock.sendMessage(
           remoteJid,
-          { text: `🔗 *LINK UNDANGAN GRUP*\n\n${link}` },
+          { text: `🔗 *Link Undangan Grup*\n\n${link}` },
           { quoted: msg }
         );
       } catch (err) {

@@ -36,7 +36,7 @@ export default {
         msg.key.remoteJid,
         {
           text:
-            `👑 *MANAJEMEN ADMIN BOT (ENTERPRISE)*\n\n` +
+            `👑 *Manajemen Admin Bot (Enterprise)*\n\n` +
             `│ ${activePrefix}admin add <nomor1 nomor2... | tag>\n` +
             `│ ${activePrefix}admin remove <nomor1 nomor2... | tag>\n` +
             `│ ${activePrefix}admin list\n\n` +
