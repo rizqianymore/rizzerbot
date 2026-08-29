@@ -5,6 +5,32 @@ export function cleanNumber(input) {
   return String(input).replace(/[^0-9]/g, "");
 }
 
+export function formatToWhatsAppJid(input) {
+  if (!input) return "";
+  let clean = cleanNumber(input);
+  if (!clean) return "";
+  if (clean.startsWith("08")) {
+    clean = "628" + clean.slice(2);
+  } else if (clean.startsWith("8") && clean.length >= 9) {
+    clean = "62" + clean;
+  }
+  return clean.length >= 7 ? `${clean}@s.whatsapp.net` : "";
+}
+
+export function parsePhoneNumbers(args) {
+  if (!args) return [];
+  const list = Array.isArray(args) ? args.join(" ") : String(args);
+  const rawTokens = list.split(/[\s,;|]+/).filter(Boolean);
+  const results = new Set();
+
+  for (const token of rawTokens) {
+    if (token.includes("@g.us")) continue;
+    const jid = formatToWhatsAppJid(token);
+    if (jid) results.add(jid);
+  }
+  return Array.from(results);
+}
+
 export function deleteFolderRecursive(dirPath) {
   if (fs.existsSync(dirPath)) {
     try {

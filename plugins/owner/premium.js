@@ -1,23 +1,47 @@
 import { db } from "@/src/core/database.js";
+import { parsePhoneNumbers } from "@/src/utils/helper.js";
+
+async function validateWhatsAppNumbers(sock, jids) {
+  const valid = [];
+  const invalid = [];
+
+  for (const jid of jids) {
+    try {
+      const check = await sock.onWhatsApp(jid);
+      if (check && check.length > 0 && check[0].exists) {
+        valid.push(db.normalizeJid(check[0].jid || jid));
+      } else {
+        invalid.push(jid);
+      }
+    } catch (_) {
+      valid.push(jid);
+    }
+  }
+
+  return { valid, invalid };
+}
 
 export default {
   name: "premium",
   aliases: ["prem"],
-  description: "Manajemen Pengguna Premium.",
-  usage: "<add/remove/list> <tag/balas/nomor>",
+  description: "Manajemen Pengguna Premium secara massal atau satuan via nomor telepon.",
+  usage: "<add/del/list> <nomor1 nomor2... | tag> [durasi/hari]",
+  example: "premium add 08123456789 08987654321 30d",
   category: "Owner",
   ownerOnly: true,
   premiumOnly: true,
-  run: async (sock, msg, args, { sendTyping, getTargetJid }) => {
+  run: async (sock, msg, args, { sendTyping }) => {
     const action = args[0]?.toLowerCase();
     if (!action) {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `⭐ *MANAJEMEN PENGGUNA PREMIUM*\n\n` +
-                `• *.premium add <tag/balas/nomor>* - Tambah Premium\n` +
-                `• *.premium remove <tag/balas/nomor>* - Hapus Premium\n` +
-                `• *.premium list* - List Pengguna Premium aktif`
+          text: `⭐ *MANAJEMEN PENGGUNA PREMIUM (ENTERPRISE)*\n\n` +
+                `│ .prem add <nomor1 nomor2... | tag> [durasi]\n` +
+                `│ .prem del <nomor1 nomor2... | tag>\n` +
+                `│ .prem list\n\n` +
+                `*Contoh:* \`.prem add 08123456789 08987654321 30d\`\n` +
+                `*Catatan:* Mendukung multi-nomor & auto-cek status aktif WhatsApp.`
         },
         { quoted: msg }
       );
@@ -26,9 +50,10 @@ export default {
 
     await sendTyping();
 
+    // 1. LIST SEMUA PREMIUM
     if (action === "list") {
       const allUsers = Object.keys(db.data.users);
-      const premiumUsers = allUsers.filter(u => db.data.users[u].premium);
+      const premiumUsers = allUsers.filter((u) => db.data.users[u].premium);
 
       if (premiumUsers.length === 0) {
         await sock.sendMessage(
@@ -41,88 +66,127 @@ export default {
 
       let textList = `⭐ *DAFTAR PENGGUNA PREMIUM (${premiumUsers.length})*\n\n`;
       premiumUsers.forEach((prem, i) => {
-        textList += `${i + 1}. @${prem.split("@")[0]}\n`;
+        const u = db.data.users[prem];
+        const isPriv = db.isPrivilegedJid(prem);
+        const roleBadge = isPriv ? " [Owner/Admin]" : "";
+        const expireInfo = u?.premiumExpiresAt ? ` (Exp: ${u.premiumExpiresAt.split("T")[0]})` : " (Permanen)";
+        textList += `${i + 1}. @${prem.split("@")[0]}${roleBadge}${expireInfo}\n`;
       });
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: textList, mentions: premiumUsers },
+        { text: textList.trim(), mentions: premiumUsers },
         { quoted: msg }
       );
       return;
     }
 
-    const target = getTargetJid(args.slice(1));
-    if (!target) {
+    // 2. PARSE MULTI-TARGET
+    const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+    const quotedParticipant = msg.message?.extendedTextMessage?.contextInfo?.participant;
+
+    let rawTargets = [];
+    if (mentionedJids.length > 0) {
+      rawTargets.push(...mentionedJids.map((j) => db.normalizeJid(j)));
+    }
+    if (quotedParticipant) {
+      rawTargets.push(db.normalizeJid(quotedParticipant));
+    }
+
+    // Detect duration argument if present (e.g., 30d, 7d, 30)
+    let durationDays = 0;
+    const cleanArgs = [];
+    for (const arg of args.slice(1)) {
+      const match = arg.match(/^(\d+)(d|hari|day|days)?$/i);
+      if (match && !arg.startsWith("08") && arg.length <= 4) {
+        durationDays = parseInt(match[1], 10);
+      } else {
+        cleanArgs.push(arg);
+      }
+    }
+
+    const parsedFromText = parsePhoneNumbers(cleanArgs);
+    rawTargets.push(...parsedFromText);
+    rawTargets = Array.from(new Set(rawTargets));
+
+    if (rawTargets.length === 0) {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: "⚠️ Harap tag, balas pesan, atau masukkan nomor telepon pengguna." },
+        { text: "⚠️ Masukkan minimal satu nomor telepon valid atau tag pengguna target!" },
         { quoted: msg }
       );
       return;
     }
 
-    const targetNum = target.split("@")[0];
+    // 3. AUTO-CHECK WHATSAPP NUMBERS
+    const { valid: validTargets, invalid: invalidTargets } = await validateWhatsAppNumbers(
+      sock,
+      rawTargets
+    );
 
-    if (action === "add") {
-      const targetProfile = db.getUser(target);
-      if (targetProfile.premium) {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            text: `⚠️ @${targetNum} sudah berstatus Premium.`,
-            mentions: [target],
-          },
-          { quoted: msg }
-        );
-        return;
+    const successList = [];
+    const skippedAlready = [];
+
+    const expiresAt = durationDays > 0
+      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
+    for (const targetJid of validTargets) {
+      const user = db.getUser(targetJid);
+
+      if (action === "add" || action === "set") {
+        db.updateUser(targetJid, {
+          premium: true,
+          registered: true,
+          limit: 99999,
+          premiumExpiresAt: expiresAt,
+        });
+        successList.push(targetJid);
+      } else if (action === "remove" || action === "del") {
+        if (!user.premium) {
+          skippedAlready.push(targetJid);
+          continue;
+        }
+        db.updateUser(targetJid, {
+          premium: false,
+          limit: 100,
+          premiumExpiresAt: null,
+        });
+        successList.push(targetJid);
       }
-
-      const defaultName = targetProfile.name || targetNum;
-      db.updateUser(target, {
-        premium: true,
-        registered: true,
-        name: defaultName,
-      });
-
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        {
-          text: `⭐ Berhasil menambahkan @${targetNum} ke daftar Premium & otomatis Terdaftar.`,
-          mentions: [target],
-        },
-        { quoted: msg }
-      );
-    } else if (action === "remove" || action === "del") {
-      const targetProfile = db.getUser(target);
-      if (!targetProfile.premium) {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            text: `⚠️ @${targetNum} tidak berada dalam daftar Premium.`,
-            mentions: [target],
-          },
-          { quoted: msg }
-        );
-        return;
-      }
-
-      db.updateUser(target, { premium: false });
-
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        {
-          text: `⭐ Berhasil menghapus @${targetNum} dari daftar Premium.`,
-          mentions: [target],
-        },
-        { quoted: msg }
-      );
-    } else {
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { text: "⚠️ Aksi tidak valid! Gunakan: add, remove, atau list." },
-        { quoted: msg }
-      );
     }
+
+    // 4. REPORT
+    let reportText = `⭐ *LAPORAN UPDATE PREMIUM (${action.toUpperCase()})*\n\n`;
+
+    if (successList.length > 0) {
+      reportText += `✅ *Berhasil Diperbarui (${successList.length}):*\n`;
+      successList.forEach((j) => {
+        const durText = durationDays > 0 ? ` [Durasi: ${durationDays} Hari]` : ` [Permanen]`;
+        reportText += `• @${j.split("@")[0]}${action === "add" ? durText : ""}\n`;
+      });
+      reportText += "\n";
+    }
+
+    if (skippedAlready.length > 0) {
+      reportText += `ℹ️ *Sudah Bukan Premium (${skippedAlready.length}):*\n`;
+      skippedAlready.forEach((j) => {
+        reportText += `• @${j.split("@")[0]}\n`;
+      });
+      reportText += "\n";
+    }
+
+    if (invalidTargets.length > 0) {
+      reportText += `❌ *Nomor Tidak Terdaftar di WhatsApp (${invalidTargets.length}):*\n`;
+      invalidTargets.forEach((j) => {
+        reportText += `• ${j.split("@")[0]}\n`;
+      });
+    }
+
+    await sock.sendMessage(
+      msg.key.remoteJid,
+      { text: reportText.trim(), mentions: successList },
+      { quoted: msg }
+    );
   },
 };

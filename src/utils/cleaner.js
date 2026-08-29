@@ -67,12 +67,38 @@ export function autoCleanSessionCache(logger) {
   }
 }
 
+export function periodicDatabaseSnapshot(logger) {
+  try {
+    const dbDir = path.join(__dirname, "..", "..", "database");
+    const backupDir = path.join(dbDir, "backups");
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+
+    const usersFile = path.join(dbDir, "users.json");
+    if (fs.existsSync(usersFile)) {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const snapshotPath = path.join(backupDir, `daily-snapshot-${timestamp}.json`);
+      if (!fs.existsSync(snapshotPath)) {
+        fs.copyFileSync(usersFile, snapshotPath);
+        if (logger) {
+          logger.info(`[Auto Backup] Database snapshot created: daily-snapshot-${timestamp}.json`);
+        }
+      }
+    }
+  } catch (err) {
+    if (logger) logger.error("[Auto Backup Error]", err.message);
+  }
+}
+
 export function startAutoCleanInterval(logger) {
   autoCleanSessionCache(logger);
-  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; // 12 hour
+  periodicDatabaseSnapshot(logger);
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
   const timer = setInterval(() => {
     autoCleanSessionCache(logger);
-  }, TWELVE_HOURS_MS);
+    periodicDatabaseSnapshot(logger);
+  }, SIX_HOURS_MS);
   if (timer && typeof timer.unref === "function") {
     timer.unref();
   }

@@ -35,6 +35,7 @@ function createDefaultSchema() {
       registrationOpen: true,
       admins: [],
       limited: [],
+      disabledPlugins: [],
       jpmChannels: [],
       jpmBlacklist: [],
     },
@@ -474,6 +475,53 @@ class Database {
     this.data.settings = { ...(this.data.settings || {}), ...props };
     this.save();
     return this.data.settings;
+  }
+
+  resetDatabase(botJid = null) {
+    const dbDir = path.join(__dirname, "..", "..", "database");
+    const backupDir = path.join(dbDir, "backups");
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+
+    // 1. Automatic Snapshot Backup Before Wipe
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const backupFilePath = path.join(backupDir, `backup-${timestamp}.json`);
+    try {
+      this.safeWriteFileSync(backupFilePath, JSON.stringify(this.data, null, 2));
+    } catch (err) {
+      console.error("[DB Backup Failed]", err.message);
+    }
+
+    // 2. Reset to fresh default schema
+    this.data = createDefaultSchema();
+
+    // 3. Preserve and Auto-Seed Owner and Active Bot numbers
+    const privilegedNumbers = [
+      this.normalizeJid(settings.ownerNumber),
+      this.normalizeJid(settings.pairingNumber),
+      botJid ? this.normalizeJid(botJid) : null,
+    ].filter(Boolean);
+
+    for (const jid of privilegedNumbers) {
+      this.data.users[jid] = {
+        registered: true,
+        name: settings.ownerName || "Owner",
+        banned: false,
+        premium: true,
+        limit: 999999,
+        joinedAt: new Date().toISOString(),
+      };
+    }
+
+    this.updatePrivilegedCache();
+    this.flushSync();
+
+    return {
+      success: true,
+      backupFile: backupFilePath,
+      preservedUsers: privilegedNumbers,
+    };
   }
 }
 

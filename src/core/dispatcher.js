@@ -143,6 +143,16 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
+  const disabledPlugins = db.data?.settings?.disabledPlugins || [];
+  if (disabledPlugins.includes(cmd.name) && !isOwner) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: `⚠️ Fitur *${activePrefix}${cmd.name}* sedang dinonaktifkan sementara oleh Owner.` },
+      { quoted: msg }
+    );
+    return;
+  }
+
   if (db.data?.settings?.maintenance && !isOwner) {
     await sock.sendMessage(
       remoteJid,
