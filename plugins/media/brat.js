@@ -252,7 +252,7 @@ function buildSvgForLines(lines, optimalSize, theme) {
 
     for (const token of line) {
       if (token.type === "space") {
-        currentX += token.width || optimalSize * 0.25;
+        currentX += token.width || optimalSize * 0.28;
         continue;
       }
 
@@ -267,11 +267,11 @@ function buildSvgForLines(lines, optimalSize, theme) {
           );
         } else {
           svgElements.push(
-            `<text x="${(currentX + tokenW / 2).toFixed(1)}" y="${(lineY + lineHeight * 0.8).toFixed(1)}" text-anchor="middle" font-family="'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" font-size="${optimalSize}" fill="${theme.text}">${escapeXml(token.value)}</text>`
+            `<text x="${(currentX + tokenW / 2).toFixed(1)}" y="${(lineY + lineHeight * 0.82).toFixed(1)}" text-anchor="middle" font-family="'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" font-size="${optimalSize}" fill="${theme.text}">${escapeXml(token.value)}</text>`
           );
         }
       } else if (token.type === "text") {
-        const textY = lineY + lineHeight * 0.8;
+        const textY = lineY + lineHeight * 0.82;
         svgElements.push(
           `<text x="${currentX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="start" font-family="${FONT_FAMILY}" font-size="${optimalSize}" font-weight="500" fill="${theme.text}">${escapeXml(token.value)}</text>`
         );
