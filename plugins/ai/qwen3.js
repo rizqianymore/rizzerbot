@@ -27,7 +27,7 @@ export default {
     try {
       const result = await askQwen3(prompt);
 
-      const responseText = `🤖 *AI Qwen3 (80B)*\n\n${result.answer}`;
+      const responseText = `🤖 *AI:*\n${result.answer}`;
 
       await sock.sendMessage(
         remoteJid,

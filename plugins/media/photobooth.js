@@ -1,6 +1,22 @@
-import { createCanvas, loadImage } from "canvas";
+import { fetchBuffer } from "@/src/utils/scraping.js";
 
 const photoboothSessions = new Map();
+
+async function uploadToTmpFiles(buffer, mimeType = "image/png") {
+  const form = new FormData();
+  const file = new Blob([buffer], { type: mimeType });
+  form.append("file", file, "photo.png");
+
+  const res = await fetch("https://tmpfiles.org/api/v1/upload", {
+    method: "POST",
+    body: form,
+  });
+  const data = await res.json();
+  if (data.status === "success" && data.data?.url) {
+    return data.data.url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/");
+  }
+  throw new Error("Gagal mengunggah foto ke temporary cloud hosting.");
+}
 
 export default [
   {
@@ -8,7 +24,7 @@ export default [
     aliases: ["addpb"],
     category: "Media",
     premiumOnly: true,
-    description: "Menambahkan foto ke sesi photobooth strip.",
+    description: "Menambahkan foto ke sesi photobooth strip (Maksimal 12 foto).",
     usage: "<kirim/balas gambar>",
     run: async (sock, msg, args, { sendTyping, senderJid }) => {
       const { extractMessageContent, downloadMediaMessage } = await import("baileys");
@@ -71,11 +87,11 @@ export default [
         }
 
         const session = photoboothSessions.get(senderJid);
-        if (session.length >= 5) {
+        if (session.length >= 12) {
           await sock.sendMessage(
             msg.key.remoteJid,
             {
-              text: "⚠️ Sesi photobooth penuh! Maksimal 5 foto per strip. Ketik *.makephotobooth* atau *.clearphotobooth*.",
+              text: "⚠️ Sesi photobooth penuh! Maksimal 12 foto per sesi. Ketik *.makepb* atau *.clearpb*.",
             },
             { quoted: msg }
           );
@@ -87,7 +103,11 @@ export default [
         await sock.sendMessage(
           msg.key.remoteJid,
           {
-            text: `✅ Foto ke-${session.length} berhasil ditambahkan! (${session.length}/5)\n\n📌 Ketik *.addpb* lagi untuk menambah foto.\n📌 Ketik *.makepb [judul]* untuk membuat strip photobooth.\n📌 Ketik *.clearpb* untuk mereset.`,
+            text:
+              `✅ Foto ke-${session.length} berhasil ditambahkan! (${session.length}/12)\n\n` +
+              `📌 Ketik *.addpb* lagi untuk menambah foto.\n` +
+              `📌 Ketik *.makepb [opsi]* untuk membuat photobooth.\n` +
+              `📌 Ketik *.clearpb* untuk mereset sesi.`,
           },
           { quoted: msg }
         );
@@ -106,17 +126,20 @@ export default [
     aliases: ["makepb", "photobooth", "pb"],
     category: "Media",
     premiumOnly: true,
-    description: "Membuat strip foto photobooth imut dengan hiasan boneka beruang 🧸 selang-seling.",
-    usage: "<judul opsional>",
-    example: ".makepb Best Moments ♥",
-    run: async (sock, msg, args, { sendTyping, senderJid }) => {
+    description:
+      "Membuat photobooth strip / grid berkualitas HD menggunakan API Worker.",
+    usage: "[judul] [--theme cream/black/pink] [--sticker bear/star/heart] [--layout vertical/grid-2/custom] [--cols 2] [--rows 3]",
+    example: ".makepb Liburan Seru --theme cream --sticker bear --layout grid-2",
+    run: async (sock, msg, args, { sendTyping, senderJid, activePrefix }) => {
       const session = photoboothSessions.get(senderJid);
 
       if (!session || session.length === 0) {
         await sock.sendMessage(
           msg.key.remoteJid,
           {
-            text: "⚠️ Sesi photobooth kosong! Gunakan *.addpb* (kirim/balas foto) terlebih dahulu.",
+            text:
+              `⚠️ Sesi photobooth kosong!\n\n` +
+              `Kirim/balas foto dengan \`${activePrefix}addpb\` terlebih dahulu minimal 1 foto.`,
           },
           { quoted: msg }
         );
@@ -124,122 +147,115 @@ export default [
       }
 
       await sendTyping();
-      await sock.sendMessage(
+
+      const loadingMsg = await sock.sendMessage(
         msg.key.remoteJid,
-        { text: "⏳ Sedang merender strip photobooth imut..." },
+        {
+          text: `⏳ Sedang mengunggah ${session.length} foto & merender photobooth HD...`,
+        },
         { quoted: msg }
       );
 
       try {
-        const titleText = args.join(" ") || "Best Moments ♥";
-        const dateText = `${new Date().toLocaleDateString("id-ID")} • PHOTOBOOTH`;
+        // Parse options from args
+        let rawText = args.join(" ");
+        let theme = "cream";
+        let sticker = "bear";
+        let layout = session.length > 4 ? "grid-2" : "vertical";
+        let cols = "";
+        let rows = "";
+        let date = new Date().toLocaleDateString("id-ID");
 
-        // Canvas Layout Dimensions
-        const photoWidth = 320;
-        const photoHeight = 220;
-        const paddingX = 24;
-        const paddingTop = 28;
-        const gapY = 16;
-        const footerHeight = 80;
-
-        const canvasWidth = photoWidth + paddingX * 2;
-        const canvasHeight =
-          paddingTop +
-          session.length * photoHeight +
-          (session.length - 1) * gapY +
-          footerHeight;
-
-        const canvas = createCanvas(canvasWidth, canvasHeight);
-        const ctx = canvas.getContext("2d");
-
-        // Background Strip (White Paper)
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // Strip Border
-        ctx.strokeStyle = "#e8ded8";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
-
-        // Render Photos & Bear Dolls
-        for (let i = 0; i < session.length; i++) {
-          const imgBuffer = session[i];
-          const img = await loadImage(imgBuffer);
-
-          const x = paddingX;
-          const y = paddingTop + i * (photoHeight + gapY);
-
-          // Draw Photo Item Container background
-          ctx.fillStyle = "#f2ebe7";
-          ctx.fillRect(x, y, photoWidth, photoHeight);
-
-          // Draw Image Object-Fit Cover
-          const imgRatio = img.width / img.height;
-          const targetRatio = photoWidth / photoHeight;
-          let sw, sh, sx, sy;
-
-          if (imgRatio > targetRatio) {
-            sh = img.height;
-            sw = img.height * targetRatio;
-            sx = (img.width - sw) / 2;
-            sy = 0;
-          } else {
-            sw = img.width;
-            sh = img.width / targetRatio;
-            sx = 0;
-            sy = (img.height - sh) / 2;
-          }
-
-          ctx.drawImage(img, sx, sy, sw, sh, x, y, photoWidth, photoHeight);
-
-          // Add 1 Teddy Bear Doll 🧸 per photo frame in alternating pattern (Foto 1: Kiri Atas, Foto 2: Kanan Atas, Foto 3: Kiri Atas...)
-          const isLeft = i % 2 === 0;
-          const bx = isLeft ? x + 8 : x + photoWidth - 36;
-          const by = y + 8;
-
-          ctx.font = "28px 'Segoe UI Emoji', sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-
-          ctx.save();
-          ctx.translate(bx + 14, by + 14);
-          ctx.rotate(isLeft ? (-15 * Math.PI) / 180 : (15 * Math.PI) / 180);
-          ctx.fillText("🧸", 0, 0);
-          ctx.restore();
+        const themeMatch = rawText.match(/--theme\s+([a-zA-Z0-9_-]+)/i);
+        if (themeMatch) {
+          theme = themeMatch[1].toLowerCase();
+          rawText = rawText.replace(themeMatch[0], "");
         }
 
-        // Render Footer Text
-        const footerY = paddingTop + session.length * photoHeight + (session.length - 1) * gapY;
-        
-        ctx.fillStyle = "#4a3b32";
-        ctx.font = "bold 22px 'Plus Jakarta Sans', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(titleText, canvasWidth / 2, footerY + 36);
+        const stickerMatch = rawText.match(/--sticker\s+([a-zA-Z0-9_-]+)/i);
+        if (stickerMatch) {
+          sticker = stickerMatch[1].toLowerCase();
+          rawText = rawText.replace(stickerMatch[0], "");
+        }
 
-        ctx.fillStyle = "#8c7a6e";
-        ctx.font = "500 12px 'Plus Jakarta Sans', sans-serif";
-        ctx.fillText(dateText, canvasWidth / 2, footerY + 58);
+        const layoutMatch = rawText.match(/--layout\s+([a-zA-Z0-9_-]+)/i);
+        if (layoutMatch) {
+          layout = layoutMatch[1].toLowerCase();
+          rawText = rawText.replace(layoutMatch[0], "");
+        }
 
-        const resultBuffer = canvas.toBuffer("image/png");
+        const colsMatch = rawText.match(/--cols\s+(\d+)/i);
+        if (colsMatch) {
+          cols = colsMatch[1];
+          rawText = rawText.replace(colsMatch[0], "");
+        }
 
-        // Clear session after rendering
+        const rowsMatch = rawText.match(/--rows\s+(\d+)/i);
+        if (rowsMatch) {
+          rows = rowsMatch[1];
+          rawText = rawText.replace(rowsMatch[0], "");
+        }
+
+        const title = rawText.trim() || "Best Moments ♥";
+
+        // 1. Upload session photos to temporary hosting
+        const uploadedPhotoUrls = [];
+        for (let i = 0; i < session.length; i++) {
+          const url = await uploadToTmpFiles(session[i]);
+          uploadedPhotoUrls.push(url);
+        }
+
+        // 2. Build Worker API URL
+        const workerBase = "https://photoboth.rakarizqi-cv.workers.dev/";
+        const params = new URLSearchParams();
+
+        if (layout) params.append("layout", layout);
+        if (cols) params.append("cols", cols);
+        if (rows) params.append("rows", rows);
+        params.append("title", title);
+        params.append("date", date);
+        params.append("theme", theme);
+        params.append("sticker", sticker);
+        params.append("photos", uploadedPhotoUrls.join(","));
+
+        const targetWorkerUrl = `${workerBase}?${params.toString()}`;
+
+        // 3. Capture with Microlink Screenshot API
+        const microUrl = `https://api.microlink.io?url=${encodeURIComponent(
+          targetWorkerUrl
+        )}&screenshot=true&embed=screenshot.url&waitForTimeout=2500`;
+
+        const resultBuffer = await fetchBuffer(microUrl, { timeout: 25000 });
+
+        // Clear session after success
         photoboothSessions.delete(senderJid);
 
         await sock.sendMessage(
           msg.key.remoteJid,
           {
             image: resultBuffer,
-            caption: `📸 *Photobooth Strip Result*\n\n✨ Total Foto: ${session.length}\n🏷️ Judul: ${titleText}\n⚡ _Via Kyros-MD_`,
+            caption:
+              `📸 *PHOTOBOOTH RESULT*\n\n` +
+              `├─ ✨ *Total Foto:* ${uploadedPhotoUrls.length}\n` +
+              `├─ 🏷️ *Judul:* ${title}\n` +
+              `├─ 🎨 *Tema:* ${theme}\n` +
+              `└─ 🧸 *Stiker:* ${sticker}\n\n` +
+              `⚡ _Generated via Photobooth Worker_`,
           },
           { quoted: msg }
         );
+
+        // Edit loading message
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: "✅ Photobooth berhasil dibuat!",
+          edit: loadingMsg.key,
+        });
       } catch (err) {
         console.error("Error makephotobooth:", err);
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { text: "❌ Gagal membuat strip photobooth." },
-          { quoted: msg }
-        );
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: `❌ Gagal merender photobooth: ${err.message}`,
+          edit: loadingMsg.key,
+        });
       }
     },
   },
@@ -263,13 +279,21 @@ export default [
     aliases: ["webpb", "linkpb", "photoboothweb"],
     category: "Media",
     premiumOnly: true,
-    description: "Mendapatkan link web Photobooth Strip Maker interaktif.",
+    description: "Mendapatkan link web Photobooth Maker interaktif.",
     run: async (sock, msg) => {
-      const webUrl = "https://photoboth.rakarizqi-cv.workers.dev/photobooth";
+      const webUrl = "https://photoboth.rakarizqi-cv.workers.dev/";
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: `📸 *Aesthetic Photobooth Strip Web App*\n\nBuka link berikut di browser untuk membuat photobooth strip imut secara langsung:\n🔗 ${webUrl}\n\n✨ *Fitur Web App*:\n• Kustomisasi 1-5 foto\n• Hiasan boneka beruang 🧸 selang-seling\n• Pilihan warna bingkai & judul footer\n• Unduh gambar PNG HD`,
+          text:
+            `📸 *Aesthetic Photobooth Strip & Grid Web App*\n\n` +
+            `Buka link berikut di browser untuk mendesain photobooth kustom:\n🔗 ${webUrl}\n\n` +
+            `✨ *Parameter URL API*:\n` +
+            `• \`?layout=vertical / grid-2 / custom\`\n` +
+            `• \`?theme=cream / black / pink\`\n` +
+            `• \`?sticker=bear / star / heart\`\n` +
+            `• \`?title=Judul&date=Tanggal\`\n` +
+            `• \`?photos=link1.jpg,link2.jpg\``,
         },
         { quoted: msg }
       );
