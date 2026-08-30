@@ -35,51 +35,51 @@ const secureHttpsAgent = createSecureAgent();
 
 const browserProfiles = [
   {
-    name: "Windows Chrome 125",
+    name: "Windows Chrome 134",
     userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
     clientHints: {
       "sec-ch-ua":
-        '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        '"Google Chrome";v="134", "Chromium";v="134", "Not.A/Brand";v="24"',
       "sec-ch-ua-mobile": "?0",
       "sec-ch-ua-platform": '"Windows"',
-      "sec-ch-ua-full-version": '"125.0.6422.112"',
+      "sec-ch-ua-full-version": '"134.0.6998.35"',
       "sec-ch-ua-platform-version": '"15.0.0"',
     },
     acceptLanguage: "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
   },
   {
-    name: "macOS Chrome 125",
+    name: "macOS Chrome 134",
     userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
     clientHints: {
       "sec-ch-ua":
-        '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        '"Google Chrome";v="134", "Chromium";v="134", "Not.A/Brand";v="24"',
       "sec-ch-ua-mobile": "?0",
       "sec-ch-ua-platform": '"macOS"',
-      "sec-ch-ua-full-version": '"125.0.6422.112"',
-      "sec-ch-ua-platform-version": '"14.5.0"',
+      "sec-ch-ua-full-version": '"134.0.6998.35"',
+      "sec-ch-ua-platform-version": '"15.3.0"',
     },
     acceptLanguage: "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
   },
   {
-    name: "Android Chrome 125",
+    name: "Android Chrome 134",
     userAgent:
-      "Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36",
+      "Mozilla/5.0 (Linux; Android 15; SM-S938B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36",
     clientHints: {
       "sec-ch-ua":
-        '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        '"Google Chrome";v="134", "Chromium";v="134", "Not.A/Brand";v="24"',
       "sec-ch-ua-mobile": "?1",
       "sec-ch-ua-platform": '"Android"',
-      "sec-ch-ua-full-version": '"125.0.6422.112"',
-      "sec-ch-ua-platform-version": '"14"',
+      "sec-ch-ua-full-version": '"134.0.6998.35"',
+      "sec-ch-ua-platform-version": '"15"',
     },
     acceptLanguage: "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
   },
   {
-    name: "iPhone Safari 17.5",
+    name: "iPhone Safari 18.3",
     userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1",
     clientHints: {},
     acceptLanguage: "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
   },
@@ -167,6 +167,38 @@ async function executeWithRetry(requestFn, retries = 3, baseDelay = 1500) {
   }
 }
 
+/**
+ * Deteksi proteksi Cloudflare WAF / Challenge page (ISO/IEC 27001 Application Resilience).
+ * @param {object} response - Axios response atau error.response object
+ * @returns {boolean}
+ */
+export function isCloudflareProtected(response) {
+  if (!response) return false;
+
+  const status = response.status;
+  const headers = response.headers || {};
+  const server = String(headers["server"] || "").toLowerCase();
+  const cfMitigated = headers["cf-mitigated"];
+
+  // 1. Cek Header WAF Cloudflare
+  if (server.includes("cloudflare") && (status === 403 || status === 503 || cfMitigated === "challenge")) {
+    return true;
+  }
+
+  // 2. Cek Body Signature jika berupa teks HTML
+  const data = typeof response.data === "string" ? response.data : "";
+  if (
+    data.includes("Just a moment...") ||
+    data.includes("cf-turnstile-wrapper") ||
+    data.includes("challenge-platform") ||
+    data.includes("cf-browser-verification")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function isPrivateIpOrHost(hostname) {
   if (!hostname) return true;
   const lower = hostname.toLowerCase();
@@ -181,7 +213,6 @@ function isPrivateIpOrHost(hostname) {
     return true;
   }
 
-  
   const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
   const match = lower.match(ipv4Regex);
   if (match) {

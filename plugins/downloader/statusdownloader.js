@@ -19,24 +19,29 @@ export default {
         keys.includes("imageMessage") ||
         keys.includes("videoMessage") ||
         keys.includes("audioMessage") ||
+        keys.includes("stickerMessage") ||
         keys.includes("documentMessage");
       if (hasMedia) return content;
       if (keys.includes("viewOnceMessage"))
         return getMediaNode(content.viewOnceMessage.message);
       if (keys.includes("viewOnceMessageV2"))
         return getMediaNode(content.viewOnceMessageV2.message);
+      if (keys.includes("viewOnceMessageV2Extension"))
+        return getMediaNode(content.viewOnceMessageV2Extension.message);
+      if (keys.includes("ephemeralMessage"))
+        return getMediaNode(content.ephemeralMessage.message);
       return null;
     };
 
-    const quotedMsg =
-      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    const quotedInfo = msg.message?.extendedTextMessage?.contextInfo;
+    const quotedMsg = quotedInfo?.quotedMessage;
     const quotedMedia = getMediaNode(quotedMsg);
 
     if (!quotedMedia) {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Balas pesan status (gambar/video/audio) yang ingin didownload dengan perintah ini.",
+          text: "⚠️ Balas pesan status (gambar/video/audio/dokumen) yang ingin didownload dengan perintah ini.",
         },
         { quoted: msg },
       );
@@ -45,10 +50,9 @@ export default {
 
     await sendTyping();
     try {
-      const quotedInfo = msg.message.extendedTextMessage.contextInfo;
       const mediaMessage = {
         key: {
-          remoteJid: msg.key.remoteJid,
+          remoteJid: quotedInfo.remoteJid || (quotedInfo.participant ? "status@broadcast" : msg.key.remoteJid),
           id: quotedInfo.stanzaId,
           participant: quotedInfo.participant,
           fromMe: false,
