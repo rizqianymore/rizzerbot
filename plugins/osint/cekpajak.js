@@ -242,7 +242,15 @@ export default {
         return sock.sendMessage(
           remoteJid,
           {
-            text: `❌ *Gagal mengambil data Samsat DKI:* ${dkiErr.message}`,
+            text:
+              `⚠️ *Informasi Samsat DKI Jakarta (Plat B)*\n\n` +
+              `Server resmi Samsat DKI Jakarta (\`samsat-pkb2.jakarta.go.id\`) saat ini mewajibkan verifikasi Cloudflare Turnstile Captcha secara real-time.\n\n` +
+              `🔗 *Cek Manual DKI:* https://samsat-pkb2.jakarta.go.id/\n\n` +
+              `💡 *Wilayah Lain yang Aktif Otomatis Tanpa Captcha:*\n` +
+              `• *DIY Yogyakarta (Plat AB)* — Contoh: \`${activePrefix}cekpajak ab1230jc\`\n` +
+              `• *Jawa Barat (Plat D, E, F, T, Z)* — Contoh: \`${activePrefix}cekpajak d1234abc\`\n` +
+              `• *Jawa Timur (Plat L, M, N, P, S, W, AE, AG)* — Contoh: \`${activePrefix}cekpajak l1111xx\`\n` +
+              `• *Banten (Plat A)* — Contoh: \`${activePrefix}cekpajak a1234xx\``,
           },
           { quoted: msg }
         );
