@@ -171,8 +171,13 @@ export default {
       }
 
       const updated = [];
+      const skippedPrivileged = [];
       for (const p of phones) {
         const jid = db.normalizeJid(p);
+        if (db.isPrivilegedJid(jid)) {
+          skippedPrivileged.push(jid);
+          continue;
+        }
         const user = db.getUser(jid);
         user.tier = selectedTier;
         user.role = selectedTier;
@@ -190,16 +195,22 @@ export default {
       const tierTitle = selectedTier === "vvip" ? "💎 VVIP / Platinum" : "⭐ VIP / Premium";
       const expText = expiresAt ? new Date(expiresAt).toLocaleDateString("id-ID") : "Permanen";
 
+      let responseText = `✅ *Berhasil Mengatur Plan Pengguna*\n\n` +
+        `│ 💎 *Tier Baru:* ${tierTitle}\n` +
+        `│ ⏳ *Masa Berlaku:* ${expText}\n` +
+        `│ 👥 *Total User:* ${updated.length}\n\n` +
+        updated.map((j) => `• @${j.split("@")[0]}`).join("\n");
+
+      if (skippedPrivileged.length > 0) {
+        responseText += `\n\n🛡️ *Dilewati (Owner/Admin Tak Dapat Diubah):*\n` +
+          skippedPrivileged.map((j) => `• @${j.split("@")[0]}`).join("\n");
+      }
+
       return await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text:
-            `✅ *Berhasil Mengatur Plan Pengguna*\n\n` +
-            `│ 💎 *Tier Baru:* ${tierTitle}\n` +
-            `│ ⏳ *Masa Berlaku:* ${expText}\n` +
-            `│ 👥 *Total User:* ${updated.length}\n\n` +
-            updated.map((j) => `• @${j.split("@")[0]}`).join("\n"),
-          mentions: updated,
+          text: responseText.trim(),
+          mentions: [...updated, ...skippedPrivileged],
         },
         { quoted: msg }
       );
@@ -222,8 +233,13 @@ export default {
       }
 
       const deleted = [];
+      const skippedPrivileged = [];
       for (const p of phones) {
         const jid = db.normalizeJid(p);
+        if (db.isPrivilegedJid(jid)) {
+          skippedPrivileged.push(jid);
+          continue;
+        }
         const user = db.getUser(jid);
         user.tier = "free";
         user.role = "user";
@@ -238,14 +254,20 @@ export default {
 
       db.save();
 
+      let responseText = `✅ *Berhasil Menghapus Status Plan*\n\n` +
+        `User telah diturunkan ke *Free User*:\n` +
+        deleted.map((j) => `• @${j.split("@")[0]}`).join("\n");
+
+      if (skippedPrivileged.length > 0) {
+        responseText += `\n\n🛡️ *Dilewati (Owner/Admin Kebal Downgrade):*\n` +
+          skippedPrivileged.map((j) => `• @${j.split("@")[0]}`).join("\n");
+      }
+
       return await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text:
-            `✅ *Berhasil Menghapus Status Plan*\n\n` +
-            `User telah diturunkan ke *Free User*:\n` +
-            deleted.map((j) => `• @${j.split("@")[0]}`).join("\n"),
-          mentions: deleted,
+          text: responseText.trim(),
+          mentions: [...deleted, ...skippedPrivileged],
         },
         { quoted: msg }
       );

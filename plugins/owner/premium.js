@@ -138,12 +138,14 @@ export default {
 
     const successList = [];
     const skippedAlready = [];
+    const skippedPrivileged = [];
 
     const expiresAt = durationDays > 0
       ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
     for (const targetJid of validTargets) {
+      const isPrivileged = db.isPrivilegedJid(targetJid);
       const user = db.getUser(targetJid);
 
       if (action === "add" || action === "set") {
@@ -155,6 +157,10 @@ export default {
         });
         successList.push(targetJid);
       } else if (action === "remove" || action === "del") {
+        if (isPrivileged) {
+          skippedPrivileged.push(targetJid);
+          continue;
+        }
         if (!user.premium) {
           skippedAlready.push(targetJid);
           continue;
@@ -188,6 +194,14 @@ export default {
       reportText += "\n";
     }
 
+    if (skippedPrivileged.length > 0) {
+      reportText += `🛡️ *Dilewati (Owner/Admin Kebal Modifikasi) (${skippedPrivileged.length}):*\n`;
+      skippedPrivileged.forEach((j) => {
+        reportText += `• @${j.split("@")[0]}\n`;
+      });
+      reportText += "\n";
+    }
+
     if (invalidTargets.length > 0) {
       reportText += `❌ *Nomor Tidak Terdaftar di WhatsApp (${invalidTargets.length}):*\n`;
       invalidTargets.forEach((j) => {
@@ -197,7 +211,7 @@ export default {
 
     await sock.sendMessage(
       msg.key.remoteJid,
-      { text: reportText.trim(), mentions: successList },
+      { text: reportText.trim(), mentions: [...successList, ...skippedPrivileged] },
       { quoted: msg }
     );
   },
