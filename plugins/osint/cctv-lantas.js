@@ -569,7 +569,7 @@ export default {
       );
     }
 
-    if (query.startsWith("http:
+    if (query.startsWith("http://") || query.startsWith("https://")) {
       const customCam = {
         id: "CUSTOM_URL",
         nama: "Direct Stream Target",
