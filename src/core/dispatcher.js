@@ -194,6 +194,15 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
+  // Group Lock Mode: Jika aktif, bot di grup hanya merespons grup yang diizinkan (allowedGroups), kecuali dipanggil oleh Owner/Admin Bot
+  if (isGroup && db.data?.settings?.groupLock && !isOwner) {
+    const allowedGroups = db.data?.settings?.allowedGroups || [];
+    const isAllowedGroup = allowedGroups.includes(remoteJid);
+    if (!isAllowedGroup) {
+      return; // Jangan merespons pesan apapun di grup yang tidak diizinkan
+    }
+  }
+
   if (cmd.superOwnerOnly && !isSuperOwner) {
     await sock.sendMessage(
       remoteJid,

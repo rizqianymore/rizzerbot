@@ -352,4 +352,114 @@ export default [
       }
     },
   },
+  {
+    name: "lockgc",
+    aliases: ["grouplock", "lockgroup"],
+    description: "Mengaktifkan/menonaktifkan mode Group Lock atau mengizinkan grup ini.",
+    usage: "<on/off/allow/del>",
+    category: "Group",
+    ownerOnly: true,
+    run: async (sock, msg, args, context) => {
+      const { sendTyping, activePrefix } = context;
+      const remoteJid = msg.key.remoteJid;
+      await sendTyping();
+
+      const action = args[0]?.toLowerCase();
+      const currentSettings = db.getSettings();
+
+      if (!action) {
+        const isLocked = currentSettings.groupLock;
+        const allowed = currentSettings.allowedGroups || [];
+        const isCurrentAllowed = allowed.includes(remoteJid);
+
+        return sock.sendMessage(
+          remoteJid,
+          {
+            text:
+              `🔐 *Group Lock System*\n\n` +
+              `• Status Lock Global: *${isLocked ? "AKTIF" : "NONAKTIF"}*\n` +
+              `• Grup Ini Diizinkan: *${isCurrentAllowed ? "✅ YA" : "❌ TIDAK"}*\n` +
+              `• Total Grup Diizinkan: *${allowed.length} Grup*\n\n` +
+              `*Penggunaan:*\n` +
+              `│ \`${activePrefix}lockgc on/off\` - Aktifkan/matikan proteksi group lock\n` +
+              `│ \`${activePrefix}lockgc allow\` - Izinkan bot aktif di grup ini\n` +
+              `│ \`${activePrefix}lockgc del\` - Cabut izin bot di grup ini\n` +
+              `│ \`${activePrefix}lockgc list\` - Lihat daftar grup yang diizinkan`,
+          },
+          { quoted: msg }
+        );
+      }
+
+      if (action === "on" || action === "aktif" || action === "enable") {
+        db.updateSettings({ groupLock: true });
+        return sock.sendMessage(
+          remoteJid,
+          { text: "✅ *Group Lock Aktif:* Bot hanya akan merespons di grup yang terdaftar dalam daftar izin (allowed list)." },
+          { quoted: msg }
+        );
+      }
+
+      if (action === "off" || action === "mati" || action === "disable") {
+        db.updateSettings({ groupLock: false });
+        return sock.sendMessage(
+          remoteJid,
+          { text: "✅ *Group Lock Nonaktif:* Bot kini dapat merespons di semua grup." },
+          { quoted: msg }
+        );
+      }
+
+      if (action === "allow" || action === "add") {
+        const allowed = [...(currentSettings.allowedGroups || [])];
+        if (allowed.includes(remoteJid)) {
+          return sock.sendMessage(
+            remoteJid,
+            { text: "ℹ️ Grup ini sudah terdaftar dalam daftar izin." },
+            { quoted: msg }
+          );
+        }
+        allowed.push(remoteJid);
+        db.updateSettings({ allowedGroups: allowed });
+        return sock.sendMessage(
+          remoteJid,
+          { text: "✅ Berhasil! Grup ini telah diizinkan dan bot akan merespons chat di grup ini." },
+          { quoted: msg }
+        );
+      }
+
+      if (action === "del" || action === "remove") {
+        const allowed = [...(currentSettings.allowedGroups || [])];
+        const idx = allowed.indexOf(remoteJid);
+        if (idx === -1) {
+          return sock.sendMessage(
+            remoteJid,
+            { text: "⚠️ Grup ini belum ada di dalam daftar izin." },
+            { quoted: msg }
+          );
+        }
+        allowed.splice(idx, 1);
+        db.updateSettings({ allowedGroups: allowed });
+        return sock.sendMessage(
+          remoteJid,
+          { text: "✅ Berhasil! Izin bot untuk grup ini telah dicabut." },
+          { quoted: msg }
+        );
+      }
+
+      if (action === "list") {
+        const allowed = currentSettings.allowedGroups || [];
+        if (allowed.length === 0) {
+          return sock.sendMessage(
+            remoteJid,
+            { text: "ℹ️ Belum ada grup yang diizinkan." },
+            { quoted: msg }
+          );
+        }
+        let listTxt = `📋 *Daftar Grup yang Diizinkan (${allowed.length})*\n\n`;
+        allowed.forEach((gid, i) => {
+          listTxt += `${i + 1}. \`${gid}\`${gid === remoteJid ? " *(Grup Ini)*" : ""}\n`;
+        });
+        return sock.sendMessage(remoteJid, { text: listTxt.trim() }, { quoted: msg });
+      }
+    },
+  },
 ];

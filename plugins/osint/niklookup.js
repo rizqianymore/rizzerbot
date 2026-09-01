@@ -7,7 +7,8 @@ export default {
   name: "nik",
   aliases: ["cek-nik", "ktp"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, senderName, senderJid, activePrefix } = context;
 

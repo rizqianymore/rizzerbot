@@ -7,7 +7,8 @@ export default {
   example: "maclookup 00:1A:2B:3C:4D:5E",
   aliases: ["mac", "vendorlookup"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;
     await sendTyping();

@@ -7,7 +7,8 @@ export default {
   example: "subdomain target.com",
   aliases: ["subdomains", "findsubdomain"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;
     await sendTyping();

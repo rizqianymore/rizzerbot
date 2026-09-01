@@ -7,7 +7,8 @@ export default {
   example: "dnslookup google.com",
   aliases: ["dns", "dnsinfo"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;
     await sendTyping();

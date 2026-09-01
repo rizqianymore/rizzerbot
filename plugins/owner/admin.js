@@ -130,7 +130,7 @@ export default {
         }
         db.data.settings.admins.push(targetJid);
         db.getUser(targetJid);
-        db.updateUser(targetJid, { registered: true, premium: true });
+        db.updateUser(targetJid, { registered: true, premium: true, admin: true });
         successList.push(targetJid);
       } else if (action === "remove" || action === "del") {
         const index = db.data.settings.admins.indexOf(targetJid);
@@ -139,6 +139,7 @@ export default {
           continue;
         }
         db.data.settings.admins.splice(index, 1);
+        db.updateUser(targetJid, { admin: false });
         successList.push(targetJid);
       }
     }

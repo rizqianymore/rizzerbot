@@ -47,6 +47,7 @@ export default {
       const sPrive = currentSettings.onlyPrivate ? "🟡 *Aktif (Private Saja)*" : "⚪ *Nonaktif*";
       const sSpam = currentSettings.antiSpam !== false ? "🟢 *Aktif (Proteksi Nyala)*" : "🔴 *Nonaktif*";
       const sReg = currentSettings.registrationOpen !== false ? "🟢 *Terbuka*" : "🔴 *Ditutup*";
+      const sLock = currentSettings.groupLock ? `🔴 *Aktif (${(currentSettings.allowedGroups || []).length} Grup Diizinkan)*` : "🟢 *Nonaktif (Semua Grup)*";
 
       const dashboard =
         `🎛️ *Dashboard Operasional Bot*\n\n` +
@@ -54,6 +55,7 @@ export default {
         `├─ 🛠️ *Maintenance:* ${sMaint}\n` +
         `├─ 👥 *Only Group:* ${sGroup}\n` +
         `├─ 🔒 *Only Private:* ${sPrive}\n` +
+        `├─ 🔐 *Group Lock:* ${sLock}\n` +
         `├─ 🛡️ *Anti-Spam Guard:* ${sSpam}\n` +
         `├─ 📝 *Registrasi User:* ${sReg}\n` +
         `├─ ⚡ *Active Prefix:* \`${activeP}\`\n` +
@@ -62,6 +64,10 @@ export default {
         `│ \`${activePrefix}mode self [on/off]\` - Mode khusus Owner\n` +
         `│ \`${activePrefix}mode public\` - Kembalikan ke mode publik normal\n` +
         `│ \`${activePrefix}mode maintenance [on/off]\` - Mode perbaikan sistem\n` +
+        `│ \`${activePrefix}mode grouplock [on/off]\` - Kunci bot hanya ke grup tertentu\n` +
+        `│ \`${activePrefix}mode allowgc [id_gc]\` - Beri izin bot aktif di grup ini/target\n` +
+        `│ \`${activePrefix}mode delgc [id_gc]\` - Cabut izin grup\n` +
+        `│ \`${activePrefix}mode listgc\` - Lihat daftar grup yang diizinkan\n` +
         `│ \`${activePrefix}mode onlygc [on/off]\` - Hanya merespons di grup\n` +
         `│ \`${activePrefix}mode onlypc [on/off]\` - Hanya merespons di private\n` +
         `│ \`${activePrefix}mode antispam [on/off]\` - Toggle rate-limit spam\n` +
@@ -179,6 +185,87 @@ export default {
         },
         { quoted: msg }
       );
+    }
+
+    if (action === "grouplock" || action === "lockgc" || action === "gclock" || action === "lockgroup") {
+      const isEnable = parseToggle(value, currentSettings.groupLock);
+      db.updateSettings({ groupLock: isEnable });
+      return sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text: `✅ *Group Lock Mode:* Berhasil diubah menjadi *${isEnable ? "AKTIF" : "NONAKTIF"}*.\n${
+            isEnable
+              ? "_Bot di grup hanya akan merespons grup yang diizinkan (allowed list). Grup lain akan diabaikan kecuali perintah dari Owner/Admin._"
+              : "_Bot sekarang dapat merespons di seluruh grup seperti semula._"
+          }`,
+        },
+        { quoted: msg }
+      );
+    }
+
+    if (action === "allowgc" || action === "addgc" || action === "delgc" || action === "removelockgc") {
+      let targetGid = args[1] || (msg.key.remoteJid.endsWith("@g.us") ? msg.key.remoteJid : null);
+      if (!targetGid) {
+        return sock.sendMessage(
+          msg.key.remoteJid,
+          { text: `⚠️ Harap masukkan ID grup atau jalankan perintah ini di dalam grup target!\nContoh: \`${activePrefix}mode allowgc\`` },
+          { quoted: msg }
+        );
+      }
+      targetGid = targetGid.replace(/[^0-9@.-]/g, "");
+      if (!targetGid.endsWith("@g.us")) targetGid += "@g.us";
+
+      const allowed = [...(currentSettings.allowedGroups || [])];
+      const isAdd = action === "allowgc" || action === "addgc";
+
+      if (isAdd) {
+        if (allowed.includes(targetGid)) {
+          return sock.sendMessage(
+            msg.key.remoteJid,
+            { text: `ℹ️ Grup \`${targetGid}\` sudah ada di daftar izin (allowed list).` },
+            { quoted: msg }
+          );
+        }
+        allowed.push(targetGid);
+        db.updateSettings({ allowedGroups: allowed });
+        return sock.sendMessage(
+          msg.key.remoteJid,
+          { text: `✅ Berhasil menambahkan grup \`${targetGid}\` ke daftar grup yang diizinkan.` },
+          { quoted: msg }
+        );
+      } else {
+        const idx = allowed.indexOf(targetGid);
+        if (idx === -1) {
+          return sock.sendMessage(
+            msg.key.remoteJid,
+            { text: `⚠️ Grup \`${targetGid}\` tidak ditemukan di daftar izin.` },
+            { quoted: msg }
+          );
+        }
+        allowed.splice(idx, 1);
+        db.updateSettings({ allowedGroups: allowed });
+        return sock.sendMessage(
+          msg.key.remoteJid,
+          { text: `✅ Berhasil menghapus grup \`${targetGid}\` dari daftar grup yang diizinkan.` },
+          { quoted: msg }
+        );
+      }
+    }
+
+    if (action === "listgc" || action === "allowedgc") {
+      const allowed = currentSettings.allowedGroups || [];
+      if (allowed.length === 0) {
+        return sock.sendMessage(
+          msg.key.remoteJid,
+          { text: "ℹ️ Belum ada grup yang ditambahkan ke daftar izin Group Lock." },
+          { quoted: msg }
+        );
+      }
+      let listText = `📋 *Daftar Grup yang Diizinkan (Group Lock)*\nStatus Lock: *${currentSettings.groupLock ? "AKTIF" : "NONAKTIF"}*\n\n`;
+      allowed.forEach((gid, i) => {
+        listText += `${i + 1}. \`${gid}\`\n`;
+      });
+      return sock.sendMessage(msg.key.remoteJid, { text: listText.trim() }, { quoted: msg });
     }
 
     if (action === "prefix") {

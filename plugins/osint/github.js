@@ -7,7 +7,8 @@ export default {
   example: "github octocat",
   aliases: ["gh", "git", "githublookup"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;
 

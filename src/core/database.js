@@ -32,6 +32,8 @@ function createDefaultSchema() {
       onlyPrivate: false,
       antiSpam: true,
       registrationOpen: true,
+      groupLock: false,
+      allowedGroups: [],
       disabledPlugins: [],
       jpmChannels: [],
       jpmBlacklist: [],
@@ -224,6 +226,8 @@ class Database {
           antiSpam: ownerSettings.antiSpam !== false,
           prefix: ownerSettings.prefix || undefined,
           registrationOpen: ownerSettings.registrationOpen !== false,
+          groupLock: ownerSettings.groupLock || false,
+          allowedGroups: ownerSettings.allowedGroups || [],
           disabledPlugins: [],
           jpmChannels: jpmChannels || [],
           jpmBlacklist: jpmBlacklist || [],
@@ -290,6 +294,8 @@ class Database {
         antiSpam: this.data.settings.antiSpam !== false,
         prefix: this.data.settings.prefix || settings.prefix,
         registrationOpen: this.data.settings.registrationOpen !== false,
+        groupLock: this.data.settings.groupLock || false,
+        allowedGroups: this.data.settings.allowedGroups || [],
       };
       this.safeWriteFileSync(
         dbPaths.owner,

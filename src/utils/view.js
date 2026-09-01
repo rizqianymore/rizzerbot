@@ -116,14 +116,12 @@ export function getPremiumMenu(commandsMap = defaultCommandsMap) {
   const dlText = buildDynamicMenuCategory("Downloader", map);
   const mediaText = buildDynamicMenuCategory("Media", map);
   const toolsText = buildDynamicMenuCategory("Tools", map);
-  const osintText = buildDynamicMenuCategory("OSINT", map);
 
   let body = "";
   if (aiText) body += aiText;
   if (dlText) body += dlText;
   if (mediaText) body += mediaText;
   if (toolsText) body += toolsText;
-  if (osintText) body += osintText;
 
   if (body) {
     return `${getHeader("Premium Menu")}\n│\n${body}╰──────────────`.trim();
@@ -152,13 +150,6 @@ ${getHeader("Premium Menu")}
 │ ${activePrefix}qr <teks>
 │ ${activePrefix}ss <url>
 │ ${activePrefix}rvo <balas media sekali lihat>
-│
-├─  *OSINT / Intel*
-│ ${activePrefix}cctvlantas <lokasi/id>
-│ ${activePrefix}github <username>
-│ ${activePrefix}iplookup <ip>
-│ ${activePrefix}whois <domain>
-│ ${activePrefix}numberlookup <nomor>
 ╰──────────────
 `.trim();
 }
@@ -166,13 +157,19 @@ ${getHeader("Premium Menu")}
 export function getOwnerMenu(commandsMap = defaultCommandsMap) {
   const map = commandsMap || defaultCommandsMap;
   const ownerCatText = buildDynamicMenuCategory("Owner", map);
-  if (ownerCatText) {
-    return `${getHeader("Owner Menu")}\n│\n${ownerCatText}╰──────────────`.trim();
+  const osintCatText = buildDynamicMenuCategory("OSINT", map);
+
+  let body = "";
+  if (ownerCatText) body += ownerCatText;
+  if (osintCatText) body += osintCatText;
+
+  if (body) {
+    return `${getHeader("Owner & Admin Menu")}\n│\n${body}╰──────────────`.trim();
   }
 
   const activePrefix = db.data?.settings?.prefix || settings.prefix || ".";
   return `
-${getHeader("Owner Menu")}
+${getHeader("Owner & Admin Menu")}
 │
 ├─  *Owner*
 │ ${activePrefix}mode <self/maint/onlygc/onlypc/antispam>
@@ -183,6 +180,19 @@ ${getHeader("Owner Menu")}
 │ ${activePrefix}cctv <snap/video/list/alias>
 │ ${activePrefix}bot <add/stop/del/list/status>
 │ ${activePrefix}addplugin <nama>
+│
+├─  *OSINT / Intel*
+│ ${activePrefix}cctvlantas <lokasi/id>
+│ ${activePrefix}github <username>
+│ ${activePrefix}iplookup <ip>
+│ ${activePrefix}whois <domain>
+│ ${activePrefix}numberlookup <nomor>
+│ ${activePrefix}cekpajak <nopol>
+│ ${activePrefix}nik <nik>
+│ ${activePrefix}maclookup <mac>
+│ ${activePrefix}portscan <ip/domain>
+│ ${activePrefix}subdomain <domain>
+│ ${activePrefix}dnslookup <domain>
 ╰──────────────
 `.trim();
 }

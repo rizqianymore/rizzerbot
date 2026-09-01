@@ -390,8 +390,8 @@ export default {
   example: "cctvlantas snap semanggi",
   aliases: ["lantas", "cctv-lantas", "cctvjalan", "cctvindonesia", "cctvlive"],
   category: "OSINT",
-  premiumOnly: true,
-  ownerOnly: false,
+  premiumOnly: false,
+  ownerOnly: true,
 
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix } = context;

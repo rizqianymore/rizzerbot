@@ -45,7 +45,8 @@ export default {
   example: "portscan 1.1.1.1",
   aliases: ["checkports", "scanport"],
   category: "OSINT",
-  premiumOnly: true,
+  premiumOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;
     await sendTyping();

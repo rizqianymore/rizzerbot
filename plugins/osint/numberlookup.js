@@ -74,14 +74,14 @@ function getNumberInfo(number) {
 }
 
 export default {
-  premiumOnly: true,
+  premiumOnly: false,
   description: "Memeriksa detail informasi kepemilikan nomor WhatsApp.",
   usage: "<nomor>",
   example: "628xxx",
   name: "numberlookup",
   aliases: ["lookup", "checknum", "ceknomor", "ceknum"],
   category: "OSINT",
-  ownerOnly: false,
+  ownerOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, getTargetJid, senderJid } = context;
     await sendTyping();
