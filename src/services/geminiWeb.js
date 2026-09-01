@@ -3,7 +3,7 @@ import { settings } from "@/config/settings.js";
 
 const GEMINI_URL = "https://gemini.google.com/app";
 const GEMINI_USER_AGENT =
-  "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36";
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
 /**
  * Parse cookie string into key-value pairs
@@ -56,38 +56,7 @@ export function parseStreamResponse(raw) {
 }
 
 /**
- * Parse Bard batchexecute response
- */
-export function parseBatchExecuteResponse(raw) {
-  if (!raw) return "";
-  const lines = raw.split("\n");
-  let lastText = "";
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line === ")]}'" || /^\d+$/.test(line)) continue;
-    try {
-      const arr = JSON.parse(line);
-      if (!Array.isArray(arr) || !Array.isArray(arr[0])) continue;
-      const payload = arr[0]?.[2];
-      if (typeof payload !== "string") continue;
-      const inner = JSON.parse(payload);
-      
-      // Try to find markdown / answer inside nested arrays
-      const candidateArray = inner?.[4]?.[0]?.[1] || inner?.[1]?.[0] || inner?.[0];
-      if (Array.isArray(candidateArray)) {
-        const text = candidateArray.filter((c) => typeof c === "string").join("");
-        if (text) lastText = text;
-      }
-    } catch {
-      // Ignore
-    }
-  }
-  return lastText;
-}
-
-/**
- * Ask Google Gemini Web via direct HTTP batchexecute API or Puppeteer automation fallback
+ * Ask Google Gemini Web via Puppeteer automation
  * @param {string} prompt
  * @param {Object} options
  * @returns {Promise<{ answer: string, model: string }>}
@@ -104,7 +73,6 @@ export async function askGeminiWeb(prompt, options = {}) {
     );
   }
 
-  // 1. Coba lewat Puppeteer untuk akurasi tinggi & handling session Google
   let browser = null;
   try {
     browser = await puppeteer.launch({
@@ -140,23 +108,18 @@ export async function askGeminiWeb(prompt, options = {}) {
     let responseText = "";
     let captured = false;
 
-    const responsePromise = new Promise((resolve) => {
-      page.on("response", async (resp) => {
-        try {
-          const url = resp.url();
-          if (!url.includes("StreamGenerate") && !url.includes("batchexecute")) return;
-          if (captured) return;
-          const raw = await resp.text().catch(() => "");
-          const text = parseStreamResponse(raw) || parseBatchExecuteResponse(raw);
-          if (text) {
-            responseText = text;
-            captured = true;
-            resolve();
-          }
-        } catch (_) {
-          resolve();
+    // Listen only for StreamGenerate (official Gemini chat generator endpoint)
+    page.on("response", async (resp) => {
+      try {
+        const url = resp.url();
+        if (!url.includes("StreamGenerate")) return;
+        const raw = await resp.text().catch(() => "");
+        const text = parseStreamResponse(raw);
+        if (text && text.trim().length > 0) {
+          responseText = text;
+          captured = true;
         }
-      });
+      } catch (_) {}
     });
 
     await page.goto(GEMINI_URL, {
@@ -164,35 +127,41 @@ export async function askGeminiWeb(prompt, options = {}) {
       timeout: 30000,
     });
 
-    const inputSelector = ".ql-editor, [contenteditable='true'], textarea";
+    // Wait for the prompt editor element
+    const inputSelector = ".ql-editor, [contenteditable='true']";
     await page.waitForSelector(inputSelector, { timeout: 15000 });
 
     await page.click(inputSelector);
     await page.keyboard.type(prompt.trim(), { delay: 10 });
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 400));
     await page.keyboard.press("Enter");
 
-    await Promise.race([
-      responsePromise,
-      new Promise((r) => setTimeout(r, 45000)),
-    ]);
+    // Poll until responseText is captured or wait up to 35s
+    const startTime = Date.now();
+    while (Date.now() - startTime < 35000) {
+      if (captured && responseText) break;
 
-    if (!responseText) {
+      // Fallback extract directly from rendered markdown response text in DOM
       try {
-        const fallbackText = await page.evaluate(() => {
-          const modelResponses = document.querySelectorAll(
-            "model-response, .model-response-text, .response-container-content, message-content"
+        const domAnswer = await page.evaluate(() => {
+          const blocks = document.querySelectorAll(
+            ".model-response-text, message-content, .response-container-content, model-response"
           );
-          if (modelResponses.length > 0) {
-            const last = modelResponses[modelResponses.length - 1];
-            return last.innerText || last.textContent || "";
+          if (blocks.length > 0) {
+            const last = blocks[blocks.length - 1];
+            // Filter out system icons / banner texts
+            const text = last.innerText || last.textContent || "";
+            return text.trim();
           }
           return "";
         });
-        if (fallbackText && fallbackText.trim()) {
-          responseText = fallbackText.trim();
+
+        if (domAnswer && domAnswer.length > 2 && !domAnswer.startsWith("Google Calendar")) {
+          responseText = domAnswer;
         }
       } catch (_) {}
+
+      await new Promise((r) => setTimeout(r, 1000));
     }
 
     if (!responseText) {
