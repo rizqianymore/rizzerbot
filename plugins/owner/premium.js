@@ -41,7 +41,6 @@ export default {
   example: "premium add 08123456789 08987654321 30d",
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     const action = args[0]?.toLowerCase();
     if (!action) {

@@ -19,7 +19,6 @@ export default {
   usage: "",
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     await sendTyping();
 

@@ -32,7 +32,6 @@ export default {
   example: "plan add 08123456789 vvip 30d",
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping, activePrefix }) => {
     const action = args[0]?.toLowerCase();
 

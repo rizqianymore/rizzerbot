@@ -9,8 +9,8 @@ export default {
   usage: "[confirm]",
   example: "resetdb confirm",
   category: "Owner",
+  superOwnerOnly: true,
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { isSuperOwner, senderJid, sendTyping }) => {
     if (!isSuperOwner) {
       await sock.sendMessage(

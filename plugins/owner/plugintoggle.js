@@ -9,7 +9,6 @@ export default {
   example: "plugintoggle disable tiktok",
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping, activePrefix }) => {
     const action = args[0]?.toLowerCase();
     const pluginTarget = args[1]?.toLowerCase();

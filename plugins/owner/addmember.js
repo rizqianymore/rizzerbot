@@ -6,8 +6,7 @@ export default {
   description: "Menambahkan nomor baru ke dalam grup.",
   usage: "<nomor hp>",
   category: "Owner",
-  ownerOnly: false,
-  premiumOnly: true,
+  groupOnly: true,
   run: async (sock, msg, args, { isOwner, senderJid, sendUsage }) => {
     const remoteJid = msg.key.remoteJid;
     if (!remoteJid.endsWith("@g.us")) {

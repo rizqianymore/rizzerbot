@@ -9,7 +9,6 @@ export default {
   aliases: ["botmode", "self", "public", "maintenance", "onlygc", "onlypc", "setprefix"],
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, commandName } = context;
     await sendTyping();

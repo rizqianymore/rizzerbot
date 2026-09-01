@@ -7,7 +7,6 @@ export default {
   aliases: [],
   category: "Owner",
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, { sendTyping }) => {
     await sendTyping();
     const { commands } = await import("@/src/core/loader.js");

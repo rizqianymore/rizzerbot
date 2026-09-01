@@ -10,8 +10,8 @@ export default {
   usage: "<kode js>",
   example: "> db.data.settings",
   category: "Owner",
+  superOwnerOnly: true,
   ownerOnly: true,
-  premiumOnly: true,
   run: async (sock, msg, args, context) => {
     const { isSuperOwner, sendTyping } = context;
 
