@@ -6,7 +6,7 @@ export default {
   example: "8.8.8.8",
   name: "iplookup",
   aliases: ["ip", "ipcheck", "ipinfo"],
-  category: "Tools",
+  category: "OSINT",
   premiumOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, activePrefix, senderName } = context;

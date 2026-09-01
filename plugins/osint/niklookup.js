@@ -6,8 +6,7 @@ export default {
   example: "3275012345678901",
   name: "nik",
   aliases: ["cek-nik", "ktp"],
-  category: "Tools",
-  ownerOnly: false,
+  category: "OSINT",
   premiumOnly: true,
   run: async (sock, msg, args, context) => {
     const { sendTyping, senderName, senderJid, activePrefix } = context;
