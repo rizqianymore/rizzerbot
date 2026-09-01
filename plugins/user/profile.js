@@ -50,9 +50,9 @@ export default {
       `│ 🛡️ *Terdaftar:* ${profile.registered ? "✅ Ya" : "❌ Belum"}\n` +
       `╰──────────────\n\n` +
       `💡 *Info Tier:*\n` +
-      `• *Free:* Basic Features & Qwen AI\n` +
-      `• *VIP:* Downloader, OSINT, Gemini Web & DDG AI\n` +
-      `• *VVIP:* Akses Semua Fitur + Full xAI Grok Web`;
+      `• *Free:* Basic Commands & Qwen 80B AI\n` +
+      `• *VIP / Premium:* Media Downloader, OSINT, & DDG Multi-Model AI\n` +
+      `• *VVIP / Platinum:* Full Priority, Google Gemini Web & Ultra AI Engine`;
 
     await sock.sendMessage(
       msg.key.remoteJid,

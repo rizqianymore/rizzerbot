@@ -48,8 +48,8 @@ export default {
             `│ \`${activePrefix}plan list\`\n` +
             `│ \`${activePrefix}plan check <nomor/tag>\`\n\n` +
             `*Tier Tersedia:*\n` +
-            `• *VIP / Premium* (Downloader, OSINT, Gemini, DDG)\n` +
-            `• *VVIP / Platinum* (Semua fitur VIP + Full Grok Web AI)\n\n` +
+            `• *VIP / Premium* (Downloader, OSINT, DDG AI)\n` +
+            `• *VVIP / Platinum* (Semua fitur VIP + Full Gemini AI & Priority Engine)\n\n` +
             `*Contoh:* \`${activePrefix}plan add 08123456789 vvip 30d\``,
         },
         { quoted: msg }
