@@ -1,10 +1,9 @@
 import puppeteer from "puppeteer";
-import crypto from "node:crypto";
 import { settings } from "@/config/settings.js";
 
-const GROK_NEW_CONVERSATION_API = "https://grok.com/rest/app-chat/conversations/new";
+const GROK_URL = "https://grok.com/";
 const GROK_USER_AGENT =
-  "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
 function parseCookies(raw) {
   if (!raw) return [];
@@ -106,7 +105,7 @@ export async function askGrokWeb(prompt, options = {}) {
     let responseText = "";
     let captured = false;
 
-    // Listen to network responses from Grok endpoints (conversations, load-responses)
+    // Listen to network responses from Grok streaming endpoint
     page.on("response", async (resp) => {
       try {
         const url = resp.url();
@@ -121,7 +120,6 @@ export async function askGrokWeb(prompt, options = {}) {
         const raw = await resp.text().catch(() => "");
         if (!raw) return;
 
-        // Cek format load-responses JSON
         if (url.includes("/load-responses")) {
           try {
             const json = JSON.parse(raw);
@@ -134,7 +132,6 @@ export async function askGrokWeb(prompt, options = {}) {
           } catch (_) {}
         }
 
-        // Cek format NDJSON Stream
         const text = parseGrokStream(raw);
         if (text && text.trim().length > 0) {
           responseText = text;
@@ -143,87 +140,55 @@ export async function askGrokWeb(prompt, options = {}) {
       } catch (_) {}
     });
 
-    await page.goto("https://grok.com/", {
+    await page.goto(GROK_URL, {
       waitUntil: "domcontentloaded",
       timeout: 30000,
     });
 
-    // Execute direct Grok new conversation request through page evaluate to inherit exact headers & cookies
-    const evalResult = await page.evaluate(async (url, userPrompt) => {
-      try {
-        const payload = {
-          temporary: true,
-          modeId: "fast",
-          message: userPrompt,
-          fileAttachments: [],
-          imageAttachments: [],
-          disableSearch: false,
-          enableImageGeneration: false,
-          returnImageBytes: false,
-          returnRawGrokInXaiRequest: false,
-          enableImageStreaming: false,
-          imageGenerationCount: 0,
-          forceConcise: false,
-          toolOverrides: {},
-          enableSideBySide: true,
-          sendFinalMetadata: true,
-          isReasoning: false,
-          disableTextFollowUps: false,
-          disableMemory: true,
-          forceSideBySide: false,
-          isAsyncChat: false,
-          disableSelfHarmShortCircuit: false,
-          deviceEnvInfo: {
-            darkModeEnabled: false,
-            devicePixelRatio: 2,
-            screenWidth: 1920,
-            screenHeight: 1080,
-            viewportWidth: 1920,
-            viewportHeight: 1080,
-          },
-        };
+    // Wait and find active chat input element
+    const inputSelector = "textarea, [contenteditable='true'], .ProseMirror, input[type='text']";
+    await page.waitForSelector(inputSelector, { timeout: 20000 });
 
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "*/*",
-            "x-xai-request-id": crypto.randomUUID(),
-          },
-          body: JSON.stringify(payload),
+    await page.click(inputSelector);
+    await page.keyboard.type(prompt.trim(), { delay: 10 });
+    await new Promise((r) => setTimeout(r, 400));
+    await page.keyboard.press("Enter");
+
+    // Wait up to 35s for response
+    const startTime = Date.now();
+    while (Date.now() - startTime < 35000) {
+      if (captured && responseText) break;
+
+      // Extract from DOM if available
+      try {
+        const domAnswer = await page.evaluate(() => {
+          const blocks = document.querySelectorAll(
+            ".response-message, .message-bubble, [data-testid='message-text'], .prose, .markdown"
+          );
+          if (blocks.length > 0) {
+            const last = blocks[blocks.length - 1];
+            return (last.innerText || last.textContent || "").trim();
+          }
+          return "";
         });
 
-        const text = await res.text();
-        return { status: res.status, text };
-      } catch (err) {
-        return { error: err.message };
-      }
-    }, GROK_NEW_CONVERSATION_API, prompt.trim());
+        if (domAnswer && domAnswer.length > 2) {
+          responseText = domAnswer;
+        }
+      } catch (_) {}
 
-    if (evalResult && evalResult.text) {
-      const parsedStream = parseGrokStream(evalResult.text);
-      if (parsedStream) {
-        responseText = parsedStream;
-        captured = true;
-      }
-    }
-
-    // Wait up to 30s for responseText
-    const startTime = Date.now();
-    while (Date.now() - startTime < 30000) {
-      if (captured && responseText) break;
       await new Promise((r) => setTimeout(r, 1000));
     }
 
     if (!responseText) {
       throw new Error(
-        `Grok response kosong (Status: ${evalResult?.status || "Unknown"}). Pastikan cookie sso/sso-rw aktif.`
+        "Tidak ada respon dari Grok Web. Pastikan cookie sso/sso-rw aktif atau coba refresh sesi di grok.com."
       );
     }
 
     return {
       status: true,
-      model: "xAI Grok-3",
+      model: "xAI Grok",
       answer: responseText.trim(),
     };
   } finally {
