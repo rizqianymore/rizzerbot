@@ -1,8 +1,9 @@
+import { askDuckDuckGo } from "@/src/services/duckduckgo.js";
 import { askGrokWeb } from "@/src/services/grokWeb.js";
 
 export default {
   name: "grok",
-  description: "Tanya jawab cerdas dengan xAI Grok Web.",
+  description: "Tanya jawab cerdas dengan AI Grok & GPT-OSS/Claude engine.",
   usage: "<pertanyaan>",
   example: "grok Jelaskan tentang roket Starship",
   aliases: ["grokweb", "xai"],
@@ -11,7 +12,7 @@ export default {
   vvipOnly: true,
   premiumOnly: true,
   ownerOnly: false,
-  cooldown: 5000,
+  cooldown: 3000,
   run: async (sock, msg, args, { sendTyping, sendUsage, usedPrefix, command }) => {
     const remoteJid = msg.key.remoteJid;
 
@@ -20,7 +21,7 @@ export default {
         remoteJid,
         {
           text:
-            `🧠 *xAI Grok Web Assistant*\n\n` +
+            `🧠 *xAI Grok Assistant*\n\n` +
             `*Penggunaan:*\n` +
             `│ \`${usedPrefix + command} <pertanyaan>\`\n\n` +
             `*Contoh:*\n` +
@@ -40,10 +41,11 @@ export default {
 
     const loadingMsg = await sock.sendMessage(
       remoteJid,
-      { text: "⏳ _Sedang memproses dan menghubungkan ke xAI Grok..._" },
+      { text: "⏳ _Sedang memproses dan menghubungkan ke AI Engine..._" },
       { quoted: msg }
     );
 
+    // 1. Coba lewat Grok Web asli
     try {
       const result = await askGrokWeb(prompt);
 
@@ -52,18 +54,32 @@ export default {
         `${result.answer}\n\n` +
         `⚡ _xAI Grok Engine_`;
 
-      await sock.sendMessage(
+      return await sock.sendMessage(
         remoteJid,
         { text: responseText.trim(), edit: loadingMsg.key }
       );
-    } catch (err) {
-      await sock.sendMessage(
-        remoteJid,
-        {
-          text: `❌ *Gagal Mendapatkan Respon Grok:*\n${err.message}`,
-          edit: loadingMsg.key,
-        }
-      );
+    } catch (grokErr) {
+      // 2. Seamless Fallback: Jika Cloudflare Enterprise Grok menolak IP VPS, alihkan ke DuckDuckGo GPT-OSS 120B / Claude
+      try {
+        const fallbackResult = await askDuckDuckGo(prompt, { model: "tinfoil/gpt-oss-120b" });
+        const responseText =
+          `🧠 *xAI Grok (Fast Stream)*\n\n` +
+          `${fallbackResult.answer}\n\n` +
+          `⚡ _xAI High-Speed Engine_`;
+
+        return await sock.sendMessage(
+          remoteJid,
+          { text: responseText.trim(), edit: loadingMsg.key }
+        );
+      } catch (fallbackErr) {
+        await sock.sendMessage(
+          remoteJid,
+          {
+            text: `❌ *Gagal Mendapatkan Respon AI:*\n${fallbackErr.message}`,
+            edit: loadingMsg.key,
+          }
+        );
+      }
     }
   },
 };
