@@ -1,11 +1,9 @@
 import puppeteer from "puppeteer";
-import crypto from "node:crypto";
 import { settings } from "@/config/settings.js";
 
 const GROK_URL = "https://grok.com/";
-const GROK_CHAT_API = "https://grok.com/rest/app-chat/conversations/new";
 const GROK_USER_AGENT =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
 /**
  * Parse cookie string into key-value pairs
@@ -89,6 +87,11 @@ export async function askGrokWeb(prompt, options = {}) {
     const page = await browser.newPage();
     await page.setUserAgent(GROK_USER_AGENT);
 
+    // Bypass webdriver detection
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, "webdriver", { get: () => undefined });
+    });
+
     if (cookieStr) {
       const parsed = parseCookies(cookieStr);
       const cookiesToSet = parsed.map((c) => ({
@@ -123,38 +126,41 @@ export async function askGrokWeb(prompt, options = {}) {
 
     await page.goto(GROK_URL, {
       waitUntil: "domcontentloaded",
-      timeout: 30000,
+      timeout: 35000,
     });
 
+    await new Promise((r) => setTimeout(r, 2000));
+
     // Wait for input textarea/contenteditable on grok.com
-    const inputSelector = "textarea, [contenteditable='true'], input[type='text']";
-    await page.waitForSelector(inputSelector, { timeout: 15000 });
+    const inputSelector = "textarea, [contenteditable='true'], input[type='text'], .ProseMirror";
+    await page.waitForSelector(inputSelector, { timeout: 20000 });
 
     await page.click(inputSelector);
     await page.keyboard.type(prompt.trim(), { delay: 10 });
     await new Promise((r) => setTimeout(r, 400));
     await page.keyboard.press("Enter");
 
-    // Wait for response up to 40s
+    // Wait for response up to 45s
     const startTime = Date.now();
-    while (Date.now() - startTime < 40000) {
+    while (Date.now() - startTime < 45000) {
       if (captured && responseText) break;
 
       // Fallback: ambil text dari bubble message DOM jika network stream tertutup
       try {
         const domAnswer = await page.evaluate(() => {
-          const bubbles = document.querySelectorAll(
-            ".message-bubble, .response-message, [data-testid='message-text'], .prose"
+          const blocks = document.querySelectorAll(
+            ".message-bubble, .response-message, [data-testid='message-text'], .prose, .markdown"
           );
-          if (bubbles.length > 0) {
-            const last = bubbles[bubbles.length - 1];
-            return last.innerText || last.textContent || "";
+          if (blocks.length > 0) {
+            const last = blocks[blocks.length - 1];
+            const text = last.innerText || last.textContent || "";
+            return text.trim();
           }
           return "";
         });
 
-        if (domAnswer && domAnswer.trim().length > 3) {
-          responseText = domAnswer.trim();
+        if (domAnswer && domAnswer.length > 3) {
+          responseText = domAnswer;
         }
       } catch (_) {}
 
@@ -163,7 +169,7 @@ export async function askGrokWeb(prompt, options = {}) {
 
     if (!responseText) {
       throw new Error(
-        "Tidak ada respon dari Grok Web. Jika diperlukan login/subscription, masukkan cookie SSO Grok (sso / sso-rw) di config/settings.js (grokCookie)."
+        "Tidak ada respon dari Grok Web. Pastikan cookie Grok (sso, sso-rw, cf_clearance) masih fresh dan valid."
       );
     }
 
