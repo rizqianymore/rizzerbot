@@ -63,7 +63,7 @@ export function parseGrokStream(raw) {
 }
 
 /**
- * Tanya jawab cerdas dengan Grok AI via Grok Web API (Direct fetch with cookies & fallback to browser page)
+ * Tanya jawab cerdas dengan Grok AI via Grok Web.
  * @param {string} prompt
  * @param {Object} options
  * @returns {Promise<{ answer: string, model: string }>}
@@ -80,7 +80,6 @@ export async function askGrokWeb(prompt, options = {}) {
 
   const modeId = options.model || "fast";
 
-  // Build OmniRoute compliant request payload
   const grokPayload = {
     temporary: true,
     modeId,
@@ -116,51 +115,6 @@ export async function askGrokWeb(prompt, options = {}) {
   const traceId = randomHex(16);
   const spanId = randomHex(8);
 
-  const headers = {
-    Accept: "*/*",
-    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
-    "Cache-Control": "no-cache",
-    "Content-Type": "application/json",
-    Origin: "https://grok.com",
-    Pragma: "no-cache",
-    Referer: "https://grok.com/",
-    "Sec-Ch-Ua": '"Google Chrome";v="133", "Chromium";v="133", "Not?A_Brand";v="24"',
-    "Sec-Ch-Ua-Mobile": "?0",
-    "Sec-Ch-Ua-Platform": '"Linux"',
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-    "User-Agent": GROK_USER_AGENT,
-    "x-statsig-id": generateStatsigId(),
-    "x-xai-request-id": crypto.randomUUID(),
-    traceparent: `00-${traceId}-${spanId}-00`,
-    Cookie: cookieStr,
-  };
-
-  // 1. First attempt: Direct HTTP POST fetch with valid SSO & Cloudflare cookies
-  try {
-    const response = await fetch(GROK_CHAT_API, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(grokPayload),
-    });
-
-    if (response.ok) {
-      const rawText = await response.text();
-      const parsedAnswer = parseGrokStream(rawText);
-      if (parsedAnswer) {
-        return {
-          status: true,
-          model: "Grok Web AI",
-          answer: parsedAnswer,
-        };
-      }
-    }
-  } catch (_) {
-    // Fallthrough to Puppeteer on error
-  }
-
-  // 2. Second attempt: Run fetch within Puppeteer context to inherit full browser TLS & Cloudflare state
   let browser = null;
   try {
     browser = await puppeteer.launch({
@@ -173,17 +127,23 @@ export async function askGrokWeb(prompt, options = {}) {
         "--no-first-run",
         "--no-zygote",
         "--disable-gpu",
+        "--window-size=1920,1080",
       ],
     });
 
     const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(GROK_USER_AGENT);
 
     await page.evaluateOnNewDocument(() => {
+      // Stealth overrides
       Object.defineProperty(navigator, "webdriver", { get: () => undefined });
+      window.chrome = { runtime: {} };
+      Object.defineProperty(navigator, "languages", { get: () => ["en-US", "en", "id"] });
+      Object.defineProperty(navigator, "plugins", { get: () => [1, 2, 3, 4, 5] });
     });
 
-    // Set cookies into page context
+    // Parse and set existing user cookies
     const parsedCookies = cookieStr
       .split(";")
       .map((p) => p.trim())
@@ -206,23 +166,29 @@ export async function askGrokWeb(prompt, options = {}) {
       await page.setCookie(...parsedCookies);
     }
 
+    // Warm up page & let Cloudflare produce/refresh clearance tokens on VPS IP
     await page.goto("https://grok.com/", {
-      waitUntil: "domcontentloaded",
-      timeout: 30000,
+      waitUntil: "networkidle2",
+      timeout: 35000,
+    }).catch(async () => {
+      // If networkidle2 times out, wait for domcontentloaded
+      await page.goto("https://grok.com/", { waitUntil: "domcontentloaded", timeout: 20000 }).catch(() => {});
     });
 
-    // Evaluate fetch from inside the browser context
-    const resultJson = await page.evaluate(
-      async (apiUrl, payload, reqHeaders) => {
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // Request Grok API from inside live page session
+    const responsePayload = await page.evaluate(
+      async (apiUrl, payload, statsigId, xaiReqId, traceparent) => {
         try {
           const res = await fetch(apiUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Accept: "*/*",
-              "x-statsig-id": reqHeaders["x-statsig-id"],
-              "x-xai-request-id": reqHeaders["x-xai-request-id"],
-              traceparent: reqHeaders["traceparent"],
+              "x-statsig-id": statsigId,
+              "x-xai-request-id": xaiReqId,
+              traceparent: traceparent,
             },
             body: JSON.stringify(payload),
           });
@@ -234,11 +200,13 @@ export async function askGrokWeb(prompt, options = {}) {
       },
       GROK_CHAT_API,
       grokPayload,
-      headers
+      generateStatsigId(),
+      crypto.randomUUID(),
+      `00-${traceId}-${spanId}-00`
     );
 
-    if (resultJson && resultJson.text) {
-      const parsedText = parseGrokStream(resultJson.text);
+    if (responsePayload && responsePayload.text) {
+      const parsedText = parseGrokStream(responsePayload.text);
       if (parsedText) {
         return {
           status: true,
@@ -248,8 +216,14 @@ export async function askGrokWeb(prompt, options = {}) {
       }
     }
 
+    if (responsePayload?.status === 403) {
+      throw new Error(
+        "Grok Cloudflare Enterprise memblokir IP VPS (403 Forbidden). Token cf_clearance dari browser lokal tidak cocok dengan IP egress VPS."
+      );
+    }
+
     throw new Error(
-      `Grok Web API mengembalikan status: ${resultJson?.status || "Unknown"}. Pastikan cookie sso/sso-rw/cf_clearance tidak expired.`
+      `Grok Web API mengembalikan status ${responsePayload?.status || "Unknown"}. Response: ${(responsePayload?.text || "").slice(0, 150)}`
     );
   } finally {
     if (browser) {
