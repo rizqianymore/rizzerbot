@@ -23,6 +23,11 @@ import {
 } from "@/src/core/secondary.js";
 import { db } from "@/src/core/database.js";
 import { deleteFolderRecursive, cleanNumber } from "@/src/utils/helper.js";
+import {
+  startAutonomousWatchdog,
+  recordSocketHeartbeat,
+  sendRecoveryReport,
+} from "@/src/core/watchdog.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -202,11 +207,16 @@ export async function startBot() {
       }
     } else if (connection === "open") {
       logger.info("Primary Kyros-MD successfully connected and is now online!");
+      recordSocketHeartbeat();
+      startAutonomousWatchdog(() => primarySock, logger);
+      sendRecoveryReport(sock, logger).catch(() => {});
     }
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
+
+    recordSocketHeartbeat();
 
     for (const msg of messages) {
       try {
