@@ -44,7 +44,7 @@ export default {
 
     const localMembers = getLocalJkt48Members();
 
-    
+    // 1. Prioritas pencarian: nama persis, nama panggilan persis, atau code persis
     let match = localMembers.find(
       (m) =>
         m.name?.toLowerCase() === query.toLowerCase() ||
@@ -52,7 +52,7 @@ export default {
         m.code?.toLowerCase() === query.toLowerCase()
     );
 
-    
+    // 2. Jika tidak ada persis, cari yang mengandung kata kunci query
     if (!match) {
       match = localMembers.find(
         (m) =>

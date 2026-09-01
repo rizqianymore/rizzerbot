@@ -35,7 +35,7 @@ export default {
     let mode = "title";
     let text = "";
 
-    
+    // Deteksi mode dari alias langsung (contoh: .capitalize teks, .titlecase teks, .upper teks)
     if (["capitalize", "titlecase"].includes(commandName)) {
       mode = "title";
       text = args.join(" ").trim() || quotedText || "";
@@ -49,7 +49,7 @@ export default {
       mode = "lower";
       text = args.join(" ").trim() || quotedText || "";
     } else {
-      
+      // Dipanggil via .case [mode] [teks]
       const firstArg = args[0]?.toLowerCase();
       const validModes = ["title", "capitalize", "sentence", "upper", "lower", "camel"];
 

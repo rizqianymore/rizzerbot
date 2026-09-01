@@ -221,7 +221,7 @@ export default [
         const targetWorkerUrl = `${workerBase}?${params.toString()}`;
 
         // 3. Capture with Microlink Screenshot API
-        const microUrl = `https:
+        const microUrl = `https://api.microlink.io?url=${encodeURIComponent(
           targetWorkerUrl
         )}&screenshot=true&embed=screenshot.url&waitForTimeout=2500`;
 

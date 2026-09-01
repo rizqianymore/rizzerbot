@@ -24,7 +24,7 @@ export default {
       );
     }
 
-    
+    // Clean protocol and paths if user paste full URL
     domain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
 
     try {

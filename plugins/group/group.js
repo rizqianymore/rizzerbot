@@ -298,7 +298,7 @@ export default [
       await sendTyping();
       try {
         const inviteCode = await sock.groupInviteCode(remoteJid);
-        const link = `https:
+        const link = `https://chat.whatsapp.com/${inviteCode}`;
         await sock.sendMessage(
           remoteJid,
           { text: `🔗 *Link Undangan Grup*\n\n${link}` },
@@ -337,7 +337,7 @@ export default [
       await sendTyping();
       try {
         const newCode = await sock.groupRevokeInvite(remoteJid);
-        const link = `https:
+        const link = `https://chat.whatsapp.com/${newCode}`;
         await sock.sendMessage(
           remoteJid,
           { text: `✅ Berhasil mereset link undangan grup!\n\n🔗 *Link Baru:* ${link}` },

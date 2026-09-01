@@ -1,6 +1,6 @@
-
+// Database Prefix Indonesia (Sesuaikan/Expand sesuai kebutuhan)
 const PREFIX_DB = {
-  
+  // Telkomsel
   811: { carrier: "Telkomsel", type: "Postpaid", city: "Jakarta/General" },
   812: { carrier: "Telkomsel", type: "Prepaid", city: "Jakarta/General" },
   813: { carrier: "Telkomsel", type: "Prepaid", city: "Jawa/Sumatera" },
@@ -15,7 +15,7 @@ const PREFIX_DB = {
   852: { carrier: "Telkomsel", type: "Prepaid", city: "Jawa/Sumatera" },
   853: { carrier: "Telkomsel", type: "Prepaid", city: "Jawa Tengah/DIY" },
 
-  
+  // Indosat
   814: { carrier: "Indosat Ooredoo", type: "Postpaid", city: "General" },
   815: { carrier: "Indosat Ooredoo", type: "Prepaid", city: "Jakarta/Jawa" },
   816: { carrier: "Indosat Ooredoo", type: "Prepaid", city: "Jawa/Sumatera" },
@@ -24,7 +24,7 @@ const PREFIX_DB = {
   857: { carrier: "Indosat Ooredoo", type: "Prepaid", city: "Jawa/Sumatera" },
   858: { carrier: "Indosat Ooredoo", type: "Prepaid", city: "Jawa/Sumatera" },
 
-  
+  // XL Axiata
   817: { carrier: "XL Axiata", type: "Prepaid", city: "Jakarta/Jawa" },
   818: { carrier: "XL Axiata", type: "Prepaid", city: "Jawa/Sumatera" },
   819: { carrier: "XL Axiata", type: "Prepaid", city: "Luar Jawa" },
@@ -32,7 +32,7 @@ const PREFIX_DB = {
   877: { carrier: "XL Axiata", type: "Prepaid", city: "Jawa/Sumatera" },
   878: { carrier: "XL Axiata", type: "Prepaid", city: "Jawa/Sumatera" },
 
-  
+  // Smartfren
   881: { carrier: "Smartfren", type: "Prepaid", city: "General" },
   882: { carrier: "Smartfren", type: "Prepaid", city: "General" },
   883: { carrier: "Smartfren", type: "Prepaid", city: "General" },
@@ -43,13 +43,13 @@ const PREFIX_DB = {
   888: { carrier: "Smartfren", type: "Prepaid", city: "General" },
   889: { carrier: "Smartfren", type: "Prepaid", city: "General" },
 
-  
+  // Axis
   831: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
   832: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
   833: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
   838: { carrier: "Axis (XL Axiata)", type: "Prepaid", city: "General" },
 
-  
+  // Three (3)
   895: { carrier: "Three (3)", type: "Prepaid", city: "General" },
   896: { carrier: "Three (3)", type: "Prepaid", city: "General" },
   897: { carrier: "Three (3)", type: "Prepaid", city: "General" },
@@ -62,7 +62,7 @@ function getNumberInfo(number) {
   const prefix3 = clean.substring(0, 3);
   const prefix4 = clean.substring(0, 4);
 
-  
+  // Cek prefix 4 digit dulu (lebih spesifik), fallback ke 3 digit
   return (
     PREFIX_DB[prefix4] ||
     PREFIX_DB[prefix3] || {
@@ -103,7 +103,7 @@ export default {
     let cleanNum = targetJid.split("@")[0];
 
     try {
-      
+      // --- LOGIC CARRIER/CITY/LINE TYPE ---
       const numInfo = getNumberInfo(cleanNum);
 
       let resolvedJid = targetJid;
