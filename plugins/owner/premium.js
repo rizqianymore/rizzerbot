@@ -6,15 +6,27 @@ async function validateWhatsAppNumbers(sock, jids) {
   const invalid = [];
 
   for (const jid of jids) {
+    const cleanJid = db.normalizeJid(jid);
+    // Jika JID berformat LID (@lid) atau JID grup / sudah ada di DB user
+    if (cleanJid.endsWith("@lid") || cleanJid.endsWith("@g.us") || db.data.users[cleanJid]) {
+      valid.push(cleanJid);
+      continue;
+    }
+
     try {
-      const check = await sock.onWhatsApp(jid);
+      const check = await sock.onWhatsApp(cleanJid);
       if (check && check.length > 0 && check[0].exists) {
-        valid.push(db.normalizeJid(check[0].jid || jid));
+        valid.push(db.normalizeJid(check[0].jid || cleanJid));
       } else {
-        invalid.push(jid);
+        // Fallback: jika check tidak menemukan atau onWhatsApp mengembalikan empty, tapi format jid valid
+        if (cleanJid.includes("@s.whatsapp.net")) {
+          valid.push(cleanJid);
+        } else {
+          invalid.push(cleanJid);
+        }
       }
     } catch (_) {
-      valid.push(jid);
+      valid.push(cleanJid);
     }
   }
 
