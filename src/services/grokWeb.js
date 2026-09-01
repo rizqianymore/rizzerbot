@@ -14,17 +14,14 @@ function parseCookies(raw) {
     .map((part) => {
       const eqIdx = part.indexOf("=");
       if (eqIdx === -1) return null;
-      const name = part.substring(0, eqIdx).trim();
-      const value = part.substring(eqIdx + 1).trim();
-      if (!name || !value) return null;
-      return { name, value };
+      return {
+        name: part.substring(0, eqIdx).trim(),
+        value: part.substring(eqIdx + 1).trim(),
+      };
     })
     .filter(Boolean);
 }
 
-/**
- * Parse Grok NDJSON stream response
- */
 export function parseGrokStream(raw) {
   if (!raw) return "";
   const lines = raw.split("\n");
@@ -52,7 +49,7 @@ export function parseGrokStream(raw) {
 }
 
 /**
- * Tanya jawab cerdas dengan xAI Grok Web.
+ * Tanya jawab cerdas dengan Grok AI via Grok Web.
  * @param {string} prompt
  * @param {Object} options
  * @returns {Promise<{ answer: string, model: string }>}
@@ -79,10 +76,12 @@ export async function askGrokWeb(prompt, options = {}) {
         "--no-first-run",
         "--no-zygote",
         "--disable-gpu",
+        "--window-size=1920,1080",
       ],
     });
 
     const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(GROK_USER_AGENT);
 
     await page.evaluateOnNewDocument(() => {
@@ -105,7 +104,6 @@ export async function askGrokWeb(prompt, options = {}) {
     let responseText = "";
     let captured = false;
 
-    // Listen to network responses from Grok streaming endpoint
     page.on("response", async (resp) => {
       try {
         const url = resp.url();
@@ -145,25 +143,48 @@ export async function askGrokWeb(prompt, options = {}) {
       timeout: 30000,
     });
 
-    // Wait and find active chat input element
-    const inputSelector = "textarea, [contenteditable='true'], .ProseMirror, input[type='text']";
-    await page.waitForSelector(inputSelector, { timeout: 20000 });
+    // Tunggu halaman siap dan deteksi elemen input secara dinamis
+    await new Promise((r) => setTimeout(r, 2000));
 
-    await page.click(inputSelector);
-    await page.keyboard.type(prompt.trim(), { delay: 10 });
+    const inputFound = await page.evaluate(() => {
+      const el =
+        document.querySelector("textarea") ||
+        document.querySelector("[contenteditable='true']") ||
+        document.querySelector(".ProseMirror") ||
+        document.querySelector("input[type='text']");
+      if (el) {
+        el.focus();
+        return true;
+      }
+      return false;
+    });
+
+    if (!inputFound) {
+      // Coba klik tombol new chat jika ada
+      await page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll("button, a"));
+        const newChat = buttons.find(
+          (b) => b.textContent.includes("Chat") || b.textContent.includes("New")
+        );
+        if (newChat) newChat.click();
+      });
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    // Ketik pesan ke keyboard aktif
+    await page.keyboard.type(prompt.trim(), { delay: 15 });
     await new Promise((r) => setTimeout(r, 400));
     await page.keyboard.press("Enter");
 
-    // Wait up to 35s for response
+    // Tunggu respons selama 35 detik
     const startTime = Date.now();
     while (Date.now() - startTime < 35000) {
       if (captured && responseText) break;
 
-      // Extract from DOM if available
       try {
         const domAnswer = await page.evaluate(() => {
           const blocks = document.querySelectorAll(
-            ".response-message, .message-bubble, [data-testid='message-text'], .prose, .markdown"
+            ".response-message, .message-bubble, [data-testid='message-text'], .prose, .markdown, model-response"
           );
           if (blocks.length > 0) {
             const last = blocks[blocks.length - 1];
@@ -182,7 +203,7 @@ export async function askGrokWeb(prompt, options = {}) {
 
     if (!responseText) {
       throw new Error(
-        "Tidak ada respon dari Grok Web. Pastikan cookie sso/sso-rw aktif atau coba refresh sesi di grok.com."
+        "Tidak ada respon dari Grok Web. Halaman mungkin menampilkan Cloudflare challenge pada IP server."
       );
     }
 
