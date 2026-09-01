@@ -36,6 +36,12 @@ export default {
 
     await sendTyping();
 
+    const loadingMsg = await sock.sendMessage(
+      remoteJid,
+      { text: "✨ _Sedang memproses pertanyaan dengan Google Gemini..._" },
+      { quoted: msg }
+    );
+
     try {
       const result = await askGeminiWeb(prompt);
 
@@ -46,16 +52,15 @@ export default {
 
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
-        { quoted: msg }
+        { text: responseText.trim(), edit: loadingMsg.key }
       );
     } catch (err) {
       await sock.sendMessage(
         remoteJid,
         {
           text: `❌ *Gagal Mendapatkan Respon Gemini:*\n${err.message}`,
-        },
-        { quoted: msg }
+          edit: loadingMsg.key,
+        }
       );
     }
   },
