@@ -7,15 +7,12 @@ export const settings = {
     watchdogNumber: "62811111111",
     usePairingCode: true,
 
-
     public: true,
     prefix: ".",
-
 
     autoRead: false,
     autoOnline: false,
     cooldownTime: 3000,
-
 
     stickerPackName: "Kyros-MD Stickers",
     stickerAuthor: "Pentagon",
@@ -27,12 +24,10 @@ export const settings = {
     newsletterJid: "120363202796245235@newsletter",
     newsletterName: "𝐊𝐲𝐫𝐨𝐬-𝐌𝐃 Updates",
 
-
     danaNumber: "[Masukkan Nomor Dana]",
     gopayNumber: "[Masukkan Nomor Gopay]",
     ovoNumber: "[Masukkan Nomor OVO]",
     saweriaUrl: "https://saweria.co/example",
-
 
     rizzQuotes: [
         "Are you a keyboard? Because you're just my type.",

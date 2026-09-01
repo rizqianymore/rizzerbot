@@ -39,7 +39,7 @@ async function getEmojiBase64(emoji) {
 
   const urls = [
     `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${codePoints}.png`,
-    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@main/assets/72x72/${codePoints}.png`,
+    `https:
   ];
 
   if (codePoints.endsWith("-fe0f")) {

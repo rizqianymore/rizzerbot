@@ -18,7 +18,7 @@ export default {
     let action = args[0]?.toLowerCase();
     let value = args[1]?.toLowerCase();
 
-    // Jika dipanggil via alias langsung seperti .self, .public, .maintenance, dll.
+    
     if (commandName === "self") {
       action = "self";
       value = args[0]?.toLowerCase() || "on";
@@ -39,7 +39,7 @@ export default {
       value = args[0];
     }
 
-    // Dashboard Status (.mode)
+    
     if (!action || action === "status" || action === "info" || action === "list") {
       const activeP = currentSettings.prefix || settings.prefix || ".";
       const sSelf = currentSettings.selfMode ? "🔴 *Aktif (Self Only)*" : "🟢 *Nonaktif (Public)*";

@@ -16,7 +16,7 @@ export async function downloadSpotifyTrack(spotifyUrl) {
     throw new Error("Tautan Spotify tidak valid.");
   }
 
-  // 1. Inisiasi Job Download
+  
   const postRes = await axios.post(
     "https://spotyloader.com/api/spotify/track",
     { url: spotifyUrl },
@@ -25,7 +25,7 @@ export async function downloadSpotifyTrack(spotifyUrl) {
 
   const initialData = postRes.data;
 
-  // Jika langsung mengembalikan downloadLink
+  
   if (initialData.downloadLink && initialData.post) {
     return {
       title: initialData.post.name || "Spotify Track",
@@ -41,7 +41,7 @@ export async function downloadSpotifyTrack(spotifyUrl) {
     throw new Error("Gagal membuat antrean unduhan Spotify.");
   }
 
-  // 2. Polling Status Job
+  
   const jobId = initialData.jobId;
   const maxAttempts = 15;
 
@@ -94,7 +94,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ *Harap sertakan link lagu Spotify!*\n\nContoh:\n`.spotify https://open.spotify.com/track/xxxx`",
+          text: "⚠️ *Harap sertakan link lagu Spotify!*\n\nContoh:\n`.spotify https:
         },
         { quoted: msg }
       );

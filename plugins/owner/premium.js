@@ -50,7 +50,7 @@ export default {
 
     await sendTyping();
 
-    // 1. LIST SEMUA PREMIUM
+    
     if (action === "list") {
       const allUsers = Object.keys(db.data.users);
       const premiumUsers = allUsers.filter((u) => db.data.users[u].premium);

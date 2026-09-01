@@ -59,10 +59,10 @@ export default {
         throw new Error(resData?.message || "Gagal mengambil data dari API.");
       }
 
-      // Cari media url dari response
+      
       let mediaUrls = [];
       
-      // Response format downreels biasanya mengembalikan array of media atau object data dengan array links/urls
+      
       if (resData.videos && Array.isArray(resData.videos)) {
         mediaUrls = resData.videos.map(item => ({
           url: item.url,

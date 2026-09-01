@@ -30,7 +30,7 @@ export default {
       return;
     }
 
-    // Parse theme from text
+    
     let theme = "pink";
     const themeFlagRegex = /--theme\s+(pink|blue|purple)\b/i;
     const matchFlag = text.match(themeFlagRegex);
@@ -92,7 +92,7 @@ export default {
 
     await sendTyping();
 
-    // Check if there is an image to download
+    
     let photoUrl = "";
     try {
       const getMediaNode = (m) => {
@@ -171,7 +171,7 @@ export default {
             mimeType = mediaNode.documentMessage.mimetype;
           }
 
-          // Upload to tmpfiles
+          
           const form = new FormData();
           const file = new Blob([buffer], { type: mimeType });
           form.append("file", file, "image.png");
@@ -203,7 +203,7 @@ export default {
       }
 
       const cardUrl = `${baseUrl}?${params.toString()}`;
-      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(
+      const microUrl = `https:
         cardUrl
       )}&screenshot=true&embed=screenshot.url&element=.card&waitForTimeout=500`;
 

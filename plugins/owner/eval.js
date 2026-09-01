@@ -38,7 +38,7 @@ export default {
 
     let result;
     try {
-      // Evaluasi kode dengan expose context esensial
+      
       const asyncEval = new Function(
         "sock",
         "msg",

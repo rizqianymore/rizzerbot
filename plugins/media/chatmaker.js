@@ -29,13 +29,13 @@ export default {
 
     await sendTyping();
 
-    // Parse text, time, and background chats
+    
     const parts = input.split("|").map((p) => p.trim());
     let text = parts[0] || "Halo";
     let time = parts[1] || "";
     let bg = parts.slice(2).join("|").trim();
 
-    // Default current local time formatted if not provided
+    
     if (!time) {
       const now = new Date();
       let hours = now.getHours();
@@ -53,9 +53,9 @@ export default {
     }
     queryParams += `&cb=${Date.now()}`;
 
-    const workerUrl = `https://bitter-water-1579.rakarizqi-cv.workers.dev/?${queryParams}`;
+    const workerUrl = `https:
 
-    // 1. Try fast Cloud Screenshot API first (targeting #captureScreen element)
+    
     try {
       const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&element=%23captureScreen&embed=screenshot.url`;
       imgBuffer = await fetchBuffer(microUrl, { timeout: 15000 });

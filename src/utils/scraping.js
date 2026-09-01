@@ -167,11 +167,6 @@ async function executeWithRetry(requestFn, retries = 3, baseDelay = 1500) {
   }
 }
 
-/**
- * Deteksi proteksi Cloudflare WAF / Challenge page (ISO/IEC 27001 Application Resilience).
- * @param {object} response - Axios response atau error.response object
- * @returns {boolean}
- */
 export function isCloudflareProtected(response) {
   if (!response) return false;
 
@@ -180,12 +175,12 @@ export function isCloudflareProtected(response) {
   const server = String(headers["server"] || "").toLowerCase();
   const cfMitigated = headers["cf-mitigated"];
 
-  // 1. Cek Header WAF Cloudflare
+  
   if (server.includes("cloudflare") && (status === 403 || status === 503 || cfMitigated === "challenge")) {
     return true;
   }
 
-  // 2. Cek Body Signature jika berupa teks HTML
+  
   const data = typeof response.data === "string" ? response.data : "";
   if (
     data.includes("Just a moment...") ||

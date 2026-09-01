@@ -42,7 +42,7 @@ export default {
       const distCode = `${regCode}.${nik.substring(4, 6)}`;
 
       const districtRes = await fetchJson(
-        `https://wilayah.id/api/districts/${regCode}.json`,
+        `https:
       );
 
       if (districtRes.status !== 200) {

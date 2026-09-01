@@ -14,7 +14,7 @@ async function validateWhatsAppNumbers(sock, jids) {
         invalid.push(jid);
       }
     } catch (_) {
-      // Fallback if check fails but format is valid
+      
       valid.push(jid);
     }
   }
@@ -52,7 +52,7 @@ export default {
 
     await sendTyping();
 
-    // 1. STATISTIK PENGGUNA
+    
     if (action === "list") {
       const allUsers = Object.keys(db.data.users);
       const registered = allUsers.filter((u) => db.data.users[u].registered).length;

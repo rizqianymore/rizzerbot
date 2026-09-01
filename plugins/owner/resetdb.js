@@ -25,7 +25,7 @@ export default {
     const now = Date.now();
 
     if (!isConfirmed) {
-      pendingConfirmations.set(senderJid, now + 30000); // 30 detik TTL
+      pendingConfirmations.set(senderJid, now + 30000); 
 
       await sock.sendMessage(
         msg.key.remoteJid,

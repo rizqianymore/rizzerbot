@@ -23,7 +23,7 @@ export default {
   run: async (sock, msg, args, { sendTyping }) => {
     await sendTyping();
 
-    // RAM Metrics
+    
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
@@ -34,13 +34,13 @@ export default {
     const heapUsed = formatBytes(procMem.heapUsed);
     const heapTotal = formatBytes(procMem.heapTotal);
 
-    // CPU Metrics
+    
     const cpus = os.cpus();
     const cpuModel = cpus[0]?.model || "Unknown CPU";
     const cpuCores = cpus.length;
     const loadAvg = os.loadavg().map((l) => l.toFixed(2)).join(", ");
 
-    // Uptime Metrics
+    
     const nodeUptime = getUptimeString();
     const osUptimeSec = os.uptime();
     const osDays = Math.floor(osUptimeSec / 86400);

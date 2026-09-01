@@ -39,7 +39,7 @@ export default {
 
       const workerUrl = `${baseUrl}?${params.toString()}`;
 
-      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(workerUrl)}&screenshot=true&embed=screenshot.url&element=%23receipt-area&waitForTimeout=500`;
+      const microUrl = `https:
 
       const buffer = await fetchBuffer(microUrl);
 

@@ -50,7 +50,7 @@ export default {
     );
 
     try {
-      const microUrl = `https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=true&embed=screenshot.url&waitForTimeout=${delay}`;
+      const microUrl = `https:
       const buffer = await fetchBuffer(microUrl, { timeout: 40000 });
       await sock.sendMessage(
         msg.key.remoteJid,
