@@ -204,10 +204,19 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
+  if (cmd.vvipOnly && !isVvip) {
+    await sock.sendMessage(
+      remoteJid,
+      { text: `💎 *VVIP / Platinum Only:* Fitur ini eksklusif untuk pengguna tier *VVIP/Platinum*.\nHubungi Owner untuk berlangganan.` },
+      { quoted: msg }
+    );
+    return;
+  }
+
   if (cmd.premiumOnly && !isPremium) {
     await sock.sendMessage(
       remoteJid,
-      { text: `⭐ *Premium Only:* Perintah ini memerlukan status *Premium*.\nHubungi Owner untuk upgrade akun.` },
+      { text: `⭐ *VIP / Premium Only:* Perintah ini memerlukan status *VIP/Premium*.\nHubungi Owner untuk upgrade akun.` },
       { quoted: msg }
     );
     return;

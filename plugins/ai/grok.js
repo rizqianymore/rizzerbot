@@ -7,6 +7,8 @@ export default {
   example: "grok Jelaskan tentang roket Starship",
   aliases: ["grokweb", "xai"],
   category: "AI",
+  tier: "vvip",
+  vvipOnly: true,
   premiumOnly: true,
   ownerOnly: false,
   cooldown: 5000,

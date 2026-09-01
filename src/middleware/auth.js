@@ -30,17 +30,44 @@ export function evaluatePermissions(sock, msg, senderJid) {
   const userProfile = db.getUser(senderJid);
   const isBotAdmin = Boolean(userProfile?.admin || userProfile?.role === "admin");
   const isOwner = Boolean(isSuperOwner || isBotAdmin || userProfile?.owner);
-  const isLimited = Boolean(isSuperOwner || isBotAdmin || userProfile?.limited || userProfile?.role === "limited");
-  const isPremium = Boolean(isSuperOwner || isBotAdmin || isLimited || userProfile?.premium || userProfile?.role === "premium");
-  const isRegistered = Boolean(isSuperOwner || isBotAdmin || userProfile?.registered);
+
+  // Auto-check expired subscription
+  if (userProfile?.tierExpiresAt && !isOwner) {
+    const expireDate = new Date(userProfile.tierExpiresAt);
+    if (Date.now() > expireDate.getTime()) {
+      userProfile.tier = "free";
+      userProfile.role = "user";
+      userProfile.premium = false;
+      userProfile.limited = false;
+      userProfile.vvip = false;
+      userProfile.tierExpiresAt = null;
+      userProfile.premiumExpiresAt = null;
+      db.save();
+    }
+  }
+
+  const tier = isOwner
+    ? "owner"
+    : isBotAdmin
+    ? "admin"
+    : (userProfile?.tier || (userProfile?.premium ? "vip" : "free")).toLowerCase();
+
+  const isVvip = Boolean(isOwner || tier === "vvip" || tier === "platinum" || userProfile?.vvip);
+  const isVip = Boolean(isOwner || isVvip || tier === "vip" || tier === "premium" || userProfile?.premium);
+  const isLimited = Boolean(isOwner || isVip || userProfile?.limited || userProfile?.role === "limited");
+  const isPremium = Boolean(isOwner || isVip || isLimited);
+  const isRegistered = Boolean(isOwner || userProfile?.registered);
 
   return {
     isSuperOwner,
     isBotAdmin,
     isOwner,
+    isVvip,
+    isVip,
     isLimited,
     isPremium,
     isRegistered,
+    tier,
     userProfile,
   };
 }
