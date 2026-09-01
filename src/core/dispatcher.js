@@ -291,13 +291,26 @@ export async function dispatchMessage(sock, msg, logger) {
     activePrefix,
     commandName,
     getTargetJid: (targetArgs) => {
+      // 1. Prioritize quoted/reply message participant
+      const quoted =
+        msg.message?.extendedTextMessage?.contextInfo?.participant ||
+        msg.message?.extendedTextMessage?.contextInfo?.remoteJid;
+      if (quoted && !quoted.endsWith("@g.us")) return db.normalizeJid(quoted);
+
+      // 2. Mentions in message
       const mentioned = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid;
       if (mentioned && mentioned.length > 0) return db.normalizeJid(mentioned[0]);
-      const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
-      if (quoted) return db.normalizeJid(quoted);
-      if (targetArgs?.[0]) {
-        const cleaned = targetArgs[0].replace(/[^0-9]/g, "");
-        if (cleaned.length >= 7) return cleaned + "@s.whatsapp.net";
+
+      // 3. Arguments phone numbers
+      const targetStr = Array.isArray(targetArgs) ? targetArgs.join(" ") : String(targetArgs || "");
+      if (targetStr) {
+        const matches = targetStr.match(/(?:62|\+62|08|8)[0-9\s-]{6,16}/g);
+        if (matches && matches.length > 0) {
+          let num = matches[0].replace(/[^0-9]/g, "");
+          if (num.startsWith("08")) num = "628" + num.slice(2);
+          else if (num.startsWith("8")) num = "62" + num;
+          if (num.length >= 7) return num + "@s.whatsapp.net";
+        }
       }
       return null;
     },

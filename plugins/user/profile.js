@@ -6,11 +6,13 @@ export default {
   description: "Melihat profil status akun, tier langganan, dan sisa masa aktif.",
   usage: "",
   category: "User",
-  run: async (sock, msg, args, { sendTyping, senderJid, senderName, activePrefix }) => {
+  run: async (sock, msg, args, { sendTyping, senderJid, senderName, activePrefix, getTargetJid }) => {
     await sendTyping();
 
-    const profile = db.getUser(senderJid);
-    const isOwner = db.isPrivilegedJid(senderJid);
+    const targetJid = getTargetJid(args) || senderJid;
+    const profile = db.getUser(targetJid);
+    const isOwner = db.isPrivilegedJid(targetJid);
+    const targetName = targetJid === senderJid ? (senderName || profile.name || "User") : (profile.name || "User");
 
     let tierLabel = "FREE USER";
     let tierEmoji = "👤";
@@ -41,8 +43,8 @@ export default {
 
     const text =
       `╭─── . ݁₊ ⊹ *PROFIL PENGGUNA* ⊹ ₊ ݁.\n` +
-      `│ 👤 *Nama:* ${senderName || profile.name || "User"}\n` +
-      `│ 📱 *Nomor:* @${senderJid.split("@")[0]}\n` +
+      `│ 👤 *Nama:* ${targetName}\n` +
+      `│ 📱 *Nomor:* @${targetJid.split("@")[0]}\n` +
       `│ ${tierEmoji} *Tier Plan:* ${tierLabel}\n` +
       `│ ⏳ *Masa Aktif:* ${expireInfo}\n` +
       `│ 🛡️ *Terdaftar:* ${profile.registered ? "✅ Ya" : "❌ Belum"}\n` +
@@ -54,7 +56,7 @@ export default {
 
     await sock.sendMessage(
       msg.key.remoteJid,
-      { text: text.trim(), mentions: [senderJid] },
+      { text: text.trim(), mentions: [targetJid] },
       { quoted: msg }
     );
   },
