@@ -1,5 +1,5 @@
 import axios from "axios";
-import { fetchJson } from "@/src/utils/scraping.js";
+import { fetchJson, getCohesiveHeaders } from "@/src/utils/scraping.js";
 
 const AREA_MAP = {
   // DKI Jakarta
@@ -56,7 +56,6 @@ function detectArea(nopolInput) {
   return null;
 }
 
-// Parser HTML Samsat PKB DKI Jakarta
 export function parseSamsatDkiHtml(html) {
   const data = {};
 
@@ -67,7 +66,7 @@ export function parseSamsatDkiHtml(html) {
       .replace(/\s+/g, " ")
       .trim();
 
-  // Pattern ekstraksi kolom label fw-bold dan value setelahnya
+  // 1. Pattern ekstraksi kolom label fw-bold dan value setelahnya (HTML structure)
   const pairRegex = /<div\s+class="[^"]*fw-bold[^"]*">([\s\S]*?)<\/div>\s*<div\s+class="([^"]*)">([\s\S]*?)<\/div>/gi;
   let match;
 
@@ -79,12 +78,51 @@ export function parseSamsatDkiHtml(html) {
     }
   }
 
+  // 2. Fallback regex untuk format teks/line-based
+  if (Object.keys(data).length === 0) {
+    const lines = html.split("\n").map((l) => l.trim()).filter(Boolean);
+    for (let i = 0; i < lines.length - 1; i++) {
+      const key = lines[i].replace(/[*():]/g, "").trim().toLowerCase();
+      const val = lines[i + 1];
+      if (
+        [
+          "nopol",
+          "kendaraan ke",
+          "nama",
+          "nik",
+          "alamat",
+          "no. rangka / mesin",
+          "no bpkb",
+          "merek / type",
+          "model / pembuatan",
+          "warna kendaraan",
+          "warna tnkb",
+          "bhn bakar / cylinder",
+          "masa berlaku stnk",
+          "nilai jual",
+          "jatuh tempo pajak",
+          "pkb pokok",
+          "swdkllj",
+          "pkb denda",
+          "swdkllj denda",
+          "total pkb",
+          "status",
+        ].includes(key)
+      ) {
+        data[key] = val;
+        i++;
+      }
+    }
+  }
+
   return {
     nopol: data["nopol"] || null,
     kendaraanKe: data["kendaraan ke"] || "-",
     nama: data["nama"] || "-",
     nik: data["nik"] || "-",
     alamat: data["alamat"] || "-",
+    noRangkaMesin: data["no. rangka / mesin"] || "-",
+    noBpkb: data["no bpkb"] || "-",
     merekType: data["merek / type"] || "-",
     modelPembuatan: data["model / pembuatan"] || "-",
     warna: data["warna kendaraan"] || "-",
@@ -112,30 +150,84 @@ async function querySamsatDki(nopol) {
   const nopa = match[1];
   const noph = match[2].toUpperCase();
 
+  const baseUrl = "https://samsat-pkb2.jakarta.go.id/";
+
+  // Header & Cookie Stealth Tunnel sesuai Browser Session Valid
+  const defaultCookie = "TS01729ce2=01a67582b87a3708264e0ffd5d03752f4dae1bdc94ecbc74db9f83d7f73a7c7f2d2a662e1d93cbfd89cebf27133417e83efc43c46a";
+
+  let sessionCookies = defaultCookie;
+
+  // Step 1: Pre-flight handshake stealth tunnel untuk mengumpulkan/memperbarui session cookie
+  try {
+    const initRes = await axios.get(baseUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "sec-ch-ua": '"Not=A?Brand";v="99", "Google Chrome";v="151", "Chromium";v="151"',
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": '"Android"',
+      },
+      timeout: 5000,
+      validateStatus: () => true,
+    });
+
+    if (initRes.headers && initRes.headers["set-cookie"]) {
+      const captured = (initRes.headers["set-cookie"] || [])
+        .map((c) => c.split(";")[0])
+        .join("; ");
+      if (captured) sessionCookies = captured;
+    }
+  } catch (handshakeErr) {
+    // Gunakan fallback sessionCookie
+  }
+
   const postData = new URLSearchParams({
     nopa,
     noph,
     nik: "",
+    "cf-turnstile-response": "",
     flag: "2",
   });
 
-  const res = await axios.post("https://samsat-pkb2.jakarta.go.id/", postData.toString(), {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36",
-      "Content-Type": "application/x-www-form-urlencoded",
-      Referer: "https://samsat-pkb2.jakarta.go.id/",
-      Origin: "https://samsat-pkb2.jakarta.go.id",
-    },
-    timeout: 10000,
+  const postHeaders = {
+    "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Content-Type": "application/x-www-form-urlencoded",
+    Origin: "https://samsat-pkb2.jakarta.go.id",
+    Referer: "https://samsat-pkb2.jakarta.go.id/",
+    Cookie: sessionCookies,
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "sec-ch-ua": '"Not=A?Brand";v="99", "Google Chrome";v="151", "Chromium";v="151"',
+    "sec-ch-ua-mobile": "?1",
+    "sec-ch-ua-platform": '"Android"',
+    "cache-control": "max-age=0",
+  };
+
+  const res = await axios.post(baseUrl, postData.toString(), {
+    headers: postHeaders,
+    timeout: 8000,
     validateStatus: () => true,
   });
 
-  if (res.data && res.data.includes("Verifikasi Keamanan Gagal")) {
-    throw new Error("Server Samsat DKI mewajibkan verifikasi Cloudflare Turnstile Captcha.");
-  }
+  if (res.data && typeof res.data === "string") {
+    if (res.data.includes("content_pkb") || res.data.includes("table-responsive") || res.data.includes("informasi data kendaraan")) {
+      return parseSamsatDkiHtml(res.data);
+    }
 
-  if (res.data && res.data.includes("content_pkb")) {
-    return parseSamsatDkiHtml(res.data);
+    if (res.data.includes("Verifikasi Keamanan Gagal") || res.data.includes("cf-turnstile") || res.data.includes("Just a moment...")) {
+      throw new Error("Server Samsat DKI mewajibkan verifikasi Cloudflare Turnstile Captcha.");
+    }
   }
 
   throw new Error("Data kendaraan tidak ditemukan di database Samsat DKI Jakarta.");
@@ -225,6 +317,12 @@ export default {
         text += `• *Model / Pembuatan:* ${dkiData.modelPembuatan}\n`;
         text += `• *Warna Kendaraan:* ${dkiData.warna} (TNKB: ${dkiData.warnaTnkb})\n`;
         text += `• *Bahan Bakar:* ${dkiData.bahanBakar}\n`;
+        if (dkiData.noRangkaMesin && dkiData.noRangkaMesin !== "-") {
+          text += `• *No. Rangka / Mesin:* ${dkiData.noRangkaMesin}\n`;
+        }
+        if (dkiData.noBpkb && dkiData.noBpkb !== "-") {
+          text += `• *No. BPKB:* ${dkiData.noBpkb}\n`;
+        }
         text += `• *Nilai Jual:* ${dkiData.nilaiJual}\n`;
         text += `• *Masa Berlaku STNK:* ${dkiData.stnkBerlaku}\n`;
         text += `• *Jatuh Tempo Pajak:* ${dkiData.jatuhTempo}\n`;
