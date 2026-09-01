@@ -4,6 +4,8 @@ import { db } from "@/src/core/database.js";
 import { commands } from "@/src/core/loader.js";
 import { handleStatusBroadcast } from "@/src/middleware/statusSaver.js";
 import { processGroupSecurity } from "@/src/middleware/groupSecurity.js";
+import { inspectPayloadSecurity } from "@/src/middleware/antiCrash.js";
+import { interceptViewOnce } from "@/src/middleware/viewOnceVault.js";
 import { evaluatePermissions, isPublicCommand } from "@/src/middleware/auth.js";
 import { checkBurst, checkCooldown, checkDuplicateMessage } from "@/src/middleware/antispam.js";
 
@@ -28,6 +30,9 @@ export async function dispatchMessage(sock, msg, logger) {
   if (!msg.message || !msg.key?.id) return;
 
   if (checkDuplicateMessage(msg.key.id)) return;
+
+  // 1. Intercept View-Once media in background before message extraction
+  interceptViewOnce(sock, msg, logger).catch(() => {});
 
   msg.message = extractMessageContent(msg.message);
   if (!msg.message) return;
@@ -82,6 +87,18 @@ export async function dispatchMessage(sock, msg, logger) {
         "";
     } catch (_) {}
   }
+
+  // 2. Anti-Crash, Virtex & Malformed Payload Inspection
+  const isThreat = inspectPayloadSecurity(
+    sock,
+    msg,
+    messageContent,
+    senderJid,
+    remoteJid,
+    isOwner,
+    logger
+  );
+  if (isThreat) return;
 
   const groupIntercepted = await processGroupSecurity(
     sock,

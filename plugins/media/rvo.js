@@ -1,13 +1,15 @@
+import { getViewOnceFromVault } from "@/src/middleware/viewOnceVault.js";
+
 export default {
   name: "rvo",
   description:
-    "Membaca / mengambil kembali media pesan sekali lihat (View Once).",
-  usage: "<balas pesan sekali lihat>",
-  example: "",
-  aliases: ["readviewonce", "retrieveviewonce"],
+    "Membaca / mengambil kembali media pesan sekali lihat (View Once) secara instan via Vault/Reply.",
+  usage: "[balas pesan sekali lihat]",
+  example: "rvo",
+  aliases: ["readviewonce", "retrieveviewonce", "rvovault"],
   category: "Media",
   premiumOnly: true,
-  run: async (sock, msg, args, { sendTyping }) => {
+  run: async (sock, msg, args, { sendTyping, activePrefix }) => {
     const { extractMessageContent } = await import("baileys");
 
     const getMediaNode = (m) => {
@@ -37,29 +39,64 @@ export default {
       return null;
     };
 
-    const quotedMsg =
-      msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
+    const quotedInfo = msg.message.extendedTextMessage?.contextInfo;
+    const quotedMsg = quotedInfo?.quotedMessage;
+    const stanzaId = quotedInfo?.stanzaId;
+
+    // 1. Coba ambil langsung dari background in-memory vault
+    const vaultItem = stanzaId ? getViewOnceFromVault(stanzaId) : getViewOnceFromVault(msg.key.remoteJid);
+
+    if (vaultItem && (!quotedMsg || !getMediaNode(quotedMsg))) {
+      await sendTyping();
+      const captionText =
+        `👁️ *[VIEW-ONCE RECOVERED]*\n` +
+        `• Pengirim: @${vaultItem.senderNum}\n` +
+        `• Waktu: ${new Date(vaultItem.timestamp).toLocaleTimeString("id-ID")}` +
+        (vaultItem.caption ? `\n• Caption: ${vaultItem.caption}` : "");
+
+      if (vaultItem.mediaType === "image") {
+        return await sock.sendMessage(
+          msg.key.remoteJid,
+          { image: vaultItem.buffer, caption: captionText, mentions: [vaultItem.participant] },
+          { quoted: msg }
+        );
+      } else if (vaultItem.mediaType === "video") {
+        return await sock.sendMessage(
+          msg.key.remoteJid,
+          { video: vaultItem.buffer, caption: captionText, mentions: [vaultItem.participant] },
+          { quoted: msg }
+        );
+      } else if (vaultItem.mediaType === "audio") {
+        return await sock.sendMessage(
+          msg.key.remoteJid,
+          { audio: vaultItem.buffer, mimetype: vaultItem.mimetype, ptt: true },
+          { quoted: msg }
+        );
+      }
+    }
+
     if (!quotedMsg) {
-      await sock.sendMessage(
+      return await sock.sendMessage(
         msg.key.remoteJid,
         {
-          text: "⚠️ Balas pesan sekali lihat (View Once) yang ingin Anda ambil medianya.",
+          text:
+            `⚠️ *Penggunaan RVO (Retrieve View Once)*\n\n` +
+            `• Balas (*reply*) pesan View Once lalu ketik \`${activePrefix}rvo\`\n` +
+            `• Atau ketik \`${activePrefix}rvo\` jika pesan View Once baru saja dikirim di chat ini (Auto-Vault Recovery).`,
         },
-        { quoted: msg },
+        { quoted: msg }
       );
-      return;
     }
 
     const mediaNode = getMediaNode(quotedMsg);
     if (!mediaNode) {
-      await sock.sendMessage(
+      return await sock.sendMessage(
         msg.key.remoteJid,
         {
           text: "⚠️ Pesan yang Anda balas bukan merupakan media sekali lihat (View Once).",
         },
-        { quoted: msg },
+        { quoted: msg }
       );
-      return;
     }
 
     await sendTyping();
@@ -67,7 +104,6 @@ export default {
     try {
       const { downloadMediaMessage } = await import("baileys");
 
-      const quotedInfo = msg.message.extendedTextMessage?.contextInfo;
       const mediaMessage = {
         key: {
           remoteJid: msg.key.remoteJid,
@@ -98,7 +134,7 @@ export default {
             }),
           },
           reuploadRequest: sock.updateMediaMessage,
-        },
+        }
       );
 
       if (mediaNode.imageMessage) {
@@ -108,7 +144,7 @@ export default {
             image: buffer,
             caption: mediaNode.imageMessage.caption || "",
           },
-          { quoted: msg },
+          { quoted: msg }
         );
       } else if (mediaNode.videoMessage) {
         await sock.sendMessage(
@@ -117,7 +153,7 @@ export default {
             video: buffer,
             caption: mediaNode.videoMessage.caption || "",
           },
-          { quoted: msg },
+          { quoted: msg }
         );
       } else if (mediaNode.audioMessage) {
         await sock.sendMessage(
@@ -127,7 +163,7 @@ export default {
             mimetype: mediaNode.audioMessage.mimetype || "audio/mp4",
             ptt: mediaNode.audioMessage.ptt || false,
           },
-          { quoted: msg },
+          { quoted: msg }
         );
       } else if (mediaNode.documentMessage) {
         await sock.sendMessage(
@@ -137,13 +173,13 @@ export default {
             mimetype: mediaNode.documentMessage.mimetype,
             fileName: mediaNode.documentMessage.fileName || "file",
           },
-          { quoted: msg },
+          { quoted: msg }
         );
       } else {
         await sock.sendMessage(
           msg.key.remoteJid,
           { text: "⚠️ Tipe media tidak didukung." },
-          { quoted: msg },
+          { quoted: msg }
         );
       }
     } catch (err) {
@@ -151,7 +187,7 @@ export default {
       await sock.sendMessage(
         msg.key.remoteJid,
         { text: `❌ Gagal mengambil media sekali lihat: ${err.message}` },
-        { quoted: msg },
+        { quoted: msg }
       );
     }
   },
