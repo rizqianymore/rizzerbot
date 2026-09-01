@@ -1,28 +1,34 @@
 import puppeteer from "puppeteer";
+import crypto from "node:crypto";
 import { settings } from "@/config/settings.js";
 
-const GROK_URL = "https://grok.com/";
+const GROK_CHAT_API = "https://grok.com/rest/app-chat/conversations/new";
 const GROK_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
-/**
- * Parse cookie string into key-value pairs
- */
-function parseCookies(raw) {
-  if (!raw) return [];
-  return raw
-    .split(";")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const eqIdx = part.indexOf("=");
-      if (eqIdx === -1) return null;
-      const name = part.substring(0, eqIdx).trim();
-      const value = part.substring(eqIdx + 1).trim();
-      if (!name || !value) return null;
-      return { name, value };
-    })
-    .filter(Boolean);
+function randomString(length, alphanumeric = false) {
+  const chars = alphanumeric
+    ? "abcdefghijklmnopqrstuvwxyz0123456789"
+    : "abcdefghijklmnopqrstuvwxyz";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+function generateStatsigId() {
+  const msg =
+    Math.random() < 0.5
+      ? `e:TypeError: Cannot read properties of null (reading 'children["${randomString(5, true)}"]')`
+      : `e:TypeError: Cannot read properties of undefined (reading '${randomString(10)}')`;
+  return Buffer.from(msg).toString("base64");
+}
+
+function randomHex(bytes) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -49,7 +55,7 @@ export function parseGrokStream(raw) {
         modelMessage = resp.modelResponse.message;
       }
     } catch (_) {
-      // Skip non-JSON chunks
+      // Skip non-JSON lines
     }
   }
 
@@ -57,7 +63,7 @@ export function parseGrokStream(raw) {
 }
 
 /**
- * Tanya jawab cerdas dengan Grok AI via Grok Web.
+ * Tanya jawab cerdas dengan Grok AI via Grok Web API (Direct fetch with cookies & fallback to browser page)
  * @param {string} prompt
  * @param {Object} options
  * @returns {Promise<{ answer: string, model: string }>}
@@ -68,8 +74,94 @@ export async function askGrokWeb(prompt, options = {}) {
   }
 
   const cookieStr = options.cookie || settings.grokCookie || process.env.GROK_COOKIE;
-  let browser = null;
+  if (!cookieStr) {
+    throw new Error("Cookie Grok Web belum dikonfigurasi di config/settings.js (grokCookie).");
+  }
 
+  const modeId = options.model || "fast";
+
+  // Build OmniRoute compliant request payload
+  const grokPayload = {
+    temporary: true,
+    modeId,
+    message: prompt.trim(),
+    fileAttachments: [],
+    imageAttachments: [],
+    disableSearch: false,
+    enableImageGeneration: false,
+    returnImageBytes: false,
+    returnRawGrokInXaiRequest: false,
+    enableImageStreaming: false,
+    imageGenerationCount: 0,
+    forceConcise: false,
+    toolOverrides: {},
+    enableSideBySide: true,
+    sendFinalMetadata: true,
+    isReasoning: false,
+    disableTextFollowUps: false,
+    disableMemory: true,
+    forceSideBySide: false,
+    isAsyncChat: false,
+    disableSelfHarmShortCircuit: false,
+    deviceEnvInfo: {
+      darkModeEnabled: false,
+      devicePixelRatio: 2,
+      screenWidth: 1920,
+      screenHeight: 1080,
+      viewportWidth: 1920,
+      viewportHeight: 1080,
+    },
+  };
+
+  const traceId = randomHex(16);
+  const spanId = randomHex(8);
+
+  const headers = {
+    Accept: "*/*",
+    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+    "Cache-Control": "no-cache",
+    "Content-Type": "application/json",
+    Origin: "https://grok.com",
+    Pragma: "no-cache",
+    Referer: "https://grok.com/",
+    "Sec-Ch-Ua": '"Google Chrome";v="133", "Chromium";v="133", "Not?A_Brand";v="24"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Linux"',
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "User-Agent": GROK_USER_AGENT,
+    "x-statsig-id": generateStatsigId(),
+    "x-xai-request-id": crypto.randomUUID(),
+    traceparent: `00-${traceId}-${spanId}-00`,
+    Cookie: cookieStr,
+  };
+
+  // 1. First attempt: Direct HTTP POST fetch with valid SSO & Cloudflare cookies
+  try {
+    const response = await fetch(GROK_CHAT_API, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(grokPayload),
+    });
+
+    if (response.ok) {
+      const rawText = await response.text();
+      const parsedAnswer = parseGrokStream(rawText);
+      if (parsedAnswer) {
+        return {
+          status: true,
+          model: "Grok Web AI",
+          answer: parsedAnswer,
+        };
+      }
+    }
+  } catch (_) {
+    // Fallthrough to Puppeteer on error
+  }
+
+  // 2. Second attempt: Run fetch within Puppeteer context to inherit full browser TLS & Cloudflare state
+  let browser = null;
   try {
     browser = await puppeteer.launch({
       headless: "new",
@@ -87,97 +179,78 @@ export async function askGrokWeb(prompt, options = {}) {
     const page = await browser.newPage();
     await page.setUserAgent(GROK_USER_AGENT);
 
-    // Bypass webdriver detection
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => undefined });
     });
 
-    if (cookieStr) {
-      const parsed = parseCookies(cookieStr);
-      const cookiesToSet = parsed.map((c) => ({
-        name: c.name,
-        value: c.value,
-        domain: ".grok.com",
-        path: "/",
-        secure: true,
-        httpOnly: false,
-      }));
-      if (cookiesToSet.length > 0) {
-        await page.setCookie(...cookiesToSet);
+    // Set cookies into page context
+    const parsedCookies = cookieStr
+      .split(";")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => {
+        const eqIdx = p.indexOf("=");
+        if (eqIdx === -1) return null;
+        return {
+          name: p.slice(0, eqIdx).trim(),
+          value: p.slice(eqIdx + 1).trim(),
+          domain: ".grok.com",
+          path: "/",
+          secure: true,
+          httpOnly: false,
+        };
+      })
+      .filter(Boolean);
+
+    if (parsedCookies.length > 0) {
+      await page.setCookie(...parsedCookies);
+    }
+
+    await page.goto("https://grok.com/", {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+
+    // Evaluate fetch from inside the browser context
+    const resultJson = await page.evaluate(
+      async (apiUrl, payload, reqHeaders) => {
+        try {
+          const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "*/*",
+              "x-statsig-id": reqHeaders["x-statsig-id"],
+              "x-xai-request-id": reqHeaders["x-xai-request-id"],
+              traceparent: reqHeaders["traceparent"],
+            },
+            body: JSON.stringify(payload),
+          });
+          const text = await res.text();
+          return { status: res.status, text };
+        } catch (e) {
+          return { error: e.message };
+        }
+      },
+      GROK_CHAT_API,
+      grokPayload,
+      headers
+    );
+
+    if (resultJson && resultJson.text) {
+      const parsedText = parseGrokStream(resultJson.text);
+      if (parsedText) {
+        return {
+          status: true,
+          model: "Grok Web AI",
+          answer: parsedText,
+        };
       }
     }
 
-    let responseText = "";
-    let captured = false;
-
-    // Listen to network responses for Grok conversation/chat endpoint
-    page.on("response", async (resp) => {
-      try {
-        const url = resp.url();
-        if (!url.includes("/app-chat/conversations") && !url.includes("/chat")) return;
-        const raw = await resp.text().catch(() => "");
-        const text = parseGrokStream(raw);
-        if (text && text.trim().length > 0) {
-          responseText = text;
-          captured = true;
-        }
-      } catch (_) {}
-    });
-
-    await page.goto(GROK_URL, {
-      waitUntil: "domcontentloaded",
-      timeout: 35000,
-    });
-
-    await new Promise((r) => setTimeout(r, 2000));
-
-    // Wait for input textarea/contenteditable on grok.com
-    const inputSelector = "textarea, [contenteditable='true'], input[type='text'], .ProseMirror";
-    await page.waitForSelector(inputSelector, { timeout: 20000 });
-
-    await page.click(inputSelector);
-    await page.keyboard.type(prompt.trim(), { delay: 10 });
-    await new Promise((r) => setTimeout(r, 400));
-    await page.keyboard.press("Enter");
-
-    // Wait for response up to 45s
-    const startTime = Date.now();
-    while (Date.now() - startTime < 45000) {
-      if (captured && responseText) break;
-
-      // Fallback: ambil text dari bubble message DOM jika network stream tertutup
-      try {
-        const domAnswer = await page.evaluate(() => {
-          const blocks = document.querySelectorAll(
-            ".message-bubble, .response-message, [data-testid='message-text'], .prose, .markdown"
-          );
-          if (blocks.length > 0) {
-            const last = blocks[blocks.length - 1];
-            const text = last.innerText || last.textContent || "";
-            return text.trim();
-          }
-          return "";
-        });
-
-        if (domAnswer && domAnswer.length > 3) {
-          responseText = domAnswer;
-        }
-      } catch (_) {}
-
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-
-    if (!responseText) {
-      throw new Error(
-        "Tidak ada respon dari Grok Web. Pastikan cookie Grok (sso, sso-rw, cf_clearance) masih fresh dan valid."
-      );
-    }
-
-    return {
-      status: true,
-      model: "Grok Web AI",
-      answer: responseText.trim(),
-    };
+    throw new Error(
+      `Grok Web API mengembalikan status: ${resultJson?.status || "Unknown"}. Pastikan cookie sso/sso-rw/cf_clearance tidak expired.`
+    );
   } finally {
     if (browser) {
       try {
