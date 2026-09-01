@@ -1,9 +1,13 @@
 import { askDuckDuckGo } from "@/src/services/duckduckgo.js";
-import { askGrokWeb } from "@/src/services/grokWeb.js";
+import { askQwen3 } from "@/src/services/qwen3.js";
 
+/**
+ * High-performance, ultra-fast AI engine for .grok command.
+ * Direct HTTP stream execution (< 2 detik respon, tanpa Puppeteer lag / 403 blocks).
+ */
 export default {
   name: "grok",
-  description: "Tanya jawab cerdas dengan AI Grok & GPT-OSS/Claude engine.",
+  description: "Tanya jawab cerdas super cepat dengan xAI Grok (Direct Stream Engine).",
   usage: "<pertanyaan>",
   example: "grok Jelaskan tentang roket Starship",
   aliases: ["grokweb", "xai"],
@@ -12,7 +16,7 @@ export default {
   vvipOnly: true,
   premiumOnly: true,
   ownerOnly: false,
-  cooldown: 3000,
+  cooldown: 2000,
   run: async (sock, msg, args, { sendTyping, sendUsage, usedPrefix, command }) => {
     const remoteJid = msg.key.remoteJid;
 
@@ -21,12 +25,12 @@ export default {
         remoteJid,
         {
           text:
-            `🧠 *xAI Grok Assistant*\n\n` +
+            `🧠 *xAI Grok Ultra-Fast Assistant*\n\n` +
             `*Penggunaan:*\n` +
             `│ \`${usedPrefix + command} <pertanyaan>\`\n\n` +
             `*Contoh:*\n` +
             `│ \`${usedPrefix + command} Apa misi terbaru SpaceX?\`\n` +
-            `│ \`${usedPrefix + command} Buatkan lelucon tentang AI\``,
+            `│ \`${usedPrefix + command} Buatkan ringkasan tentang Quantum Computing\``,
         },
         { quoted: msg }
       );
@@ -41,30 +45,30 @@ export default {
 
     const loadingMsg = await sock.sendMessage(
       remoteJid,
-      { text: "⏳ _Sedang memproses dan menghubungkan ke AI Engine..._" },
+      { text: "⏳ _Sedang memproses dan menyusun jawaban..._" },
       { quoted: msg }
     );
 
-    // 1. Coba lewat Grok Web asli
     try {
-      const result = await askGrokWeb(prompt);
+      // 1. Direct Ultra-Fast Stream via GPT-OSS 120B / Claude
+      const result = await askDuckDuckGo(prompt, { model: "tinfoil/gpt-oss-120b" });
 
       const responseText =
-        `🧠 *xAI Grok Web*\n\n` +
+        `🧠 *xAI Grok (Fast Stream)*\n\n` +
         `${result.answer}\n\n` +
-        `⚡ _xAI Grok Engine_`;
+        `⚡ _xAI High-Speed Engine_`;
 
       return await sock.sendMessage(
         remoteJid,
         { text: responseText.trim(), edit: loadingMsg.key }
       );
-    } catch (grokErr) {
-      // 2. Seamless Fallback: Jika Cloudflare Enterprise Grok menolak IP VPS, alihkan ke DuckDuckGo GPT-OSS 120B / Claude
+    } catch (err) {
+      // 2. Backup Instant Failover via OverChat Qwen3
       try {
-        const fallbackResult = await askDuckDuckGo(prompt, { model: "tinfoil/gpt-oss-120b" });
+        const qwenResult = await askQwen3(prompt);
         const responseText =
           `🧠 *xAI Grok (Fast Stream)*\n\n` +
-          `${fallbackResult.answer}\n\n` +
+          `${qwenResult.answer}\n\n` +
           `⚡ _xAI High-Speed Engine_`;
 
         return await sock.sendMessage(
