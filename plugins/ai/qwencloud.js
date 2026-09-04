@@ -30,11 +30,9 @@ export default {
         enableThinking: false,
       });
 
-      const responseText = `🤖 *QwenCloud AI (qwen3.8-max):*\n\n${result.answer}`;
-
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
+        { text: result.answer },
         { quoted: msg }
       );
     } catch (err) {
