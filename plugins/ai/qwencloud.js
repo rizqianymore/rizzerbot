@@ -25,7 +25,11 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askQwenCloud(prompt, {
+      const systemInstruction =
+        "Instruksi: Jawab dengan ramah, jelas, to the point, dan rangkum HANYA dalam 1 paragraf singkat (maksimal 3-4 kalimat). Dilarang membuat poin-poin, list nomor, atau penjelasan yang bertele-tele.";
+      const finalPrompt = `${systemInstruction}\n\nPertanyaan: ${prompt}`;
+
+      const result = await askQwenCloud(finalPrompt, {
         modelId: "qwen3.8-max",
         enableThinking: false,
       });

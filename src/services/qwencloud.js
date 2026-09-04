@@ -157,34 +157,61 @@ export async function askQwenCloud(prompt, options = {}) {
     throw new Error(`SSE stream failed with HTTP ${response.status}`);
   }
 
-  const rawText = await response.text();
-  const lines = rawText.split("\n");
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("Tidak ada stream body dari QwenCloud.");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
   let lastAssistantContent = "";
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith("data:")) continue;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
 
-    try {
-      const parsedData = JSON.parse(trimmed.slice(5).trim());
-      const valueStr = parsedData?.data?.[0]?.value;
-      if (!valueStr) continue;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
 
-      const inner = JSON.parse(valueStr);
-      const msgList = inner?.data?.messageList;
-      if (Array.isArray(msgList) && msgList.length > 0) {
-        const contentList = msgList[0]?.contentList;
-        if (Array.isArray(contentList)) {
-          const textChunk = contentList.find(
-            (c) => c.jsonPath === "/contentList/0/content"
-          );
-          if (textChunk && typeof textChunk.content === "string") {
-            lastAssistantContent = textChunk.content;
+    let isFinished = false;
+    for (const rawLine of lines) {
+      const trimmed = rawLine.trim();
+      if (!trimmed.startsWith("data:")) continue;
+
+      try {
+        const parsedData = JSON.parse(trimmed.slice(5).trim());
+        const valueStr = parsedData?.data?.[0]?.value;
+        if (!valueStr) continue;
+
+        const inner = JSON.parse(valueStr);
+        const msgList = inner?.data?.messageList;
+        if (Array.isArray(msgList) && msgList.length > 0) {
+          const firstMsg = msgList[0];
+          const contentList = firstMsg?.contentList;
+          if (Array.isArray(contentList)) {
+            const textChunk = contentList.find(
+              (c) => c.jsonPath === "/contentList/0/content"
+            );
+            if (textChunk && typeof textChunk.content === "string") {
+              lastAssistantContent = textChunk.content;
+            }
+          }
+
+          if (firstMsg?.status === "FINISHED") {
+            isFinished = true;
           }
         }
+      } catch {
+        // frame ignore
       }
-    } catch {
-      // frame ignore
+    }
+
+    if (isFinished) {
+      try {
+        await reader.cancel();
+      } catch {}
+      break;
     }
   }
 
