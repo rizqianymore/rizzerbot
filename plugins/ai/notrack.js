@@ -1,4 +1,5 @@
 import { askNoTrackAI, AVAILABLE_MODELS } from "@/src/services/notrack.js";
+import { formatLLMPrompt } from "@/src/utils/aiPrompt.js";
 
 export default {
   name: "notrack",
@@ -30,7 +31,7 @@ export default {
             `${modelList}\n\n` +
             `*Contoh:*\n` +
             `│ \`${usedPrefix + command} Apa itu quantum computing?\`\n` +
-            `│ \`${usedPrefix + command} Buatkan kode Python --model O\``,
+            `│ \`${usedPrefix + command} Jelaskan zero knowledge proof --model O\``,
         },
         { quoted: msg }
       );
@@ -57,19 +58,13 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askNoTrackAI(rawText, { model: selectedModel });
-
-      const modelInfo = AVAILABLE_MODELS.find((m) => m.id === selectedModel);
-      const modelLabel = modelInfo ? modelInfo.name : selectedModel;
-
-      let responseText =
-        `🤖 *NoTrack AI* (${modelLabel})\n\n` +
-        `${result.answer}\n\n` +
-        `⚡ _Engine: notrack.ai (Zero-Log)_`;
+      const result = await askNoTrackAI(formatLLMPrompt(rawText), {
+        model: selectedModel,
+      });
 
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
+        { text: result.answer },
         { quoted: msg }
       );
     } catch (err) {

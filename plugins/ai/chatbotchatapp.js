@@ -1,4 +1,5 @@
 import { askChatbotChatApp } from "@/src/services/chatbotchatapp.js";
+import { formatLLMPrompt } from "@/src/utils/aiPrompt.js";
 
 export default {
   name: "chatbotchatapp",
@@ -10,7 +11,7 @@ export default {
   premiumOnly: true,
   ownerOnly: false,
   cooldown: 3000,
-  run: async (sock, msg, args, { sendTyping, sendUsage, usedPrefix, command }) => {
+  run: async (sock, msg, args, { sendTyping, sendUsage }) => {
     const remoteJid = msg.key.remoteJid;
 
     if (!args || args.length === 0) {
@@ -25,16 +26,11 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askChatbotChatApp(prompt);
-
-      const responseText =
-        `🤖 *ChatbotChatApp AI*\n\n` +
-        `${result.answer}\n\n` +
-        `⚡ _Engine: chatbotchatapp.com_`;
+      const result = await askChatbotChatApp(formatLLMPrompt(prompt));
 
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
+        { text: result.answer },
         { quoted: msg }
       );
     } catch (err) {

@@ -1,4 +1,5 @@
 import { askDuckDuckGo, AVAILABLE_MODELS } from "@/src/services/duckduckgo.js";
+import { formatLLMPrompt } from "@/src/utils/aiPrompt.js";
 
 export default {
   name: "duckduckgo",
@@ -30,8 +31,7 @@ export default {
             `${modelList}\n\n` +
             `*Contoh:*\n` +
             `│ \`${usedPrefix + command} Siapa penemu komputer?\`\n` +
-            `│ \`${usedPrefix + command} Buatkan kode Python --model claude\`\n` +
-            `│ \`${usedPrefix + command} Halo apa kabar? --model mistral\``,
+            `│ \`${usedPrefix + command} Jelaskan gravitasi --model claude\``,
         },
         { quoted: msg }
       );
@@ -75,18 +75,11 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askDuckDuckGo(rawText, { model: selectedModel });
-      const matchedInfo = AVAILABLE_MODELS.find((m) => m.id === result.model);
-      const modelLabel = matchedInfo ? matchedInfo.name : result.model;
-
-      const responseText =
-        `🤖 *DuckDuckGo AI* (${modelLabel})\n\n` +
-        `${result.answer}\n\n` +
-        `⚡ _DuckDuckGo AI Engine_`;
+      const result = await askDuckDuckGo(formatLLMPrompt(rawText), { model: selectedModel });
 
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
+        { text: result.answer },
         { quoted: msg }
       );
     } catch (err) {

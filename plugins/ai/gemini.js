@@ -1,6 +1,7 @@
 import { askGeminiWeb } from "@/src/services/geminiWeb.js";
 import { askDuckDuckGo } from "@/src/services/duckduckgo.js";
 import { askQwen3 } from "@/src/services/qwen3.js";
+import { formatLLMPrompt } from "@/src/utils/aiPrompt.js";
 
 export default {
   name: "gemini",
@@ -26,7 +27,7 @@ export default {
             `│ \`${usedPrefix + command} <pertanyaan>\`\n\n` +
             `*Contoh:*\n` +
             `│ \`${usedPrefix + command} Apa itu quantum computing?\`\n` +
-            `│ \`${usedPrefix + command} Buatkan artikel singkat tentang AI\``,
+            `│ \`${usedPrefix + command} Buatkan penjelasan singkat tentang AI\``,
         },
         { quoted: msg }
       );
@@ -39,59 +40,46 @@ export default {
 
     await sendTyping();
 
-    const loadingMsg = await sock.sendMessage(
-      remoteJid,
-      { text: "✨ _Sedang memproses pertanyaan dengan Google Gemini..._" },
-      { quoted: msg }
-    );
+    const formattedPrompt = formatLLMPrompt(prompt);
 
     // 1. Coba lewat Google Gemini Web
     try {
-      const result = await askGeminiWeb(prompt);
-
-      const responseText =
-        `✨ *Google Gemini Web*\n\n` +
-        `${result.answer}\n\n` +
-        `⚡ _Google Gemini Engine_`;
+      const result = await askGeminiWeb(formattedPrompt);
 
       return await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim(), edit: loadingMsg.key }
+        { text: result.answer },
+        { quoted: msg }
       );
     } catch (geminiErr) {
       // 2. High-speed Google Gemma / DuckDuckGo Fallback jika browser delay/timeout
       try {
-        const gemmaResult = await askDuckDuckGo(prompt, { model: "tinfoil/gemma4-31b" });
-
-        const responseText =
-          `✨ *Google Gemini (Fast Engine)*\n\n` +
-          `${gemmaResult.answer}\n\n` +
-          `⚡ _Google AI Cloud Engine_`;
+        const gemmaResult = await askDuckDuckGo(formattedPrompt, {
+          model: "tinfoil/gemma4-31b",
+        });
 
         return await sock.sendMessage(
           remoteJid,
-          { text: responseText.trim(), edit: loadingMsg.key }
+          { text: gemmaResult.answer },
+          { quoted: msg }
         );
       } catch (gemmaErr) {
         // 3. Ultra backup via OverChat
         try {
-          const qwenResult = await askQwen3(prompt);
-          const responseText =
-            `✨ *Google Gemini (Backup Engine)*\n\n` +
-            `${qwenResult.answer}\n\n` +
-            `⚡ _Google AI Cloud Engine_`;
+          const qwenResult = await askQwen3(formattedPrompt);
 
           return await sock.sendMessage(
             remoteJid,
-            { text: responseText.trim(), edit: loadingMsg.key }
+            { text: qwenResult.answer },
+            { quoted: msg }
           );
         } catch (finalErr) {
           await sock.sendMessage(
             remoteJid,
             {
               text: `❌ *Gagal Mendapatkan Respon Gemini:*\n${finalErr.message}`,
-              edit: loadingMsg.key,
-            }
+            },
+            { quoted: msg }
           );
         }
       }

@@ -1,4 +1,5 @@
 import { askQwen3 } from "@/src/services/qwen3.js";
+import { formatLLMPrompt } from "@/src/utils/aiPrompt.js";
 
 export default {
   name: "qwen3",
@@ -25,13 +26,11 @@ export default {
     await sendTyping();
 
     try {
-      const result = await askQwen3(prompt);
-
-      const responseText = `🤖 *AI:*\n${result.answer}`;
+      const result = await askQwen3(formatLLMPrompt(prompt));
 
       await sock.sendMessage(
         remoteJid,
-        { text: responseText.trim() },
+        { text: result.answer },
         { quoted: msg }
       );
     } catch (err) {
