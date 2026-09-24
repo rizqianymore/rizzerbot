@@ -17,10 +17,9 @@ auth_info/
 sessions/
 
 # Database Files (Contains JIDs/User info)
-database/*.json
-!database/.gitkeep
-!database/jkt48.json
-!database/cctv-*.json
+database.json
+*.creds
+.creds.json
 config/database.json
 marketing.txt
 bin/

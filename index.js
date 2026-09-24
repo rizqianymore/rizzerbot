@@ -34,15 +34,13 @@ if (fs.existsSync(envPath)) {
 
 import {
   startBot,
-  addSecondaryBot,
-  stopSecondaryBot,
-  runningBots,
   logger,
 } from "./src/core/connection.js";
 
-process.env.FFMPEG_PATH = path.join(process.cwd(), "bin", "ffmpeg");
-
-export { addSecondaryBot, stopSecondaryBot, runningBots };
+const binFfmpeg = path.join(process.cwd(), "bin", "ffmpeg");
+if (fs.existsSync(binFfmpeg)) {
+  process.env.FFMPEG_PATH = binFfmpeg;
+}
 
 startBot().catch((err) => {
   logger.error("Fatal initialization error:", err);

@@ -13,21 +13,8 @@ import qrcode from "qrcode-terminal";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { loadPlugins } from "@/src/core/loader.js";
 import { settings } from "@/config/settings.js";
-import { registerGroupGuard } from "@/src/middleware/groupGuard.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
-import {
-  addSecondaryBot,
-  stopSecondaryBot,
-  restoreSecondarySessions,
-  runningBots,
-} from "@/src/core/secondary.js";
-import { db } from "@/src/core/database.js";
-import { deleteFolderRecursive, cleanNumber } from "@/src/utils/helper.js";
-import {
-  startAutonomousWatchdog,
-  recordSocketHeartbeat,
-  sendRecoveryReport,
-} from "@/src/core/watchdog.js";
+import { deleteFolderRecursive } from "@/src/utils/helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,7 +63,6 @@ export async function startBot() {
     if (!isPluginsLoaded) {
       await loadPlugins();
       isPluginsLoaded = true;
-      db.ensurePrivilegedUsers();
     }
 
     if (!_cleanIntervalStarted) {
@@ -90,7 +76,7 @@ export async function startBot() {
       version: [2, 3000, 1043857760],
     }));
 
-    logger.info(`Initializing primary Kyros-MD connection (WA Version: ${version ? version.join('.') : 'default'})...`);
+    logger.info(`Initializing primary Rizzer Bot connection (WA Version: ${version ? version.join('.') : 'default'})...`);
 
     const usePairingCode = settings.usePairingCode;
     const msgRetryCounterCache = new Map();
@@ -117,9 +103,8 @@ export async function startBot() {
     primarySock = sock;
     isStarting = false;
 
-  sock.ev.on("creds.update", saveCreds);
-  registerGroupGuard(sock);
-  let pairingTimeout = null;
+    sock.ev.on("creds.update", saveCreds);
+    let pairingTimeout = null;
 
   if (usePairingCode && !sock.authState.creds.registered) {
     const phoneNumber = settings.pairingNumber?.replace(/[^0-9]/g, "");
@@ -206,17 +191,12 @@ export async function startBot() {
         }, 3000);
       }
     } else if (connection === "open") {
-      logger.info("Primary Kyros-MD successfully connected and is now online!");
-      recordSocketHeartbeat();
-      startAutonomousWatchdog(() => primarySock, logger);
-      sendRecoveryReport(sock, logger).catch(() => {});
+      logger.info("Primary Rizzer Bot successfully connected and is now online!");
     }
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
-
-    recordSocketHeartbeat();
 
     for (const msg of messages) {
       try {
@@ -227,12 +207,11 @@ export async function startBot() {
         }
         enqueueMessage(sock, msg, logger);
       } catch (err) {
-        logger.error("Error in primary message handler middleware:", err);
+        logger.error("Error in primary message handler:", err);
       }
     }
   });
 
-  restoreSecondarySessions(logger);
   return sock;
   } catch (error) {
     isStarting = false;
@@ -246,4 +225,8 @@ export async function startBot() {
   }
 }
 
-export { addSecondaryBot, stopSecondaryBot, runningBots };
+startBot().catch((err) => {
+  logger.error("Fatal initialization error:", err);
+});
+
+export default startBot;
