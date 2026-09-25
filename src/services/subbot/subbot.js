@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { logger } from "@/src/core/connection.js";
+import { db } from "@/src/core/database.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 
 const subBots = new Map(); // id -> { sock, number, status, startedAt }
@@ -108,6 +109,8 @@ export async function createSubBot(number, onPairingCode) {
     if (connection === "open") {
       botEntry.status = "online";
       logger.info(`[SubBot ${cleanNumber}] Connected successfully!`);
+      const botUserJid = sock.user?.id || `${cleanNumber}@s.whatsapp.net`;
+      db.registerBotJid(botUserJid);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;

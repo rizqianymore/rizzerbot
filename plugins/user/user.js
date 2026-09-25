@@ -57,7 +57,7 @@ export default [
   {
     name: "quote",
     description: "Get a random rizz quote",
-    premiumOnly: true,
+    premiumOnly: false,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -83,18 +83,33 @@ export default [
   },
   {
     name: "sticker",
-    aliases: ["s"],
-    description: "Convert image/video to sticker",
-    premiumOnly: true,
+    aliases: ["s", "stiker"],
+    description: "Convert image/video to sticker (bisa tambahkan teks atas/bawah)",
+    premiumOnly: false,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
       const target = quoted || msg;
       const buffer = await getMediaBuffer(sock, target);
-      if (!buffer) return reply("❌ Balas/buka gambar atau video dengan caption *\\.sticker*");
+      if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.sticker* atau *\\.sticker atas | bawah*");
+
+      // Parse text meme atas / bawah
+      let topText = "";
+      let bottomText = "";
+      if (args.length > 0) {
+        const fullText = args.join(" ");
+        if (fullText.includes("|")) {
+          const parts = fullText.split("|");
+          topText = parts[0]?.trim() || "";
+          bottomText = parts.slice(1).join("|")?.trim() || "";
+        } else {
+          bottomText = fullText.trim();
+        }
+      }
+
       try {
-        const stickerBuffer = await createSticker(buffer);
+        const stickerBuffer = await createSticker(buffer, { topText, bottomText });
         await sock.sendMessage(
           msg.key.remoteJid,
           { sticker: stickerBuffer },
@@ -109,7 +124,7 @@ export default [
     name: "toimg",
     aliases: ["toimage"],
     description: "Convert sticker to image",
-    premiumOnly: true,
+    premiumOnly: false,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

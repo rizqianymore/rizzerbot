@@ -18,16 +18,128 @@ export default [
     }
   },
   {
-    name: "addprem",
-    description: "Add premium user",
+    name: "addowner",
+    description: "Tambahkan owner baru ke bot",
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply, getTargetJid }) => {
       const jid = getTargetJid(args);
-      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addprem 628xx*");
-      if (db.isOwner(jid)) return reply("❌ Owner otomatis memiliki akses Premium.");
-      if (db.isAdmin(jid)) return reply("ℹ️ Admin Bot otomatis memiliki akses Premium.");
-      if (db.isConfiguredPremium(jid)) return reply("ℹ️ Nomor tersebut sudah terkonfigurasi sebagai Premium.");
+      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addowner 628xx*");
+      if (db.isOwner(jid)) return reply(`ℹ️ *${jid.split("@")[0]}* sudah menjadi Owner.`);
+
+      db.setOwner(jid, true);
+      reply(`👑 Berhasil menambahkan *${jid.split("@")[0]}* sebagai Owner Bot.`);
+    }
+  },
+  {
+    name: "delowner",
+    description: "Hapus owner tambahan dari bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.delowner 628xx*");
+      if (db.isPrimaryOwner(jid)) {
+        return reply("❌ Nomor tersebut adalah Primary Owner (Pemilik Utama) dan tidak dapat dihapus!");
+      }
+      if (!db.isOwner(jid)) {
+        return reply(`ℹ️ *${jid.split("@")[0]}* bukan Owner.`);
+      }
+
+      db.setOwner(jid, false);
+      reply(`✅ Berhasil menghapus *${jid.split("@")[0]}* dari daftar Owner Bot.`);
+    }
+  },
+  {
+    name: "listowner",
+    aliases: ["owners"],
+    description: "Lihat daftar semua Owner bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply }) => {
+      const settings = db.getSettings();
+      const primary = db.normalizeJid(settings.ownerNumber);
+      const ownerList = [
+        primary,
+        ...(Array.isArray(settings.ownerNumbers) ? settings.ownerNumbers : []),
+      ].filter(Boolean);
+      const uniqueOwners = [...new Set(ownerList.map(j => db.normalizeJid(j)))];
+
+      let text = `👑 *DAFTAR OWNER BOT*\n─────────────────────────\n`;
+      uniqueOwners.forEach((j, i) => {
+        const num = j.split("@")[0];
+        const isMain = j === primary;
+        text += `${i + 1}. +${num} ${isMain ? "⭐ _(Primary Owner)_" : "👑 _(Owner)_"}\n`;
+      });
+      text += `─────────────────────────\nTotal: ${uniqueOwners.length} Owner`;
+      reply(text);
+    }
+  },
+  {
+    name: "addadmin",
+    description: "Tambahkan admin bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addadmin 628xx*");
+      if (db.isOwner(jid)) return reply("ℹ️ Nomor tersebut sudah menjadi Owner (memiliki hak di atas Admin).");
+      if (db.isAdmin(jid)) return reply(`ℹ️ *${jid.split("@")[0]}* sudah menjadi Admin Bot.`);
+
+      db.setAdmin(jid, true);
+      reply(`🛡️ Berhasil menjadikan *${jid.split("@")[0]}* sebagai Admin Bot.`);
+    }
+  },
+  {
+    name: "deladmin",
+    description: "Hapus admin bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.deladmin 628xx*");
+      if (db.isOwner(jid)) return reply("❌ Owner tidak dapat dihapus melalui perintah deladmin.");
+      if (!db.isAdmin(jid)) return reply(`ℹ️ *${jid.split("@")[0]}* bukan Admin Bot.`);
+
+      db.setAdmin(jid, false);
+      reply(`✅ Berhasil mencabut akses Admin Bot dari *${jid.split("@")[0]}*.`);
+    }
+  },
+  {
+    name: "listadmin",
+    aliases: ["admins", "botadmins"],
+    description: "Lihat daftar semua Admin bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply }) => {
+      const settings = db.getSettings();
+      const adminList = Array.isArray(settings.adminNumbers) ? settings.adminNumbers : [];
+      const uniqueAdmins = [...new Set(adminList.map(j => db.normalizeJid(j)))].filter(j => !db.isOwner(j));
+
+      if (uniqueAdmins.length === 0) {
+        return reply("ℹ️ Belum ada Admin Bot tambahan yang terdaftar.");
+      }
+
+      let text = `🛡️ *DAFTAR ADMIN BOT*\n─────────────────────────\n`;
+      uniqueAdmins.forEach((j, i) => {
+        const num = j.split("@")[0];
+        text += `${i + 1}. +${num}\n`;
+      });
+      text += `─────────────────────────\nTotal: ${uniqueAdmins.length} Admin`;
+      reply(text);
+    }
+  },
+  {
+    name: "addprem",
+    description: "Tambahkan pengguna premium",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addprem 628xx 30*");
+      if (db.isOwner(jid)) return reply("ℹ️ Owner otomatis memiliki akses Premium selamanya.");
+      if (db.isAdmin(jid)) return reply("ℹ️ Admin Bot otomatis memiliki akses Premium selamanya.");
+
       const lastArg = args[args.length - 1] || "";
       const lastArgDigits = lastArg.replace(/\D/g, "");
       const totalDigits = args.join("").replace(/\D/g, "");
@@ -40,13 +152,14 @@ export default [
       const duration = Number.isFinite(parsedDuration) && parsedDuration > 0
         ? parsedDuration
         : null;
+
       db.setPremium(jid, true, duration);
-      reply(`✅ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${duration ? ` selama ${duration} hari` : ""}.`);
+      reply(`⭐ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${duration ? ` selama ${duration} hari` : " (Permanen)"}.`);
     }
   },
   {
     name: "delprem",
-    description: "Remove premium user",
+    description: "Hapus pengguna premium",
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply, getTargetJid }) => {
@@ -54,36 +167,35 @@ export default [
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.delprem 628xx*");
       if (db.isOwner(jid)) return reply("❌ Owner tidak dapat kehilangan akses Premium.");
       if (db.isAdmin(jid)) return reply("❌ Admin Bot otomatis memiliki akses Premium.");
-      if (db.isConfiguredPremium(jid)) return reply("❌ Nomor tersebut dikelola oleh konfigurasi.");
+
       db.setPremium(jid, false);
-      reply(`✅ Berhasil menghapus *${jid.split("@")[0]}* dari Premium.`);
+      reply(`✅ Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`);
     }
   },
   {
-    name: "addadmin",
-    description: "Add bot admin",
+    name: "listprem",
+    aliases: ["prems", "premiums"],
+    description: "Lihat daftar semua user Premium",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply, getTargetJid }) => {
-      const jid = getTargetJid(args);
-      if (!jid) return reply("Balas pesan user atau masukkan nomor!");
-      if (db.isOwner(jid)) return reply("Nomor tersebut sudah menjadi Owner.");
-      db.setAdmin(jid, true);
-      reply(`Berhasil menjadikan *${jid.split("@")[0]}* sebagai Admin Bot.`);
-    }
-  },
-  {
-    name: "deladmin",
-    description: "Remove bot admin",
-    ownerOnly: true,
-    category: "Owner",
-    run: async (sock, msg, args, { reply, getTargetJid }) => {
-      const jid = getTargetJid(args);
-      if (!jid) return reply("Balas pesan user atau masukkan nomor!");
-      if (db.isOwner(jid)) return reply("Owner tidak dapat dihapus dari Admin Bot.");
-      if (db.isConfiguredAdmin(jid)) return reply("Nomor tersebut dikelola oleh konfigurasi.");
-      db.setAdmin(jid, false);
-      reply(`Berhasil menghapus akses Admin Bot dari *${jid.split("@")[0]}*.`);
+    run: async (sock, msg, args, { reply }) => {
+      const settings = db.getSettings();
+      const premList = Array.isArray(settings.premiumNumbers) ? settings.premiumNumbers : [];
+      const uniquePrems = [...new Set(premList.map(j => db.normalizeJid(j)))].filter(j => !db.isOwner(j) && !db.isAdmin(j));
+
+      if (uniquePrems.length === 0) {
+        return reply("ℹ️ Belum ada user Premium khusus yang terdaftar.");
+      }
+
+      let text = `⭐ *DAFTAR PENGGUNA PREMIUM*\n─────────────────────────\n`;
+      uniquePrems.forEach((j, i) => {
+        const num = j.split("@")[0];
+        const u = db.getUser(j);
+        const until = u?.premiumUntil ? new Date(u.premiumUntil).toLocaleDateString("id-ID") : "Permanen";
+        text += `${i + 1}. +${num} _(${until})_\n`;
+      });
+      text += `─────────────────────────\nTotal: ${uniquePrems.length} Premium`;
+      reply(text);
     }
   },
   {

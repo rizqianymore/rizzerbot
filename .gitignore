@@ -18,6 +18,7 @@ sessions/
 
 # Database Files (Contains JIDs/User info)
 database.json
+database/
 *.creds
 .creds.json
 config/database.json

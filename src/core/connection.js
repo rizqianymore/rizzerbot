@@ -217,6 +217,9 @@ export async function startBot() {
       }
     } else if (connection === "open") {
       logger.info("Primary Rizzer Bot successfully connected and is now online!");
+      if (sock.user?.id) {
+        db.registerBotJid(sock.user.id);
+      }
     }
   });
 

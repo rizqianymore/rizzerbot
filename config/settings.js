@@ -18,7 +18,7 @@ export const settings = {
     responseDelay: 1500,
 
     stickerPackName: "Rizzer Bot Stickers",
-    stickerAuthor: "Pentagon",
+    stickerAuthor: "Rizzer Bot [Private]",
     image: 'assets/image/banner.png',
     linkTitle: "Rizzer Bot",
     linkBody: "Simple & Clean WhatsApp Bot",

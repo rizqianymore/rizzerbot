@@ -146,20 +146,16 @@ export async function dispatchMessage(sock, msg, logger) {
     const check = checkProfanity(textToCheck);
 
     if (check.isViolation) {
-      db.setBanned(senderJid, true);
-      try {
-        await sock.updateBlockStatus(senderJid, "block");
-      } catch (_) {}
       logger?.warn?.(
-        `[Auto-Block] User ${senderJid} (${msg.pushName}) diblokir karena meminta konten jorok/18+ ("${check.matchedWord}")`
+        `[Blocked-Input] User ${senderJid} (${msg.pushName}) mencoba konten terlarang 18+ ("${check.matchedWord}")`
       );
       await sock.sendMessage(
         remoteJid,
         {
           text:
-            `🚫 *AKSES DITOLAK & NOMOR DIBLOKIR!*\n\n` +
-            `Pesan Anda terdeteksi mengandung kata jorok atau konten terlarang 18+ (*"${check.matchedWord}"*).\n` +
-            `Nomor Anda telah diblokir secara otomatis dari bot.`
+            `⚠️ *PERINGATAN: KONTEN TERLARANG!*\n\n` +
+            `Pesan Anda mengandung kata atau permintaan konten terlarang 18+ (*"${check.matchedWord}"*).\n` +
+            `Permintaan dibatalkan. Harap gunakan bot secara bijak.`
         },
         { quoted: msg }
       );

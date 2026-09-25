@@ -91,8 +91,22 @@ export default [
       const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
       const buffer = await getMediaBuffer(sock, quoted || msg);
       if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.stickernowm*");
+      // Parse text meme atas / bawah
+      let topText = "";
+      let bottomText = "";
+      if (args.length > 0) {
+        const fullText = args.join(" ");
+        if (fullText.includes("|")) {
+          const parts = fullText.split("|");
+          topText = parts[0]?.trim() || "";
+          bottomText = parts.slice(1).join("|")?.trim() || "";
+        } else {
+          bottomText = fullText.trim();
+        }
+      }
+
       try {
-        const stickerBuffer = await createSticker(buffer, { pack: "", author: "" });
+        const stickerBuffer = await createSticker(buffer, { pack: "", author: "", topText, bottomText });
         await sock.sendMessage(
           msg.key.remoteJid,
           { sticker: stickerBuffer },

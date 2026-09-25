@@ -4,11 +4,11 @@
  */
 
 export const BANNED_PATTERNS = [
-  // 1. Pornografi, Seksual Eksplisit & Slang 18+ (Indonesia, English, Japanese slang)
-  /\b(?:bokep|porn|porno|pornografi|hentai|ecchi|nsfw|sex|seks|ngentot|ngewe|kontol|memek|pepek|itil|jembut|tetek|toket|coli|colmek|crot|vagina|penis|bugil|telanjang|lonte|perek|open\s*bo|bispak|jav|masturbasi|cum|creampie|blowjob|deepthroat|dildo|sange|horny|bokepjepang|bokepindo|pornhub|xnxx|xvideos|nude|nudes|boobs|tits|pussy|dick|cock|milf|hentaihaven|rule34)\b/i,
+  // 1. Pornografi, Seksual Eksplisit & Slang 18+ Berat (Indonesia, English, Japanese slang)
+  /\b(?:bokep|porn|porno|pornografi|hentai|ecchi|sex|seks|ngentot|ngewe|kontol|memek|pepek|itil|jembut|tetek|toket|coli|colmek|crot|vagina|penis|bugil|telanjang|lonte|perek|open\s*bo|bispak|jav|masturbasi|cum|creampie|blowjob|deepthroat|dildo|sange|horny|bokepjepang|bokepindo|pornhub|xnxx|xvideos|nude|nudes|boobs|tits|pussy|dick|cock|milf|hentaihaven|rule34)\b/i,
 
-  // 2. Makian, Umpatan & Kata Kasar Jorok
-  /\b(?:pantek|puki|pukimak|bangsat|bajingan|brengsek|tolol|goblok|kampang|kimak|titit|asu|pecun|jablay|bego|tai|taik|babi|anjing|anjir)\b/i,
+  // 2. Makian Jorok Ekstrem / Pelecehan
+  /\b(?:pantek|puki|pukimak|pecun|jablay)\b/i,
 ];
 
 /**

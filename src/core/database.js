@@ -6,6 +6,12 @@ const dbPath = process.env.RIZZER_DB_PATH
   ? path.resolve(process.env.RIZZER_DB_PATH)
   : path.join(process.cwd(), 'database.json');
 const dbDirectory = path.dirname(dbPath);
+
+const usersDbPath = process.env.RIZZER_USERS_PATH
+  ? path.resolve(process.env.RIZZER_USERS_PATH)
+  : path.join(process.cwd(), 'database', 'users.json');
+const usersDbDirectory = path.dirname(usersDbPath);
+
 const configDefaults = cloneValue(settings);
 const configuredOwnerValues = [
   settings.ownerNumber,
@@ -16,6 +22,7 @@ const configuredAdminValues = [settings.adminNumbers, settings.admins];
 const configuredPremiumValues = [settings.premiumNumbers, settings.premiumUsers];
 const schemaVersion = 2;
 let data = null;
+let activeBotJids = new Set();
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -93,6 +100,15 @@ let ownerJids = getConfiguredJids(configuredOwnerValues);
 let adminJids = getConfiguredJids(configuredAdminValues);
 let premiumJids = getConfiguredJids(configuredPremiumValues);
 
+function registerBotJid(jid) {
+  const normalized = normalizeJid(jid);
+  if (!normalized) return;
+  activeBotJids.add(normalized);
+  refreshConfiguredJids();
+  syncPrivilegedUsers();
+  save();
+}
+
 function refreshConfiguredJids() {
   if (!data?.settings) return;
   const activeSettings = data.settings;
@@ -101,6 +117,7 @@ function refreshConfiguredJids() {
     activeSettings.ownerNumber,
     activeSettings.pairingNumber,
     activeSettings.ownerNumbers,
+    ...activeBotJids,
   ]);
   adminJids = getConfiguredJids([
     ...configuredAdminValues,
@@ -111,6 +128,7 @@ function refreshConfiguredJids() {
     ...configuredPremiumValues,
     activeSettings.premiumNumbers,
     activeSettings.premiumUsers,
+    ...activeBotJids,
   ]);
 }
 
@@ -121,8 +139,10 @@ function getRole(user) {
   return 'user';
 }
 
-function getOwnerName() {
-  return data?.settings?.ownerName || settings.ownerName || 'Owner';
+function isPrimaryOwner(jid) {
+  const normalized = normalizeJid(jid);
+  const primary = normalizeJid(data?.settings?.ownerNumber || settings.ownerNumber);
+  return Boolean(normalized && primary && normalized === primary);
 }
 
 function isPremiumExpired(user) {
@@ -137,6 +157,7 @@ function normalizeUser(jid, user = {}) {
   const isConfiguredOwner = ownerJids.has(jid);
   const isConfiguredAdmin = adminJids.has(jid);
   const isConfiguredPremium = premiumJids.has(jid);
+
   const owner = isConfiguredOwner || toBoolean(user.owner);
   const admin = owner || isConfiguredAdmin || toBoolean(user.admin);
   const expired = isPremiumExpired(user);
@@ -175,13 +196,9 @@ function normalizeSettings(storedSettings = {}) {
     premiumNumbers: ['premiumUsers'],
   };
   for (const key of Object.keys(roleAliases)) {
-    const values = [
-      result[key],
-      ...roleAliases[key].map((alias) => result[alias]),
-      configDefaults[key],
-      ...roleAliases[key].map((alias) => configDefaults[alias]),
-    ];
-    result[key] = [...new Set(values.flatMap((value) => toJidList(value)))];
+    const rawVal = storedSettings[key] ?? roleAliases[key].find(k => storedSettings[k] !== undefined);
+    const sourceVal = rawVal !== undefined ? rawVal : configDefaults[key];
+    result[key] = [...new Set(toJidList(sourceVal))];
   }
 
   for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline']) {
@@ -225,10 +242,32 @@ function loadData() {
     }
   }
 
+  // Load dedicated users.json if exists or fallback to database.json users
+  let storedUsers = {};
+  if (fs.existsSync(usersDbPath)) {
+    try {
+      const rawUsers = fs.readFileSync(usersDbPath, 'utf8');
+      if (rawUsers && rawUsers.trim()) {
+        const parsedUsers = JSON.parse(rawUsers);
+        if (isRecord(parsedUsers)) {
+          storedUsers = parsedUsers;
+        }
+      }
+    } catch (error) {
+      const backupUsersPath = `${usersDbPath}.corrupt-${Date.now()}`;
+      try {
+        fs.renameSync(usersDbPath, backupUsersPath);
+      } catch (_) {}
+      storedUsers = {};
+    }
+  }
+
   const source = isRecord(stored) ? stored : {};
-  const users = isRecord(source.users) ? source.users : {};
+  const baseUsers = isRecord(source.users) ? source.users : {};
+  // Combine users: priority to users.json, fallback to database.json
+  const users = { ...baseUsers, ...storedUsers };
   const normalizedUsers = {};
-  let changed = !isRecord(source.users);
+  let changed = !isRecord(source.users) || !fs.existsSync(usersDbPath);
 
   for (const [jid, user] of Object.entries(users)) {
     const normalized = normalizeJid(jid);
@@ -260,6 +299,22 @@ function loadData() {
 
 function writeData() {
   fs.mkdirSync(dbDirectory, { recursive: true });
+  fs.mkdirSync(usersDbDirectory, { recursive: true });
+
+  // 1. Write dedicated database/users.json
+  const usersSerialized = JSON.stringify(data.users || {}, null, 2);
+  const tempUsersPath = `${usersDbPath}.${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(tempUsersPath, usersSerialized, 'utf8');
+    fs.renameSync(tempUsersPath, usersDbPath);
+  } catch (_) {
+    fs.writeFileSync(usersDbPath, usersSerialized, 'utf8');
+    try {
+      fs.rmSync(tempUsersPath, { force: true });
+    } catch (_) {}
+  }
+
+  // 2. Write database.json
   const serialized = JSON.stringify(data, null, 2);
   const temporaryPath = `${dbPath}.${process.pid}.tmp`;
   try {
@@ -408,24 +463,27 @@ function hasAccess(jid, requiredAccess) {
 
 function updateUser(jid, updates = {}) {
   const normalized = normalizeJid(jid);
-  const current = ensureUser(normalized);
-  if (!current) return null;
+  if (!normalized) return null;
+  if (!data.users[normalized]) {
+    data.users[normalized] = createUser(normalized);
+  }
+  const current = data.users[normalized];
 
-  const protectedOwner = isOwner(normalized);
+  const isPrimary = isPrimaryOwner(normalized);
+  const nextOwner = isPrimary ? true : (updates.owner !== undefined ? toBoolean(updates.owner) : toBoolean(current.owner));
+  const nextAdmin = nextOwner || (updates.admin !== undefined ? toBoolean(updates.admin) : toBoolean(current.admin));
+  const nextPremium = nextOwner || nextAdmin || (updates.premium !== undefined ? toBoolean(updates.premium) : toBoolean(current.premium));
+  const nextBanned = nextOwner ? false : (updates.banned !== undefined ? toBoolean(updates.banned) : toBoolean(current.banned));
+
   const next = {
     ...current,
     ...updates,
-    owner: protectedOwner,
-    admin: toBoolean(updates.admin ?? current.admin),
-    premium: toBoolean(updates.premium ?? current.premium),
-    banned: protectedOwner ? false : toBoolean(updates.banned ?? current.banned),
+    owner: nextOwner,
+    admin: nextAdmin,
+    premium: nextPremium,
+    banned: nextBanned,
   };
 
-  if (next.owner) {
-    next.premium = true;
-    next.banned = false;
-  }
-  if (next.admin) next.premium = true;
   next.role = getRole(next);
   if (next.premiumUntil === undefined) next.premiumUntil = current.premiumUntil ?? null;
 
@@ -434,27 +492,85 @@ function updateUser(jid, updates = {}) {
   return next;
 }
 
-function setPremium(jid, enabled, days = null) {
+function setOwner(jid, enabled) {
   const normalized = normalizeJid(jid);
-  if (!normalized || isOwner(normalized)) return data.users[normalized] || null;
-  if (!enabled && (isAdmin(normalized) || premiumJids.has(normalized))) {
-    return data.users[normalized] || null;
+  if (!normalized) return null;
+  if (!enabled && isPrimaryOwner(normalized)) {
+    return data.users[normalized] || null; // Primary owner cannot be removed
   }
-  const duration = Number(days);
-  const premiumUntil = enabled && Number.isFinite(duration) && duration > 0
-    ? Date.now() + duration * 24 * 60 * 60 * 1000
-    : null;
-  return updateUser(normalized, {
-    premium: toBoolean(enabled),
-    premiumUntil,
+
+  const currentList = Array.isArray(data.settings.ownerNumbers) ? data.settings.ownerNumbers : [];
+  let nextList;
+  if (enabled) {
+    nextList = [...new Set([...currentList, normalized])];
+  } else {
+    nextList = currentList.filter((num) => normalizeJid(num) !== normalized);
+  }
+  data.settings.ownerNumbers = nextList;
+  refreshConfiguredJids();
+
+  const user = updateUser(normalized, {
+    owner: Boolean(enabled),
+    admin: Boolean(enabled),
+    premium: Boolean(enabled),
+    banned: enabled ? false : undefined,
   });
+  syncPrivilegedUsers();
+  save();
+  return user;
 }
 
 function setAdmin(jid, enabled) {
   const normalized = normalizeJid(jid);
-  if (!normalized || isOwner(normalized)) return data.users[normalized] || null;
-  if (!enabled && adminJids.has(normalized)) return data.users[normalized] || null;
-  return updateUser(normalized, { admin: toBoolean(enabled) });
+  if (!normalized) return null;
+  if (isOwner(normalized)) return data.users[normalized] || null;
+
+  const currentList = Array.isArray(data.settings.adminNumbers) ? data.settings.adminNumbers : [];
+  let nextList;
+  if (enabled) {
+    nextList = [...new Set([...currentList, normalized])];
+  } else {
+    nextList = currentList.filter((num) => normalizeJid(num) !== normalized);
+  }
+  data.settings.adminNumbers = nextList;
+  refreshConfiguredJids();
+
+  const user = updateUser(normalized, {
+    admin: Boolean(enabled),
+    premium: enabled ? true : undefined,
+  });
+  syncPrivilegedUsers();
+  save();
+  return user;
+}
+
+function setPremium(jid, enabled, days = null) {
+  const normalized = normalizeJid(jid);
+  if (!normalized) return null;
+  if (isOwner(normalized) || isAdmin(normalized)) return data.users[normalized] || null;
+
+  const duration = Number(days);
+  const premiumUntil = enabled && Number.isFinite(duration) && duration > 0
+    ? Date.now() + duration * 24 * 60 * 60 * 1000
+    : null;
+
+  const currentList = Array.isArray(data.settings.premiumNumbers) ? data.settings.premiumNumbers : [];
+  let nextList;
+  if (enabled) {
+    nextList = [...new Set([...currentList, normalized])];
+  } else {
+    nextList = currentList.filter((num) => normalizeJid(num) !== normalized);
+  }
+  data.settings.premiumNumbers = nextList;
+  refreshConfiguredJids();
+
+  const user = updateUser(normalized, {
+    premium: Boolean(enabled),
+    premiumUntil,
+  });
+  syncPrivilegedUsers();
+  save();
+  return user;
 }
 
 function setBanned(jid, enabled) {
@@ -487,12 +603,15 @@ export const db = {
   updateSettings,
   getUser: (jid) => ensureUser(normalizeJid(jid)),
   updateUser,
-  setPremium,
+  registerBotJid,
+  setOwner,
   setAdmin,
+  setPremium,
   setBanned,
   isOwner,
   isAdmin,
   isPremium,
+  isPrimaryOwner,
   isConfiguredAdmin: (jid) => adminJids.has(normalizeJid(jid)),
   isConfiguredPremium: (jid) => premiumJids.has(normalizeJid(jid)),
   isBanned: (jid) => getAccess(jid).banned,
