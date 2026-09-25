@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { settings } from '@/config/settings.js';
 
 const dbPath = path.join(process.cwd(), 'database.json');
 
@@ -24,14 +25,29 @@ const save = () => {
 };
 
 const ensureUser = (normalized) => {
+  let isOwner = false;
+  if (settings.ownerNumber || settings.pairingNumber) {
+    const ownerJids = [settings.ownerNumber, settings.pairingNumber]
+      .filter(Boolean)
+      .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+    if (ownerJids.includes(normalized)) {
+      isOwner = true;
+    }
+  }
+
   if (!data.users[normalized]) {
     data.users[normalized] = {
       name: '',
-      premium: false,
+      premium: isOwner,
+      owner: isOwner,
       banned: false,
       profile: '',
       createdAt: Date.now()
     };
+    save();
+  } else if (isOwner && (!data.users[normalized].premium || !data.users[normalized].owner)) {
+    data.users[normalized].premium = true;
+    data.users[normalized].owner = true;
     save();
   }
   return data.users[normalized];
