@@ -42,7 +42,12 @@ if (fs.existsSync(binFfmpeg)) {
   process.env.FFMPEG_PATH = binFfmpeg;
 }
 
-startBot().catch((err) => {
+startBot().then(async () => {
+  try {
+    const { autoRestoreSubBots } = await import("./src/services/subbot/subbot.js");
+    await autoRestoreSubBots();
+  } catch (_) {}
+}).catch((err) => {
   logger.error("Fatal initialization error:", err);
 });
 

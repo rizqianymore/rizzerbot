@@ -4,6 +4,8 @@ import {
   getJkt48News,
   getJkt48Schedules,
   getJkt48ScheduleDetail,
+  getShowroomLeaderboard,
+  getShowroomSchedules,
 } from "@/src/services/jkt48.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
 
@@ -160,6 +162,7 @@ export default [
     name: "jkt48",
     aliases: ["memberjkt", "jkt", "jktmember"],
     description: "Informasi profil dan daftar member resmi JKT48",
+    premiumOnly: true,
     category: "Tools",
     run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();
@@ -233,7 +236,7 @@ export default [
         const catchphrase = fan?.catchphrase ? `"${fan.catchphrase}"` : "-";
 
         const lines = [
-          `*PROFIL MEMBER JKT48*`,
+          `*Profil Member JKT48*`,
           ``,
           `• Nama Lengkap: *${realName}*`,
           `• Nama Panggilan: *${nickName}*`,
@@ -262,13 +265,10 @@ export default [
 
         const caption = lines.join("\n");
 
-        // Prioritas gambar embed: Foto resmi JKT48, jika tidak ada gunakan foto Fandom
+        // Gambar embed hanya dari situs resmi JKT48
         let photoUrl = info.photo;
         if (photoUrl && !photoUrl.startsWith("http")) {
           photoUrl = `${JKT48_BASE}${photoUrl.startsWith("/") ? "" : "/"}${photoUrl}`;
-        }
-        if (!photoUrl && fan?.wikiImageUrl) {
-          photoUrl = fan.wikiImageUrl;
         }
 
         if (photoUrl) {
@@ -293,6 +293,7 @@ export default [
     name: "jkt48news",
     aliases: ["jktnews", "beritajkt48"],
     description: "Rangkuman berita dan pengumuman resmi terbaru JKT48",
+    premiumOnly: true,
     category: "Tools",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -329,6 +330,7 @@ export default [
     name: "jkt48schedule",
     aliases: ["jktschedule", "jadwaljkt48", "jktjadwal", "jkt48show"],
     description: "Jadwal dan rincian show theater resmi JKT48 dengan pemilihan tanggal spesifik",
+    premiumOnly: true,
     category: "Tools",
     run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();
@@ -445,4 +447,148 @@ export default [
       }
     },
   },
+
+  {
+    name: "jkt48showroom",
+    aliases: ["jktshowroom", "showroomjkt", "srjkt48", "srjkt"],
+    description: "Peringkat dan leaderboard live Showroom member JKT48",
+    premiumOnly: true,
+    category: "Tools",
+    run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+      await sendTyping();
+      await reply("Memuat data leaderboard Showroom member JKT48...");
+
+      try {
+        const res = await getShowroomLeaderboard();
+        const list = res?.data || [];
+        const filterDate = res?.filterDate;
+
+        if (list.length === 0) {
+          return await reply("Belum ada data aktivitas live Showroom JKT48 untuk periode ini.");
+        }
+
+        const periodInfo = filterDate
+          ? `Periode ${filterDate.startDate || ""} - ${filterDate.endDate || filterDate.month || ""}`.trim()
+          : "Bulan Ini";
+
+        const lines = [
+          `*Leaderboard Showroom Member JKT48*`,
+          `_${periodInfo}_`,
+          ``,
+        ];
+
+        for (const item of list) {
+          const liveStatus = item.profile?.is_onlive ? "🔴 *Sedang Live*" : "⚪ *Offline*";
+          lines.push(`*#${item.rank}* • *${item.username}*`);
+          lines.push(`• Total Live: *${item.total_live} kali* (${liveStatus})`);
+          if (item.room_id) {
+            lines.push(`• Tautan Room: https://www.showroom-live.com/room/profile?room_id=${item.room_id}`);
+          }
+          if (item.profile?.image_square || item.profile?.image) {
+            lines.push(`• Foto Profil: ${item.profile.image_square || item.profile.image}`);
+          }
+          lines.push(``);
+        }
+
+        const topMember = list[0];
+        const topImage = topMember?.profile?.image_square || topMember?.profile?.image;
+
+        const caption = lines.join("\n").trim();
+
+        if (topImage) {
+          try {
+            const img = await fetchBuffer(topImage, { redirect: "follow" });
+            return await sock.sendMessage(
+              msg.key.remoteJid,
+              { image: img, caption },
+              { quoted: msg }
+            );
+          } catch (_) {}
+        }
+
+        await reply(caption);
+      } catch (err) {
+        console.error("[JKT48 Showroom Error]", err.message);
+        await reply(`Gagal memuat leaderboard Showroom: ${err.message}`);
+      }
+    },
+  },
+
+  {
+    name: "jkt48theater",
+    aliases: ["jkttheater", "showtheater", "jadwalteater"],
+    description: "Jadwal pertunjukan teater mingguan JKT48 beserta link tiket live streaming & teater",
+    premiumOnly: true,
+    category: "Tools",
+    run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+      await sendTyping();
+      await reply("Memuat jadwal pertunjukan teater JKT48 minggu ini...");
+
+      try {
+        const schedules = await getShowroomSchedules(true);
+
+        if (!Array.isArray(schedules) || schedules.length === 0) {
+          return await reply("Tidak ada pertunjukan teater mingguan yang terdaftar saat ini.");
+        }
+
+        const lines = [
+          `*Jadwal Teater JKT48 Minggu Ini*`,
+          `_Sumber: Live Theater & Showroom API_`,
+          ``,
+        ];
+
+        for (const item of schedules) {
+          const showDateStr = item.showDate ? formatDate(item.showDate.split("T")[0]) : "-";
+          const time = item.showTime ? `pukul *${item.showTime} WIB*` : "";
+          const setlistName = item.setlist?.name || "Pertunjukan Teater";
+
+          let specialTag = "";
+          if (item.isBirthdayShow && item.birthdayMember?.name) {
+            specialTag = ` 🎂 *Birthday Show ${item.birthdayMember.name}*`;
+          } else if (item.isGraduationShow && item.graduateMember?.name) {
+            specialTag = ` 🎓 *Graduation Show ${item.graduateMember.name}*`;
+          }
+
+          lines.push(`• *${setlistName}*${specialTag}`);
+          lines.push(`  - Tanggal & Waktu: *${showDateStr}* ${time}`.trim());
+
+          if (item.ticketTheater) {
+            lines.push(`  - Tiket Teater: ${item.ticketTheater}`);
+          }
+          if (item.ticketShowroom) {
+            lines.push(`  - Live Streaming: ${item.ticketShowroom}`);
+          }
+
+          if (Array.isArray(item.memberList) && item.memberList.length > 0) {
+            const memberNames = item.memberList.map((m) => m.stage_name || m.name).join(", ");
+            lines.push(`  - Member Lineup: ${memberNames}`);
+          }
+          lines.push(``);
+        }
+
+        lines.push(`Ketik \`${prefix}jktschedule\` untuk memeriksa jadwal di kalender resmi situs web JKT48.`);
+
+        const caption = lines.join("\n").trim();
+        const firstWithImage = schedules.find((s) => s.setlist?.image);
+
+        if (firstWithImage?.setlist?.image) {
+          try {
+            const img = await fetchBuffer(firstWithImage.setlist.image, { redirect: "follow" });
+            return await sock.sendMessage(
+              msg.key.remoteJid,
+              { image: img, caption },
+              { quoted: msg }
+            );
+          } catch (_) {}
+        }
+
+        await reply(caption);
+      } catch (err) {
+        console.error("[JKT48 Theater Error]", err.message);
+        await reply(`Gagal memuat jadwal teater mingguan: ${err.message}`);
+      }
+    },
+  },
 ];
+
+

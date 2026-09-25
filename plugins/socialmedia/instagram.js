@@ -3,6 +3,7 @@ export default [
     name: "igdl",
     aliases: ["ig", "instagram"],
     description: "Download Instagram media (Reels/Post) via link",
+    premiumOnly: true,
     category: "Social Media",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

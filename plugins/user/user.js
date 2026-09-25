@@ -56,6 +56,7 @@ export default [
   {
     name: "quote",
     description: "Get a random rizz quote",
+    premiumOnly: true,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -83,6 +84,7 @@ export default [
     name: "sticker",
     aliases: ["s"],
     description: "Convert image/video to sticker",
+    premiumOnly: true,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -106,6 +108,7 @@ export default [
     name: "toimg",
     aliases: ["toimage"],
     description: "Convert sticker to image",
+    premiumOnly: true,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -134,6 +137,7 @@ export default [
     name: "lyrics",
     aliases: ["lirik"],
     description: "Search song lyrics",
+    premiumOnly: true,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -155,6 +159,7 @@ export default [
     name: "translate",
     aliases: ["tr"],
     description: "Translate text (default: id)",
+    premiumOnly: true,
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
@@ -185,19 +190,110 @@ export default [
   },
   {
     name: "profile",
-    description: "View your profile & status",
+    aliases: ["cekuser", "userinfo", "whois"],
+    description: "Cek informasi profil WhatsApp dan status data bot pengguna",
     category: "User",
-    run: async (sock, msg, args, { reply, sendTyping, senderJid, isPremium }) => {
+    run: async (sock, msg, args, { reply, sendTyping, senderJid, isPremium, isOwner, getTargetJid, prefix }) => {
       await sendTyping();
-      const user = db.getUser(senderJid);
-      await reply(
-        `👤 *Profil Anda*\n\n` +
-        `*Nama:* ${msg.pushName || "User"}\n` +
-        `*Nomor:* ${senderJid.split("@")[0]}\n` +
-        `*Status:* ${isPremium ? "⭐ Premium" : "Free User"}\n` +
-        `*Bio:* ${user.profile || "-"}\n` +
-        `*Terdaftar:* ${new Date(user.createdAt).toLocaleDateString("id-ID")}`
+
+      let targetJid = getTargetJid(args) || senderJid;
+      targetJid = db.normalizeJid(targetJid);
+
+      const isSelf = targetJid === senderJid;
+      const targetUser = db.getUser(targetJid);
+
+      const targetIsOwner = [settings.ownerNumber, settings.pairingNumber]
+        .map((v) => (v ? v.replace(/[^0-9]/g, "") + "@s.whatsapp.net" : ""))
+        .includes(targetJid);
+
+      const targetIsPremium = targetIsOwner || Boolean(targetUser.premium);
+
+      // Ambil foto profil dari WhatsApp (jika diizinkan privasi WA user)
+      let ppUrl = null;
+      try {
+        ppUrl = await sock.profilePictureUrl(targetJid, "image");
+      } catch (_) {
+        ppUrl = null;
+      }
+
+      // Ambil Status / About / Bio dari WhatsApp
+      let waStatus = "-";
+      let waStatusSetAt = null;
+      try {
+        const statusRes = await sock.fetchStatus(targetJid);
+        if (statusRes?.status) {
+          waStatus = statusRes.status;
+          waStatusSetAt = statusRes.setAt ? new Date(statusRes.setAt).toLocaleDateString("id-ID") : null;
+        }
+      } catch (_) {}
+
+      // Nomor bersih
+      const phoneNum = targetJid.split("@")[0];
+
+      // Nama tampilan
+      let displayName = targetUser.name || (isSelf ? (msg.pushName || "Pengguna") : "Pengguna");
+
+      // Tanggal registrasi bot
+      const regDate = targetUser.createdAt
+        ? new Date(targetUser.createdAt).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
+        : "-";
+
+      const lines = [
+        `👤 *Informasi Profil Pengguna*`,
+        ``,
+        `• *Nama:* ${displayName}`,
+        `• *Nomor:* +${phoneNum}`,
+        `• *Status Bot:* ${targetIsOwner ? "👑 Owner Bot" : targetIsPremium ? "⭐ Premium User" : "Free User"}`,
+        `• *Status Banned:* ${targetUser.banned ? "🔴 Diblokir / Banned" : "🟢 Aktif (Normal)"}`,
+        `• *Terdaftar Bot:* ${regDate}`,
+        ``,
+        `📝 *Bio / Status WhatsApp:*`,
+        `"${waStatus}"${waStatusSetAt ? ` _(Diperbarui: ${waStatusSetAt})_` : ""}`,
+      ];
+
+      if (targetUser.profile) {
+        lines.push(``, `📌 *Custom Bio Bot:*`, `"${targetUser.profile}"`);
+      }
+
+      lines.push(
+        ``,
+        `🔗 *Tautan Langsung:* wa.me/${phoneNum}`,
+        ``,
+        `_💡 Ketik \`${prefix}profile @tag\` atau \`${prefix}profile 628xxx\` untuk lookup pengguna lain._`
       );
-    }
-  }
+
+      const captionText = lines.join("\n");
+
+      // Kirim bersama gambar profil jika ada
+      if (ppUrl) {
+        try {
+          const { fetchBuffer } = await import("@/src/services/scrape.js");
+          const imgBuffer = await fetchBuffer(ppUrl);
+          return await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+              image: imgBuffer,
+              caption: captionText,
+              mentions: [targetJid],
+            },
+            { quoted: msg }
+          );
+        } catch (_) {}
+      }
+
+      // Fallback pesan teks jika tidak ada foto profil / error fetch
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        {
+          text: captionText,
+          mentions: [targetJid],
+        },
+        { quoted: msg }
+      );
+    },
+  },
 ];

@@ -39,6 +39,52 @@ export async function dispatchMessage(sock, msg, logger) {
   if (!isPublic && !isOwner) return;
 
   const user = db.getUser(senderJid);
+  if (msg.pushName && user.name !== msg.pushName) {
+    user.name = msg.pushName;
+    db.save();
+  }
+
+  // Cek apakah user sudah dibanned/diblokir oleh bot
+  if (user.banned && !isOwner) {
+    return;
+  }
+
+  // Proteksi kata jorok / konten 18+ (Berlaku global untuk SEMUA plugins & reply/quoted)
+  if (!isOwner) {
+    const { checkProfanity } = await import("@/src/utils/filter.js");
+
+    const quotedText =
+      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
+      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||
+      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage?.caption ||
+      "";
+
+    const textToCheck = `${messageContent} ${quotedText}`.trim();
+    const check = checkProfanity(textToCheck);
+
+    if (check.isViolation) {
+      user.banned = true;
+      db.save();
+
+      try {
+        await sock.updateBlockStatus(senderJid, "block");
+      } catch (_) {}
+
+      logger.warn(`[Auto-Block] User ${senderJid} (${msg.pushName}) diblokir karena meminta konten jorok/18+ ("${check.matchedWord}")`);
+
+      await sock.sendMessage(
+        remoteJid,
+        {
+          text: `🚫 *AKSES DITOLAK & NOMOR DIBLOKIR!*\n\n` +
+            `Pesan Anda terdeteksi mengandung kata jorok atau konten terlarang 18+ (*"${check.matchedWord}"*).\n` +
+            `Nomor Anda telah diblokir secara otomatis dari bot.`
+        },
+        { quoted: msg }
+      );
+      return;
+    }
+  }
+
   const isPremium = isOwner || user.premium;
 
   if (cmd.ownerOnly && !isOwner) {

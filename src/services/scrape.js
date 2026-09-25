@@ -176,8 +176,28 @@ http.interceptors.request.use((config) => {
 });
 
 let jktBrowser = null;
+let jktBrowserIdleTimer = null;
+
+function resetScrapeBrowserTimer() {
+  if (jktBrowserIdleTimer) {
+    clearTimeout(jktBrowserIdleTimer);
+    jktBrowserIdleTimer = null;
+  }
+  jktBrowserIdleTimer = setTimeout(async () => {
+    if (jktBrowser) {
+      try {
+        if (jktBrowser.connected) await jktBrowser.close().catch(() => {});
+      } catch (_) {}
+      jktBrowser = null;
+    }
+  }, 60000);
+  if (jktBrowserIdleTimer && typeof jktBrowserIdleTimer.unref === "function") {
+    jktBrowserIdleTimer.unref();
+  }
+}
 
 async function getJktBrowser() {
+  resetScrapeBrowserTimer();
   if (jktBrowser?.connected) return jktBrowser;
   const { default: puppeteer } = await import("puppeteer");
   jktBrowser = await puppeteer.launch({
@@ -185,14 +205,17 @@ async function getJktBrowser() {
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--single-process",
+      "--disable-gpu",
       "--disable-blink-features=AutomationControlled",
-      "--disable-features=IsolateOrigins,site-per-process",
     ],
   });
   return jktBrowser;
 }
 
 async function jktFetch(url) {
+  resetScrapeBrowserTimer();
   const browser = await getJktBrowser();
   const page = await browser.newPage();
   const device = getRandomDevice("mobile");

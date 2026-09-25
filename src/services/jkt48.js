@@ -13,11 +13,36 @@ let jktBrowser = null;
 let jktPage = null;
 let isInitializing = false;
 let initWaiters = [];
+let idleTimer = null;
+
+const BROWSER_IDLE_TIMEOUT_MS = 60000; // Auto-kill setelah 60 detik tidak digunakan
+
+function resetBrowserIdleTimer() {
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+  idleTimer = setTimeout(async () => {
+    if (jktBrowser) {
+      try {
+        if (jktPage && !jktPage.isClosed()) await jktPage.close().catch(() => {});
+        if (jktBrowser?.connected) await jktBrowser.close().catch(() => {});
+      } catch (_) {}
+      jktBrowser = null;
+      jktPage = null;
+    }
+  }, BROWSER_IDLE_TIMEOUT_MS);
+  if (idleTimer && typeof idleTimer.unref === "function") {
+    idleTimer.unref();
+  }
+}
 
 /**
  * Ensures an active stealth browser session connected to jkt48.com.
  */
 async function getActivePage() {
+  resetBrowserIdleTimer();
+
   if (jktPage && !jktPage.isClosed() && jktBrowser?.connected) {
     return jktPage;
   }
@@ -35,6 +60,8 @@ async function getActivePage() {
       try {
         await jktBrowser.close();
       } catch (_) {}
+      jktBrowser = null;
+      jktPage = null;
     }
 
     const { default: puppeteer } = await import("puppeteer");
@@ -48,6 +75,7 @@ async function getActivePage() {
         "--no-first-run",
         "--no-zygote",
         "--disable-gpu",
+        "--single-process",
         "--disable-blink-features=AutomationControlled",
         "--window-size=1280,800",
       ],
@@ -101,6 +129,7 @@ async function getActivePage() {
  * Executes in-page fetch using the browser's cleared Cloudflare context.
  */
 export async function jktInPageFetch(apiUrl) {
+  resetBrowserIdleTimer();
   let page = await getActivePage();
 
   const executeFetch = async (p) => {
@@ -121,6 +150,7 @@ export async function jktInPageFetch(apiUrl) {
 
   try {
     const result = await executeFetch(page);
+    resetBrowserIdleTimer();
     if (result.ok && result.data) {
       return result.data;
     }
@@ -131,6 +161,7 @@ export async function jktInPageFetch(apiUrl) {
     jktPage = null;
     page = await getActivePage();
     const retryResult = await executeFetch(page);
+    resetBrowserIdleTimer();
     if (retryResult.ok && retryResult.data) {
       return retryResult.data;
     }
@@ -417,3 +448,37 @@ export async function getJkt48MemberDetail(idOrName) {
     fandom: fandomData || null,
   };
 }
+
+/**
+ * Fetch JKT48 Showroom Leaderboard
+ * URL: https://admin.jkt48showroom-api.my.id/leaderboard-member/showroom
+ */
+export async function getShowroomLeaderboard(page = 1, filterBy = "month", year = new Date().getFullYear()) {
+  const { default: axios } = await import("axios");
+  const url = `https://admin.jkt48showroom-api.my.id/leaderboard-member/showroom?page=${page}&filterBy=${filterBy}&year=${year}`;
+  const res = await axios.get(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    },
+    timeout: 10000,
+  });
+  return res.data;
+}
+
+/**
+ * Fetch JKT48 Show Schedules from Showroom API
+ * URL: https://admin.jkt48showroom-api.my.id/schedules?isOnWeekSchedule=true/false
+ */
+export async function getShowroomSchedules(isOnWeek = true) {
+  const { default: axios } = await import("axios");
+  const url = `https://admin.jkt48showroom-api.my.id/schedules?isOnWeekSchedule=${isOnWeek ? "true" : "false"}`;
+  const res = await axios.get(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    },
+    timeout: 10000,
+  });
+  return Array.isArray(res.data) ? res.data : [];
+}
+
+

@@ -91,15 +91,34 @@ export function periodicDatabaseSnapshot(logger) {
   }
 }
 
+export function cleanOrphanChromeProcesses(logger) {
+  try {
+    const { exec } = import("child_process");
+    import("child_process").then(({ exec }) => {
+      // Bunuh process chrome yang orphaned atau defunct jika ada
+      exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {
+        if (!err && logger) {
+          logger.info("[System Cleaner] Membersihkan proses browser renderer yang tidak terpakai.");
+        }
+      });
+    }).catch(() => {});
+  } catch (_) {}
+}
+
 export function startAutoCleanInterval(logger) {
   autoCleanSessionCache(logger);
   periodicDatabaseSnapshot(logger);
+  cleanOrphanChromeProcesses(logger);
+
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
   const timer = setInterval(() => {
     autoCleanSessionCache(logger);
     periodicDatabaseSnapshot(logger);
+    cleanOrphanChromeProcesses(logger);
   }, SIX_HOURS_MS);
+
   if (timer && typeof timer.unref === "function") {
     timer.unref();
   }
 }
+

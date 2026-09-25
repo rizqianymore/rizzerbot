@@ -16,6 +16,7 @@ export default [
     name: "rvo",
     aliases: ["readviewonce", "viewonce"],
     description: "Membuka dan mendownload media sekali lihat (view once)",
+    premiumOnly: true,
     category: "Tools",
     run: async (sock, msg, args, { reply, sendTyping, quoted }) => {
       await sendTyping();

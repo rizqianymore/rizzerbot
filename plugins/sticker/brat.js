@@ -436,6 +436,7 @@ export default [
     name: "brat",
     aliases: ["bratimg", "brattext", "sbrat"],
     description: "Membuat stiker teks Brat Classic (lokal generator)",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       let text = args.join(" ").trim();
@@ -483,6 +484,7 @@ export default [
     name: "bratvid",
     aliases: ["bratvideo", "bratvid2"],
     description: "Membuat stiker teks Brat video animasi teks berjalan",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       let text = args.join(" ").trim();
@@ -514,6 +516,7 @@ export default [
     name: "bratgojo",
     aliases: ["sbratgojo"],
     description: "Membuat stiker Brat versi Gojo Satoru",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       const text = args.join(" ").trim();
@@ -539,6 +542,7 @@ export default [
     name: "bratgojovid",
     aliases: ["sbratgojovid"],
     description: "Membuat stiker Brat Gojo video animasi berjalan",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       const text = args.join(" ").trim();
@@ -564,6 +568,7 @@ export default [
     name: "bratvermeil",
     aliases: ["sbratvermeil"],
     description: "Membuat stiker Brat versi Vermeil",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       const text = args.join(" ").trim();
@@ -589,6 +594,7 @@ export default [
     name: "bratvermeilvid",
     aliases: ["sbratvermeilvid"],
     description: "Membuat stiker Brat Vermeil video animasi berjalan",
+    premiumOnly: true,
     category: "Sticker",
     run: async (sock, msg, args, { reply, prefix }) => {
       const text = args.join(" ").trim();

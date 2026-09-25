@@ -15,6 +15,7 @@
     "@napi-rs/canvas": "^1.0.9",
     "axios": "^1.19.0",
     "baileys": "7.0.0-rc14",
+    "parse5": "^8.0.1",
     "pino": "^9.6.0",
     "pino-pretty": "^13.1.1",
     "puppeteer": "^25.9.0",
