@@ -227,9 +227,39 @@ export default {
       menuText += `_Ketik \`${prefix}menu\` untuk melihat seluruh daftar menu._`;
     }
 
+    const finalCaption = menuText.trim();
+
+    // Coba kirim dengan gambar jika file lokal atau URL gambar tersedia
+    try {
+      let imagePayload = null;
+      if (settings.image) {
+        if (typeof settings.image === "string" && (settings.image.startsWith("http://") || settings.image.startsWith("https://"))) {
+          imagePayload = { url: settings.image };
+        } else {
+          const { existsSync, readFileSync } = await import("fs");
+          const { resolve } = await import("path");
+          const localPath = resolve(process.cwd(), settings.image);
+          if (existsSync(localPath)) {
+            imagePayload = readFileSync(localPath);
+          }
+        }
+      }
+
+      if (imagePayload) {
+        return await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            image: imagePayload,
+            caption: finalCaption,
+          },
+          { quoted: msg }
+        );
+      }
+    } catch (_) {}
+
     await sock.sendMessage(
       msg.key.remoteJid,
-      { text: menuText.trim() },
+      { text: finalCaption },
       { quoted: msg }
     );
   },
