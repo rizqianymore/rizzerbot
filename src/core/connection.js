@@ -71,6 +71,29 @@ export async function startBot() {
     }
 
     const authDir = path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot");
+    if (!fs.existsSync(authDir)) {
+      fs.mkdirSync(authDir, { recursive: true });
+    }
+
+    // Validasi integritas sesi yang sudah ada. Jika creds rusak / 0 byte, reset sesi agar fallback bersih.
+    const credsPath = path.join(authDir, "creds.json");
+    if (fs.existsSync(credsPath)) {
+      try {
+        const stats = fs.statSync(credsPath);
+        if (stats.size === 0) {
+          throw new Error("creds.json kosong (0 bytes)");
+        }
+        const parsed = JSON.parse(fs.readFileSync(credsPath, "utf-8"));
+        if (!parsed || typeof parsed !== "object" || !parsed.noiseKey) {
+          throw new Error("Format creds.json tidak lengkap atau korup");
+        }
+      } catch (err) {
+        logger.warn(`Sesi sebelumnya tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru yang bersih...`);
+        deleteFolderRecursive(authDir);
+        fs.mkdirSync(authDir, { recursive: true });
+      }
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
     const { version } = await fetchLatestBaileysVersion().catch(() => ({
       version: [2, 3000, 1043857760],
@@ -224,9 +247,5 @@ export async function startBot() {
     return null;
   }
 }
-
-startBot().catch((err) => {
-  logger.error("Fatal initialization error:", err);
-});
 
 export default startBot;

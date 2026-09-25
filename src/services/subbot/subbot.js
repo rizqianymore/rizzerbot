@@ -34,6 +34,27 @@ export async function createSubBot(number, onPairingCode) {
   }
 
   const sessionDir = path.join(baseSessionsDir, botId);
+  if (!fs.existsSync(sessionDir)) {
+    fs.mkdirSync(sessionDir, { recursive: true });
+  }
+
+  // Validasi file creds sesi subbot
+  const credsPath = path.join(sessionDir, "creds.json");
+  if (fs.existsSync(credsPath)) {
+    try {
+      const stats = fs.statSync(credsPath);
+      if (stats.size === 0) throw new Error("creds.json kosong");
+      const parsed = JSON.parse(fs.readFileSync(credsPath, "utf-8"));
+      if (!parsed || typeof parsed !== "object" || !parsed.noiseKey) {
+        throw new Error("Format creds subbot korup");
+      }
+    } catch (err) {
+      logger.warn(`[SubBot ${cleanNumber}] Sesi lama rusak (${err.message}). Mereset sesi subbot...`);
+      deleteFolderRecursive(sessionDir);
+      fs.mkdirSync(sessionDir, { recursive: true });
+    }
+  }
+
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
   const { version } = await fetchLatestBaileysVersion().catch(() => ({
     version: [2, 3000, 1043857760],
