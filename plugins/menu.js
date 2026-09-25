@@ -3,6 +3,11 @@ import { db } from "@/src/core/database.js";
 
 // Panduan contoh penggunaan untuk masing-masing command
 const COMMAND_USAGES = {
+  // News
+  cnn: "<topik berita>",
+  inews: "<topik / link berita>",
+  kompastv: "[topik / link / jumlah]",
+
   // Social Media
   tiktok: "<url> [mp3]",
   igdl: "<url>",
@@ -20,11 +25,6 @@ const COMMAND_USAGES = {
   bratvermeil: "<teks>",
   bratvermeilvid: "<teks>",
 
-  // News
-  kompastv: "[topik / link / jumlah]",
-  cnn: "<topik berita>",
-  inews: "<topik / link berita>",
-
   // Tools
   jkt48: "<nama/id member>",
   jkt48news: "[jumlah berita]",
@@ -39,6 +39,7 @@ const COMMAND_USAGES = {
   ipgeo: "<ip / domain>",
   pinterest: "<kata kunci>",
   image: "<kata kunci>",
+  listplugins: "",
 
   // Group
   hidetag: "<pesan>",
