@@ -118,30 +118,46 @@ export async function searchKompasNews(query, limit = 5) {
       timeout: 30000,
     });
 
+    // Google CSE input handling if needed
+    const cseInputSelector = "input.gsc-input, input#gsc-i-id1, input[name='search']";
+    const hasInput = await page.$(cseInputSelector);
+    if (hasInput) {
+      await page.focus(cseInputSelector);
+      await page.keyboard.down("Control");
+      await page.keyboard.press("KeyA");
+      await page.keyboard.up("Control");
+      await page.keyboard.press("Backspace");
+      await page.type(cseInputSelector, cleanQuery, { delay: 30 });
+      await page.keyboard.press("Enter");
+    }
+
     // Menunggu Google CSE selesai merender hasil pencarian
-    await page.waitForSelector(".gsc-webResult, .gsc-result, a.gs-title", {
-      timeout: 12000,
+    await page.waitForSelector(".gsc-webResult.gsc-result, a.gs-title", {
+      timeout: 15000,
     });
+
+    // Beri jeda sejenak untuk memastikan hasil selesai di-render
+    await new Promise((r) => setTimeout(r, 1000));
 
     const queryWords = cleanQuery
       .toLowerCase()
       .split(/\s+/)
-      .filter((w) => w.length > 2);
+      .filter((w) => w.length >= 2);
 
     const rawResults = await page.evaluate((max) => {
       const list = [];
       const nodes = document.querySelectorAll(".gsc-webResult.gsc-result");
       for (const n of nodes) {
-        if (list.length >= max * 2) break;
+        if (list.length >= max * 3) break;
         const titleEl = n.querySelector("a.gs-title");
         const snippetEl = n.querySelector(".gs-snippet");
-        const imgEl = n.querySelector(".gs-image img");
+        const imgEl = n.querySelector(".gs-image img") || n.querySelector("img");
 
         if (titleEl && titleEl.href && !titleEl.href.includes("google.com")) {
           const title = titleEl.innerText.trim();
           const url = titleEl.href;
           const snippet = snippetEl ? snippetEl.innerText.trim() : "";
-          const image = imgEl ? imgEl.src : null;
+          const image = imgEl ? (imgEl.src || imgEl.getAttribute("src")) : null;
 
           if (title && url) {
             list.push({ title, url, snippet, image });
@@ -152,20 +168,31 @@ export async function searchKompasNews(query, limit = 5) {
     }, limit);
 
     // Filter hasil agar benar-benar relevan dengan topik yang dicari
+    // Untuk query spesifik seperti 'pt kai', prioritaskan artikel yang mengandung kata kunci tersebut
     const filtered = rawResults.filter((item) => {
       if (queryWords.length === 0) return true;
       const combinedText = `${item.title} ${item.snippet}`.toLowerCase();
+      // Harus mengandung setidaknya 1 kata kunci utama
       return queryWords.some((w) => combinedText.includes(w));
     });
 
-    const finalResults = filtered.length > 0 ? filtered.slice(0, limit) : rawResults.slice(0, limit);
+    // Urutkan berdasarkan skor kecocokan tertinggi
+    filtered.sort((a, b) => {
+      const aText = `${a.title} ${a.snippet}`.toLowerCase();
+      const bText = `${b.title} ${b.snippet}`.toLowerCase();
+      const aScore = queryWords.reduce((acc, w) => acc + (aText.includes(w) ? 1 : 0), 0) + (aText.includes(cleanQuery.toLowerCase()) ? 2 : 0);
+      const bScore = queryWords.reduce((acc, w) => acc + (bText.includes(w) ? 1 : 0), 0) + (bText.includes(cleanQuery.toLowerCase()) ? 2 : 0);
+      return bScore - aScore;
+    });
+
+    const finalResults = filtered.length > 0 ? filtered.slice(0, limit) : [];
     if (finalResults.length > 0) return finalResults;
 
     throw new Error("Hasil kosong");
   } catch (err) {
     const fallbackList = await searchKompasNewsFallback(cleanQuery, limit);
     if (fallbackList.length > 0) return fallbackList;
-    throw new Error(`Pencarian untuk "${cleanQuery}" tidak menemukan hasil.`);
+    throw new Error(`Pencarian untuk "${cleanQuery}" tidak menemukan berita yang cocok di Kompas TV.`);
   } finally {
     await browser.close().catch(() => {});
   }
