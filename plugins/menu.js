@@ -141,8 +141,8 @@ export default {
     if (rawArg && !targetCategory) {
       const targetCmd = commands.get(rawArg);
       if (targetCmd) {
-        const usage = COMMAND_USAGES[targetCmd.name] ? ` \`${prefix}${targetCmd.name} ${COMMAND_USAGES[targetCmd.name]}\`` : ` \`${prefix}${targetCmd.name}\``;
-        const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `\`${prefix}${a}\``).join(", ") : "-";
+        const usage = COMMAND_USAGES[targetCmd.name] ? ` *${prefix}${targetCmd.name} ${COMMAND_USAGES[targetCmd.name]}*` : ` *${prefix}${targetCmd.name}*`;
+        const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ") : "-";
 
         const detailText =
           `*Panduan Perintah: ${prefix}${targetCmd.name}*\n\n` +
@@ -183,11 +183,11 @@ export default {
       if (targetCategory === "Owner" && !isOwner) {
         return reply("❌ Kategori *Owner* hanya dapat diakses oleh Pemilik Bot!");
       }
-      return reply(`❌ Kategori \`${rawArg}\` tidak ditemukan atau tidak tersedia.`);
+      return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
     let menuText = `*${settings.botName}*\n`;
-    menuText += `• Prefix : [ \`${prefix}\` ]\n`;
+    menuText += `• Prefix : [ *${prefix}* ]\n`;
     menuText += `• Status : *${isOwner ? "👑 Owner" : isPremium ? "⭐ Premium" : "Free User"}*\n`;
     if (targetCategory) {
       menuText += `• Kategori : *${targetCategory}*\n`;
@@ -204,27 +204,27 @@ export default {
     for (const cat of catKeys) {
       menuText += `┌───「 *${cat}* 」\n`;
       for (const cmd of categories[cat]) {
-        menuText += `│ • \`${prefix}${cmd.name}\`\n`;
+        menuText += `│ • ${prefix}${cmd.name}\n`;
       }
       menuText += `└───\n\n`;
     }
 
     if (!targetCategory) {
       menuText += `💡 *Pilihan Kategori Menu:*\n`;
-      menuText += `• \`${prefix}menu news\`\n`;
-      menuText += `• \`${prefix}menu socmed\`\n`;
-      menuText += `• \`${prefix}menu ai\`\n`;
-      menuText += `• \`${prefix}menu sticker\`\n`;
-      menuText += `• \`${prefix}menu tools\`\n`;
-      menuText += `• \`${prefix}menu group\`\n`;
-      menuText += `• \`${prefix}menu user\`\n`;
-      menuText += `• \`${prefix}menu premium\`\n`;
+      menuText += `• ${prefix}menu news\n`;
+      menuText += `• ${prefix}menu socmed\n`;
+      menuText += `• ${prefix}menu ai\n`;
+      menuText += `• ${prefix}menu sticker\n`;
+      menuText += `• ${prefix}menu tools\n`;
+      menuText += `• ${prefix}menu group\n`;
+      menuText += `• ${prefix}menu user\n`;
+      menuText += `• ${prefix}menu premium\n`;
       if (isOwner) {
-        menuText += `• \`${prefix}menu owner\`\n`;
+        menuText += `• ${prefix}menu owner\n`;
       }
-      menuText += `\n_Ketik \`${prefix}help <command>\` untuk info detail fitur._`;
+      menuText += `\n_Ketik *${prefix}help <command>* untuk info detail fitur._`;
     } else {
-      menuText += `_Ketik \`${prefix}menu\` untuk melihat seluruh daftar menu._`;
+      menuText += `_Ketik *${prefix}menu* untuk melihat seluruh daftar menu._`;
     }
 
     const finalCaption = menuText.trim();
