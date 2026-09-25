@@ -4,6 +4,9 @@ export const settings = {
     ownerName: "Pentagon",
     ownerNumber: "6287847566690",
     pairingNumber: "6287847566690",
+    ownerNumbers: [],
+    premiumNumbers: [],
+    adminNumbers: [],
     usePairingCode: true,
 
     public: true,

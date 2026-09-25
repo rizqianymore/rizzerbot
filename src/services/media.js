@@ -1,6 +1,6 @@
 import { Sticker, StickerTypes } from "wa-sticker-formatter";
 import sharp from "sharp";
-import { settings } from "@/config/settings.js";
+import { db } from "@/src/core/database.js";
 
 export async function getMediaBuffer(sock, msg) {
   try {
@@ -11,9 +11,10 @@ export async function getMediaBuffer(sock, msg) {
 }
 
 export async function createSticker(buffer, { pack, author } = {}) {
+  const activeSettings = db.getSettings();
   const sticker = new Sticker(buffer, {
-    pack: pack || settings.stickerPackName,
-    author: author || settings.stickerAuthor,
+    pack: pack === undefined ? activeSettings.stickerPackName : pack,
+    author: author === undefined ? activeSettings.stickerAuthor : author,
     quality: 80,
     type: StickerTypes.FULL,
   });

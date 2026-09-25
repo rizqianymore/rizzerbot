@@ -1,4 +1,3 @@
-import { settings } from '@/config/settings.js';
 import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
@@ -36,10 +35,12 @@ export default [
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
+      const activeSettings = db.getSettings();
+      const ownerNumber = db.normalizeJid(activeSettings.ownerNumber).split("@")[0] || activeSettings.ownerNumber;
       const text =
         `👤 *Owner Info*\n\n` +
-        `*Nama:* ${settings.ownerName}\n` +
-        `*Nomor:* wa.me/${settings.ownerNumber}\n\n` +
+        `*Nama:* ${activeSettings.ownerName}\n` +
+        `*Nomor:* wa.me/${ownerNumber}\n\n` +
         `Hubungi owner jika ada kendala / ingin upgrade premium.`;
       await reply(text);
     }
@@ -179,12 +180,15 @@ export default [
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
       await sendTyping();
+      const activeSettings = db.getSettings();
+      const ownerJid = db.normalizeJid(activeSettings.ownerNumber);
       const data =
         `📩 *Laporan Masuk*\n\n` +
         `*Dari:* ${msg.pushName || "User"}\n` +
         `*Nomor:* ${senderJid}\n\n` +
         `*Laporan:* ${args.join(" ") || "(kosong)"}`;
-      await sock.sendMessage(settings.ownerNumber + "@s.whatsapp.net", { text: data });
+      if (!ownerJid) return reply("❌ Nomor owner belum dikonfigurasi.");
+      await sock.sendMessage(ownerJid, { text: data });
       await reply("✅ Laporan telah dikirim ke Owner.");
     }
   },
@@ -193,7 +197,7 @@ export default [
     aliases: ["cekuser", "userinfo", "whois"],
     description: "Cek informasi profil WhatsApp dan status data bot pengguna",
     category: "User",
-    run: async (sock, msg, args, { reply, sendTyping, senderJid, isPremium, isOwner, getTargetJid, prefix }) => {
+    run: async (sock, msg, args, { reply, sendTyping, senderJid, getTargetJid, prefix }) => {
       await sendTyping();
 
       let targetJid = getTargetJid(args) || senderJid;
@@ -201,12 +205,11 @@ export default [
 
       const isSelf = targetJid === senderJid;
       const targetUser = db.getUser(targetJid);
+      if (!targetUser) return reply("❌ Nomor target tidak valid.");
 
-      const targetIsOwner = [settings.ownerNumber, settings.pairingNumber]
-        .map((v) => (v ? v.replace(/[^0-9]/g, "") + "@s.whatsapp.net" : ""))
-        .includes(targetJid);
-
-      const targetIsPremium = targetIsOwner || Boolean(targetUser.premium);
+      const targetAccess = db.getAccess(targetJid);
+      const targetIsOwner = targetAccess.owner;
+      const targetIsPremium = targetAccess.premium;
 
       // Ambil foto profil dari WhatsApp (jika diizinkan privasi WA user)
       let ppUrl = null;
@@ -247,7 +250,7 @@ export default [
         ``,
         `• *Nama:* ${displayName}`,
         `• *Nomor:* +${phoneNum}`,
-        `• *Status Bot:* ${targetIsOwner ? "👑 Owner Bot" : targetIsPremium ? "⭐ Premium User" : "Free User"}`,
+        `• *Status Bot:* ${targetIsOwner ? "Owner Bot" : targetAccess.admin ? "Admin Bot" : targetIsPremium ? "Premium User" : "Free User"}`,
         `• *Status Banned:* ${targetUser.banned ? "🔴 Diblokir / Banned" : "🟢 Aktif (Normal)"}`,
         `• *Terdaftar Bot:* ${regDate}`,
         ``,

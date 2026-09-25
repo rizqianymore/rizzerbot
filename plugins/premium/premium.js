@@ -61,14 +61,21 @@ export default [
     name: "nsfw",
     description: "Toggle NSFW content mode in this chat",
     premiumOnly: true,
+    groupOnly: true,
+    groupAdminOnly: true,
     category: "Premium",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const groupJid = msg.key.remoteJid;
-      const current = db.isNsfw(groupJid);
-      db.setNsfw(groupJid, !current);
+      const action = (args[0] || "").toLowerCase();
+      if (action !== "on" && action !== "off") {
+        return reply("Gunakan *.nsfw on* atau *.nsfw off*.");
+      }
+
+      const enabled = action === "on";
+      db.setNsfw(groupJid, enabled);
       await reply(
-        !current
+        enabled
           ? "🔞 *Mode NSFW diaktifkan* untuk chat ini."
           : "✅ *Mode NSFW dimatikan* untuk chat ini."
       );
@@ -120,12 +127,11 @@ export default [
     description: "Set custom profile text",
     premiumOnly: true,
     category: "Premium",
-    run: async (sock, msg, args, { reply, sendTyping, senderJid, user }) => {
+    run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
       await sendTyping();
-      const text = args.join(" ");
+      const text = args.join(" ").trim();
       if (!text) return reply("❌ Masukkan teks profil! Contoh: *.customprofile CEO of Rizz*");
-      user.profile = text;
-      db.save();
+      db.updateUser(senderJid, { profile: text });
       await reply(`✅ Profil kustom diatur:\n\n"${text}"`);
     }
   },

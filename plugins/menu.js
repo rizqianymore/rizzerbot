@@ -1,5 +1,5 @@
 import { commands } from "@/src/core/loader.js";
-import { settings } from "@/config/settings.js";
+import { db } from "@/src/core/database.js";
 
 // Panduan contoh penggunaan untuk masing-masing command
 const COMMAND_USAGES = {
@@ -80,8 +80,11 @@ const COMMAND_USAGES = {
 
   // Owner
   eval: "<kode js>",
-  addprem: "<nomor> <hari>",
+  addprem: "<nomor> [hari]",
   delprem: "<nomor>",
+  addadmin: "<nomor>",
+  deladmin: "<nomor>",
+  access: "[nomor]",
   broadcast: "<pesan>",
   setprefix: "<simbol>",
   block: "<nomor>",
@@ -102,10 +105,12 @@ export default {
   aliases: ["help", "panduan"],
   description: "Menampilkan daftar seluruh perintah dan panduan cara penggunaannya.",
   category: "General",
-  run: async (sock, msg, args, { reply, sendTyping, isOwner, isPremium, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix }) => {
     await sendTyping();
 
-    const rawArg = args[0]?.toLowerCase()?.replace(new RegExp(`^[${prefix}]+`), "") || "";
+    const activeSettings = db.getSettings();
+    let rawArg = args[0]?.toLowerCase() || "";
+    if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length);
 
     // 1. Cek apakah user meminta kategori tertentu (misal: .menu owner, .menu premium, .menu user)
     const categoryAliases = {
@@ -151,6 +156,7 @@ export default {
           `• *Format Penggunaan:*${usage}\n` +
           `• *Alias Singkat:* ${aliases}\n` +
           (targetCmd.premiumOnly ? `• *Akses:* Khusus Premium User\n` : "") +
+          (targetCmd.adminOnly ? `• *Akses:* Khusus Admin Bot\n` : "") +
           (targetCmd.ownerOnly ? `• *Akses:* Khusus Pemilik Bot\n` : "");
 
         return await reply(detailText.trim());
@@ -166,6 +172,7 @@ export default {
       seen.add(cmd.name);
 
       if (cmd.ownerOnly && !isOwner) return;
+      if (cmd.adminOnly && !isAdmin) return;
       if (cmd.premiumOnly && !isPremium) return;
 
       const cat = cmd.category || "General";
@@ -186,9 +193,9 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    let menuText = `*${settings.botName}*\n`;
+    let menuText = `*${activeSettings.botName}*\n`;
     menuText += `• Prefix : [ *${prefix}* ]\n`;
-    menuText += `• Status : *${isOwner ? "👑 Owner" : isPremium ? "⭐ Premium" : "Free User"}*\n`;
+    menuText += `• Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
     if (targetCategory) {
       menuText += `• Kategori : *${targetCategory}*\n`;
     }
@@ -232,13 +239,13 @@ export default {
     // Coba kirim dengan gambar jika file lokal atau URL gambar tersedia
     try {
       let imagePayload = null;
-      if (settings.image) {
-        if (typeof settings.image === "string" && (settings.image.startsWith("http://") || settings.image.startsWith("https://"))) {
-          imagePayload = { url: settings.image };
+      if (activeSettings.image) {
+        if (typeof activeSettings.image === "string" && (activeSettings.image.startsWith("http://") || activeSettings.image.startsWith("https://"))) {
+          imagePayload = { url: activeSettings.image };
         } else {
           const { existsSync, readFileSync } = await import("fs");
           const { resolve } = await import("path");
-          const localPath = resolve(process.cwd(), settings.image);
+          const localPath = resolve(process.cwd(), activeSettings.image);
           if (existsSync(localPath)) {
             imagePayload = readFileSync(localPath);
           }

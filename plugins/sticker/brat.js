@@ -5,8 +5,8 @@ import path from "path";
 import os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { settings } from "@/config/settings.js";
 import { createSticker } from "@/src/services/media.js";
+import { db } from "@/src/core/database.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -400,9 +400,10 @@ async function createBratVideo(text, template, options = {}) {
 }
 
 async function sendStickerBuffer(sock, msg, buffer) {
+  const activeSettings = db.getSettings();
   const stickerBuffer = await createSticker(buffer, {
-    pack: settings.stickerPackName,
-    author: settings.stickerAuthor,
+    pack: activeSettings.stickerPackName,
+    author: activeSettings.stickerAuthor,
   });
 
   await sock.sendMessage(

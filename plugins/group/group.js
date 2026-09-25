@@ -1,6 +1,5 @@
 import { db } from "@/src/core/database.js";
 import { getCachedGroupMeta, invalidateGroupMeta } from "@/src/utils/helper.js";
-import { settings } from "@/config/settings.js";
 
 /**
  * Validates group context and checks bot/user admin permissions.
@@ -28,11 +27,13 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
 
   const userParticipant = meta.participants.find((p) => db.normalizeJid(p.id) === senderJid);
   const isUserAdmin = Boolean(
-    context.isOwner || (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
+    context.isOwner ||
+      context.isAdmin ||
+      (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup atau Owner Bot!");
+    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
@@ -139,10 +140,7 @@ export default [
       }
 
       // Lindungi owner bot
-      const ownerJids = [settings.ownerNumber, settings.pairingNumber].map(
-        (v) => db.normalizeJid(v)
-      );
-      if (ownerJids.includes(db.normalizeJid(targetJid))) {
+      if (db.isOwner(targetJid)) {
         return context.reply("❌ Tidak dapat mengeluarkan Owner Bot dari grup!");
       }
 
@@ -310,7 +308,7 @@ export default [
     run: async (sock, msg, args, context) => {
       await context.sendTyping();
       const ctx = await getGroupContext(sock, msg, context, {
-        requireUserAdmin: false,
+        requireUserAdmin: true,
         requireBotAdmin: true,
       });
       if (!ctx) return;

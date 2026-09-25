@@ -12,7 +12,7 @@ import { fileURLToPath } from "url";
 import qrcode from "qrcode-terminal";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { loadPlugins } from "@/src/core/loader.js";
-import { settings } from "@/config/settings.js";
+import { db } from "@/src/core/database.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 
@@ -60,6 +60,8 @@ export async function startBot() {
   }
 
   try {
+    const activeSettings = db.getSettings();
+
     if (!isPluginsLoaded) {
       await loadPlugins();
       isPluginsLoaded = true;
@@ -101,7 +103,7 @@ export async function startBot() {
 
     logger.info(`Initializing primary Rizzer Bot connection (WA Version: ${version ? version.join('.') : 'default'})...`);
 
-    const usePairingCode = settings.usePairingCode;
+    const usePairingCode = activeSettings.usePairingCode;
     const msgRetryCounterCache = new Map();
 
     const sock = makeWASocket({
@@ -110,7 +112,7 @@ export async function startBot() {
       logger: pino({ level: "silent" }),
       printQRInTerminal: !usePairingCode,
       browser: Browsers.ubuntu("Chrome"),
-      markOnlineOnConnect: settings.autoOnline,
+      markOnlineOnConnect: activeSettings.autoOnline,
       syncFullHistory: false,
       msgRetryCounterCache,
       generateHighQualityLinkPreview: false,
@@ -130,10 +132,10 @@ export async function startBot() {
     let pairingTimeout = null;
 
   if (usePairingCode && !sock.authState.creds.registered) {
-    const phoneNumber = settings.pairingNumber?.replace(/[^0-9]/g, "");
+    const phoneNumber = db.normalizeJid(activeSettings.pairingNumber).split("@")[0];
     if (!phoneNumber) {
       logger.error(
-        "Pairing phone number is missing or invalid in settings.js!"
+        "Pairing phone number is missing or invalid in database/settings.js!"
       );
     } else {
       const requestPairing = async () => {
@@ -225,7 +227,7 @@ export async function startBot() {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
 
-        if (settings.autoRead) {
+        if (db.getSettings().autoRead) {
           await sock.readMessages([msg.key]).catch(() => {});
         }
         enqueueMessage(sock, msg, logger);

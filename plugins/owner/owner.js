@@ -25,9 +25,23 @@ export default [
     run: async (sock, msg, args, { reply, getTargetJid }) => {
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addprem 628xx*");
-      db.getUser(jid).premium = true;
-      db.save();
-      reply(`✅ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium.`);
+      if (db.isOwner(jid)) return reply("❌ Owner otomatis memiliki akses Premium.");
+      if (db.isAdmin(jid)) return reply("ℹ️ Admin Bot otomatis memiliki akses Premium.");
+      if (db.isConfiguredPremium(jid)) return reply("ℹ️ Nomor tersebut sudah terkonfigurasi sebagai Premium.");
+      const lastArg = args[args.length - 1] || "";
+      const lastArgDigits = lastArg.replace(/\D/g, "");
+      const totalDigits = args.join("").replace(/\D/g, "");
+      const beforeLastJid = args.length > 1 ? getTargetJid(args.slice(0, -1)) : null;
+      const hasDuration = /^\d+(?:\.\d+)?$/.test(lastArg) && (
+        (args.length === 1 && totalDigits < 10) ||
+        (args.length > 1 && (beforeLastJid === jid || totalDigits < 10))
+      );
+      const parsedDuration = hasDuration && lastArgDigits ? Number(lastArg) : null;
+      const duration = Number.isFinite(parsedDuration) && parsedDuration > 0
+        ? parsedDuration
+        : null;
+      db.setPremium(jid, true, duration);
+      reply(`✅ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${duration ? ` selama ${duration} hari` : ""}.`);
     }
   },
   {
@@ -38,9 +52,63 @@ export default [
     run: async (sock, msg, args, { reply, getTargetJid }) => {
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.delprem 628xx*");
-      db.getUser(jid).premium = false;
-      db.save();
+      if (db.isOwner(jid)) return reply("❌ Owner tidak dapat kehilangan akses Premium.");
+      if (db.isAdmin(jid)) return reply("❌ Admin Bot otomatis memiliki akses Premium.");
+      if (db.isConfiguredPremium(jid)) return reply("❌ Nomor tersebut dikelola oleh konfigurasi.");
+      db.setPremium(jid, false);
       reply(`✅ Berhasil menghapus *${jid.split("@")[0]}* dari Premium.`);
+    }
+  },
+  {
+    name: "addadmin",
+    description: "Add bot admin",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("Balas pesan user atau masukkan nomor!");
+      if (db.isOwner(jid)) return reply("Nomor tersebut sudah menjadi Owner.");
+      db.setAdmin(jid, true);
+      reply(`Berhasil menjadikan *${jid.split("@")[0]}* sebagai Admin Bot.`);
+    }
+  },
+  {
+    name: "deladmin",
+    description: "Remove bot admin",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid }) => {
+      const jid = getTargetJid(args);
+      if (!jid) return reply("Balas pesan user atau masukkan nomor!");
+      if (db.isOwner(jid)) return reply("Owner tidak dapat dihapus dari Admin Bot.");
+      if (db.isConfiguredAdmin(jid)) return reply("Nomor tersebut dikelola oleh konfigurasi.");
+      db.setAdmin(jid, false);
+      reply(`Berhasil menghapus akses Admin Bot dari *${jid.split("@")[0]}*.`);
+    }
+  },
+  {
+    name: "access",
+    aliases: ["checkaccess", "useraccess"],
+    description: "Check user access",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, getTargetJid, senderJid }) => {
+      const jid = getTargetJid(args) || senderJid;
+      const access = db.getAccess(jid);
+      const user = db.getUser(jid);
+      if (!user) return reply("Nomor target tidak valid.");
+      const until = user.premiumUntil
+        ? new Date(user.premiumUntil).toLocaleDateString("id-ID")
+        : "Tanpa batas waktu";
+      reply(
+        `*Status Akses ${jid.split("@")[0]}*\n` +
+        `Role: *${access.role}*\n` +
+        `Owner: *${access.owner ? "Ya" : "Tidak"}*\n` +
+        `Admin: *${access.admin ? "Ya" : "Tidak"}*\n` +
+        `Premium: *${access.premium ? "Ya" : "Tidak"}*\n` +
+        `Banned: *${access.banned ? "Ya" : "Tidak"}*\n` +
+        `Berlaku: *${until}*`
+      );
     }
   },
   {
@@ -64,10 +132,12 @@ export default [
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply }) => {
-      if (!args[0]) return reply("Masukkan prefix baru!");
-      db.data.settings.prefix = args[0];
-      db.save();
-      reply(`✅ Prefix berhasil diubah ke: ${args[0]}`);
+      const prefix = args[0] || "";
+      if (!prefix || prefix.length > 3 || /\s/.test(prefix)) {
+        return reply("❌ Prefix harus berupa 1-3 karakter tanpa spasi.");
+      }
+      db.updateSettings({ prefix });
+      reply(`✅ Prefix berhasil diubah ke: ${prefix}`);
     }
   },
   {
@@ -78,7 +148,9 @@ export default [
     run: async (sock, msg, args, { reply, getTargetJid }) => {
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor!");
+      if (db.isOwner(jid)) return reply("❌ Owner tidak dapat diblokir.");
       await sock.updateBlockStatus(jid, "block");
+      db.setBanned(jid, true);
       reply(`✅ *${jid.split("@")[0]}* diblokir.`);
     }
   },
@@ -91,9 +163,7 @@ export default [
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor!");
       await sock.updateBlockStatus(jid, "unblock");
-      const targetUser = db.getUser(jid);
-      targetUser.banned = false;
-      db.save();
+      db.setBanned(jid, false);
       reply(`✅ *${jid.split("@")[0]}* dibuka blokirnya dan di-unban.`);
     }
   },
@@ -124,8 +194,7 @@ export default [
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply }) => {
-      db.data.settings.public = false;
-      db.save();
+      db.updateSettings({ public: false });
       reply("✅ Bot sekarang dalam mode Self (hanya owner).");
     }
   },
@@ -136,8 +205,7 @@ export default [
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply }) => {
-      db.data.settings.public = true;
-      db.save();
+      db.updateSettings({ public: true });
       reply("✅ Bot sekarang dalam mode Public (semua user).");
     }
   },
