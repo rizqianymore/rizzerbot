@@ -1,26 +1,26 @@
-/**
- * Scraper Berita iNews.id (Pencarian & Baca Artikel)
- */
+import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const INEWS_SEARCH_URL = "https://www.inews.id/find";
 
-const DEFAULT_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  Accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-  "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-};
-
 /**
- * Mencari berita di iNews.id berdasarkan topik / kata kunci
+ * Mencari berita di iNews.id berdasarkan topik / kata kunci dengan filter relevansi ketat
  * @param {string} query
  * @param {number} [limit=5]
  * @returns {Promise<Array<{title: string, url: string, image: string|null, category: string, time: string}>>}
  */
 export async function searchInews(query, limit = 5) {
-  const url = `${INEWS_SEARCH_URL}?q=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: DEFAULT_HEADERS });
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return [];
+
+  const device = getRandomDevice("desktop");
+  const headers = buildScraperHeaders(device, {
+    Referer: "https://www.inews.id/",
+    Origin: "https://www.inews.id",
+    "Sec-Fetch-Site": "same-origin",
+  });
+
+  const url = `${INEWS_SEARCH_URL}?q=${encodeURIComponent(cleanQuery)}`;
+  const res = await fetch(url, { headers });
 
   if (!res.ok) {
     throw new Error(`iNews HTTP ${res.status}`);
@@ -34,6 +34,10 @@ export async function searchInews(query, limit = 5) {
   }
 
   const results = [];
+  const queryWords = cleanQuery
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
 
   for (const block of articleBlocks) {
     const raw = block[1];
@@ -49,16 +53,26 @@ export async function searchInews(query, limit = 5) {
 
     if (linkMatch && titleMatch) {
       const title = titleMatch[1].replace(/<[^>]+>/g, "").trim();
-      // Skip tautan listen / playlist
-      if (linkMatch[1].includes("/playlists/")) continue;
+      const articleUrl = linkMatch[1];
 
-      results.push({
-        title,
-        url: linkMatch[1],
-        image: imgMatch ? imgMatch[1] : null,
-        category: kanalMatch ? kanalMatch[1].trim() : "News",
-        time: timeMatch ? timeMatch[1].trim() : "",
-      });
+      // Skip tautan listen / playlist / non-berita
+      if (articleUrl.includes("/playlists/")) continue;
+
+      // Verifikasi topik: pastikan berita berkaitan dengan kata kunci pencarian
+      const titleLower = title.toLowerCase();
+      const isRelevant =
+        queryWords.length === 0 ||
+        queryWords.some((word) => titleLower.includes(word));
+
+      if (isRelevant && !results.some((r) => r.url === articleUrl)) {
+        results.push({
+          title,
+          url: articleUrl,
+          image: imgMatch ? imgMatch[1] : null,
+          category: kanalMatch ? kanalMatch[1].trim() : "News",
+          time: timeMatch ? timeMatch[1].trim() : "",
+        });
+      }
     }
 
     if (results.length >= limit) break;
@@ -73,7 +87,13 @@ export async function searchInews(query, limit = 5) {
  * @returns {Promise<{title: string, image: string|null, content: string, url: string}>}
  */
 export async function getInewsArticle(articleUrl) {
-  const res = await fetch(articleUrl, { headers: DEFAULT_HEADERS });
+  const device = getRandomDevice("desktop");
+  const headers = buildScraperHeaders(device, {
+    Referer: "https://www.inews.id/",
+    Origin: "https://www.inews.id",
+  });
+
+  const res = await fetch(articleUrl, { headers });
   if (!res.ok) throw new Error(`iNews HTTP ${res.status}`);
 
   const html = await res.text();

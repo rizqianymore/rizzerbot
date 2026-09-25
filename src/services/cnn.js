@@ -1,35 +1,30 @@
 import { randomUUID } from "node:crypto";
+import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const CNN_SEARCH_BASE = "https://search.prod.di.api.cnn.io/search/query";
 
-const DEFAULT_HEADERS = {
-  Accept: "*/*",
-  "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-  Origin: "https://edition.cnn.com",
-  Referer: "https://edition.cnn.com/",
-  "User-Agent":
-    "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-};
-
 /**
- * Cari berita di CNN via Stellar Search API
+ * Cari berita di CNN via Stellar Search API dengan anti-bot header rotation
  *
  * @param {string} query - Kata kunci pencarian
  * @param {object} [options]
  * @param {number} [options.size=5] - Jumlah berita yang diambil
  * @param {number} [options.page=1] - Halaman hasil pencarian
- * @param {string} [options.sort="newest"] - newest | relevance
+ * @param {string} [options.sort="relevance"] - newest | relevance
  * @returns {Promise<{total: number, items: Array}>}
  */
 export async function searchCNNNews(query, options = {}) {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return { total: 0, items: [] };
+
   const size = Math.min(Math.max(options.size || 5, 1), 20);
   const page = Math.max(options.page || 1, 1);
   const from = (page - 1) * size;
-  const sort = options.sort || "newest";
+  const sort = options.sort || "relevance";
   const reqId = `stellar-search-${randomUUID()}`;
 
   const params = new URLSearchParams({
-    q: query,
+    q: cleanQuery,
     size: String(size),
     from: String(from),
     page: String(page),
@@ -43,9 +38,19 @@ export async function searchCNNNews(query, options = {}) {
 
   const url = `${CNN_SEARCH_BASE}?${params.toString()}`;
 
+  const device = getRandomDevice();
+  const headers = buildScraperHeaders(device, {
+    Accept: "*/*",
+    Origin: "https://edition.cnn.com",
+    Referer: "https://edition.cnn.com/",
+    "Sec-Fetch-Site": "cross-site",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+  });
+
   const res = await fetch(url, {
     method: "GET",
-    headers: DEFAULT_HEADERS,
+    headers,
   });
 
   if (!res.ok) {
