@@ -15,6 +15,7 @@ export default [
         const info = await tiktokDownload(url);
         const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
         const dlUrl = isAudio ? info.mp3 : info.noWatermark;
+        if (!dlUrl) throw new Error("Gagal menemukan link download media TikTok.");
         const isVideo = !isAudio;
         const buffer = await fetchBuffer(dlUrl);
         const caption =

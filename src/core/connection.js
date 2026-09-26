@@ -120,7 +120,7 @@ export async function startBot() {
       keepAliveIntervalMs: 25000,
       connectTimeoutMs: 60000,
       defaultQueryTimeoutMs: 60000,
-      emitOwnEvents: false,
+      emitOwnEvents: true,
       fireInitQueries: true,
       retryRequestDelayMs: 250,
     });

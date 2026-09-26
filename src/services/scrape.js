@@ -671,6 +671,6 @@ export async function aiChat(prompt) {
       );
       return data?.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada jawaban";
     }
-    throw new Error("API key AI tidak dikonfigurasi (OPENAI_API_KEY / GEMINI_API_KEY)");
+    throw new Error("API key AI tidak dikonfigurasi (.env OPENAI_API_KEY / GEMINI_API_KEY)");
   }
 }

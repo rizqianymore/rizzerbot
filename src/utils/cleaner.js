@@ -5,59 +5,84 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function autoCleanSessionCache(logger) {
-  try {
-    const pathsToClean = [
-      path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot"),
-      path.join(__dirname, "..", "..", "assets", "sessions"),
-    ];
+export function cleanTempFiles() {
+  const pathsToClean = [
+    path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot"),
+    path.join(__dirname, "..", "..", "assets", "sessions"),
+    path.join(__dirname, "..", "..", "assets", "media"),
+    path.join(__dirname, "..", "..", "temp"),
+    path.join(__dirname, "..", "..", "tmp"),
+  ];
 
-    const now = Date.now();
-    const maxAge = 12 * 60 * 60 * 1000; 
-    let deletedCount = 0;
+  const now = Date.now();
+  const maxAge = 2 * 60 * 60 * 1000; // 2 jam untuk manual clear
+  let deletedCount = 0;
+  let freedBytes = 0;
 
-    const isTempFile = (name) => {
-      
-      
-      return (
-        name.endsWith(".json") &&
-        (name.startsWith("pre-key-") ||
-          name.startsWith("app-state-sync-key-"))
-      );
-    };
+  const isTempSessionFile = (name) => {
+    return (
+      name.endsWith(".json") &&
+      (name.startsWith("pre-key-") ||
+        name.startsWith("app-state-sync-key-") ||
+        name.startsWith("sender-key-") ||
+        name.startsWith("session-"))
+    );
+  };
 
-    for (const basePath of pathsToClean) {
-      if (!fs.existsSync(basePath)) continue;
+  const isTrashFile = (name) => {
+    return (
+      name.endsWith(".tmp") ||
+      name.endsWith(".temp") ||
+      name.endsWith(".log") ||
+      name.startsWith("temp_")
+    );
+  };
 
+  for (const basePath of pathsToClean) {
+    if (!fs.existsSync(basePath)) continue;
+
+    try {
       const items = fs.readdirSync(basePath);
       for (const item of items) {
         const itemPath = path.join(basePath, item);
         const stat = fs.statSync(itemPath);
 
         if (stat.isDirectory() && item.startsWith("session_")) {
-          const subFiles = fs.readdirSync(itemPath);
-          for (const subFile of subFiles) {
-            if (isTempFile(subFile)) {
-              const filePath = path.join(itemPath, subFile);
-              const fileStat = fs.statSync(filePath);
-              if (now - fileStat.mtimeMs > maxAge) {
-                fs.unlinkSync(filePath);
-                deletedCount++;
+          try {
+            const subFiles = fs.readdirSync(itemPath);
+            for (const subFile of subFiles) {
+              if (isTempSessionFile(subFile) || isTrashFile(subFile)) {
+                const filePath = path.join(itemPath, subFile);
+                const fileStat = fs.statSync(filePath);
+                if (now - fileStat.mtimeMs > maxAge) {
+                  freedBytes += fileStat.size || 0;
+                  fs.unlinkSync(filePath);
+                  deletedCount++;
+                }
               }
             }
-          }
-        } else if (isTempFile(item)) {
+          } catch (_) {}
+        } else if (isTempSessionFile(item) || isTrashFile(item)) {
           if (now - stat.mtimeMs > maxAge) {
+            freedBytes += stat.size || 0;
             fs.unlinkSync(itemPath);
             deletedCount++;
           }
         }
       }
-    }
+    } catch (_) {}
+  }
 
+  return { deletedCount, freedBytes };
+}
+
+export function autoCleanSessionCache(logger) {
+  try {
+    const { deletedCount, freedBytes } = cleanTempFiles();
     if (deletedCount > 0 && logger) {
+      const mb = (freedBytes / (1024 * 1024)).toFixed(2);
       logger.info(
-        `[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi Baileys (file > 12 jam).`
+        `[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi (${mb} MB).`
       );
     }
   } catch (err) {
@@ -93,7 +118,6 @@ export function periodicDatabaseSnapshot(logger) {
 
 export function cleanOrphanChromeProcesses(logger) {
   try {
-    const { exec } = import("child_process");
     import("child_process").then(({ exec }) => {
       // Bunuh process chrome yang orphaned atau defunct jika ada
       exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {

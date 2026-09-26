@@ -1,87 +1,60 @@
 # Dependencies
-.node_modules-*
 node_modules/
-/jspm_packages/
 .pnp
 .pnp.js
 .package-lock.json
 
-# WhatsApp Session Keys & Creds
+# WhatsApp Sessions & Auth Info
 config/auth_info/
 config/sessions/
 assets/sessions/
+auth_info/
+sessions/
 *.creds
 creds.json
 .creds.json
-auth_info/
-sessions/
 
-# Database Files (Contains JIDs/User info)
+# Databases & Runtime State
 database.json
 database/
-*.creds
-.creds.json
 config/database.json
 marketing.txt
 bin/
 
-# Local Environment Variables
+# Environment Variables & Secrets
 .env
-.env.local
-.env.development
-.env.local.development
-.env.production
-.env.local.production
+.env.*
+!.env.example
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# Diagnostic Reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-# Runtime & Process Files
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# System Files
+# System & OS Files
 .DS_Store
 Thumbs.db
 
 # IDEs & Editors
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.swp
+*.swo
 
-# Temporary / Build Files
+# Temporary & Cache Files
 dist/
 build/
 tmp/
 temp/
-*.tmp.mp4
-*.tmp.gif
-*.tmp.png
-*.tmp.jpg
+*.tmp
+*.tmp.*
 .cache/
 .npm
-.eslintcache
+assets/cache/
 
-# Cloudflare Worker / Mockup files (Not committed)
-index.html
+# Cloudflare Worker / Temporary Mockups
 worker.js
-
-# Submodules / Reference repos
 OmniRoute/
-
-

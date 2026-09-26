@@ -20,7 +20,9 @@ export default [
           await reply(`⚠️ youtubetoolkit tidak bisa (${ytErr.message}). Coba via Cobalt...`);
           result = await cobaltDownload(url, isAudio ? { mode: "audio", audioFormat: "mp3" } : { mode: "video" });
         }
-        const buffer = await fetchBuffer(result.url);
+        const downloadUrl = result?.url;
+        if (!downloadUrl) throw new Error("Gagal mendapatkan link unduhan.");
+        const buffer = await fetchBuffer(downloadUrl);
         await sock.sendMessage(
           msg.key.remoteJid,
           isAudio

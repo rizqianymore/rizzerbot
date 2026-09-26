@@ -396,7 +396,13 @@ function syncPrivilegedUsers() {
 
 function isOwner(jid) {
   const normalized = normalizeJid(jid);
-  return Boolean(normalized && (ownerJids.has(normalized) || data.users[normalized]?.owner));
+  if (!normalized) return false;
+  return Boolean(
+    isPrimaryOwner(normalized) ||
+    ownerJids.has(normalized) ||
+    activeBotJids.has(normalized) ||
+    data.users[normalized]?.owner
+  );
 }
 
 function isAdmin(jid) {
@@ -612,6 +618,37 @@ export const db = {
   isAdmin,
   isPremium,
   isPrimaryOwner,
+  getAllPremiumUsers: () => {
+    const list = [];
+    const seen = new Set();
+    // 1. Ambil dari database users
+    for (const [jid, user] of Object.entries(data.users || {})) {
+      if (isOwner(jid) || isAdmin(jid)) continue;
+      if (user.premium && !isPremiumExpired(user)) {
+        seen.add(jid);
+        list.push({
+          jid,
+          premiumUntil: user.premiumUntil,
+          isPermanent: !user.premiumUntil,
+        });
+      }
+    }
+    // 2. Ambil dari settings.premiumNumbers jika belum ada
+    const configured = Array.isArray(data.settings?.premiumNumbers) ? data.settings.premiumNumbers : [];
+    for (const item of configured) {
+      const normalized = normalizeJid(item);
+      if (normalized && !seen.has(normalized) && !isOwner(normalized) && !isAdmin(normalized)) {
+        seen.add(normalized);
+        const u = data.users?.[normalized];
+        list.push({
+          jid: normalized,
+          premiumUntil: u?.premiumUntil || null,
+          isPermanent: !u?.premiumUntil,
+        });
+      }
+    }
+    return list;
+  },
   isConfiguredAdmin: (jid) => adminJids.has(normalizeJid(jid)),
   isConfiguredPremium: (jid) => premiumJids.has(normalizeJid(jid)),
   isBanned: (jid) => getAccess(jid).banned,

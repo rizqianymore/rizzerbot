@@ -3,26 +3,6 @@ import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const KOMPAS_BASE = "https://www.kompas.tv";
 
-let puppeteerBrowser = null;
-
-async function getBrowserInstance() {
-  if (puppeteerBrowser?.connected) return puppeteerBrowser;
-  const { default: puppeteer } = await import("puppeteer");
-  puppeteerBrowser = await puppeteer.launch({
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu",
-    ],
-  });
-  return puppeteerBrowser;
-}
 
 /**
  * Mengambil daftar berita terkini dari Kompas TV (halaman /news atau kategori tertentu)

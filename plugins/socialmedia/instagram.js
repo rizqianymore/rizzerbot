@@ -13,7 +13,9 @@ export default [
       try {
         const { cobaltDownload, fetchBuffer } = await import("@/src/services/scrape.js");
         const result = await cobaltDownload(url, { mode: "video" });
-        const buffer = await fetchBuffer(result.url);
+        const mediaUrl = result?.url || (result?.picker && result.picker[0]?.url);
+        if (!mediaUrl) throw new Error("Gagal mendapatkan link media Instagram.");
+        const buffer = await fetchBuffer(mediaUrl);
         await sock.sendMessage(
           msg.key.remoteJid,
           { video: buffer, mimetype: "video/mp4" },

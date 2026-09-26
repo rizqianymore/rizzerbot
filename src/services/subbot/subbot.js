@@ -76,6 +76,7 @@ export async function createSubBot(number, onPairingCode) {
     keepAliveIntervalMs: 25000,
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 60000,
+    emitOwnEvents: true,
   });
 
   const botEntry = {

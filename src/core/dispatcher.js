@@ -117,16 +117,46 @@ export async function dispatchMessage(sock, msg, logger) {
   const cmd = commands.get(commandName);
   if (!cmd) return;
 
-  const senderJid = db.normalizeJid(msg.key.participant || remoteJid);
-  let access = db.getAccess(senderJid);
-  if (activeSettings.public === false && !access.owner) return;
+  const isFromMe = Boolean(msg.key?.fromMe);
+  const botRawId = sock.user?.id || "";
+  const botJid = db.normalizeJid(botRawId);
+  const rawSender = msg.key.participant || remoteJid;
+  const normalizedRawSender = db.normalizeJid(rawSender);
+  const remoteNormalized = db.normalizeJid(remoteJid);
+
+  // Auto-register bot JID if known
+  if (botJid) {
+    db.registerBotJid(botJid);
+  }
+
+  // Jika pesan berasal dari bot sendiri (isFromMe), atau nomornya sama dengan nomor bot
+  const senderJid = isFromMe
+    ? (botJid || normalizedRawSender)
+    : normalizedRawSender;
+
+  // Cek apakah pengirim adalah owner atau nomor bot itu sendiri
+  const isSenderOwner =
+    isFromMe ||
+    db.isOwner(senderJid) ||
+    db.isOwner(normalizedRawSender) ||
+    db.isOwner(rawSender) ||
+    db.isOwner(remoteNormalized) ||
+    (botJid && (senderJid === botJid || normalizedRawSender === botJid || remoteNormalized === botJid));
 
   let user = db.getUser(senderJid);
   if (!user) return;
-  access = db.getAccess(senderJid);
-  const isOwner = access.owner;
-  const isAdmin = access.admin;
-  const isPremium = access.premium;
+
+  let access = db.getAccess(senderJid);
+  const isOwner = Boolean(isSenderOwner || access.owner);
+  const isAdmin = Boolean(isOwner || access.admin);
+  const isPremium = Boolean(isOwner || isAdmin || access.premium);
+
+  if (activeSettings.public === false && !isOwner) return;
+
+  if (isOwner && !user.owner) {
+    user = db.updateUser(senderJid, { owner: true, admin: true, premium: true, banned: false });
+    access = db.getAccess(senderJid);
+  }
 
   if (msg.pushName && user.name !== msg.pushName) {
     user = db.updateUser(senderJid, { name: msg.pushName });
@@ -200,7 +230,13 @@ export async function dispatchMessage(sock, msg, logger) {
     isOwner,
     isAdmin,
     isPremium,
-    access,
+    access: {
+      ...access,
+      owner: isOwner,
+      admin: isAdmin,
+      premium: isPremium,
+      role: isOwner ? "owner" : isAdmin ? "admin" : isPremium ? "premium" : access.role || "user",
+    },
     senderJid,
     isGroup: isGroupJid(remoteJid),
     user,

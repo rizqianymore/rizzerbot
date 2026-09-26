@@ -104,6 +104,7 @@ const COMMAND_USAGES = {
   listbot: "",
   delbot: "<nomor bot>",
   botstatus: "",
+  cleartmp: "",
   restart: "",
 };
 

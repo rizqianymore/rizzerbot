@@ -1,15 +1,15 @@
 import fs from "fs";
 import path from "path";
 
-// Ensure @ symlink in node_modules exists for seamless alias resolution
+// Pastikan symlink alias '@' di node_modules tersedia untuk module resolver
 const symlinkPath = path.join(process.cwd(), "node_modules", "@");
 if (!fs.existsSync(symlinkPath)) {
   try {
     fs.symlinkSync(process.cwd(), symlinkPath, "junction");
-  } catch (_) {}
+  } catch (_) { }
 }
 
-// Auto load .env if exists
+// Auto load .env jika file .env ada
 const envPath = path.join(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
   try {
@@ -32,23 +32,24 @@ if (fs.existsSync(envPath)) {
   } catch (_) {}
 }
 
-import {
-  startBot,
-  logger,
-} from "./src/core/connection.js";
-
+// Konfigurasi binary lokal ffmpeg jika tersedia
 const binFfmpeg = path.join(process.cwd(), "bin", "ffmpeg");
 if (fs.existsSync(binFfmpeg)) {
   process.env.FFMPEG_PATH = binFfmpeg;
 }
 
-startBot().then(async () => {
-  try {
-    const { autoRestoreSubBots } = await import("./src/services/subbot/subbot.js");
-    await autoRestoreSubBots();
-  } catch (_) {}
-}).catch((err) => {
-  logger.error("Fatal initialization error:", err);
-});
+import { startBot, logger } from "./src/core/connection.js";
+
+// Inisialisasi bot utama
+startBot()
+  .then(async () => {
+    try {
+      const { autoRestoreSubBots } = await import("./src/services/subbot/subbot.js");
+      await autoRestoreSubBots();
+    } catch (_) { }
+  })
+  .catch((err) => {
+    logger.error("Fatal initialization error:", err);
+  });
 
 export default startBot;

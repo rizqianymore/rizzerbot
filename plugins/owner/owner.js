@@ -135,26 +135,56 @@ export default [
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply, getTargetJid }) => {
-      const jid = getTargetJid(args);
-      if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addprem 628xx 30*");
+      let jid = null;
+      let durationDays = null;
+
+      // 1. Cek quoted message atau mentions terlebih dahulu
+      const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.remoteJid;
+      const mentionedJid = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
+
+      if (quotedJid && !quotedJid.endsWith("@g.us")) {
+        jid = db.normalizeJid(quotedJid);
+        const days = parseFloat(args[0]);
+        if (!isNaN(days) && days > 0) durationDays = days;
+      } else if (mentionedJid) {
+        jid = db.normalizeJid(mentionedJid);
+        // Cari angka durasi setelah mention
+        for (const arg of args) {
+          const val = parseFloat(arg);
+          if (!isNaN(val) && val > 0 && !arg.includes("@") && arg.replace(/\D/g, "").length < 7) {
+            durationDays = val;
+            break;
+          }
+        }
+      } else if (args.length > 0) {
+        // Mode input via teks: contoh: .addprem 6281234567890 30
+        const firstDigits = args[0].replace(/\D/g, "");
+        if (firstDigits.length >= 7) {
+          jid = db.normalizeJid(args[0]);
+          if (args[1]) {
+            const days = parseFloat(args[1]);
+            if (!isNaN(days) && days > 0) durationDays = days;
+          }
+        } else {
+          // Fallback ke getTargetJid jika ada
+          jid = getTargetJid(args);
+          const lastArg = args[args.length - 1];
+          const days = parseFloat(lastArg);
+          if (!isNaN(days) && days > 0 && lastArg.replace(/\D/g, "").length < 7) {
+            durationDays = days;
+          }
+        }
+      }
+
+      if (!jid) {
+        return reply("❌ Balas pesan user atau masukkan nomor! Contoh:\n• *.addprem 628xxx 30* (30 hari)\n• *.addprem 628xxx* (Permanen)");
+      }
+
       if (db.isOwner(jid)) return reply("ℹ️ Owner otomatis memiliki akses Premium selamanya.");
       if (db.isAdmin(jid)) return reply("ℹ️ Admin Bot otomatis memiliki akses Premium selamanya.");
 
-      const lastArg = args[args.length - 1] || "";
-      const lastArgDigits = lastArg.replace(/\D/g, "");
-      const totalDigits = args.join("").replace(/\D/g, "");
-      const beforeLastJid = args.length > 1 ? getTargetJid(args.slice(0, -1)) : null;
-      const hasDuration = /^\d+(?:\.\d+)?$/.test(lastArg) && (
-        (args.length === 1 && totalDigits < 10) ||
-        (args.length > 1 && (beforeLastJid === jid || totalDigits < 10))
-      );
-      const parsedDuration = hasDuration && lastArgDigits ? Number(lastArg) : null;
-      const duration = Number.isFinite(parsedDuration) && parsedDuration > 0
-        ? parsedDuration
-        : null;
-
-      db.setPremium(jid, true, duration);
-      reply(`⭐ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${duration ? ` selama ${duration} hari` : " (Permanen)"}.`);
+      db.setPremium(jid, true, durationDays);
+      reply(`⭐ Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`);
     }
   },
   {
@@ -179,22 +209,19 @@ export default [
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply }) => {
-      const settings = db.getSettings();
-      const premList = Array.isArray(settings.premiumNumbers) ? settings.premiumNumbers : [];
-      const uniquePrems = [...new Set(premList.map(j => db.normalizeJid(j)))].filter(j => !db.isOwner(j) && !db.isAdmin(j));
+      const allPrems = db.getAllPremiumUsers();
 
-      if (uniquePrems.length === 0) {
+      if (allPrems.length === 0) {
         return reply("ℹ️ Belum ada user Premium khusus yang terdaftar.");
       }
 
       let text = `⭐ *DAFTAR PENGGUNA PREMIUM*\n─────────────────────────\n`;
-      uniquePrems.forEach((j, i) => {
-        const num = j.split("@")[0];
-        const u = db.getUser(j);
-        const until = u?.premiumUntil ? new Date(u.premiumUntil).toLocaleDateString("id-ID") : "Permanen";
-        text += `${i + 1}. +${num} _(${until})_\n`;
+      allPrems.forEach((u, i) => {
+        const num = u.jid.split("@")[0];
+        const status = u.isPermanent ? "Permanen" : `Hingga ${new Date(u.premiumUntil).toLocaleDateString("id-ID")}`;
+        text += `${i + 1}. +${num} _(${status})_\n`;
       });
-      text += `─────────────────────────\nTotal: ${uniquePrems.length} Premium`;
+      text += `─────────────────────────\nTotal: ${allPrems.length} Premium`;
       reply(text);
     }
   },
@@ -433,6 +460,31 @@ export default [
         `⚡ *Node.js:* ${process.version}\n` +
         `─────────────────────────`;
       reply(text);
+    }
+  },
+  {
+    name: "cleartmp",
+    aliases: ["clearsampah", "clearcache", "purgetmp"],
+    description: "Bersihkan file sampah, cache sesi usang, dan log sementara",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping, logger }) => {
+      await sendTyping();
+      await reply("🧹 Sedang membersihkan file sampah dan cache sementara...");
+      try {
+        const { cleanTempFiles, cleanOrphanChromeProcesses } = await import("@/src/utils/cleaner.js");
+        cleanOrphanChromeProcesses(logger);
+        const { deletedCount, freedBytes } = cleanTempFiles();
+        const freedMB = (freedBytes / (1024 * 1024)).toFixed(2);
+        await reply(
+          `✅ *Pembersihan Sampah Selesai!*\n\n` +
+          `🗑️ *File dihapus:* ${deletedCount} file\n` +
+          `💾 *Ruang dibebaskan:* ${freedMB} MB\n` +
+          `⚡ *Renderer Chrome:* Dibersihkan (orphaned process killed)`
+        );
+      } catch (err) {
+        await reply(`❌ Gagal membersihkan sampah: ${err.message}`);
+      }
     }
   },
   {
