@@ -10,6 +10,27 @@ import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { db } from "@/src/core/database.js";
 
 const execFileAsync = promisify(execFile);
+
+function getFfmpegPath() {
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return process.env.FFMPEG_PATH;
+  }
+  const localBin = path.join(process.cwd(), "bin", "ffmpeg");
+  if (fs.existsSync(localBin)) {
+    return localBin;
+  }
+  const localBinWin = path.join(process.cwd(), "bin", "ffmpeg.exe");
+  if (fs.existsSync(localBinWin)) {
+    return localBinWin;
+  }
+  for (const sysPath of ["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"]) {
+    if (fs.existsSync(sysPath)) {
+      return sysPath;
+    }
+  }
+  return "ffmpeg";
+}
+
 const { Image: WebpMuxImage } = webpmux;
 
 export async function addTextToImage(buffer, { topText = "", bottomText = "" } = {}) {
@@ -92,7 +113,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
     const outWebp = `${tmpBase}.webp`;
     await fsp.writeFile(inVid, processedBuffer);
     try {
-      await execFileAsync("ffmpeg", [
+      await execFileAsync(getFfmpegPath(), [
         "-y",
         "-i",
         inVid,

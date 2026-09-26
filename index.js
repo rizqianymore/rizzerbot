@@ -33,9 +33,22 @@ if (fs.existsSync(envPath)) {
 }
 
 // Konfigurasi binary lokal ffmpeg jika tersedia
-const binFfmpeg = path.join(process.cwd(), "bin", "ffmpeg");
-if (fs.existsSync(binFfmpeg)) {
-  process.env.FFMPEG_PATH = binFfmpeg;
+const candidateFfmpegPaths = [
+  process.env.FFMPEG_PATH,
+  path.join(process.cwd(), "bin", "ffmpeg"),
+  path.join(process.cwd(), "bin", "ffmpeg.exe"),
+  "/usr/bin/ffmpeg",
+  "/usr/local/bin/ffmpeg",
+];
+for (const p of candidateFfmpegPaths) {
+  if (p && fs.existsSync(p)) {
+    process.env.FFMPEG_PATH = p;
+    const dir = path.dirname(p);
+    if (!process.env.PATH.split(path.delimiter).includes(dir)) {
+      process.env.PATH = `${dir}${path.delimiter}${process.env.PATH}`;
+    }
+    break;
+  }
 }
 
 import { startBot, logger } from "./src/core/connection.js";

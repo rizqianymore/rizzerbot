@@ -10,6 +10,26 @@ import { db } from "@/src/core/database.js";
 
 const execFileAsync = promisify(execFile);
 
+function getFfmpegPath() {
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return process.env.FFMPEG_PATH;
+  }
+  const localBin = path.join(process.cwd(), "bin", "ffmpeg");
+  if (fs.existsSync(localBin)) {
+    return localBin;
+  }
+  const localBinWin = path.join(process.cwd(), "bin", "ffmpeg.exe");
+  if (fs.existsSync(localBinWin)) {
+    return localBinWin;
+  }
+  for (const sysPath of ["/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg"]) {
+    if (fs.existsSync(sysPath)) {
+      return sysPath;
+    }
+  }
+  return "ffmpeg";
+}
+
 const ASSETS_DIR = path.join(process.cwd(), "assets", "brat");
 const BRAT_FONT_PATH = path.join(ASSETS_DIR, "ArialNarrow.ttf");
 const BRAT_FONT_URL =
@@ -355,7 +375,8 @@ async function encodeVideo(concatPath, outputPath, configObj) {
     outputPath,
   ];
 
-  await execFileAsync("ffmpeg", args, { maxBuffer: 1024 * 1024 * 10 });
+  const ffmpegCmd = getFfmpegPath();
+  await execFileAsync(ffmpegCmd, args, { maxBuffer: 1024 * 1024 * 10 });
 }
 
 async function createBratVideo(text, template, options = {}) {
