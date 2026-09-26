@@ -24,4 +24,9 @@ export const settings = {
     linkBody: "Simple & Clean WhatsApp Bot",
     linkUrl: "https://whatsapp.com/",
     linkImage: "assets/image/banner.png",
+
+    // Saluran / Channel (Newsletter) Management
+    channelJid: "",
+    channelName: "Official Channel",
+    autoForwardTrxToChannel: true,
 };

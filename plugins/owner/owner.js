@@ -522,6 +522,190 @@ export default [
     }
   },
   {
+    name: "setch",
+    aliases: ["setsaluran", "setchannel"],
+    description: "Atur ID/link saluran (newsletter) resmi bot untuk posting struk/update",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping }) => {
+      await sendTyping();
+      const input = args[0]?.trim();
+      if (!input) {
+        const cur = db.getSettings();
+        return reply(
+          `📢 *MANAJEMEN SALURAN BOT*\n\n` +
+          `• Saluran Saat Ini: *${cur.channelJid || "Belum diatur"}*\n` +
+          `• Nama Saluran: *${cur.channelName || "Official Channel"}*\n` +
+          `• Auto Post TRX: *${cur.autoForwardTrxToChannel !== false ? "Aktif (ON)" : "Mati (OFF)"}*\n\n` +
+          `*Cara Mengatur:*\n` +
+          `• \`.setch <JID_SALURAN>\`\n` +
+          `  Contoh: \`.setch 120363312345678901@newsletter\`\n` +
+          `• Atau jika memasukkan link saluran:\n` +
+          `  \`.setch https://whatsapp.com/channel/0029Vxxxxxxx\`\n` +
+          `• Ganti nama saluran: \`.setch name <Nama Baru>\``
+        );
+      }
+
+      if (input.toLowerCase() === "name" || input.toLowerCase() === "nama") {
+        const newName = args.slice(1).join(" ").trim();
+        if (!newName) return reply("❌ Masukkan nama baru untuk saluran!");
+        db.updateSettings({ channelName: newName });
+        return reply(`✅ Nama saluran bot berhasil diubah menjadi: *${newName}*`);
+      }
+
+      let channelJid = input;
+      // Jika input adalah link saluran whatsapp (whatsapp.com/channel/xxx)
+      if (input.includes("whatsapp.com/channel/")) {
+        const code = input.split("whatsapp.com/channel/")[1]?.split(/[\/\?\s]/)[0];
+        if (code && sock.newsletterMetadata) {
+          try {
+            const meta = await sock.newsletterMetadata("invite", code);
+            if (meta?.id) {
+              channelJid = meta.id;
+            }
+          } catch (e) {
+            // Biarkan lanjut atau beri tahu
+          }
+        }
+      }
+
+      if (!channelJid.includes("@newsletter")) {
+        // Cek jika hanya angka ID
+        if (/^\d{15,20}$/.test(channelJid)) {
+          channelJid = `${channelJid}@newsletter`;
+        } else {
+          return reply(
+            `❌ Format ID Saluran tidak valid!\n` +
+            `ID Saluran WhatsApp harus berakhiran *@newsletter* atau berupa link saluran resmi.\n` +
+            `Contoh: \`.setch 120363312345678901@newsletter\``
+          );
+        }
+      }
+
+      db.updateSettings({ channelJid });
+      reply(
+        `✅ *Saluran Berhasil Diatur!*\n\n` +
+        `📢 *JID Saluran:* \`${channelJid}\`\n` +
+        `⚡ *Auto-Forward TRX:* Otomatis aktif. Setiap transaksi atau orderan baru akan dikirimkan ke saluran ini.`
+      );
+    },
+  },
+  {
+    name: "delch",
+    aliases: ["clearch", "hapussaluran"],
+    description: "Hapus konfigurasi saluran resmi dari bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply }) => {
+      db.updateSettings({ channelJid: "" });
+      reply("✅ Konfigurasi Saluran bot berhasil dinonaktifkan/dihapus.");
+    },
+  },
+  {
+    name: "autotrxch",
+    aliases: ["autochtrx", "trxchannel"],
+    description: "Aktifkan atau nonaktifkan auto forward transaksi ke saluran (on/off)",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply }) => {
+      const mode = args[0]?.toLowerCase();
+      if (!mode || !["on", "off", "aktif", "mati"].includes(mode)) {
+        const cur = db.getSettings();
+        return reply(
+          `ℹ️ Status Auto Post TRX ke Saluran saat ini: *${cur.autoForwardTrxToChannel !== false ? "AKTIF (ON)" : "NONAKTIF (OFF)"}*\n\n` +
+          `Gunakan: \`.autotrxch on\` atau \`.autotrxch off\``
+        );
+      }
+
+      const enabled = mode === "on" || mode === "aktif";
+      db.updateSettings({ autoForwardTrxToChannel: enabled });
+      reply(`✅ Auto-post transaksi ke Saluran sekarang: *${enabled ? "AKTIF (ON)" : "NONAKTIF (OFF)"}*.`);
+    },
+  },
+  {
+    name: "postch",
+    aliases: ["postsaluran", "chpost"],
+    description: "Kirim pesan / pengumuman manual dari bot langsung ke saluran resmi",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping, quoted }) => {
+      await sendTyping();
+      const settings = db.getSettings();
+      const channelJid = settings.channelJid;
+
+      if (!channelJid || !channelJid.includes("@newsletter")) {
+        return reply("❌ Saluran belum diatur! Gunakan perintah *.setch <JID_SALURAN>* terlebih dahulu.");
+      }
+
+      const content = args.join(" ").trim();
+      if (!content && !quoted) {
+        return reply("❌ Masukkan teks pesan yang ingin dipost ke saluran! Atau reply gambar/media.");
+      }
+
+      try {
+        if (quoted && /image/i.test(quoted.mtype || "")) {
+          const media = await quoted.download();
+          await sock.sendMessage(channelJid, {
+            image: media,
+            caption: content || quoted.text || "",
+          });
+        } else {
+          await sock.sendMessage(channelJid, {
+            text: content,
+          });
+        }
+        reply(`✅ Pesan berhasil diposting ke Saluran (*${settings.channelName || channelJid}*)!`);
+      } catch (err) {
+        reply(`❌ Gagal mengirim pesan ke saluran: ${err.message}`);
+      }
+    },
+  },
+  {
+    name: "infoch",
+    aliases: ["chinfo", "saluraninfo"],
+    description: "Cek informasi saluran yang terhubung dengan bot",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping }) => {
+      await sendTyping();
+      const settings = db.getSettings();
+      const channelJid = settings.channelJid;
+
+      if (!channelJid) {
+        return reply(
+          `📢 *INFORMASI SALURAN BOT*\n` +
+          `─────────────────────────\n` +
+          `Status: 🔴 *Belum Terhubung*\n\n` +
+          `Gunakan \`.setch <JID_SALURAN>\` untuk menghubungkan bot ke saluran WhatsApp Anda.`
+        );
+      }
+
+      let infoText =
+        `📢 *INFORMASI SALURAN RESMI BOT*\n` +
+        `─────────────────────────\n` +
+        `• JID Saluran : \`${channelJid}\`\n` +
+        `• Nama Label : *${settings.channelName || "Official Channel"}*\n` +
+        `• Auto Post TRX : *${settings.autoForwardTrxToChannel !== false ? "🟢 AKTIF" : "🔴 NONAKTIF"}*\n`;
+
+      try {
+        if (sock.newsletterMetadata) {
+          const meta = await sock.newsletterMetadata("jid", channelJid);
+          if (meta) {
+            infoText += `• Nama Asli Saluran : *${meta.name || "-"}*\n`;
+            infoText += `• Subscribers : *${meta.subscribers || "-"}*\n`;
+            infoText += `• Dibuat : *${meta.creation_time ? new Date(meta.creation_time * 1000).toLocaleDateString("id-ID") : "-"}*\n`;
+          }
+        }
+      } catch (_) {}
+
+      infoText +=
+        `─────────────────────────\n` +
+        `💡 _Gunakan \`.postch <pesan>\` untuk posting atau \`.delch\` untuk melepas._`;
+
+      reply(infoText);
+    },
+  },
+  {
     name: "restart",
     aliases: ["reboot"],
     description: "Restart proses bot",

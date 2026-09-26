@@ -130,29 +130,53 @@ export default [
 
       const caption = formatTrxText(trx);
 
+      let cardBuffer = null;
       try {
-        // Generate high-resolution receipt card
-        const cardBuffer = await generateReceiptCard(trx);
+        cardBuffer = await generateReceiptCard(trx);
+      } catch (_) {}
 
-        await sock.sendMessage(
-          remoteJid,
-          {
-            image: cardBuffer,
-            caption,
-            mentions: trx.buyerJid ? [trx.buyerJid] : [],
-          },
-          { quoted: msg }
-        );
+      try {
+        if (cardBuffer) {
+          await sock.sendMessage(
+            remoteJid,
+            {
+              image: cardBuffer,
+              caption,
+              mentions: trx.buyerJid ? [trx.buyerJid] : [],
+            },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            remoteJid,
+            {
+              text: caption,
+              mentions: trx.buyerJid ? [trx.buyerJid] : [],
+            },
+            { quoted: msg }
+          );
+        }
       } catch (err) {
-        // Fallback to text if canvas fails
-        await sock.sendMessage(
-          remoteJid,
-          {
-            text: caption,
-            mentions: trx.buyerJid ? [trx.buyerJid] : [],
-          },
-          { quoted: msg }
-        );
+        await reply(caption);
+      }
+
+      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi oleh Owner
+      const channelJid = activeSettings.channelJid || "";
+      if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
+        try {
+          if (cardBuffer) {
+            await sock.sendMessage(channelJid, {
+              image: cardBuffer,
+              caption: caption + `\n\n📢 _Auto-posted to official channel_`,
+            });
+          } else {
+            await sock.sendMessage(channelJid, {
+              text: caption + `\n\n📢 _Auto-posted to official channel_`,
+            });
+          }
+        } catch (channelErr) {
+          console.error("Gagal mengirim transaksi ke saluran:", channelErr.message);
+        }
       }
     },
   },
@@ -217,19 +241,54 @@ export default [
         `✅ *STATUS TRANSAKSI DIPERBARUI!*\n\n` + formatTrxText(updated);
       const remoteJid = msg.key.remoteJid;
 
+      const activeSettings = db.getSettings();
+      let cardBuffer = null;
       try {
-        const cardBuffer = await generateReceiptCard(updated);
-        await sock.sendMessage(
-          remoteJid,
-          {
-            image: cardBuffer,
-            caption,
-            mentions: updated.buyerJid ? [updated.buyerJid] : [],
-          },
-          { quoted: msg }
-        );
+        cardBuffer = await generateReceiptCard(updated);
+      } catch (_) {}
+
+      try {
+        if (cardBuffer) {
+          await sock.sendMessage(
+            remoteJid,
+            {
+              image: cardBuffer,
+              caption,
+              mentions: updated.buyerJid ? [updated.buyerJid] : [],
+            },
+            { quoted: msg }
+          );
+        } else {
+          await sock.sendMessage(
+            remoteJid,
+            {
+              text: caption,
+              mentions: updated.buyerJid ? [updated.buyerJid] : [],
+            },
+            { quoted: msg }
+          );
+        }
       } catch (_) {
         await reply(caption);
+      }
+
+      // Auto-forward update transaksi ke Saluran
+      const channelJid = activeSettings.channelJid || "";
+      if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
+        try {
+          if (cardBuffer) {
+            await sock.sendMessage(channelJid, {
+              image: cardBuffer,
+              caption: caption + `\n\n📢 _Auto-posted status update to official channel_`,
+            });
+          } else {
+            await sock.sendMessage(channelJid, {
+              text: caption + `\n\n📢 _Auto-posted status update to official channel_`,
+            });
+          }
+        } catch (channelErr) {
+          console.error("Gagal mengirim update transaksi ke saluran:", channelErr.message);
+        }
       }
     },
   },

@@ -201,7 +201,7 @@ function normalizeSettings(storedSettings = {}) {
     result[key] = [...new Set(toJidList(sourceVal))];
   }
 
-  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline']) {
+  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel']) {
     result[key] = toBoolean(result[key], configDefaults[key]);
   }
   if (
