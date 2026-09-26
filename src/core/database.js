@@ -658,11 +658,6 @@ export const db = {
     data.usage[command] = (Number(data.usage[command]) || 0) + 1;
     save();
   },
-  isNsfw: (groupId) => toBoolean(data.nsfw?.[groupId]),
-  setNsfw: (groupId, enabled) => {
-    data.nsfw[groupId] = toBoolean(enabled);
-    save();
-  },
   isAntilink: (groupId) => toBoolean(data.antilink?.[groupId]),
   setAntilink: (groupId, enabled) => {
     if (!data.antilink) data.antilink = {};

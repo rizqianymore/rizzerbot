@@ -58,30 +58,6 @@ export default [
     }
   },
   {
-    name: "nsfw",
-    description: "Toggle NSFW content mode in this chat",
-    premiumOnly: true,
-    groupOnly: true,
-    groupAdminOnly: true,
-    category: "Premium",
-    run: async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
-      const groupJid = msg.key.remoteJid;
-      const action = (args[0] || "").toLowerCase();
-      if (action !== "on" && action !== "off") {
-        return reply("Gunakan *.nsfw on* atau *.nsfw off*.");
-      }
-
-      const enabled = action === "on";
-      db.setNsfw(groupJid, enabled);
-      await reply(
-        enabled
-          ? "🔞 *Mode NSFW diaktifkan* untuk chat ini."
-          : "✅ *Mode NSFW dimatikan* untuk chat ini."
-      );
-    }
-  },
-  {
     name: "stickernowm",
     description: "Create sticker without watermark",
     premiumOnly: true,

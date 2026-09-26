@@ -73,7 +73,6 @@ const COMMAND_USAGES = {
   // Premium
   hd: "(reply gambar)",
   tts: "<teks>",
-  nsfw: "<on / off>",
   stickernowm: "[teks atas | bawah] (reply gambar)",
   aipro: "<prompt>",
   customprofile: "<teks bio>",
@@ -271,7 +270,7 @@ export default {
           { quoted: msg }
         );
       }
-    } catch (_) {}
+    } catch (_) { }
 
     await sock.sendMessage(
       msg.key.remoteJid,
