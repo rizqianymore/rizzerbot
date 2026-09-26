@@ -2,14 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { settings } from '@/config/settings.js';
 
-const dbPath = process.env.RIZZER_DB_PATH
-  ? path.resolve(process.env.RIZZER_DB_PATH)
-  : path.join(process.cwd(), 'database.json');
+const dbPath = path.join(process.cwd(), 'database', 'database.json');
 const dbDirectory = path.dirname(dbPath);
 
-const usersDbPath = process.env.RIZZER_USERS_PATH
-  ? path.resolve(process.env.RIZZER_USERS_PATH)
-  : path.join(process.cwd(), 'database', 'users.json');
+const usersDbPath = path.join(process.cwd(), 'database', 'users.json');
 const usersDbDirectory = path.dirname(usersDbPath);
 
 const configDefaults = cloneValue(settings);
