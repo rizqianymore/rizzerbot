@@ -40,6 +40,11 @@ const COMMAND_USAGES = {
   pinterest: "<kata kunci>",
   image: "<kata kunci>",
   listplugins: "",
+  trx: "<barang> | <harga> | <buyer> | [metode]",
+  cektrx: "<id_trx>",
+  settrx: "<id_trx> <status>",
+  listtrx: "[jumlah]",
+  deltrx: "<id_trx>",
 
   // Group
   hidetag: "<pesan>",
