@@ -163,37 +163,15 @@ export default [
       // Format Grid Tampilan
       const gridVisual = grid.map((r) => r.map((c) => c.char).join("  ")).join("\n");
 
-      let dialogue = combos.length > 0
-        ? ZEUS_DIALOGUES_WIN[Math.floor(Math.random() * ZEUS_DIALOGUES_WIN.length)]
-        : ZEUS_DIALOGUES_NORMAL[Math.floor(Math.random() * ZEUS_DIALOGUES_NORMAL.length)];
-
-      let text = `⚡🏛️ *GATES OF OLYMPUS: ZEUS ASCENSION* 🏛️⚡\n`;
-      text += `─────────────────────────\n`;
-      text += `${dialogue}\n\n`;
-      text += `📜 *Papan Gerbang Ilahi:*\n`;
-      text += `${gridVisual}\n\n`;
-
-      if (combos.length > 0) {
-        text += `💥 *Kombo Elemen Terpicu:*\n`;
-        combos.forEach((c) => {
-          text += ` • ${c.char} ${c.name} x${c.count} (+${c.score} Poin)\n`;
-        });
-        if (multiplier > 1) {
-          text += `⚡ *Sambaran Petir Zeus Multiplier: x${multiplier}!* ⚡\n`;
-        }
-        text += `🎯 *Total Power Serangan:* *${finalScore}*\n\n`;
-      } else {
-        text += `💨 _Tidak ada kombo elemen yang cukup sejajar kali ini._\n\n`;
+      const isWin = combos.length > 0;
+      let text = `⚡ *GATES OF OLYMPUS*\n\n`;
+      text += `Status: ${isWin ? "🎉 *MENANG (BERKAH ZEUS)*" : "🛡️ *BERTAHAN (KALAH)*"}\n`;
+      if (isWin && multiplier > 1) {
+        text += `Multiplier Petir: *x${multiplier}*\n`;
       }
-
-      text += `🎁 *Hadiah Quest:*\n`;
-      text += ` • Status: ${combos.length > 0 ? "🎉 *BERKAH / MENANG*" : "🛡️ *BERTAHAN*"}\n`;
-      text += ` • EXP: +${gainedExp} EXP (${userExp}/${userLevel * 100})\n`;
-      text += ` • Kristal Olympus: +${gainedCrystals} 💎 (Total: ${userCrystals})\n`;
-      text += ` • Sisa Energi: ${remainingEnergy}/100 ⚡\n`;
-      text += levelUpMessage;
-      text += `─────────────────────────\n`;
-      text += `💡 _Tonton cuplikan sambaran petir Olympus di video di atas!_`;
+      text += `Power Serangan: *${finalScore}*\n`;
+      text += `Hadiah: *+${gainedExp} EXP* | *+${gainedCrystals} Kristal*\n`;
+      text += `Energi: *${remainingEnergy}/100*${levelUpMessage ? `\n${levelUpMessage}` : ""}`;
 
       try {
         let videoBuffer = null;

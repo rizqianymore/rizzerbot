@@ -37,13 +37,22 @@ export async function recordRealOlympusGameplay({ durationSec = 3, fps = 8 } = {
     const fileUrl = `file://${GAME_HTML_PATH}`;
     await page.goto(fileUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
 
-    // Click play to initiate 3D scene & start wave
-    try {
-      await page.click("a#play");
-    } catch (_) {}
+    // Sembunyikan seluruh banner, teks hint Firefox, menu, dan jalankan game
+    await page.evaluate(() => {
+      const menu = document.getElementById("menucontainer");
+      if (menu) menu.remove();
+      const instruct = document.getElementById("instructcontainer");
+      if (instruct) instruct.remove();
+      const iframes = document.querySelectorAll("iframe");
+      iframes.forEach((f) => f.remove());
+      const audio = document.getElementById("backtrack");
+      if (audio) audio.remove();
+      if (typeof startGame === "function") startGame();
+    });
+
     await new Promise((r) => setTimeout(r, 600));
 
-    // Place towers randomly (Archer or Catapult) to simulate strategic defense
+    // Pasang menara pertahanan
     try {
       await page.keyboard.press("Digit1");
       await page.mouse.click(320, 240);
