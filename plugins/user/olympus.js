@@ -187,14 +187,36 @@ export default [
       }
 
       text += `🎁 *Hadiah Quest:*\n`;
+      text += ` • Status: ${combos.length > 0 ? "🎉 *BERKAH / MENANG*" : "🛡️ *BERTAHAN*"}\n`;
       text += ` • EXP: +${gainedExp} EXP (${userExp}/${userLevel * 100})\n`;
       text += ` • Kristal Olympus: +${gainedCrystals} 💎 (Total: ${userCrystals})\n`;
       text += ` • Sisa Energi: ${remainingEnergy}/100 ⚡\n`;
       text += levelUpMessage;
       text += `─────────────────────────\n`;
-      text += `💡 _Mainkan terus untuk menaikkan level dan membuka berkah para dewa!_`;
+      text += `💡 _Tonton cuplikan sambaran petir Olympus di video di atas!_`;
 
-      await reply(text.trim());
+      try {
+        const { generateOlympusVideo } = await import("@/src/services/olympus-video.js");
+        const videoBuffer = await generateOlympusVideo({
+          isWin: combos.length > 0,
+          multiplier,
+          score: finalScore,
+          level: userLevel,
+        });
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            video: videoBuffer,
+            caption: text.trim(),
+            mimetype: "video/mp4",
+          },
+          { quoted: msg }
+        );
+      } catch (vidErr) {
+        // Fallback ke pesan teks jika render video gagal
+        await reply(text.trim());
+      }
     },
   },
   {
