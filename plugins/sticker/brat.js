@@ -457,6 +457,9 @@ function showBratGuide(prefix) {
   );
 }
 
+const MAX_BRAT_STATIC_LENGTH = 100;
+const MAX_BRAT_VIDEO_LENGTH = 50;
+
 export default [
   {
     name: "brat",
@@ -485,6 +488,24 @@ export default [
 
       if (!text) {
         return reply(`⚠️ Masukkan teks untuk stiker!\nContoh: \`${prefix}brat Hai semua\``);
+      }
+
+      // Validasi batas panjang teks / kalimat
+      if (!isVideo && text.length > MAX_BRAT_STATIC_LENGTH) {
+        return reply(
+          `⚠️ *Teks Terlalu Panjang!*\n\n` +
+          `Maksimal *${MAX_BRAT_STATIC_LENGTH} karakter* untuk stiker Brat gambar agar teks pas dan terbaca rapi.\n` +
+          `Panjang teks Anda: *${text.length} karakter*.\n\n` +
+          `💡 _Tips: Gunakan teks yang lebih padat atau gunakan ${prefix}bratvid untuk teks berjalan._`
+        );
+      }
+      if (isVideo && text.length > MAX_BRAT_VIDEO_LENGTH) {
+        return reply(
+          `⚠️ *Kalimat Terlalu Panjang!*\n\n` +
+          `Maksimal *${MAX_BRAT_VIDEO_LENGTH} karakter* (sekitar 8-10 kata) untuk stiker Brat Video.\n` +
+          `Panjang teks Anda: *${text.length} karakter*.\n\n` +
+          `💡 _Tips: Gunakan kalimat yang lebih ringkas agar animasi stiker berjalan mulus!_`
+        );
       }
 
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
@@ -524,6 +545,20 @@ export default [
         text = text.replace(/--green|-g/gi, "").trim();
       }
 
+      if (!text) {
+        return reply(`⚠️ Masukkan teks!\nContoh: \`${prefix}bratvid lagu baru charli xcx\``);
+      }
+
+      // Validasi batas panjang kalimat video
+      if (text.length > MAX_BRAT_VIDEO_LENGTH) {
+        return reply(
+          `⚠️ *Kalimat Terlalu Panjang!*\n\n` +
+          `Maksimal *${MAX_BRAT_VIDEO_LENGTH} karakter* (sekitar 8-10 kata) untuk stiker Brat Video.\n` +
+          `Panjang teks Anda: *${text.length} karakter*.\n\n` +
+          `💡 _Tips: Gunakan kalimat yang lebih ringkas agar animasi stiker berjalan mulus dan cepat dirender!_`
+        );
+      }
+
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
       try {
@@ -548,6 +583,10 @@ export default [
       const text = args.join(" ").trim();
       if (!text) {
         return reply(`⚠️ Harap masukkan teksnya!\nContoh: \`${prefix}bratgojo Halo semuanya\``);
+      }
+
+      if (text.length > MAX_BRAT_STATIC_LENGTH) {
+        return reply(`⚠️ Teks terlalu panjang! Maksimal ${MAX_BRAT_STATIC_LENGTH} karakter untuk stiker Brat Gojo.`);
       }
 
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
@@ -576,6 +615,12 @@ export default [
         return reply(`⚠️ Harap masukkan teksnya!\nContoh: \`${prefix}bratgojovid Halo semuanya\``);
       }
 
+      if (text.length > MAX_BRAT_VIDEO_LENGTH) {
+        return reply(
+          `⚠️ Kalimat terlalu panjang! Maksimal ${MAX_BRAT_VIDEO_LENGTH} karakter (sekitar 8-10 kata) untuk video Brat Gojo.`
+        );
+      }
+
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
       try {
@@ -602,6 +647,10 @@ export default [
         return reply(`⚠️ Harap masukkan teksnya!\nContoh: \`${prefix}bratvermeil Halo semuanya\``);
       }
 
+      if (text.length > MAX_BRAT_STATIC_LENGTH) {
+        return reply(`⚠️ Teks terlalu panjang! Maksimal ${MAX_BRAT_STATIC_LENGTH} karakter untuk stiker Brat Vermeil.`);
+      }
+
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
       try {
@@ -626,6 +675,12 @@ export default [
       const text = args.join(" ").trim();
       if (!text) {
         return reply(`⚠️ Harap masukkan teksnya!\nContoh: \`${prefix}bratvermeilvid Halo semuanya\``);
+      }
+
+      if (text.length > MAX_BRAT_VIDEO_LENGTH) {
+        return reply(
+          `⚠️ Kalimat terlalu panjang! Maksimal ${MAX_BRAT_VIDEO_LENGTH} karakter (sekitar 8-10 kata) untuk video Brat Vermeil.`
+        );
       }
 
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});

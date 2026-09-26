@@ -397,16 +397,35 @@ function syncPrivilegedUsers() {
 function isOwner(jid) {
   const normalized = normalizeJid(jid);
   if (!normalized) return false;
-  return Boolean(
+  if (
     isPrimaryOwner(normalized) ||
     ownerJids.has(normalized) ||
     activeBotJids.has(normalized) ||
     data.users[normalized]?.owner
-  );
+  ) {
+    return true;
+  }
+
+  // Cross-match nomor telepon jika JID berupa @lid atau variasi format
+  const digits = normalizePhone(normalized);
+  if (digits && digits.length >= 8) {
+    const phoneJid = `${digits}@s.whatsapp.net`;
+    if (
+      isPrimaryOwner(phoneJid) ||
+      ownerJids.has(phoneJid) ||
+      activeBotJids.has(phoneJid) ||
+      data.users[phoneJid]?.owner
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function isAdmin(jid) {
   const normalized = normalizeJid(jid);
+  if (!normalized) return false;
   return Boolean(normalized && (isOwner(normalized) || adminJids.has(normalized) || data.users[normalized]?.admin));
 }
 
@@ -414,6 +433,15 @@ function isPremium(jid) {
   const normalized = normalizeJid(jid);
   if (!normalized) return false;
   if (isOwner(normalized) || isAdmin(normalized) || premiumJids.has(normalized)) return true;
+
+  const digits = normalizePhone(normalized);
+  if (digits && digits.length >= 8) {
+    const phoneJid = `${digits}@s.whatsapp.net`;
+    if (isOwner(phoneJid) || isAdmin(phoneJid) || premiumJids.has(phoneJid)) return true;
+    const phoneUser = data.users[phoneJid];
+    if (phoneUser?.premium && !isPremiumExpired(phoneUser)) return true;
+  }
+
   const user = data.users[normalized];
   return Boolean(user?.premium && !isPremiumExpired(user));
 }
