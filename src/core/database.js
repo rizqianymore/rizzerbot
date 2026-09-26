@@ -135,6 +135,10 @@ function getRole(user) {
   return 'user';
 }
 
+function getOwnerName() {
+  return data?.settings?.ownerName || settings.ownerName || 'Owner';
+}
+
 function isPrimaryOwner(jid) {
   const normalized = normalizeJid(jid);
   const primary = normalizeJid(data?.settings?.ownerNumber || settings.ownerNumber);
