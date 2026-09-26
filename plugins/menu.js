@@ -207,7 +207,24 @@ export default {
     if (targetCategory) {
       menuText += `• Kategori : *${targetCategory}*\n`;
     }
-    menuText += `• Total  : *${Object.values(categories).reduce((acc, cur) => acc + cur.length, 0)} Fitur*\n\n`;
+    // 4. Tampilkan Top 10 Fitur Terpopuler jika menu utama (bukan kategori)
+    if (!targetCategory) {
+      const usage = db.data?.usage || {};
+      const sortedUsage = Object.entries(usage)
+        .filter(([name]) => commands.has(name))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      // Jika belum ada record usage, ambil 10 command populer default
+      const topList = sortedUsage.length > 0
+        ? sortedUsage.map(([name, count], i) => `│ ${i + 1}. *${prefix}${name}* _(${count}x)_`)
+        : ["sticker", "tiktok", "igdl", "ytdlpro", "deepseek", "brat", "jkt48", "kompastv", "ping", "profile"]
+            .filter((c) => commands.has(c))
+            .map((name, i) => `│ ${i + 1}. *${prefix}${name}*`);
+
+      menuText += `🔥 *10 FITUR TERPOPULER*\n`;
+      menuText += topList.join("\n") + "\n\n";
+    }
 
     const order = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General"];
     const catKeys = Object.keys(categories).sort((a, b) => {

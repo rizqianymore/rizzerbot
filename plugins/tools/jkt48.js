@@ -169,19 +169,32 @@ export default [
       const query = args.join(" ").trim();
 
       if (!query) {
-        await reply("Memuat daftar member resmi langsung dari web JKT48...");
+        await reply("📋 Memuat daftar member JKT48...");
         try {
           const members = await getJkt48Members();
-          const sampleNames = members
-            .slice(0, 6)
-            .map((m) => m.name)
-            .join(", ");
+          if (!Array.isArray(members) || members.length === 0) {
+            return reply("❌ Data member tidak ditemukan.");
+          }
 
-          const text = `Saat ini JKT48 memiliki ${members.length} member aktif yang beraktivitas di berbagai tim dan generasi, seperti ${sampleNames}, dan lainnya. Anda dapat membaca profil lengkap serta melihat foto resmi masing-masing member dengan mengetikkan perintah ${prefix}jkt48 diikuti nama atau ID member yang ingin dicari, sebagai contoh ${prefix}jkt48 Freya atau ${prefix}jkt48 244.`;
+          let text = `👥 *DAFTAR MEMBER JKT48 (${members.length} Member)*\n`;
+          text += `─────────────────────────\n`;
 
-          await reply(text);
+          members.slice(0, 20).forEach((m, idx) => {
+            text += `${idx + 1}. *${m.name}* (ID: ${m.id || "-"})\n`;
+          });
+
+          if (members.length > 20) {
+            text += `_... dan ${members.length - 20} member lainnya._\n`;
+          }
+
+          text += `─────────────────────────\n`;
+          text += `💡 *Cara Pilih Member:*\n`;
+          text += `Ketik: *${prefix}jkt48 <nama / ID>*\n`;
+          text += `_Contoh: *${prefix}jkt48 ${members[0]?.name || "Freya"}*_`;
+
+          await reply(text.trim());
         } catch (err) {
-          await reply(`Gagal memuat daftar member: ${err.message}`);
+          await reply(`❌ Gagal memuat daftar member: ${err.message}`);
         }
         return;
       }
@@ -297,31 +310,35 @@ export default [
     category: "Tools",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      await reply("Memuat rangkuman berita terbaru dari situs resmi JKT48...");
+      await reply("📰 Memuat pengumuman terbaru JKT48...");
 
       const limit = parseInt(args[0], 10) || 5;
 
       try {
         const newsList = await getJkt48News(limit);
         if (!Array.isArray(newsList) || newsList.length === 0) {
-          return reply("Tidak ada pengumuman berita JKT48 yang tersedia saat ini.");
+          return reply("❌ Tidak ada pengumuman berita JKT48 saat ini.");
         }
 
-        const newsNarrative = newsList
-          .map((item, idx) => {
-            const tgl = formatDate(item.valid_date_from);
-            const cat = item.category ? `kategori *${item.category}*` : "pengumuman";
-            const url = item.link ? `${JKT48_BASE}/news/${item.link}` : "situs web JKT48";
-            return `${idx + 1}. *${item.title}* (${cat}, dirilis pada *${tgl}*, tautan: ${url})`;
-          })
-          .join("; ");
+        let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n`;
+        text += `─────────────────────────\n`;
 
-        const text = `Berikut rangkuman berita dan pengumuman resmi terbaru dari manajemen JKT48: ${newsNarrative}. Untuk membaca rincian lengkap setiap pengumuman, silakan akses tautan resmi yang tertera.`;
+        newsList.forEach((item, idx) => {
+          const tgl = formatDate(item.valid_date_from);
+          const cat = item.category ? `[${item.category}]` : "";
+          const url = item.link ? `${JKT48_BASE}/news/${item.link}` : "-";
+          text += `*${idx + 1}. ${cat} ${item.title}*\n`;
+          text += `   _🕒 Tanggal: ${tgl}_\n`;
+          text += `   🔗 Link: ${url}\n\n`;
+        });
 
-        await reply(text);
+        text += `─────────────────────────\n`;
+        text += `💡 _Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
+
+        await reply(text.trim());
       } catch (err) {
         console.error("[JKT48 News Error]", err.message);
-        await reply(`Gagal mengambil berita JKT48: ${err.message}`);
+        await reply(`❌ Gagal mengambil berita JKT48: ${err.message}`);
       }
     },
   },
