@@ -388,7 +388,24 @@ export default [
               "."
               : "";
 
-          const text = `Pertunjukan teater *${detail.title}* ${team} dengan kode *${detail.code || parsed.code}* dijadwalkan pada *${showDate}* pukul ${showTime} ${openGate} dengan harga tiket *${price}*. ${memberNames} ${salesSummary} Informasi lengkap dan reservasi tiket resmi dapat diakses melalui ${JKT48_BASE}/schedule/${detail.link || parsed.code}.`;
+          const lines = [
+            `*${detail.title}* (${detail.code || parsed.code})`,
+            ``,
+            `• Tim: ${detail.jkt48_member_type ? `Tim ${detail.jkt48_member_type}` : "JKT48"}`,
+            `• Tanggal: ${showDate}`,
+            `• Waktu: ${showTime} ${openGate}`.trim(),
+            `• Harga Tiket: ${price}`,
+            ``,
+            `• Member (${detail.jkt48_member?.length || 0}): ${detail.jkt48_member?.map((m) => m.name).join(", ") || "Belum diumumkan"}`,
+          ];
+
+          if (salesSummary) {
+            lines.push(``, `• Penjualan: ${salesSummary}`);
+          }
+
+          lines.push(``, `🔗 ${JKT48_BASE}/schedule/${detail.link || parsed.code}`);
+
+          const text = lines.join("\n");
 
           return await reply(text);
         } catch (err) {
