@@ -175,117 +175,13 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-let jktBrowser = null;
-let jktBrowserIdleTimer = null;
 
-function resetScrapeBrowserTimer() {
-  if (jktBrowserIdleTimer) {
-    clearTimeout(jktBrowserIdleTimer);
-    jktBrowserIdleTimer = null;
-  }
-  jktBrowserIdleTimer = setTimeout(async () => {
-    if (jktBrowser) {
-      try {
-        if (jktBrowser.connected) await jktBrowser.close().catch(() => {});
-      } catch (_) {}
-      jktBrowser = null;
-    }
-  }, 60000);
-  if (jktBrowserIdleTimer && typeof jktBrowserIdleTimer.unref === "function") {
-    jktBrowserIdleTimer.unref();
-  }
-}
 
-async function getJktBrowser() {
-  resetScrapeBrowserTimer();
-  if (jktBrowser?.connected) return jktBrowser;
-  const { default: puppeteer } = await import("puppeteer");
-  const fs = await import("fs");
-  const candidatePaths = [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/chromium",
-    "/snap/bin/chromium",
-  ].filter(Boolean);
-
-  let foundExecutable = candidatePaths.find((p) => fs.existsSync(p));
-
-  const launchOptions = {
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--single-process",
-      "--disable-gpu",
-      "--disable-blink-features=AutomationControlled",
-    ],
-  };
-
-  if (foundExecutable) {
-    launchOptions.executablePath = foundExecutable;
-  }
-
-  jktBrowser = await puppeteer.launch(launchOptions);
-  return jktBrowser;
-}
-
-async function jktFetch(url) {
-  resetScrapeBrowserTimer();
-  const browser = await getJktBrowser();
-  const page = await browser.newPage();
-  const device = getRandomDevice("mobile");
-
-  await page.setUserAgent(device.userAgent);
-  if (device.viewport) {
-    await page.setViewport(device.viewport);
-  }
-
-  const extraHeaders = buildScraperHeaders(device, {
-    Accept: "application/json, text/plain, */*",
-    Referer: "https://jkt48.com/",
-    Origin: "https://jkt48.com",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-  });
-  await page.setExtraHTTPHeaders(extraHeaders);
-
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-  });
-
-  try {
-    const doFetch = async (u) =>
-      page.goto(u, {
-        waitUntil: "domcontentloaded",
-        timeout: 35000,
-        cache: "no-store",
-      });
-    let resp = await doFetch(url);
-    if (resp.status() === 304) {
-      const sep = url.includes("?") ? "&" : "?";
-      resp = await doFetch(`${url}${sep}cb=${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
-    }
-    const ct = (resp.headers()["content-type"] || "").toLowerCase();
-    if (!ct.includes("json")) {
-      if (resp.status() === 404) throw new Error("Data tidak ditemukan.");
-      throw new Error(`Skriper JKT48 gagal (status ${resp.status()}).`);
-    }
-    const body = await page.evaluate(() => JSON.parse(document.body.innerText));
-    return body;
-  } finally {
-    await page.close();
-  }
-}
+import { STATIC_MEMBERS } from "@/src/services/jkt48.js";
 
 export async function jkt48ListMembers() {
-  const { status, data } = await jktFetch("https://jkt48.com/api/v1/members/");
-  if (!status || !Array.isArray(data)) throw new Error("Gagal mengambil daftar member.");
-  return data.map((m) => ({
-    id: m.jkt48_member_id,
+  return STATIC_MEMBERS.map((m) => ({
+    id: m.id,
     name: m.name,
     nickname: m.nickname,
     code: m.code,
@@ -304,24 +200,20 @@ export async function jkt48MemberDetail(idOrName) {
     list.find((m) => m.nickname && m.nickname.toLowerCase().includes(q)) ||
     list.find((m) => m.name.toLowerCase().includes(q));
   if (!target) throw new Error("Member tidak ditemukan.");
-  const { data } = await jktFetch(
-    `https://jkt48.com/api/v1/members/${target.id}?lang=id&t=${Date.now()}`
-  );
-  if (!data) throw new Error("Detail member tidak ditemukan.");
   return {
     id: target.id,
-    name: data.name || target.name,
-    nickname: data.nickname || target.nickname,
-    type: data.type || "",
-    birthPlace: data.birth_place || "",
-    birthDate: data.birth_date || "",
-    bloodType: data.blood_type || "-",
-    height: data.body_height ? `${data.body_height} cm` : "-",
-    horoscope: data.horoscope || "-",
-    twitter: data.twitter_account || "",
-    instagram: data.instagram_account || "",
-    tiktok: data.tiktok_account || "",
-    photo: data.photo_1 || data.photo_2 || target.photo || "",
+    name: target.name,
+    nickname: target.nickname,
+    type: target.type || "",
+    birthPlace: "",
+    birthDate: "",
+    bloodType: "-",
+    height: "-",
+    horoscope: "-",
+    twitter: "",
+    instagram: "",
+    tiktok: "",
+    photo: target.photo || "",
   };
 }
 

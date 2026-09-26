@@ -70,181 +70,25 @@ export const STATIC_MEMBERS = [
   { id: 244, name: "Victoria Kimberly", nickname: "Kimmy", code: "VICTORIA_KIMBERLY", type: "PASSION", photo: "https://jkt48.com/api/v1/storages/media/jkt48-member/victoria_kimberly.jpg" }
 ];
 
-let jktBrowser = null;
-let jktPage = null;
-let isInitializing = false;
-let initWaiters = [];
-let idleTimer = null;
-
-const BROWSER_IDLE_TIMEOUT_MS = 60000; // Auto-kill setelah 60 detik tidak digunakan
-
-function resetBrowserIdleTimer() {
-  if (idleTimer) {
-    clearTimeout(idleTimer);
-    idleTimer = null;
-  }
-  idleTimer = setTimeout(async () => {
-    if (jktBrowser) {
-      try {
-        if (jktPage && !jktPage.isClosed()) await jktPage.close().catch(() => {});
-        if (jktBrowser?.connected) await jktBrowser.close().catch(() => {});
-      } catch (_) {}
-      jktBrowser = null;
-      jktPage = null;
-    }
-  }, BROWSER_IDLE_TIMEOUT_MS);
-  if (idleTimer && typeof idleTimer.unref === "function") {
-    idleTimer.unref();
-  }
-}
+import axios from "axios";
 
 /**
- * Ensures an active stealth browser session connected to jkt48.com.
- */
-async function getActivePage() {
-  resetBrowserIdleTimer();
-
-  if (jktPage && !jktPage.isClosed() && jktBrowser?.connected) {
-    return jktPage;
-  }
-
-  if (isInitializing) {
-    return new Promise((resolve, reject) => {
-      initWaiters.push({ resolve, reject });
-    });
-  }
-
-  isInitializing = true;
-
-  try {
-    if (jktBrowser) {
-      try {
-        await jktBrowser.close();
-      } catch (_) {}
-      jktBrowser = null;
-      jktPage = null;
-    }
-
-    const { default: puppeteer } = await import("puppeteer");
-    const fs = await import("fs");
-    const candidatePaths = [
-      process.env.PUPPETEER_EXECUTABLE_PATH,
-      "/usr/bin/google-chrome-stable",
-      "/usr/bin/google-chrome",
-      "/usr/bin/chromium-browser",
-      "/usr/bin/chromium",
-      "/snap/bin/chromium",
-    ].filter(Boolean);
-
-    let foundExecutable = candidatePaths.find((p) => fs.existsSync(p));
-
-    const launchOptions = {
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-        "--single-process",
-        "--disable-blink-features=AutomationControlled",
-        "--window-size=1280,800",
-      ],
-    };
-
-    if (foundExecutable) {
-      launchOptions.executablePath = foundExecutable;
-    }
-
-    jktBrowser = await puppeteer.launch(launchOptions);
-
-    jktPage = await jktBrowser.newPage();
-    await jktPage.setUserAgent(USER_AGENT);
-    await jktPage.setViewport({ width: 1280, height: 800 });
-
-    // Anti-bot stealth injections
-    await jktPage.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-      window.chrome = { runtime: {} };
-      Object.defineProperty(navigator, "languages", {
-        get: () => ["id-ID", "id", "en-US", "en"],
-      });
-      Object.defineProperty(navigator, "plugins", {
-        get: () => [1, 2, 3, 4, 5],
-      });
-    });
-
-    // Navigate to homepage to establish valid Cloudflare clearance
-    await jktPage.goto(JKT48_BASE, {
-      waitUntil: "domcontentloaded",
-      timeout: 35000,
-    });
-
-    // If Cloudflare JS challenge is presented, wait for resolution
-    let title = await jktPage.title();
-    let retries = 0;
-    while (title.includes("Just a moment") && retries < 10) {
-      await new Promise((r) => setTimeout(r, 2000));
-      title = await jktPage.title();
-      retries++;
-    }
-
-    const page = jktPage;
-    initWaiters.forEach((w) => w.resolve(page));
-    initWaiters = [];
-    return page;
-  } catch (err) {
-    initWaiters.forEach((w) => w.reject(err));
-    initWaiters = [];
-    throw err;
-  } finally {
-    isInitializing = false;
-  }
-}
-
-/**
- * Executes in-page fetch using the browser's cleared Cloudflare context.
+ * Executes direct HTTP fetch to JKT48 endpoints or mirror
  */
 export async function jktInPageFetch(apiUrl) {
-  resetBrowserIdleTimer();
-  let page = await getActivePage();
-
-  const executeFetch = async (p) => {
-    return await p.evaluate(async (url) => {
-      try {
-        const res = await fetch(url, {
-          headers: {
-            Accept: "application/json, text/plain, */*",
-          },
-        });
-        const json = await res.json();
-        return { ok: true, status: res.status, data: json };
-      } catch (err) {
-        return { ok: false, error: err.message };
-      }
-    }, apiUrl);
-  };
-
   try {
-    const result = await executeFetch(page);
-    resetBrowserIdleTimer();
-    if (result.ok && result.data) {
-      return result.data;
-    }
-    throw new Error(result.error || `HTTP ${result.status}`);
+    const res = await axios.get(apiUrl, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json, text/plain, */*",
+        Referer: "https://jkt48.com/",
+        Origin: "https://jkt48.com",
+      },
+      timeout: 10000,
+    });
+    return res.data;
   } catch (err) {
-    // If session invalidated or closed, reset and retry once
-    console.warn("[JKT48 Scraper] Retrying with fresh session:", err.message);
-    jktPage = null;
-    page = await getActivePage();
-    const retryResult = await executeFetch(page);
-    resetBrowserIdleTimer();
-    if (retryResult.ok && retryResult.data) {
-      return retryResult.data;
-    }
-    throw new Error(retryResult.error || "Gagal mengambil data dari JKT48");
+    throw new Error(err.response?.data?.message || err.message || "Gagal mengambil data dari JKT48");
   }
 }
 
