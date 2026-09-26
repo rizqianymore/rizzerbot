@@ -11,9 +11,9 @@ import { db } from "@/src/core/database.js";
 const execFileAsync = promisify(execFile);
 
 const ASSETS_DIR = path.join(process.cwd(), "assets", "brat");
-const BRAT_FONT_PATH = path.join(ASSETS_DIR, "Poppins.ttf");
+const BRAT_FONT_PATH = path.join(ASSETS_DIR, "ArialNarrow.ttf");
 const BRAT_FONT_URL =
-  "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Poppins.ttf";
+  "https://raw.githubusercontent.com/Arifzyn19/brat-generator/master/src/fonts/arialnarrow.ttf";
 
 let isFontLoaded = false;
 
@@ -41,7 +41,7 @@ const TEMPLATES = {
 };
 
 const TEXT_STYLE = {
-  fontFamily: "Poppins",
+  fontFamily: "Arial Narrow",
   maxFontSize: 90,
   minFontSize: 22,
   lineHeight: 1.18,
