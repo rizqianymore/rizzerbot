@@ -180,6 +180,13 @@ function normalizeUser(jid, user = {}) {
     createdAt,
     lastSeen: Number.isFinite(Number(user.lastSeen)) ? Number(user.lastSeen) : createdAt,
     role: getRole({ owner, admin, premium }),
+    // RPG / Olympus Mini-game Profile (non-judi, progresif)
+    energy: Number.isFinite(Number(user.energy)) ? Math.max(0, Number(user.energy)) : 50,
+    energyLastRefill: Number.isFinite(Number(user.energyLastRefill)) ? Number(user.energyLastRefill) : createdAt,
+    exp: Number.isFinite(Number(user.exp)) ? Math.max(0, Number(user.exp)) : 0,
+    level: Number.isFinite(Number(user.level)) ? Math.max(1, Number(user.level)) : 1,
+    crystals: Number.isFinite(Number(user.crystals)) ? Math.max(0, Number(user.crystals)) : 100,
+    spinsWon: Number.isFinite(Number(user.spinsWon)) ? Math.max(0, Number(user.spinsWon)) : 0,
   };
 }
 
