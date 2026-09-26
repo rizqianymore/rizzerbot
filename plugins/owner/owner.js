@@ -472,13 +472,12 @@ export default [
       await sendTyping();
       await reply("🧹 Sedang membersihkan file sampah dan cache sementara...");
       try {
-        const { cleanTempFiles, cleanOrphanChromeProcesses } = await import("@/src/utils/cleaner.js");
-        cleanOrphanChromeProcesses(logger);
-        const { deletedCount, freedBytes } = cleanTempFiles();
+        const { clearAllCache } = await import("@/src/utils/cleaner.js");
+        const { deletedCount, freedBytes } = clearAllCache({ logger });
         const freedMB = (freedBytes / (1024 * 1024)).toFixed(2);
         await reply(
-          `✅ *Pembersihan Sampah Selesai!*\n\n` +
-          `🗑️ *File dihapus:* ${deletedCount} file\n` +
+          `✅ *Pembersihan Semua Cache & Sampah Selesai!*\n\n` +
+          `🗑️ *File dihapus:* ${deletedCount} file (cache, temp, dump, session keys)\n` +
           `💾 *Ruang dibebaskan:* ${freedMB} MB\n` +
           `⚡ *Renderer Chrome:* Dibersihkan (orphaned process killed)`
         );

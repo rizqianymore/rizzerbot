@@ -70,25 +70,23 @@ export const STATIC_MEMBERS = [
   { id: 244, name: "Victoria Kimberly", nickname: "Kimmy", code: "VICTORIA_KIMBERLY", type: "PASSION", photo: "https://jkt48.com/api/v1/storages/media/jkt48-member/victoria_kimberly.jpg" }
 ];
 
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 
 /**
- * Executes direct HTTP fetch to JKT48 endpoints or mirror
+ * Executes HTTP fetch to JKT48 endpoints with automatic Cloudflare & Anti-Bot bypass
  */
 export async function jktInPageFetch(apiUrl) {
   try {
-    const res = await axios.get(apiUrl, {
+    return await request.json(apiUrl, {
       headers: {
-        "User-Agent": USER_AGENT,
-        Accept: "application/json, text/plain, */*",
         Referer: "https://jkt48.com/",
         Origin: "https://jkt48.com",
       },
-      timeout: 10000,
+      bypassCloudflare: "auto",
+      timeout: 15000,
     });
-    return res.data;
   } catch (err) {
-    throw new Error(err.response?.data?.message || err.message || "Gagal mengambil data dari JKT48");
+    throw new Error(err.message || "Gagal mengambil data dari JKT48");
   }
 }
 

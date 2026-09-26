@@ -108,7 +108,11 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
   let webpBuffer;
   if (isMp4) {
-    const tmpBase = path.join(os.tmpdir(), `stk-${Math.random().toString(36).slice(2)}`);
+    const cacheDir = path.join(process.cwd(), "assets", "cache");
+    if (!fs.existsSync(cacheDir)) {
+      try { fs.mkdirSync(cacheDir, { recursive: true }); } catch (_) {}
+    }
+    const tmpBase = path.join(cacheDir, `stk-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     const inVid = `${tmpBase}.mp4`;
     const outWebp = `${tmpBase}.webp`;
     await fsp.writeFile(inVid, processedBuffer);

@@ -53,7 +53,15 @@ temp/
 *.tmp.*
 .cache/
 .npm
-assets/cache/
+assets/cache/*
+!assets/cache/.gitkeep
+/cache/
+/*.png
+/*.webp
+/*.mp4
+/*.jpg
+/*.jpeg
+/*.gif
 
 # Cloudflare Worker / Temporary Mockups
 worker.js

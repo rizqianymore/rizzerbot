@@ -386,7 +386,11 @@ async function createBratVideo(text, template, options = {}) {
     throw new Error("Teks kosong untuk membuat video stiker");
   }
 
-  const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), "bratvid-"));
+  const cacheBase = path.join(process.cwd(), "assets", "cache");
+  if (!fs.existsSync(cacheBase)) {
+    try { fs.mkdirSync(cacheBase, { recursive: true }); } catch (_) {}
+  }
+  const tmpDir = await fsp.mkdtemp(path.join(cacheBase, "bratvid-"));
   const outputPath = path.join(tmpDir, "output.mp4");
 
   try {

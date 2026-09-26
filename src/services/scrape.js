@@ -1,157 +1,13 @@
 import axios from "axios";
+import {
+  DEVICE_PROFILES,
+  ACCEPT_LANGUAGES,
+  getRandomDevice,
+  buildScraperHeaders,
+  request,
+} from "@/src/utils/request.js";
 
-/**
- * Dynamic Device Profiles for realistic anti-bot / anti-scraping bypass.
- * Covers modern Android, iOS, Windows, macOS, and Linux devices.
- */
-export const DEVICE_PROFILES = [
-  {
-    name: "Samsung Galaxy S24 Ultra",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.39 Mobile Safari/537.36",
-    secChUa: '"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?1",
-    secChUaPlatform: '"Android"',
-    viewport: { width: 412, height: 915, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "Samsung Galaxy A55",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 14; SM-A556B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.6943.125 Mobile Safari/537.36",
-    secChUa: '"Chromium";v="133", "Google Chrome";v="133", "Not?A_Brand";v="99"',
-    secChUaMobile: "?1",
-    secChUaPlatform: '"Android"',
-    viewport: { width: 412, height: 892, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "Google Pixel 8 Pro",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.39 Mobile Safari/537.36",
-    secChUa: '"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?1",
-    secChUaPlatform: '"Android"',
-    viewport: { width: 412, height: 892, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "Xiaomi 14 Pro",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 14; 23116PN5BC) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.39 Mobile Safari/537.36",
-    secChUa: '"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?1",
-    secChUaPlatform: '"Android"',
-    viewport: { width: 393, height: 873, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "iPhone 16 Pro Max",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-    secChUa: null,
-    secChUaMobile: "?1",
-    secChUaPlatform: '"iOS"',
-    viewport: { width: 440, height: 956, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "iPhone 15 Pro",
-    type: "mobile",
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
-    secChUa: null,
-    secChUaMobile: "?1",
-    secChUaPlatform: '"iOS"',
-    viewport: { width: 393, height: 852, isMobile: true, hasTouch: true },
-  },
-  {
-    name: "Windows 11 Chrome",
-    type: "desktop",
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-    secChUa: '"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?0",
-    secChUaPlatform: '"Windows"',
-    viewport: { width: 1920, height: 1080, isMobile: false, hasTouch: false },
-  },
-  {
-    name: "Windows 11 Edge",
-    type: "desktop",
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
-    secChUa: '"Chromium";v="134", "Microsoft Edge";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?0",
-    secChUaPlatform: '"Windows"',
-    viewport: { width: 1536, height: 864, isMobile: false, hasTouch: false },
-  },
-  {
-    name: "macOS Sonoma Safari",
-    type: "desktop",
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
-    secChUa: null,
-    secChUaMobile: "?0",
-    secChUaPlatform: '"macOS"',
-    viewport: { width: 1440, height: 900, isMobile: false, hasTouch: false },
-  },
-  {
-    name: "macOS Sonoma Chrome",
-    type: "desktop",
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-    secChUa: '"Chromium";v="134", "Google Chrome";v="134", "Not:A-Brand";v="24"',
-    secChUaMobile: "?0",
-    secChUaPlatform: '"macOS"',
-    viewport: { width: 1680, height: 1050, isMobile: false, hasTouch: false },
-  },
-];
-
-export const ACCEPT_LANGUAGES = [
-  "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-  "id-ID,id;q=0.9,en;q=0.8",
-  "en-US,en;q=0.9,id;q=0.8",
-  "en-GB,en;q=0.9,en-US;q=0.8,id;q=0.7",
-];
-
-/**
- * Returns a random device profile (optionally filtered by "mobile" or "desktop").
- */
-export function getRandomDevice(preferredType = "any") {
-  let pool = DEVICE_PROFILES;
-  if (preferredType === "mobile" || preferredType === "desktop") {
-    pool = DEVICE_PROFILES.filter((d) => d.type === preferredType);
-  }
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-/**
- * Builds realistic browser headers based on the chosen device profile.
- */
-export function buildScraperHeaders(device = getRandomDevice(), customHeaders = {}) {
-  const lang = ACCEPT_LANGUAGES[Math.floor(Math.random() * ACCEPT_LANGUAGES.length)];
-  const headers = {
-    "User-Agent": device.userAgent,
-    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": lang,
-    "Accept-Encoding": "gzip, deflate, br",
-    "Cache-Control": "no-cache",
-    Pragma: "no-cache",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-  };
-
-  if (device.secChUa) {
-    headers["Sec-Ch-Ua"] = device.secChUa;
-    headers["Sec-Ch-Ua-Mobile"] = device.secChUaMobile;
-    headers["Sec-Ch-Ua-Platform"] = device.secChUaPlatform;
-  }
-
-  return { ...headers, ...customHeaders };
-}
+export { DEVICE_PROFILES, ACCEPT_LANGUAGES, getRandomDevice, buildScraperHeaders, request };
 
 // Global Axios client with auto-changing device and header rotation
 const http = axios.create({
@@ -545,16 +401,10 @@ export async function cobaltDownload(url, { mode = "auto", audioFormat = "mp3", 
 }
 
 export async function fetchBuffer(url, customHeaders = {}) {
-  const device = getRandomDevice();
-  const headers = buildScraperHeaders(device, {
-    Accept: "*/*",
-    ...customHeaders,
+  return await request.buffer(url, {
+    headers: customHeaders,
+    bypassCloudflare: "auto",
   });
-  const { data } = await http.get(url, {
-    headers,
-    responseType: "arraybuffer",
-  });
-  return Buffer.from(data);
 }
 
 export async function aiChat(prompt) {
