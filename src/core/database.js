@@ -659,4 +659,10 @@ export const db = {
     data.nsfw[groupId] = toBoolean(enabled);
     save();
   },
+  isAntilink: (groupId) => toBoolean(data.antilink?.[groupId]),
+  setAntilink: (groupId, enabled) => {
+    if (!data.antilink) data.antilink = {};
+    data.antilink[groupId] = toBoolean(enabled);
+    save();
+  },
 };

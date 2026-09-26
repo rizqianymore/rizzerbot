@@ -55,6 +55,7 @@ const COMMAND_USAGES = {
   setdesc: "<deskripsi baru>",
   infogrup: "",
   listadmin: "",
+  antilink: "<on / off>",
 
   // User
   ping: "",

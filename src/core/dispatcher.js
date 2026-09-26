@@ -7,6 +7,9 @@ function isGroupJid(jid) {
   return Boolean(jid?.endsWith("@g.us"));
 }
 
+// Memory map untuk anti-spam & rate limiter per user
+const userCooldowns = new Map();
+
 function getPhoneDigits(value) {
   return String(value || "").replace(/\D/g, "");
 }
@@ -106,6 +109,37 @@ export async function dispatchMessage(sock, msg, logger) {
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
     "";
 
+  // Proteksi Anti-Link Grup WhatsApp
+  if (isGroupJid(remoteJid) && db.isAntilink(remoteJid)) {
+    const linkRegex = /(chat\.whatsapp\.com\/[A-Za-z0-9]{20,24}|wa\.me\/settings)/i;
+    if (linkRegex.test(messageContent)) {
+      const rawSender = msg.key.participant || remoteJid;
+      const senderJid = db.normalizeJid(rawSender);
+      const isOwner = db.isOwner(senderJid);
+
+      if (!isOwner) {
+        // Cek apakah pengirim adalah admin grup
+        const meta = await getCachedGroupMeta(sock, remoteJid).catch(() => null);
+        const participant = meta?.participants?.find((p) => db.normalizeJid(p.id) === senderJid);
+        const isGroupAdmin = participant && (participant.admin === "admin" || participant.admin === "superadmin");
+
+        if (!isGroupAdmin) {
+          logger?.warn?.(`[Anti-Link] Menghapus link grup dari non-admin: ${senderJid} di grup ${remoteJid}`);
+          try {
+            // Hapus pesan pelanggar
+            await sock.sendMessage(remoteJid, { delete: msg.key });
+            // Kirim peringatan
+            await sock.sendMessage(remoteJid, {
+              text: `⚠️ *ANTI-LINK DETECTED!*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini! Pesan Anda telah dihapus.`,
+              mentions: [senderJid],
+            });
+          } catch (_) {}
+          return;
+        }
+      }
+    }
+  }
+
   const activeSettings = db.getSettings();
   const prefix = activeSettings.prefix || ".";
   if (!messageContent.startsWith(prefix)) return;
@@ -203,6 +237,33 @@ export async function dispatchMessage(sock, msg, logger) {
 
   if (cmd.premiumOnly && !isPremium) {
     return sock.sendMessage(remoteJid, { text: "❌ Fitur ini hanya untuk pengguna Premium!" }, { quoted: msg });
+  }
+
+  // Anti-Spam / Rate Limiter per User (Owner kebal cooldown)
+  if (!isOwner) {
+    const cooldownMs = Number(activeSettings.cooldownTime) || 3000;
+    const now = Date.now();
+    const lastTime = userCooldowns.get(senderJid) || 0;
+    const diff = now - lastTime;
+
+    if (diff < cooldownMs) {
+      const waitSec = ((cooldownMs - diff) / 1000).toFixed(1);
+      return sock.sendMessage(
+        remoteJid,
+        { text: `⏳ *Mohon tunggu ${waitSec} detik* sebelum menggunakan perintah berikutnya!` },
+        { quoted: msg }
+      );
+    }
+    userCooldowns.set(senderJid, now);
+
+    // Auto clean memory map jika membesar > 1000 entri
+    if (userCooldowns.size > 1000) {
+      for (const [jid, time] of userCooldowns.entries()) {
+        if (now - time > cooldownMs * 2) {
+          userCooldowns.delete(jid);
+        }
+      }
+    }
   }
 
   const groupAccessError = await getGroupAccessError(

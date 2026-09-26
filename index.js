@@ -29,7 +29,7 @@ if (fs.existsSync(envPath)) {
         }
       }
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 // Konfigurasi binary lokal ffmpeg jika tersedia
@@ -49,7 +49,33 @@ startBot()
     } catch (_) { }
   })
   .catch((err) => {
-    logger.error("Fatal initialization error:", err);
+    logger?.error?.("Fatal initialization error:", err);
   });
+
+// Graceful Shutdown & Process Crash Traps
+let isShuttingDown = false;
+async function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger?.info?.(`[System] Received ${signal}. Saving data and gracefully shutting down...`);
+  try {
+    const { cleanOrphanChromeProcesses } = await import("./src/utils/cleaner.js");
+    cleanOrphanChromeProcesses(logger);
+  } catch (_) { }
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+
+process.on("unhandledRejection", (reason) => {
+  logger?.error?.("[Unhandled Rejection Trapped]", reason?.message || reason);
+});
+
+process.on("uncaughtException", (err) => {
+  logger?.error?.("[Uncaught Exception Trapped]", err?.message || err);
+});
 
 export default startBot;
