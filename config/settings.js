@@ -29,4 +29,9 @@ export const settings = {
     channelJid: "",
     channelName: "Official Channel",
     autoForwardTrxToChannel: true,
+
+    // QRIS Dinamis & Static Settings
+    qrisString: "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
+    qrisMerchantName: "Rizzer Cloud",
+    qrisCity: "JAKARTA BARAT",
 };

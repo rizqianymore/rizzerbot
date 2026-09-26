@@ -8,6 +8,13 @@ import {
   formatTrxText,
   formatRupiah,
 } from "@/src/services/trx.js";
+import {
+  convertQRIS,
+  generateQrisCard,
+  getActiveQrisString,
+  parseQRIS,
+  validateQRIS,
+} from "@/src/services/qris.js";
 import { db } from "@/src/core/database.js";
 
 function parseTrxInput(rawText, quoted, getTargetJid) {
@@ -158,6 +165,38 @@ export default [
         }
       } catch (err) {
         await reply(caption);
+      }
+
+      // Jika pembayaran QRIS dan status transaksi PENDING, kirimkan QRIS Dinamis otomatis!
+      if (trx.payment.includes("QRIS") && (trx.status === "PENDING" || trx.status === "PROSES")) {
+        try {
+          const qrisStatic = getActiveQrisString();
+          const dynamicPayload = convertQRIS(qrisStatic, { amount: trx.price });
+          const parsed = parseQRIS(dynamicPayload);
+          const qrisCard = await generateQrisCard({
+            qrisPayload: dynamicPayload,
+            amount: trx.price,
+            merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
+            merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
+          });
+
+          await sock.sendMessage(
+            remoteJid,
+            {
+              image: qrisCard,
+              caption:
+                `📱 *QRIS DINAMIS PEMBAYARAN*\n` +
+                `🏪 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
+                `💰 *Nominal Otomatis:* *${trx.formattedPrice}*\n` +
+                `🆔 *Ref Transaksi:* \`${trx.id}\`\n\n` +
+                `_Scan QRIS di atas melalui BCA, Mandiri, BRI, DANA, GoPay, OVO, ShopeePay. Nominal sudah terisi otomatis!_`,
+              mentions: trx.buyerJid ? [trx.buyerJid] : [],
+            },
+            { quoted: msg }
+          );
+        } catch (qrisErr) {
+          console.error("Gagal membuat QRIS dinamis:", qrisErr.message);
+        }
       }
 
       // Auto-forward ke Saluran WhatsApp jika dikonfigurasi oleh Owner
@@ -340,6 +379,131 @@ export default [
       }
 
       await reply(`🗑️ Transaksi *"${id}"* berhasil dihapus dari sistem.`);
+    },
+  },
+  {
+    name: "qris",
+    aliases: ["qrisdinamis", "payqris", "bayarqris"],
+    description: "Buat kode QRIS Dinamis dengan nominal otomatis atau QRIS Statis",
+    category: "Tools",
+    run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+      await sendTyping();
+      const rawInput = args.join(" ").trim();
+      const staticQris = getActiveQrisString();
+      const activeSettings = db.getSettings();
+
+      if (!rawInput) {
+        // Tampilkan QRIS Statis Toko
+        try {
+          const parsed = parseQRIS(staticQris);
+          const card = await generateQrisCard({
+            qrisPayload: staticQris,
+            amount: 0,
+            merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
+            merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
+          });
+
+          return await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+              image: card,
+              caption:
+                `🏪 *QRIS RESMI TOKO*\n` +
+                `🏢 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
+                `📍 *Kota:* ${parsed.merchantCity || "JAKARTA BARAT"}\n` +
+                `💳 *Tipe:* QRIS Statis (Nominal Bebas)\n\n` +
+                `💡 _Ingin nominal otomatis? Ketik: \`${prefix}qris <nominal>\` (Contoh: \`${prefix}qris 25000\`)_`,
+            },
+            { quoted: msg }
+          );
+        } catch (err) {
+          return reply(`❌ Gagal membuat kartu QRIS: ${err.message}`);
+        }
+      }
+
+      // Bersihkan nominal harga
+      let cleanInput = rawInput.toLowerCase().replace(/^rp\.?/, "").trim();
+      if (cleanInput.endsWith("k")) cleanInput = String(parseFloat(cleanInput) * 1000);
+      const amount = Number(cleanInput.replace(/[^0-9.]/g, ""));
+
+      if (!amount || isNaN(amount) || amount <= 0) {
+        return reply(`❌ Masukkan nominal yang valid!\n*Contoh:* \`${prefix}qris 15000\` atau \`${prefix}qris 25k\``);
+      }
+
+      try {
+        const dynamicPayload = convertQRIS(staticQris, { amount });
+        const parsed = parseQRIS(dynamicPayload);
+        const card = await generateQrisCard({
+          qrisPayload: dynamicPayload,
+          amount,
+          merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
+          merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
+        });
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            image: card,
+            caption:
+              `⚡ *QRIS DINAMIS SIAP BAYAR*\n` +
+              `🏢 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
+              `📍 *Kota:* ${parsed.merchantCity || "JAKARTA BARAT"}\n` +
+              `💰 *Total Nominal:* *${formatRupiah(amount)}*\n` +
+              `⏱️ *Kedaluwarsa:* 15 Menit\n\n` +
+              `_Scan langsung dengan DANA, BCA, GoPay, OVO, ShopeePay, atau m-Banking Anda. Nominal otomatis terinput pas!_`,
+          },
+          { quoted: msg }
+        );
+      } catch (err) {
+        reply(`❌ Gagal memproses QRIS Dinamis: ${err.message}`);
+      }
+    },
+  },
+  {
+    name: "setqris",
+    aliases: ["updateqris"],
+    description: "Atur string QRIS statis utama bot (Khusus Owner)",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping }) => {
+      await sendTyping();
+      const newString = args.join(" ").trim();
+      if (!newString) {
+        const cur = getActiveQrisString();
+        const parsed = parseQRIS(cur);
+        return reply(
+          `📱 *PENGATURAN QRIS TOKO*\n\n` +
+          `• *Merchant:* ${parsed.merchantName || "-"}\n` +
+          `• *Kota:* ${parsed.merchantCity || "-"}\n` +
+          `• *String Aktif:* \`${cur}\`\n\n` +
+          `*Cara Mengganti:*\n` +
+          `• \`.setqris <string_qris_baru>\``
+        );
+      }
+
+      const validation = validateQRIS(newString);
+      if (!validation.valid) {
+        return reply(
+          `❌ Format string QRIS tidak valid!\n` +
+          `Alasan:\n- ` +
+          validation.errors.join("\n- ")
+        );
+      }
+
+      const parsed = parseQRIS(newString);
+      db.updateSettings({
+        qrisString: newString,
+        qrisMerchantName: parsed.merchantName || "Rizzer Cloud",
+        qrisCity: parsed.merchantCity || "JAKARTA BARAT",
+      });
+
+      reply(
+        `✅ *QRIS Berhasil Diperbarui!*\n\n` +
+        `🏢 *Merchant:* ${parsed.merchantName}\n` +
+        `📍 *Kota:* ${parsed.merchantCity}\n` +
+        `🔐 *CRC16:* ${parsed.crc} (Valid)\n` +
+        `⚡ Semua pembayaran otomatis akan menggunakan QRIS ini.`
+      );
     },
   },
 ];

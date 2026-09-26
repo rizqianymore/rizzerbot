@@ -45,6 +45,7 @@ const COMMAND_USAGES = {
   settrx: "<id_trx> <status>",
   listtrx: "[jumlah]",
   deltrx: "<id_trx>",
+  qris: "[nominal / bebas]",
 
   // Group
   hidetag: "<pesan>",
@@ -113,6 +114,7 @@ const COMMAND_USAGES = {
   infoch: "",
   autotrxch: "<on / off>",
   postch: "<pesan>",
+  setqris: "<string qris>",
   botstatus: "",
   cleartmp: "",
   restart: "",
