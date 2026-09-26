@@ -69,9 +69,6 @@ const COMMAND_USAGES = {
   translate: "[kode_bahasa] <teks>",
   report: "<isi pesan laporan>",
   profile: "[@user / nomor / reply]",
-  olympus: "",
-  dailyenergy: "",
-  olympusprofile: "",
 
   // Premium
   hd: "(reply gambar)",
