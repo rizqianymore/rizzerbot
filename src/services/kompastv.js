@@ -64,135 +64,54 @@ export async function searchKompasNews(query, limit = 5) {
   const cleanQuery = query.trim();
   if (!cleanQuery) throw new Error("Kata kunci pencarian tidak boleh kosong.");
 
-  const { default: puppeteer } = await import("puppeteer");
-  const device = getRandomDevice("desktop");
+  // 1. Coba pencarian cepat dari kategori portal Kompas TV langsung
+  const localResults = await searchKompasNewsFallback(cleanQuery, limit);
+  if (localResults && localResults.length > 0) return localResults;
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--single-process",
-      "--disable-blink-features=AutomationControlled",
-      "--window-size=1920,1080",
-    ],
-  });
-
-  const page = await browser.newPage();
-  await page.setUserAgent(device.userAgent);
-  if (device.viewport) {
-    await page.setViewport(device.viewport);
-  }
-
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-  });
-
-  const targetUrl = `${KOMPAS_BASE}/search?q=${encodeURIComponent(cleanQuery)}`;
-
+  // 2. Pencarian berbasis Google News RSS untuk topik yang lebih luas (100% cepat & tanpa browser)
   try {
-    await page.goto(targetUrl, {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(`site:kompas.tv ${cleanQuery}`)}&hl=id&gl=ID&ceid=ID:id`;
+    const res = await axios.get(rssUrl, { timeout: 8000 });
+    const items = [...res.data.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, limit);
+    const results = [];
 
-    // Google CSE input handling if needed
-    const cseInputSelector = "input.gsc-input, input#gsc-i-id1, input[name='search']";
-    const hasInput = await page.$(cseInputSelector);
-    if (hasInput) {
-      await page.focus(cseInputSelector);
-      await page.keyboard.down("Control");
-      await page.keyboard.press("KeyA");
-      await page.keyboard.up("Control");
-      await page.keyboard.press("Backspace");
-      await page.type(cseInputSelector, cleanQuery, { delay: 30 });
-      await page.keyboard.press("Enter");
+    for (const it of items) {
+      let title = it[1].match(/<title>([\s\S]*?)<\/title>/)?.[1] || "";
+      title = title.replace(/\s*-\s*Kompas\.tv$/i, "").trim();
+      const link = it[1].match(/<link>([\s\S]*?)<\/link>/)?.[1] || "";
+      const pubDate = it[1].match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || "Baru saja";
+      if (title && link) {
+        results.push({
+          title,
+          url: link,
+          time: pubDate,
+          image: null,
+          snippet: "",
+        });
+      }
     }
 
-    // Menunggu Google CSE selesai merender hasil pencarian
-    await page.waitForSelector(".gsc-webResult.gsc-result, a.gs-title", {
-      timeout: 15000,
-    });
+    if (results.length > 0) return results;
+  } catch (_) {}
 
-    // Beri jeda sejenak untuk memastikan hasil selesai di-render
-    await new Promise((r) => setTimeout(r, 1000));
-
-    const queryWords = cleanQuery
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length >= 2);
-
-    const rawResults = await page.evaluate((max) => {
-      const list = [];
-      const nodes = document.querySelectorAll(".gsc-webResult.gsc-result");
-      for (const n of nodes) {
-        if (list.length >= max * 3) break;
-        const titleEl = n.querySelector("a.gs-title");
-        const snippetEl = n.querySelector(".gs-snippet");
-        const imgEl = n.querySelector(".gs-image img") || n.querySelector("img");
-
-        if (titleEl && titleEl.href && !titleEl.href.includes("google.com")) {
-          const title = titleEl.innerText.trim();
-          const url = titleEl.href;
-          const snippet = snippetEl ? snippetEl.innerText.trim() : "";
-          const image = imgEl ? (imgEl.src || imgEl.getAttribute("src")) : null;
-
-          if (title && url) {
-            list.push({ title, url, snippet, image });
-          }
-        }
-      }
-      return list;
-    }, limit);
-
-    // Filter hasil agar benar-benar relevan dengan topik yang dicari
-    // Untuk query spesifik seperti 'pt kai', prioritaskan artikel yang mengandung kata kunci tersebut
-    const filtered = rawResults.filter((item) => {
-      if (queryWords.length === 0) return true;
-      const combinedText = `${item.title} ${item.snippet}`.toLowerCase();
-      // Harus mengandung setidaknya 1 kata kunci utama
-      return queryWords.some((w) => combinedText.includes(w));
-    });
-
-    // Urutkan berdasarkan skor kecocokan tertinggi
-    filtered.sort((a, b) => {
-      const aText = `${a.title} ${a.snippet}`.toLowerCase();
-      const bText = `${b.title} ${b.snippet}`.toLowerCase();
-      const aScore = queryWords.reduce((acc, w) => acc + (aText.includes(w) ? 1 : 0), 0) + (aText.includes(cleanQuery.toLowerCase()) ? 2 : 0);
-      const bScore = queryWords.reduce((acc, w) => acc + (bText.includes(w) ? 1 : 0), 0) + (bText.includes(cleanQuery.toLowerCase()) ? 2 : 0);
-      return bScore - aScore;
-    });
-
-    const finalResults = filtered.length > 0 ? filtered.slice(0, limit) : [];
-    if (finalResults.length > 0) return finalResults;
-
-    throw new Error("Hasil kosong");
-  } catch (err) {
-    const fallbackList = await searchKompasNewsFallback(cleanQuery, limit);
-    if (fallbackList.length > 0) return fallbackList;
-    throw new Error(`Pencarian untuk "${cleanQuery}" tidak menemukan berita yang cocok di Kompas TV.`);
-  } finally {
-    await browser.close().catch(() => {});
-  }
+  throw new Error(`Pencarian untuk "${cleanQuery}" tidak menemukan berita yang cocok di Kompas TV.`);
 }
 
 /**
- * Fallback jika rendering browser Google CSE mengalami hambatan
+ * Pencarian cepat berbasis HTTP tanpa browser di seluruh kanal Kompas TV
  */
 async function searchKompasNewsFallback(query, limit = 5) {
   const categories = ["news", "nasional", "regional", "internasional", "ekonomi", "olahraga"];
   const queryWords = query
     .toLowerCase()
     .split(/\s+/)
-    .filter((w) => w.length > 2);
+    .filter((w) => w.length >= 2);
   const matched = [];
 
   for (const cat of categories) {
     if (matched.length >= limit) break;
     try {
-      const items = await getLatestKompasNews(cat, 10);
+      const items = await getLatestKompasNews(cat, 12);
       for (const it of items) {
         const titleLower = it.title.toLowerCase();
         const isMatch = queryWords.length === 0 || queryWords.some((w) => titleLower.includes(w));

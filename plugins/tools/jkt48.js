@@ -416,21 +416,26 @@ export default [
         const exactShows = schedules.filter((s) => s.date === targetDateStr);
 
         if (exactShows.length > 0) {
-          const exactNarrative = exactShows
-            .map((s, idx) => {
-              const team = s.jkt48_member_type ? `oleh *Tim ${s.jkt48_member_type}*` : "";
-              const time =
-                s.start_time && s.end_time
-                  ? `pukul *${s.start_time.slice(0, 5)} hingga ${s.end_time.slice(0, 5)} WIB*`
-                  : "waktu menyesuaikan";
-              const code = s.reference_code ? ` (kode show *${s.reference_code}*)` : "";
-              return `${idx + 1}. *${s.title}* ${team} ${time}${code}, tautan ${JKT48_BASE}/schedule/${s.link}`;
-            })
-            .join("; ");
+          let text = `🎭 *JADWAL TEATER JKT48 (${formattedTargetDate})*\n`;
+          text += `─────────────────────────\n`;
 
-          const text = `Pada tanggal *${formattedTargetDate}*, JKT48 menyelenggarakan pertunjukan teater resmi sebagai berikut: ${exactNarrative}. Untuk melihat daftar member penampil dan pemesanan tiket, ketikkan perintah ${prefix}jktschedule diikuti kode show yang tertera.`;
+          exactShows.forEach((s, idx) => {
+            const team = s.jkt48_member_type ? `[Tim ${s.jkt48_member_type}]` : "";
+            const time =
+              s.start_time && s.end_time
+                ? `${s.start_time.slice(0, 5)} - ${s.end_time.slice(0, 5)} WIB`
+                : "Waktu menyesuaikan";
+            const code = s.reference_code || s.link;
+            text += `*${idx + 1}. ${s.title}* ${team}\n`;
+            text += `   _🕒 Waktu: ${time}_\n`;
+            text += `   🎫 Kode Show: *${code}*\n`;
+            text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
+          });
 
-          return await reply(text);
+          text += `─────────────────────────\n`;
+          text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk melihat line-up member penampil.`;
+
+          return await reply(text.trim());
         }
 
         // Jika tidak ada jadwal pada tanggal yang dipilih, tampilkan minimal 5 opsi alternatif terdekat
@@ -442,22 +447,26 @@ export default [
         });
 
         const topAlternatives = sortedAlternatives.slice(0, 5);
-        const altNarrative = topAlternatives
-          .map((s, idx) => {
-            const tgl = formatDate(s.date);
-            const team = s.jkt48_member_type ? `oleh *Tim ${s.jkt48_member_type}*` : "";
-            const time =
-              s.start_time && s.end_time
-                ? `pukul *${s.start_time.slice(0, 5)} WIB*`
-                : "";
-            const code = s.reference_code ? `kode show *${s.reference_code}*` : `kode show *${s.link}*`;
-            return `${idx + 1}. *${s.title}* ${team} pada *${tgl}* ${time} (${code}, tautan ${JKT48_BASE}/schedule/${s.link})`;
-          })
-          .join("; ");
 
-        const text = `Tidak terdapat jadwal pertunjukan teater JKT48 pada tanggal *${formattedTargetDate}*. Sebagai 5 opsi alternatif pertunjukan terdekat, Anda dapat menyaksikan: ${altNarrative}. Untuk melihat rincian member yang tampil serta reservasi tiket, silakan gunakan perintah ${prefix}jktschedule diikuti kode show yang Anda pilih.`;
+        let text = `ℹ️ Tidak ada show pada tanggal *${formattedTargetDate}*.\n\n`;
+        text += `🎭 *5 PILIHAN SHOW TERDEKAT:*\n`;
+        text += `─────────────────────────\n`;
 
-        await reply(text);
+        topAlternatives.forEach((s, idx) => {
+          const tgl = formatDate(s.date);
+          const team = s.jkt48_member_type ? `[Tim ${s.jkt48_member_type}]` : "";
+          const time = s.start_time ? `${s.start_time.slice(0, 5)} WIB` : "";
+          const code = s.reference_code || s.link;
+          text += `*${idx + 1}. ${s.title}* ${team}\n`;
+          text += `   _📅 Tanggal: ${tgl} ${time}_\n`;
+          text += `   🎫 Kode Show: *${code}*\n`;
+          text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
+        });
+
+        text += `─────────────────────────\n`;
+        text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk memilih dan melihat rincian member.`;
+
+        await reply(text.trim());
       } catch (err) {
         console.error("[JKT48 Schedule Error]", err.message);
         await reply(`Gagal memuat jadwal pertunjukan JKT48: ${err.message}`);
