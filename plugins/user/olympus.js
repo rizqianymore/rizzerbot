@@ -196,25 +196,34 @@ export default [
       text += `💡 _Tonton cuplikan sambaran petir Olympus di video di atas!_`;
 
       try {
-        const { generateOlympusVideo } = await import("@/src/services/olympus-video.js");
-        const videoBuffer = await generateOlympusVideo({
-          isWin: combos.length > 0,
-          multiplier,
-          score: finalScore,
-          level: userLevel,
-        });
+        let videoBuffer = null;
+        try {
+          const { recordRealOlympusGameplay } = await import("@/src/services/olympus-recorder.js");
+          videoBuffer = await recordRealOlympusGameplay({ durationSec: 2.5, fps: 8 });
+        } catch (_) {
+          const { generateOlympusVideo } = await import("@/src/services/olympus-video.js");
+          videoBuffer = await generateOlympusVideo({
+            isWin: combos.length > 0,
+            multiplier,
+            score: finalScore,
+            level: userLevel,
+          });
+        }
 
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            video: videoBuffer,
-            caption: text.trim(),
-            mimetype: "video/mp4",
-          },
-          { quoted: msg }
-        );
+        if (videoBuffer) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+              video: videoBuffer,
+              caption: text.trim(),
+              mimetype: "video/mp4",
+            },
+            { quoted: msg }
+          );
+        } else {
+          await reply(text.trim());
+        }
       } catch (vidErr) {
-        // Fallback ke pesan teks jika render video gagal
         await reply(text.trim());
       }
     },
