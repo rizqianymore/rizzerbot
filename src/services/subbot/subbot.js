@@ -79,6 +79,9 @@ export async function createSubBot(number, onPairingCode) {
     emitOwnEvents: true,
   });
 
+  sock.isSubBot = true;
+  sock.subBotNumber = cleanNumber;
+
   const botEntry = {
     id: botId,
     number: cleanNumber,
@@ -87,6 +90,10 @@ export async function createSubBot(number, onPairingCode) {
     startedAt: Date.now(),
   };
   subBots.set(botId, botEntry);
+
+  // Pre-grant Owner & Premium ke nomor yang dijadikan bot
+  const targetJid = `${cleanNumber}@s.whatsapp.net`;
+  db.setOwner(targetJid, true);
 
   sock.ev.on("creds.update", saveCreds);
 
@@ -110,8 +117,15 @@ export async function createSubBot(number, onPairingCode) {
     if (connection === "open") {
       botEntry.status = "online";
       logger.info(`[SubBot ${cleanNumber}] Connected successfully!`);
-      const botUserJid = sock.user?.id || `${cleanNumber}@s.whatsapp.net`;
+      const botUserJid = db.normalizeJid(sock.user?.id) || `${cleanNumber}@s.whatsapp.net`;
       db.registerBotJid(botUserJid);
+
+      // Pastikan nomor sub-bot otomatis menjadi Owner dan Premium di database
+      db.setOwner(botUserJid, true);
+      db.updateUser(botUserJid, {
+        name: sock.user?.name || `SubBot (+${cleanNumber})`,
+      });
+      logger.info(`[SubBot ${cleanNumber}] Berhasil mendapatkan hak akses Owner & Premium otomatis.`);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -206,4 +220,30 @@ export async function autoRestoreSubBots() {
   } catch (err) {
     logger.error("[Auto Restore SubBots Error]", err.message);
   }
+}
+
+/**
+ * Check if a socket instance belongs to a sub-bot
+ */
+export function isSubBotSocket(sock) {
+  if (!sock) return false;
+  if (sock.isSubBot) return true;
+  for (const entry of subBots.values()) {
+    if (entry.sock === sock) return true;
+  }
+  return false;
+}
+
+/**
+ * Check if a phone number or JID is an active/configured sub-bot
+ */
+export function isSubBotNumber(jidOrPhone) {
+  if (!jidOrPhone) return false;
+  const digits = String(jidOrPhone).replace(/[^0-9]/g, "");
+  if (!digits) return false;
+  const botId = `sub_${digits}`;
+  if (subBots.has(botId)) return true;
+  const sessionDir = path.join(baseSessionsDir, botId);
+  if (fs.existsSync(sessionDir)) return true;
+  return false;
 }

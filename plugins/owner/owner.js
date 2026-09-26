@@ -354,23 +354,39 @@ export default [
     description: "Tambahkan bot baru (sub-bot) via pairing code",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply, sendTyping }) => {
+    run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
       await sendTyping();
+
+      // Pengecekan: Akun Sub-Bot atau nomor sub-bot dilarang menambahkan bot lagi
+      const { isSubBotSocket, isSubBotNumber } = await import("@/src/services/subbot/subbot.js");
+      if (isSubBotSocket(sock) || isSubBotNumber(senderJid)) {
+        return reply(
+          "❌ *Akses Ditolak!*\n\n" +
+          "Akun Sub-Bot tidak diizinkan untuk menambahkan bot baru (*.addbot*). Fitur ini hanya dapat digunakan oleh Bot Utama."
+        );
+      }
+
       const number = args[0]?.replace(/[^0-9]/g, "");
       if (!number || number.length < 8) {
         return reply("❌ Masukkan nomor WhatsApp untuk dijadikan bot! Contoh: *.addbot 6281234567890*");
       }
 
-      await reply(`⏳ Menyiapkan sesi bot untuk *${number}*...\nKode pairing akan dikirimkan sebentar lagi.`);
+      await reply(
+        `⏳ Menyiapkan sesi bot untuk *${number}*...\n` +
+        `Nomor bot ini akan otomatis menjadi *Owner & Premium*.\n` +
+        `Kode pairing akan dikirimkan sebentar lagi.`
+      );
 
       try {
         const { createSubBot } = await import("@/src/services/subbot/subbot.js");
         await createSubBot(number, async (code) => {
           const message =
             `🔑 *KODE PAIRING BOT BARU*\n\n` +
-            `Nomor: *${number}*\n` +
-            `Kode Pairing: *\`${code}\`*\n\n` +
-            `_Buka WhatsApp > Perangkat Tertaut > Tautkan dengan nomor telepon, lalu masukkan kode di atas._`;
+            `📱 *Nomor:* +${number}\n` +
+            `👑 *Status:* Owner & Premium (Otomatis)\n` +
+            `⚠️ *Batasan:* Sub-bot tidak dapat menggunakan fitur .addbot\n` +
+            `🔐 *Kode Pairing:* *\`${code}\`*\n\n` +
+            `_Buka WhatsApp di nomor tersebut > Perangkat Tertaut > Tautkan dengan nomor telepon, lalu masukkan kode di atas._`;
           await reply(message);
         });
       } catch (err) {
