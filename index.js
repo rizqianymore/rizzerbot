@@ -57,7 +57,8 @@ import { startBot, logger } from "./src/core/connection.js";
 startBot()
   .then(async () => {
     try {
-      const { autoRestoreSubBots } = await import("./src/services/subbot/subbot.js");
+      const { autoRestoreSubBots, syncSubBotsDatabase } = await import("./src/services/subbot/subbot.js");
+      await syncSubBotsDatabase();
       await autoRestoreSubBots();
     } catch (_) { }
   })

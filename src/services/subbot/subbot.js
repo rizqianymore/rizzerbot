@@ -202,10 +202,73 @@ export function getSubBotsList() {
 }
 
 /**
+ * Auto update & sync database for all existing sub-bots on the server
+ */
+export async function syncSubBotsDatabase() {
+  let updatedCount = 0;
+  try {
+    if (!fs.existsSync(baseSessionsDir)) return 0;
+    const folders = fs.readdirSync(baseSessionsDir);
+
+    for (const folder of folders) {
+      if (folder.startsWith("sub_")) {
+        const number = folder.replace("sub_", "").replace(/[^0-9]/g, "");
+        if (!number) continue;
+
+        const sessionDir = path.join(baseSessionsDir, folder);
+        const credsPath = path.join(sessionDir, "creds.json");
+        let botName = `SubBot (+${number})`;
+        const jidsToSync = new Set([`${number}@s.whatsapp.net`]);
+
+        if (fs.existsSync(credsPath)) {
+          try {
+            const raw = fs.readFileSync(credsPath, "utf-8");
+            const parsed = JSON.parse(raw);
+            if (parsed?.me?.id) {
+              const fullJid = db.normalizeJid(parsed.me.id);
+              if (fullJid) jidsToSync.add(fullJid);
+            }
+            if (parsed?.me?.name) {
+              botName = parsed.me.name;
+            }
+          } catch (_) {}
+        }
+
+        // Update database untuk seluruh variasi JID sub-bot agar tidak old
+        for (const jid of jidsToSync) {
+          db.registerBotJid(jid);
+          db.setOwner(jid, true);
+          db.updateUser(jid, {
+            name: botName,
+            owner: true,
+            admin: true,
+            premium: true,
+            registered: true,
+          });
+        }
+
+        updatedCount++;
+        logger?.info?.(`[SubBot Database Sync] Berhasil memperbarui database sub-bot: +${number} (Owner & Premium Aktif)`);
+      }
+    }
+
+    if (updatedCount > 0) {
+      db.save();
+    }
+  } catch (err) {
+    logger?.error?.("[SubBot Database Sync Error]:", err.message);
+  }
+  return updatedCount;
+}
+
+/**
  * Auto restore existing saved sub bot sessions on startup
  */
 export async function autoRestoreSubBots() {
   try {
+    // 1. Sinkronkan dan perbarui database terlebih dahulu agar database tidak old
+    await syncSubBotsDatabase();
+
     if (!fs.existsSync(baseSessionsDir)) return;
     const folders = fs.readdirSync(baseSessionsDir);
     for (const folder of folders) {

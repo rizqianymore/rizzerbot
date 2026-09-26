@@ -446,6 +446,25 @@ export default [
     }
   },
   {
+    name: "syncsubbot",
+    aliases: ["updatesubbot", "syncbot"],
+    description: "Perbarui dan sinkronkan database seluruh sub-bot yang ada di server ke status Owner & Premium",
+    ownerOnly: true,
+    category: "Owner",
+    run: async (sock, msg, args, { reply, sendTyping }) => {
+      await sendTyping();
+      const { syncSubBotsDatabase, getSubBotsList } = await import("@/src/services/subbot/subbot.js");
+      const count = await syncSubBotsDatabase();
+      const activeList = getSubBotsList();
+      await reply(
+        `✅ *Sinkronisasi Database Sub-Bot Berhasil!*\n\n` +
+        `📦 *Sub-Bot di Server:* ${count} bot diperbarui\n` +
+        `🟢 *Status Aktif:* ${activeList.filter((b) => b.status === "online").length} online / ${activeList.length} total\n` +
+        `👑 *Database:* Seluruh sub-bot telah diperbarui ke status *Owner & Premium* terbaru agar database tidak old.`
+      );
+    }
+  },
+  {
     name: "botstatus",
     aliases: ["statsbot", "systemstatus"],
     description: "Cek status kesehatan dan penggunaan memori bot",
