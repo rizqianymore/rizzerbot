@@ -191,16 +191,20 @@ export function cleanOrphanChromeProcesses(logger) {
 }
 
 export function startAutoCleanInterval(logger) {
-  autoCleanSessionCache(logger);
-  periodicDatabaseSnapshot(logger);
-  cleanOrphanChromeProcesses(logger);
-
-  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-  const timer = setInterval(() => {
-    autoCleanSessionCache(logger);
+  // Langsung bersihkan cache, sampah sesi, dan temporary files saat bot aktif
+  try {
+    clearAllCache({ logger });
     periodicDatabaseSnapshot(logger);
-    cleanOrphanChromeProcesses(logger);
-  }, SIX_HOURS_MS);
+  } catch (_) {}
+
+  // Interval otomatis pembersihan berkala setiap 15 menit
+  const AUTO_CLEAN_INTERVAL_MS = 15 * 60 * 1000;
+  const timer = setInterval(() => {
+    try {
+      clearAllCache({ logger });
+      periodicDatabaseSnapshot(logger);
+    } catch (_) {}
+  }, AUTO_CLEAN_INTERVAL_MS);
 
   if (timer && typeof timer.unref === "function") {
     timer.unref();

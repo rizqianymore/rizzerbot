@@ -17,6 +17,37 @@ import {
 } from "@/src/services/qris.js";
 import { db } from "@/src/core/database.js";
 
+// Cache status admin channel per JID saluran (TTL 5 menit)
+const channelAdminCache = new Map();
+// Cache deduplikasi pengiriman broadcast ke saluran agar 1 transaksi tidak dikirim ganda
+const recentBroadcastTrx = new Set();
+
+async function checkIsChannelAdmin(sock, channelJid) {
+  if (!channelJid || !channelJid.includes("@newsletter")) return false;
+  const now = Date.now();
+  const cached = channelAdminCache.get(channelJid);
+  if (cached && now - cached.timestamp < 5 * 60 * 1000) {
+    return cached.isAdmin;
+  }
+
+  let isAdmin = false;
+  try {
+    if (typeof sock.newsletterMetadata === "function") {
+      const meta = await sock.newsletterMetadata("jid", channelJid);
+      const role = meta?.viewer_metadata?.role;
+      isAdmin = role === "ADMIN" || role === "OWNER";
+    } else {
+      // Fallback: anggap true jika method tidak tersedia
+      isAdmin = true;
+    }
+  } catch (_) {
+    isAdmin = false;
+  }
+
+  channelAdminCache.set(channelJid, { isAdmin, timestamp: now });
+  return isAdmin;
+}
+
 function parseTrxInput(rawText, quoted, getTargetJid) {
   let item = "";
   let price = 0;
@@ -140,7 +171,7 @@ export default [
       let cardBuffer = null;
       try {
         cardBuffer = await generateReceiptCard(trx);
-      } catch (_) {}
+      } catch (_) { }
 
       try {
         if (cardBuffer) {
@@ -199,22 +230,36 @@ export default [
         }
       }
 
-      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi oleh Owner
+      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi & bot adalah admin di saluran
       const channelJid = activeSettings.channelJid || "";
       if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
-        try {
-          if (cardBuffer) {
-            await sock.sendMessage(channelJid, {
-              image: cardBuffer,
-              caption: caption + `\n\n📢 _Auto-posted to official channel_`,
-            });
-          } else {
-            await sock.sendMessage(channelJid, {
-              text: caption + `\n\n📢 _Auto-posted to official channel_`,
-            });
+        // Cek duplikasi: jika ID transaksi ini sudah pernah dibroadcast (oleh bot utama / instance sub-bot yang sama), jangan kirim ulang
+        const dedupeKey = `create_${trx.id}`;
+        if (!recentBroadcastTrx.has(dedupeKey)) {
+          const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
+          if (isChannelAdmin) {
+            recentBroadcastTrx.add(dedupeKey);
+            // Simpan riwayat maksimal 200 id agar memori tetap bersih
+            if (recentBroadcastTrx.size > 200) {
+              const [firstKey] = recentBroadcastTrx;
+              recentBroadcastTrx.delete(firstKey);
+            }
+
+            try {
+              if (cardBuffer) {
+                await sock.sendMessage(channelJid, {
+                  image: cardBuffer,
+                  caption,
+                });
+              } else {
+                await sock.sendMessage(channelJid, {
+                  text: caption,
+                });
+              }
+            } catch (channelErr) {
+              console.error("Gagal mengirim transaksi ke saluran:", channelErr.message);
+            }
           }
-        } catch (channelErr) {
-          console.error("Gagal mengirim transaksi ke saluran:", channelErr.message);
         }
       }
     },
@@ -284,7 +329,7 @@ export default [
       let cardBuffer = null;
       try {
         cardBuffer = await generateReceiptCard(updated);
-      } catch (_) {}
+      } catch (_) { }
 
       try {
         if (cardBuffer) {
@@ -311,22 +356,35 @@ export default [
         await reply(caption);
       }
 
-      // Auto-forward update transaksi ke Saluran
+      // Auto-forward update transaksi ke Saluran jika dikonfigurasi & bot adalah admin
       const channelJid = activeSettings.channelJid || "";
       if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
-        try {
-          if (cardBuffer) {
-            await sock.sendMessage(channelJid, {
-              image: cardBuffer,
-              caption: caption + `\n\n📢 _Auto-posted status update to official channel_`,
-            });
-          } else {
-            await sock.sendMessage(channelJid, {
-              text: caption + `\n\n📢 _Auto-posted status update to official channel_`,
-            });
+        // Cek duplikasi: jika update status transaksi ini sudah pernah dibroadcast, jangan kirim ulang
+        const dedupeKey = `update_${updated.id}_${updated.status}`;
+        if (!recentBroadcastTrx.has(dedupeKey)) {
+          const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
+          if (isChannelAdmin) {
+            recentBroadcastTrx.add(dedupeKey);
+            if (recentBroadcastTrx.size > 200) {
+              const [firstKey] = recentBroadcastTrx;
+              recentBroadcastTrx.delete(firstKey);
+            }
+
+            try {
+              if (cardBuffer) {
+                await sock.sendMessage(channelJid, {
+                  image: cardBuffer,
+                  caption,
+                });
+              } else {
+                await sock.sendMessage(channelJid, {
+                  text: caption,
+                });
+              }
+            } catch (channelErr) {
+              console.error("Gagal mengirim update transaksi ke saluran:", channelErr.message);
+            }
           }
-        } catch (channelErr) {
-          console.error("Gagal mengirim update transaksi ke saluran:", channelErr.message);
         }
       }
     },
@@ -346,7 +404,7 @@ export default [
         return reply("📋 Belum ada riwayat transaksi yang tersimpan.");
       }
 
-      let text = `📋 *DAFTAR TRANSAKSI TERBARU* (${list.length})\n─────────────────────────\n`;
+      let text = `📋 *DAFTAR TRANSAKSI TERBARU* (${list.length})\n`;
       for (const [i, t] of list.entries()) {
         const statusIcon =
           t.status === "LUNAS" ? "✅" : t.status === "PROSES" ? "🔄" : t.status === "BATAL" ? "❌" : "⏳";

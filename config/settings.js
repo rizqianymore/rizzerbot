@@ -14,8 +14,8 @@ export const settings = {
 
     autoRead: false,
     autoOnline: false,
-    cooldownTime: 3000,
-    responseDelay: 1500,
+    cooldownTime: 0,
+    responseDelay: 0,
 
     stickerPackName: "Rizzer Bot Stickers",
     stickerAuthor: "Rizzer Bot [Private]",

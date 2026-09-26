@@ -234,7 +234,7 @@ export default {
             .filter((c) => commands.has(c))
             .map((name, i) => `│ ${i + 1}. *${prefix}${name}*`);
 
-      menuText += `🔥 *10 FITUR TERPOPULER*\n`;
+      menuText += `*TOP 10 POPULER*\n`;
       menuText += topList.join("\n") + "\n\n";
     }
 
@@ -254,7 +254,7 @@ export default {
     }
 
     if (!targetCategory) {
-      menuText += `💡 *Pilihan Kategori Menu:*\n`;
+      menuText += `*Kategori Menu:*\n`;
       menuText += `• ${prefix}menu news\n`;
       menuText += `• ${prefix}menu socmed\n`;
       menuText += `• ${prefix}menu ai\n`;
