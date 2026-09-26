@@ -200,7 +200,19 @@ async function getJktBrowser() {
   resetScrapeBrowserTimer();
   if (jktBrowser?.connected) return jktBrowser;
   const { default: puppeteer } = await import("puppeteer");
-  jktBrowser = await puppeteer.launch({
+  const fs = await import("fs");
+  const candidatePaths = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+    "/snap/bin/chromium",
+  ].filter(Boolean);
+
+  let foundExecutable = candidatePaths.find((p) => fs.existsSync(p));
+
+  const launchOptions = {
     headless: "new",
     args: [
       "--no-sandbox",
@@ -210,7 +222,13 @@ async function getJktBrowser() {
       "--disable-gpu",
       "--disable-blink-features=AutomationControlled",
     ],
-  });
+  };
+
+  if (foundExecutable) {
+    launchOptions.executablePath = foundExecutable;
+  }
+
+  jktBrowser = await puppeteer.launch(launchOptions);
   return jktBrowser;
 }
 
