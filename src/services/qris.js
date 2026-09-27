@@ -280,6 +280,23 @@ export function getActiveQrisString() {
 }
 
 /**
+ * Generate clean and pure QR Code image buffer without template/card wrapper
+ */
+export async function generatePureQR(qrisPayload, options = {}) {
+  return await QRCode.toBuffer(qrisPayload, {
+    type: "png",
+    errorCorrectionLevel: "M",
+    margin: 2,
+    scale: 8,
+    color: {
+      dark: "#000000",
+      light: "#ffffff",
+    },
+    ...options,
+  });
+}
+
+/**
  * Generate high-aesthetic QRIS Payment Card (PNG Buffer)
  */
 export async function generateQrisCard({

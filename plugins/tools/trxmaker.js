@@ -10,6 +10,7 @@ import {
 } from "@/src/services/trx.js";
 import {
   convertQRIS,
+  generatePureQR,
   generateQrisCard,
   getActiveQrisString,
   parseQRIS,
@@ -204,23 +205,18 @@ export default [
           const qrisStatic = getActiveQrisString();
           const dynamicPayload = convertQRIS(qrisStatic, { amount: trx.price });
           const parsed = parseQRIS(dynamicPayload);
-          const qrisCard = await generateQrisCard({
-            qrisPayload: dynamicPayload,
-            amount: trx.price,
-            merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
-            merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
-          });
+          const qrBuffer = await generatePureQR(dynamicPayload);
 
           await sock.sendMessage(
             remoteJid,
             {
-              image: qrisCard,
+              image: qrBuffer,
               caption:
                 `📱 *QRIS DINAMIS PEMBAYARAN*\n` +
-                `🏪 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
+                `🏪 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
                 `💰 *Nominal Otomatis:* *${trx.formattedPrice}*\n` +
                 `🆔 *Ref Transaksi:* \`${trx.id}\`\n\n` +
-                `_Scan QRIS di atas melalui BCA, Mandiri, BRI, DANA, GoPay, OVO, ShopeePay. Nominal sudah terisi otomatis!_`,
+                `_Scan QR di atas melalui BCA, Mandiri, BRI, BNI, DANA, GoPay, OVO, ShopeePay. Nominal sudah terisi otomatis!_`,
               mentions: trx.buyerJid ? [trx.buyerJid] : [],
             },
             { quoted: msg }
@@ -454,28 +450,23 @@ export default [
         // Tampilkan QRIS Statis Toko
         try {
           const parsed = parseQRIS(staticQris);
-          const card = await generateQrisCard({
-            qrisPayload: staticQris,
-            amount: 0,
-            merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
-            merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
-          });
+          const qrBuffer = await generatePureQR(staticQris);
 
           return await sock.sendMessage(
             msg.key.remoteJid,
             {
-              image: card,
+              image: qrBuffer,
               caption:
                 `🏪 *QRIS RESMI TOKO*\n` +
-                `🏢 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
-                `📍 *Kota:* ${parsed.merchantCity || "JAKARTA BARAT"}\n` +
+                `🏢 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
+                `📍 *Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
                 `💳 *Tipe:* QRIS Statis (Nominal Bebas)\n\n` +
                 `💡 _Ingin nominal otomatis? Ketik: \`${prefix}qris <nominal>\` (Contoh: \`${prefix}qris 25000\`)_`,
             },
             { quoted: msg }
           );
         } catch (err) {
-          return reply(`❌ Gagal membuat kartu QRIS: ${err.message}`);
+          return reply(`❌ Gagal membuat QRIS: ${err.message}`);
         }
       }
 
@@ -491,24 +482,19 @@ export default [
       try {
         const dynamicPayload = convertQRIS(staticQris, { amount });
         const parsed = parseQRIS(dynamicPayload);
-        const card = await generateQrisCard({
-          qrisPayload: dynamicPayload,
-          amount,
-          merchantName: parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud",
-          merchantCity: parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT",
-        });
+        const qrBuffer = await generatePureQR(dynamicPayload);
 
         await sock.sendMessage(
           msg.key.remoteJid,
           {
-            image: card,
+            image: qrBuffer,
             caption:
               `⚡ *QRIS DINAMIS SIAP BAYAR*\n` +
-              `🏢 *Merchant:* ${parsed.merchantName || "Rizzer Cloud"}\n` +
-              `📍 *Kota:* ${parsed.merchantCity || "JAKARTA BARAT"}\n` +
+              `🏢 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
+              `📍 *Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
               `💰 *Total Nominal:* *${formatRupiah(amount)}*\n` +
               `⏱️ *Kedaluwarsa:* 15 Menit\n\n` +
-              `_Scan langsung dengan DANA, BCA, GoPay, OVO, ShopeePay, atau m-Banking Anda. Nominal otomatis terinput pas!_`,
+              `_Scan langsung dengan DANA, BCA, GoPay, OVO, ShopeePay, atau m-Banking Anda. Nominal otomatis terisi pas!_`,
           },
           { quoted: msg }
         );
