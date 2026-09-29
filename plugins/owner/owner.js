@@ -270,13 +270,15 @@ export default [
     description: "Change bot prefix",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply }) => {
+    run: async (sock, msg, args, { reply, botJid }) => {
       const prefix = args[0] || "";
       if (!prefix || prefix.length > 3 || /\s/.test(prefix)) {
         return reply("❌ Prefix harus berupa 1-3 karakter tanpa spasi.");
       }
-      db.updateSettings({ prefix });
-      reply(`✅ Prefix berhasil diubah ke: ${prefix}`);
+      const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
+      db.updateBotSettings(activeBotJid, { prefix });
+      const botLabel = activeBotJid ? ` untuk bot (+${activeBotJid.split('@')[0]})` : '';
+      reply(`✅ Prefix berhasil diubah ke: ${prefix}${botLabel}`);
     }
   },
   {
@@ -332,9 +334,11 @@ export default [
     description: "Set bot to self mode (owner only)",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply }) => {
-      db.updateSettings({ public: false });
-      reply("✅ Bot sekarang dalam mode Self (hanya owner).");
+    run: async (sock, msg, args, { reply, botJid }) => {
+      const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
+      db.updateBotSettings(activeBotJid, { public: false });
+      const botLabel = activeBotJid ? ` (+${activeBotJid.split('@')[0]})` : '';
+      reply(`✅ Bot${botLabel} sekarang dalam mode Self (hanya owner). Bot lain tidak terpengaruh.`);
     }
   },
   {
@@ -343,9 +347,11 @@ export default [
     description: "Set bot to public mode",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply }) => {
-      db.updateSettings({ public: true });
-      reply("✅ Bot sekarang dalam mode Public (semua user).");
+    run: async (sock, msg, args, { reply, botJid }) => {
+      const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
+      db.updateBotSettings(activeBotJid, { public: true });
+      const botLabel = activeBotJid ? ` (+${activeBotJid.split('@')[0]})` : '';
+      reply(`✅ Bot${botLabel} sekarang dalam mode Public (semua user). Bot lain tidak terpengaruh.`);
     }
   },
   {
@@ -373,7 +379,7 @@ export default [
 
       await reply(
         `⏳ Menyiapkan sesi bot untuk *${number}*...\n` +
-        `Nomor bot ini akan otomatis menjadi *Owner & Premium*.\n` +
+        `Sub-bot akan memiliki pengaturan mandiri (Self/Public/Prefix).\n` +
         `Kode pairing akan dikirimkan sebentar lagi.`
       );
 
@@ -383,7 +389,7 @@ export default [
           const message =
             `🔑 *KODE PAIRING BOT BARU*\n\n` +
             `📱 *Nomor:* +${number}\n` +
-            `👑 *Status:* Owner & Premium (Otomatis)\n` +
+            `⚙️ *Mode:* Pengaturan Mandiri (Self/Public/Prefix Terpisah)\n` +
             `⚠️ *Batasan:* Sub-bot tidak dapat menggunakan fitur .addbot\n` +
             `🔐 *Kode Pairing:* *\`${code}\`*\n\n` +
             `_Buka WhatsApp di nomor tersebut > Perangkat Tertaut > Tautkan dengan nomor telepon, lalu masukkan kode di atas._`;
@@ -448,7 +454,7 @@ export default [
   {
     name: "syncsubbot",
     aliases: ["updatesubbot", "syncbot"],
-    description: "Perbarui dan sinkronkan database seluruh sub-bot yang ada di server ke status Owner & Premium",
+    description: "Perbarui dan sinkronkan database serta pengaturan seluruh sub-bot yang ada di server",
     ownerOnly: true,
     category: "Owner",
     run: async (sock, msg, args, { reply, sendTyping }) => {
@@ -458,9 +464,9 @@ export default [
       const activeList = getSubBotsList();
       await reply(
         `✅ *Sinkronisasi Database Sub-Bot Berhasil!*\n\n` +
-        `📦 *Sub-Bot di Server:* ${count} bot diperbarui\n` +
+        `📦 *Sub-Bot di Server:* ${count} bot disinkronkan\n` +
         `🟢 *Status Aktif:* ${activeList.filter((b) => b.status === "online").length} online / ${activeList.length} total\n` +
-        `👑 *Database:* Seluruh sub-bot telah diperbarui ke status *Owner & Premium* terbaru agar database tidak old.`
+        `⚙️ *Pengaturan:* Data & konfigurasi masing-masing sub-bot telah diperbarui tanpa bentrok peran.`
       );
     }
   },

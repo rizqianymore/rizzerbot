@@ -141,17 +141,6 @@ export async function dispatchMessage(sock, msg, logger) {
     }
   }
 
-  const activeSettings = db.getSettings();
-  const prefix = activeSettings.prefix || ".";
-  if (!messageContent.startsWith(prefix)) return;
-
-  const args = messageContent.slice(prefix.length).trim().split(/ +/).filter(Boolean);
-  const commandName = args.shift()?.toLowerCase() || "";
-  if (!commandName) return;
-
-  const cmd = commands.get(commandName);
-  if (!cmd) return;
-
   const isFromMe = Boolean(msg.key?.fromMe);
   const botRawId = sock.user?.id || "";
   const botJid = db.normalizeJid(botRawId);
@@ -164,38 +153,30 @@ export async function dispatchMessage(sock, msg, logger) {
     db.registerBotJid(botJid);
   }
 
+  // Ambil pengaturan khusus bot ini (jika subbot, memiliki settings mandiri)
+  const activeSettings = db.getBotSettings(botJid);
+  const prefix = activeSettings.prefix || ".";
+  if (!messageContent.startsWith(prefix)) return;
+
+  const args = messageContent.slice(prefix.length).trim().split(/ +/).filter(Boolean);
+  const commandName = args.shift()?.toLowerCase() || "";
+  if (!commandName) return;
+
+  const cmd = commands.get(commandName);
+  if (!cmd) return;
+
   // Jika pesan berasal dari bot sendiri (isFromMe), atau nomornya sama dengan nomor bot
   const senderJid = isFromMe
     ? (botJid || normalizedRawSender)
     : normalizedRawSender;
 
-  // Auto-detect apakah socket ini adalah sub-bot atau pengirim adalah sub-bot
-  const isSubBot = Boolean(sock.isSubBot || isSubBotSocket(sock));
-  const isSubSender = Boolean(
-    isSubBotNumber(senderJid) ||
-    isSubBotNumber(normalizedRawSender) ||
-    isSubBotNumber(rawSender) ||
-    isSubBotNumber(remoteNormalized) ||
-    (sock.subBotNumber && isSubBotNumber(sock.subBotNumber))
-  );
-
-  // Auto-update: Jika pesan dari subbot atau akun subbot terdaftar di server
-  if ((isSubBot && isFromMe) || isSubSender) {
-    db.setOwner(senderJid, true);
-    if (normalizedRawSender) db.setOwner(normalizedRawSender, true);
-    if (botJid) db.setOwner(botJid, true);
-  }
-
-  // Cek apakah pengirim adalah owner atau nomor bot itu sendiri atau sub-bot
+  // Cek apakah pengirim adalah owner (Primary Owner, terdaftar di db.isOwner, atau isFromMe pada bot ini)
   const isSenderOwner =
     isFromMe ||
-    (isSubBot && isFromMe) ||
-    isSubSender ||
     db.isOwner(senderJid) ||
-    db.isOwner(normalizedRawSender) ||
-    db.isOwner(rawSender) ||
-    db.isOwner(remoteNormalized) ||
-    (botJid && (senderJid === botJid || normalizedRawSender === botJid || remoteNormalized === botJid));
+    (normalizedRawSender && db.isOwner(normalizedRawSender)) ||
+    (rawSender && db.isOwner(rawSender)) ||
+    (remoteNormalized && db.isOwner(remoteNormalized));
 
   let user = db.getUser(senderJid);
   if (!user) return;
@@ -203,8 +184,9 @@ export async function dispatchMessage(sock, msg, logger) {
   let access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
   const isAdmin = Boolean(isOwner || access.admin);
-  const isPremium = Boolean(isOwner || isAdmin || access.premium || (isSubBot && isFromMe) || isSubSender);
+  const isPremium = Boolean(isOwner || isAdmin || access.premium);
 
+  // Jika bot dalam mode Self (public === false), hanya Owner atau pesan langsung dari bot sendiri yang diizinkan
   if (activeSettings.public === false && !isOwner) return;
 
   if (isOwner && (!user.owner || !user.premium || user.role !== "owner")) {
@@ -311,6 +293,8 @@ export async function dispatchMessage(sock, msg, logger) {
 
   const context = {
     logger,
+    botJid,
+    activeSettings,
     prefix,
     activePrefix: prefix,
     commandName,

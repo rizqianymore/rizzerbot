@@ -100,9 +100,6 @@ function registerBotJid(jid) {
   const normalized = normalizeJid(jid);
   if (!normalized) return;
   activeBotJids.add(normalized);
-  refreshConfiguredJids();
-  syncPrivilegedUsers();
-  save();
 }
 
 function refreshConfiguredJids() {
@@ -113,7 +110,6 @@ function refreshConfiguredJids() {
     activeSettings.ownerNumber,
     activeSettings.pairingNumber,
     activeSettings.ownerNumbers,
-    ...activeBotJids,
   ]);
   adminJids = getConfiguredJids([
     ...configuredAdminValues,
@@ -124,7 +120,6 @@ function refreshConfiguredJids() {
     ...configuredPremiumValues,
     activeSettings.premiumNumbers,
     activeSettings.premiumUsers,
-    ...activeBotJids,
   ]);
 }
 
@@ -284,12 +279,14 @@ function loadData() {
     schemaVersion,
     users: normalizedUsers,
     settings: normalizeSettings(isRecord(source.settings) ? source.settings : {}),
+    botSettings: isRecord(source.botSettings) ? source.botSettings : {},
     usage: isRecord(source.usage) ? source.usage : {},
     nsfw: isRecord(source.nsfw) ? source.nsfw : {},
   };
 
   if (data.schemaVersion !== schemaVersion) changed = true;
   if (JSON.stringify(data.settings) !== JSON.stringify(source.settings || {})) changed = true;
+  if (!isRecord(source.botSettings)) changed = true;
   if (!isRecord(source.usage)) changed = true;
   if (!isRecord(source.nsfw)) changed = true;
   if (source.schemaVersion !== schemaVersion) changed = true;
@@ -400,7 +397,6 @@ function isOwner(jid) {
   if (
     isPrimaryOwner(normalized) ||
     ownerJids.has(normalized) ||
-    activeBotJids.has(normalized) ||
     data.users[normalized]?.owner
   ) {
     return true;
@@ -413,7 +409,6 @@ function isOwner(jid) {
     if (
       isPrimaryOwner(phoneJid) ||
       ownerJids.has(phoneJid) ||
-      activeBotJids.has(phoneJid) ||
       data.users[phoneJid]?.owner
     ) {
       return true;
@@ -626,6 +621,62 @@ function updateSettings(updates = {}) {
   return data.settings;
 }
 
+function getBotSettings(botJid) {
+  const normalized = normalizeJid(botJid);
+  const mainSettings = data.settings || {};
+  if (!normalized) return { ...mainSettings };
+
+  const primaryOwnerJid = normalizeJid(mainSettings.ownerNumber || settings.ownerNumber);
+  const primaryPairingJid = normalizeJid(mainSettings.pairingNumber || settings.pairingNumber);
+  
+  // Jika bot adalah main bot, gunakan main settings langsung
+  if (normalized === primaryOwnerJid || normalized === primaryPairingJid) {
+    return { ...mainSettings };
+  }
+
+  // Jika sub-bot, ambil dari botSettings dengan fallback ke settings default
+  const subConfig = data.botSettings?.[normalized] || {};
+  return {
+    ...mainSettings,
+    ...subConfig,
+    public: subConfig.public !== undefined ? toBoolean(subConfig.public) : mainSettings.public,
+    prefix: typeof subConfig.prefix === 'string' && subConfig.prefix.trim() ? subConfig.prefix.trim() : (mainSettings.prefix || '.'),
+  };
+}
+
+function updateBotSettings(botJid, updates = {}) {
+  const normalized = normalizeJid(botJid);
+  const mainSettings = data.settings || {};
+  const primaryOwnerJid = normalizeJid(mainSettings.ownerNumber || settings.ownerNumber);
+  const primaryPairingJid = normalizeJid(mainSettings.pairingNumber || settings.pairingNumber);
+
+  // Jika main bot atau tidak ada JID bot, update settings global
+  if (!normalized || normalized === primaryOwnerJid || normalized === primaryPairingJid) {
+    return updateSettings(updates);
+  }
+
+  // Jika sub-bot, simpan di botSettings khusus nomor bot tersebut
+  if (!data.botSettings) data.botSettings = {};
+  if (!data.botSettings[normalized]) data.botSettings[normalized] = {};
+
+  const current = data.botSettings[normalized];
+  if (updates.public !== undefined) {
+    current.public = toBoolean(updates.public);
+  }
+  if (updates.prefix !== undefined) {
+    const p = String(updates.prefix).trim();
+    if (p && p.length <= 3 && !/\s/.test(p)) {
+      current.prefix = p;
+    }
+  }
+  if (updates.botName !== undefined) {
+    current.botName = String(updates.botName).trim();
+  }
+
+  save();
+  return getBotSettings(normalized);
+}
+
 const accessChanged = syncPrivilegedUsers();
 if (loaded.changed || accessChanged) save();
 
@@ -635,6 +686,8 @@ export const db = {
   normalizeJid,
   getSettings: () => data.settings,
   updateSettings,
+  getBotSettings,
+  updateBotSettings,
   getUser: (jid) => ensureUser(normalizeJid(jid)),
   updateUser,
   registerBotJid,

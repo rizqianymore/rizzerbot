@@ -91,9 +91,11 @@ export async function createSubBot(number, onPairingCode) {
   };
   subBots.set(botId, botEntry);
 
-  // Pre-grant Owner & Premium ke nomor yang dijadikan bot
   const targetJid = `${cleanNumber}@s.whatsapp.net`;
-  db.setOwner(targetJid, true);
+  db.registerBotJid(targetJid);
+  db.updateBotSettings(targetJid, {
+    botName: `SubBot (+${cleanNumber})`,
+  });
 
   sock.ev.on("creds.update", saveCreds);
 
@@ -120,12 +122,15 @@ export async function createSubBot(number, onPairingCode) {
       const botUserJid = db.normalizeJid(sock.user?.id) || `${cleanNumber}@s.whatsapp.net`;
       db.registerBotJid(botUserJid);
 
-      // Pastikan nomor sub-bot otomatis menjadi Owner dan Premium di database
-      db.setOwner(botUserJid, true);
+      // Inisialisasi pengaturan mandiri untuk sub-bot
+      db.updateBotSettings(botUserJid, {
+        botName: sock.user?.name || `SubBot (+${cleanNumber})`,
+      });
       db.updateUser(botUserJid, {
         name: sock.user?.name || `SubBot (+${cleanNumber})`,
+        registered: true,
       });
-      logger.info(`[SubBot ${cleanNumber}] Berhasil mendapatkan hak akses Owner & Premium otomatis.`);
+      logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan pengaturan mandiri.`);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -234,21 +239,20 @@ export async function syncSubBotsDatabase() {
           } catch (_) {}
         }
 
-        // Update database untuk seluruh variasi JID sub-bot agar tidak old
+        // Update database untuk seluruh variasi JID sub-bot agar terdaftar dengan pengaturan mandiri
         for (const jid of jidsToSync) {
           db.registerBotJid(jid);
-          db.setOwner(jid, true);
+          db.updateBotSettings(jid, {
+            botName,
+          });
           db.updateUser(jid, {
             name: botName,
-            owner: true,
-            admin: true,
-            premium: true,
             registered: true,
           });
         }
 
         updatedCount++;
-        logger?.info?.(`[SubBot Database Sync] Berhasil memperbarui database sub-bot: +${number} (Owner & Premium Aktif)`);
+        logger?.info?.(`[SubBot Database Sync] Berhasil memperbarui data sub-bot: +${number} (Settings & Register Terpisah)`);
       }
     }
 
