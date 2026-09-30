@@ -1,10 +1,25 @@
 import { handleMessage } from "@/src/core/handler.js";
+import { db } from "@/src/core/database.js";
 
 const chatQueues = new Map();
-const QUEUE_DELAY_MS = 50; 
+const QUEUE_DELAY_MS = 50;
 
-async function processQueue(jid, logger) {
-  const queue = chatQueues.get(jid);
+function getSockIdentity(sock) {
+  try {
+    const jid = db.normalizeJid(sock?.user?.id || "");
+    if (jid) return jid;
+  } catch (_) {}
+  // Fallback sebelum login: bedakan main vs sub agar antrean tidak tercampur
+  if (sock?.isSubBot) return `sub_${sock?.subBotNumber || "unknown"}`;
+  return "main";
+}
+
+function getQueueKey(sock, remoteJid) {
+  return `${getSockIdentity(sock)}::${remoteJid}`;
+}
+
+async function processQueue(key, logger) {
+  const queue = chatQueues.get(key);
   if (!queue || queue.processing) return;
 
   queue.processing = true;
@@ -16,9 +31,9 @@ async function processQueue(jid, logger) {
       await handleMessage(sock, msg, logger);
     } catch (err) {
       if (logger) {
-        logger.error(`[Queue Error] Failed to handle message in ${jid}:`, err);
+        logger.error(`[Queue Error] Failed to handle message in ${key}:`, err);
       } else {
-        console.error(`[Queue Error] Failed to handle message in ${jid}:`, err);
+        console.error(`[Queue Error] Failed to handle message in ${key}:`, err);
       }
     }
 
@@ -31,7 +46,7 @@ async function processQueue(jid, logger) {
     }
   }
 
-  chatQueues.delete(jid);
+  chatQueues.delete(key);
 }
 
 const MAX_QUEUE_PER_CHAT = 50;
@@ -39,19 +54,19 @@ const MAX_QUEUE_PER_CHAT = 50;
 export function enqueueMessage(sock, msg, logger) {
   if (!msg.key || !msg.key.remoteJid) return;
 
-  const jid = msg.key.remoteJid;
+  const key = getQueueKey(sock, msg.key.remoteJid);
 
-  if (!chatQueues.has(jid)) {
-    chatQueues.set(jid, {
+  if (!chatQueues.has(key)) {
+    chatQueues.set(key, {
       tasks: [],
       processing: false,
     });
   }
 
-  const queue = chatQueues.get(jid);
+  const queue = chatQueues.get(key);
   if (queue.tasks.length >= MAX_QUEUE_PER_CHAT) {
     if (logger) {
-      logger.warn(`[Queue Overflow] Chat ${jid} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`);
+      logger.warn(`[Queue Overflow] Chat ${key} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`);
     }
     queue.tasks.shift();
   }
@@ -59,7 +74,7 @@ export function enqueueMessage(sock, msg, logger) {
   queue.tasks.push({ sock, msg });
 
   // Start processing loop asynchronously
-  processQueue(jid, logger).catch((err) => {
-    console.error(`[Queue Fatal] Loop crash for ${jid}:`, err);
+  processQueue(key, logger).catch((err) => {
+    console.error(`[Queue Fatal] Loop crash for ${key}:`, err);
   });
 }

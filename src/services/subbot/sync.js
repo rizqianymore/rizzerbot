@@ -38,17 +38,21 @@ export async function syncSubBotsDatabase() {
           } catch (_) {}
         }
 
-        // Update database untuk seluruh variasi JID sub-bot agar terdaftar dengan pengaturan mandiri
-        const existing = db.getBotSettings(`${number}@s.whatsapp.net`);
+        // Update database: daftarkan JID, tapi JANGAN timpa setting mandiri
+        // (public/prefix/owner) yang sudah diatur owner sub via DM.
         for (const jid of jidsToSync) {
           db.registerBotJid(jid);
-          db.updateBotSettings(jid, {
-            botName,
-            ownerNumber: existing.ownerNumber || `${number}@s.whatsapp.net`,
-            ownerNumbers: existing.ownerNumbers || [],
-            public: existing.public,
-            prefix: existing.prefix,
-          });
+          const hasConfig = Boolean(db.data?.botSettings?.[db.normalizeJid(jid)]);
+          if (!hasConfig) {
+            db.updateBotSettings(jid, {
+              botName,
+              ownerNumber: `${number}@s.whatsapp.net`,
+              ownerNumbers: [],
+            });
+          } else if (botName && botName !== `SubBot (+${number})`) {
+            // Hanya refresh nama, setting self/public/prefix dibiarkan apa adanya
+            db.updateBotSettings(jid, { botName });
+          }
           db.updateUser(jid, {
             name: botName,
             registered: true,

@@ -6,6 +6,26 @@ import { db } from "@/src/core/database.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots } from "./store.js";
 
+function shouldSkipBeforeQueue(msg) {
+  if (!msg?.key?.id || !msg?.key?.remoteJid) return true;
+  const rjid = msg.key.remoteJid;
+  if (rjid === "status@broadcast") return true;
+  if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) return true;
+  // Pesan sistem (hapus/reaction/poll-update) tidak perlu masuk antrean
+  if (msg.message) {
+    const keys = Object.keys(msg.message);
+    if (keys.length === 1 && (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")) {
+      return true;
+    }
+  }
+  // Pesan basi (>2 menit) dari riwayat/reconnect -> abaikan agar tidak loop spam
+  try {
+    const ts = Number(msg.messageTimestamp);
+    if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) return true;
+  } catch (_) {}
+  return false;
+}
+
 /**
  * Setup Baileys event handlers for a sub-bot
  */
@@ -44,23 +64,45 @@ export function setupSubBotEvents({
       logger.info(`[SubBot ${cleanNumber}] Connected successfully!`);
       const botUserJid = db.normalizeJid(sock.user?.id) || `${cleanNumber}@s.whatsapp.net`;
       db.registerBotJid(botUserJid);
+      // Daftarkan juga varian nomor bersih agar deteksi bot lintas format (lid/device) akurat
+      db.registerBotJid(`${cleanNumber}@s.whatsapp.net`);
 
-      // Ambil pengaturan yang sudah ada untuk cleanNumber atau botUserJid
-      const existingSettings = db.getBotSettings(`${cleanNumber}@s.whatsapp.net`);
-
-      // Inisialisasi pengaturan mandiri untuk sub-bot
-      db.updateBotSettings(botUserJid, {
-        botName: sock.user?.name || existingSettings.botName || `SubBot (+${cleanNumber})`,
-        ownerNumber: existingSettings.ownerNumber || `${cleanNumber}@s.whatsapp.net`,
-        ownerNumbers: existingSettings.ownerNumbers || [],
-        public: existingSettings.public,
-        prefix: existingSettings.prefix,
-      });
-      db.updateUser(botUserJid, {
-        name: sock.user?.name || `SubBot (+${cleanNumber})`,
-        registered: true,
-      });
-      logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan pengaturan mandiri.`);
+      // ISOLASI SETTING: jangan overwrite public/prefix/owner yang sudah diatur
+      // owner sub via DM. Hanya inisialisasi sekali jika belum ada.
+      try {
+        const stored = db.data?.botSettings?.[botUserJid];
+        const storedAlt = db.data?.botSettings?.[db.normalizeJid(`${cleanNumber}@s.whatsapp.net`)];
+        const existing = stored || storedAlt;
+        if (!existing) {
+          db.updateBotSettings(botUserJid, {
+            botName: sock.user?.name || `SubBot (+${cleanNumber})`,
+            ownerNumber: `${cleanNumber}@s.whatsapp.net`,
+            ownerNumbers: [],
+          });
+        } else {
+          // Samakan alias JID agar lookup konsisten, tanpa merusak setting mandiri
+          if (!stored && storedAlt) {
+            db.updateBotSettings(botUserJid, {
+              botName: sock.user?.name || storedAlt.botName || `SubBot (+${cleanNumber})`,
+            });
+          } else if (sock.user?.name) {
+            db.updateUser(botUserJid, { name: sock.user.name, registered: true });
+          }
+        }
+      } catch (_) {
+        try {
+          db.updateBotSettings(botUserJid, {
+            botName: sock.user?.name || `SubBot (+${cleanNumber})`,
+          });
+        } catch (_) {}
+      }
+      try {
+        db.updateUser(botUserJid, {
+          name: sock.user?.name || `SubBot (+${cleanNumber})`,
+          registered: true,
+        });
+      } catch (_) {}
+      logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan pengaturan mandiri (self/public/prefix terisolasi).`);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -84,11 +126,14 @@ export function setupSubBotEvents({
     }
   });
 
-  // Message dispatcher queue
+  // Message dispatcher queue (dengan filter dini anti-loop)
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
     for (const msg of messages) {
-      if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
+      if (shouldSkipBeforeQueue(msg)) continue;
+      if (db.getSettings().autoRead) {
+        try { await sock.readMessages([msg.key]).catch(() => {}); } catch (_) {}
+      }
       enqueueMessage(sock, msg, logger);
     }
   });

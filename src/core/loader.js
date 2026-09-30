@@ -18,6 +18,9 @@ function getFilesRecursive(dir, baseDir = dir) {
     if (file.isDirectory()) {
       results = results.concat(getFilesRecursive(fullPath, baseDir));
     } else if (file.isFile() && file.name.endsWith(".js")) {
+      // File helper bersama (awalan "_", misal plugins/owner/_helpers.js)
+      // bukan plugin dan wajib di-skip agar tidak dimuat sebagai command.
+      if (file.name.startsWith("_")) continue;
       results.push({
         absolutePath: fullPath,
         relativePath: path.relative(baseDir, fullPath),
@@ -42,6 +45,7 @@ function getDirectoriesRecursive(dir) {
 
 export async function reloadPluginFile(absolutePath, relativePath) {
   if (!absolutePath.endsWith(".js")) return;
+  if (path.basename(absolutePath).startsWith("_")) return;
 
   if (!fs.existsSync(absolutePath)) {
     for (const [key, cmd] of commands.entries()) {
@@ -114,7 +118,7 @@ function watchDirectory(dirPath, baseDir) {
     const watcher = fs.watch(dirPath, async (eventType, filename) => {
       updateDirectoryWatchers();
 
-      if (filename && filename.endsWith(".js")) {
+      if (filename && filename.endsWith(".js") && !filename.startsWith("_")) {
         const absolutePath = path.join(dirPath, filename);
         const relativePath = path.relative(baseDir, absolutePath);
         debouncedReload(absolutePath, relativePath);

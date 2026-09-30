@@ -1,3 +1,4 @@
+// plugins/tools/rvo.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { downloadContentFromMessage } from "baileys";
 import { getStockTicker } from "@/src/services/stock.js";
 
@@ -9,15 +10,13 @@ async function streamToBuffer(stream) {
   return buffer;
 }
 
-export default [
-  // --- VIEW ONCE UNLOCKER ---
-  {
-    name: "rvo",
-    aliases: ["readviewonce", "viewonce"],
-    description: "Membuka dan mendownload media sekali lihat (view once)",
-    premiumOnly: true,
-    category: "Tools",
-    run: async (sock, msg, args, { reply, sendTyping, quoted }) => {
+export default {
+  "name": "rvo",
+  "aliases": ["readviewonce","viewonce"],
+  "description": "Membuka dan mendownload media sekali lihat (view once)",
+  "premiumOnly": true,
+  "category": "Tools",
+  "run": async (sock, msg, args, { reply, sendTyping, quoted }) => {
       await sendTyping();
 
       if (!quoted) {
@@ -95,54 +94,4 @@ export default [
         await reply(`❌ Gagal membuka View Once: ${err.message}`);
       }
     },
-  },
-
-  // --- BLOOMBERG / SAHAM / TICKER ---
-  {
-    name: "bloombergstock",
-    aliases: ["bloomberg", "stock", "saham", "ticker", "bbg"],
-    description: "Pantau harga saham, komoditas emas/minyak, dan crypto secara realtime",
-    premiumOnly: false,
-    category: "Tools",
-    run: async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
-
-      const input = args.join(" ").trim();
-      if (!input) {
-        return reply("Contoh: *.bloombergstock GC1:COM* atau *.saham BBCA*");
-      }
-
-      try {
-        const data = await getStockTicker(input);
-
-        const isPositive = data.priceChange >= 0;
-        const trend = isPositive ? "▲" : "▼";
-        const sign = isPositive ? "+" : "";
-
-        const formattedPrice =
-          typeof data.price === "number"
-            ? data.price.toLocaleString("id-ID", { maximumFractionDigits: 2 })
-            : data.price;
-
-        const formattedChange =
-          typeof data.priceChange === "number"
-            ? `${sign}${data.priceChange.toLocaleString("id-ID", { maximumFractionDigits: 2 })}`
-            : data.priceChange;
-
-        const formattedPercent =
-          typeof data.percentChange === "number"
-            ? `${sign}${data.percentChange.toFixed(2)}%`
-            : data.percentChange;
-
-        const output =
-          `📊 *${data.name}* (\`${data.symbol || data.id}\`)\n` +
-          `💰 *${formattedPrice} ${data.currency}*\n` +
-          `📈 ${trend} ${formattedChange} (${formattedPercent})`;
-
-        await reply(output);
-      } catch (err) {
-        await reply(`❌ Gagal: ${err.message}`);
-      }
-    },
-  },
-];
+};

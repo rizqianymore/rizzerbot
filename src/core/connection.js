@@ -59,7 +59,7 @@ export async function startBot() {
       primarySock.ev.removeAllListeners("messages.upsert");
       primarySock.ev.removeAllListeners("creds.update");
       primarySock.end();
-    } catch (_) {}
+    } catch (_) { }
     primarySock = null;
   }
 
@@ -135,107 +135,121 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     let pairingTimeout = null;
 
-  if (usePairingCode && !sock.authState.creds.registered) {
-    const phoneNumber = db.normalizeJid(activeSettings.pairingNumber).split("@")[0];
-    if (!phoneNumber) {
-      logger.error(
-        "Pairing phone number is missing or invalid in database/settings.js!"
-      );
-    } else {
-      const requestPairing = async () => {
-        try {
-          logger.info(
-            `Requesting pairing code for primary bot: ${phoneNumber}...`
-          );
-          const code = await sock.requestPairingCode(phoneNumber);
-          console.log(
-            `\n\x1b[36m====================================\x1b[0m`
-          );
-          console.log(
-            `🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`
-          );
-          console.log(
-            `\x1b[36m====================================\x1b[0m\n`
-          );
-        } catch (err) {
-          logger.error(`Failed to request pairing code: ${err.message || err}. Retrying in 5 seconds...`);
-          pairingTimeout = setTimeout(requestPairing, 5000);
-        }
-      };
-      pairingTimeout = setTimeout(requestPairing, 3000);
-    }
-  }
-
-  sock.ev.on("connection.update", (update) => {
-    const { connection, lastDisconnect, qr } = update;
-
-    if (qr && !usePairingCode) {
-      logger.info(
-        "New QR Code generated. Scan the code below to pair your WhatsApp account:"
-      );
-      qrcode.generate(qr, { small: true });
-    }
-
-    if (connection === "close") {
-      if (pairingTimeout) clearTimeout(pairingTimeout);
-      const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
-      const reason =
-        lastDisconnect?.error?.message || lastDisconnect?.error || "Unknown";
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-      logger.warn(
-        `Primary connection closed. Reason: ${reason} (Status Code: ${
-          statusCode || "N/A"
-        }). Reconnecting: ${shouldReconnect}`
-      );
-
-      if (shouldReconnect) {
-        logger.info("Attempting to reconnect primary in 5 seconds...");
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(() => {
-          reconnectTimer = null;
-          startBot().catch((err) => {
-            logger.error("Failed to restart primary bot:", err);
-          });
-        }, 5000);
-      } else {
-        logger.error("Log out detected. Cleaning up primary session files...");
-        try {
-          deleteFolderRecursive(authDir);
-        } catch (e) {
-          logger.error(
-            "Failed to delete corrupted primary session:",
-            e.message
-          );
-        }
-        logger.info(
-          "Re-initializing bot connection with fresh state in 3 seconds..."
+    if (usePairingCode && !sock.authState.creds.registered) {
+      const phoneNumber = db.normalizeJid(activeSettings.pairingNumber).split("@")[0];
+      if (!phoneNumber) {
+        logger.error(
+          "Pairing phone number is missing or invalid in database/settings.js!"
         );
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(() => {
-          reconnectTimer = null;
-          startBot().catch((err) => {
-            logger.error("Failed to restart primary bot with fresh state:", err);
-          });
-        }, 3000);
+      } else {
+        const requestPairing = async () => {
+          try {
+            logger.info(
+              `Requesting pairing code for primary bot: ${phoneNumber}...`
+            );
+            const code = await sock.requestPairingCode(phoneNumber);
+            console.log(
+              `\n\x1b[36m====================================\x1b[0m`
+            );
+            console.log(
+              `🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`
+            );
+            console.log(
+              `\x1b[36m====================================\x1b[0m\n`
+            );
+          } catch (err) {
+            logger.error(`Failed to request pairing code: ${err.message || err}. Retrying in 5 seconds...`);
+            pairingTimeout = setTimeout(requestPairing, 5000);
+          }
+        };
+        pairingTimeout = setTimeout(requestPairing, 3000);
       }
-    } else if (connection === "open") {
+    }
+
+    sock.ev.on("connection.update", (update) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr && !usePairingCode) {
+        logger.info(
+          "New QR Code generated. Scan the code below to pair your WhatsApp account:"
+        );
+        qrcode.generate(qr, { small: true });
+      }
+
+      if (connection === "close") {
+        if (pairingTimeout) clearTimeout(pairingTimeout);
+        const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        const reason =
+          lastDisconnect?.error?.message || lastDisconnect?.error || "Unknown";
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        logger.warn(
+          `Primary connection closed. Reason: ${reason} (Status Code: ${statusCode || "N/A"
+          }). Reconnecting: ${shouldReconnect}`
+        );
+
+        if (shouldReconnect) {
+          logger.info("Attempting to reconnect primary in 5 seconds...");
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            startBot().catch((err) => {
+              logger.error("Failed to restart primary bot:", err);
+            });
+          }, 5000);
+        } else {
+          logger.error("Log out detected. Cleaning up primary session files...");
+          try {
+            deleteFolderRecursive(authDir);
+          } catch (e) {
+            logger.error(
+              "Failed to delete corrupted primary session:",
+              e.message
+            );
+          }
+          logger.info(
+            "Re-initializing bot connection with fresh state in 3 seconds..."
+          );
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            startBot().catch((err) => {
+              logger.error("Failed to restart primary bot with fresh state:", err);
+            });
+          }, 3000);
+        }
+      } else if (connection === "open") {
       logger.info("Primary Rizzer Bot successfully connected and is now online!");
       if (sock.user?.id) {
         db.registerBotJid(sock.user.id);
+        try {
+          if (typeof db.setMainBotJid === "function") db.setMainBotJid(sock.user.id);
+        } catch (_) {}
       }
-    }
-  });
+      }
+    });
 
+  sock.isSubBot = false;
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
 
     for (const msg of messages) {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
+        const rjid = msg.key.remoteJid;
+        if (rjid === "status@broadcast") continue;
+        if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
+        if (msg.message) {
+          const keys = Object.keys(msg.message);
+          if (keys.length === 1 && (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")) continue;
+        }
+        try {
+          const ts = Number(msg.messageTimestamp);
+          if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) continue;
+        } catch (_) {}
 
         if (db.getSettings().autoRead) {
-          await sock.readMessages([msg.key]).catch(() => {});
+          await sock.readMessages([msg.key]).catch(() => { });
         }
         enqueueMessage(sock, msg, logger);
       } catch (err) {
@@ -244,14 +258,14 @@ export async function startBot() {
     }
   });
 
-  return sock;
+    return sock;
   } catch (error) {
     isStarting = false;
     logger.error("Fatal error during startBot initialization:", error);
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;
-      startBot().catch(() => {});
+      startBot().catch(() => { });
     }, 5000);
     return null;
   }

@@ -83,29 +83,59 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
   const liveModels = await getLiveFreeModels();
   const effectiveModel = pickDuckDuckGoModel(requestedModel, liveModels);
 
-  // 1. Get status and challenge header
-  const statusResp = await fetch(STATUS_URL, {
-    method: "GET",
-    headers: {
-      Accept: "*/*",
-      "Cache-Control": "no-store",
-      "x-vqd-accept": "1",
-      "User-Agent": DEFAULT_USER_AGENT,
-      Origin: DUCKDUCKGO_BASE,
-      Referer: `${DUCKDUCKGO_BASE}/`,
-    },
-  });
-
-  if (!statusResp.ok) {
-    throw new Error(`DuckDuckGo status request failed with HTTP ${statusResp.status}`);
-  }
-
-  const vqdHash = statusResp.headers.get("x-vqd-hash-1");
-  const vqd4 = statusResp.headers.get("x-vqd-4");
-
+  // 1. Get status and challenge header (dengan retry: Duck.ai merotasi
+  // varian challenge obfuscated; varian baru kadang butuh stub tambahan.
+  // Setiap percobaan mengambil challenge BARU dari server.)
+  const CHALLENGE_ATTEMPTS = 3;
+  let vqd4 = null;
   let solvedHash = null;
-  if (vqdHash) {
-    solvedHash = await solveDuckDuckGoChallenge(vqdHash, DEFAULT_USER_AGENT);
+  let lastChallengeError = null;
+  for (let attempt = 1; attempt <= CHALLENGE_ATTEMPTS; attempt += 1) {
+    const statusResp = await fetch(STATUS_URL, {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Cache-Control": "no-store",
+        "x-vqd-accept": "1",
+        "User-Agent": DEFAULT_USER_AGENT,
+        Origin: DUCKDUCKGO_BASE,
+        Referer: `${DUCKDUCKGO_BASE}/`,
+      },
+    });
+
+    if (!statusResp.ok) {
+      lastChallengeError = new Error(`DuckDuckGo status request failed with HTTP ${statusResp.status}`);
+      // Status HTTP gagal → coba lagi (kemungkinan rate-limit sesaat)
+      if (attempt < CHALLENGE_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 800 * attempt));
+        continue;
+      }
+      throw lastChallengeError;
+    }
+
+    const vqdHash = statusResp.headers.get("x-vqd-hash-1");
+    vqd4 = statusResp.headers.get("x-vqd-4");
+
+    if (!vqdHash) break; // tidak ada challenge → lanjut tanpa hash
+
+    try {
+      solvedHash = await solveDuckDuckGoChallenge(vqdHash, DEFAULT_USER_AGENT);
+      lastChallengeError = null;
+      break;
+    } catch (err) {
+      lastChallengeError = err;
+      solvedHash = null;
+      // Ambil challenge baru dan coba lagi
+      if (attempt < CHALLENGE_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 500 * attempt));
+      }
+    }
+  }
+  if (lastChallengeError) {
+    // Jangan bocorkan detail obfuscated internal ke pengguna
+    throw new Error(
+      "DuckDuckGo anti-bot challenge gagal dipecahkan setelah 3x percobaan. Coba lagi dalam beberapa saat."
+    );
   }
 
   const reasoningEffort = options.reasoningEffort || getReasoningEffort(effectiveModel);
@@ -165,6 +195,10 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
         if (parsed.message) resultAnswer += parsed.message;
       } catch (_) {}
     }
+  }
+
+  if (!resultAnswer.trim()) {
+    throw new Error("DuckDuckGo mengembalikan jawaban kosong. Coba lagi dalam beberapa saat.");
   }
 
   return {

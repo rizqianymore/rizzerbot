@@ -17,12 +17,23 @@ __nativeFn(parseFloat, 'parseFloat');
 __nativeFn(isNaN, 'isNaN');
 __nativeFn(encodeURIComponent, 'encodeURIComponent');
 __nativeFn(decodeURIComponent, 'decodeURIComponent');
+function __makeDomRect() {
+  return { x: 8, y: 8, top: 8, left: 8, right: 108, bottom: 28, width: 100, height: 20, toJSON: function(){ return { x: 8, y: 8, width: 100, height: 20 }; } };
+}
 function __makeHtmlElement(tag) {
   var state = { _innerHTML: '', _qsaCount: 0, _cssText: '' };
   var el = Object.create(__ctorForTag(tag).prototype);
   Object.assign(el, {
     tagName: String(tag).toUpperCase(), nodeName: String(tag).toUpperCase(), nodeType: 1,
     children: [], childNodes: [],
+    offsetHeight: 20, offsetWidth: 100, offsetTop: 8, offsetLeft: 8,
+    scrollHeight: 20, scrollWidth: 100, scrollTop: 0, scrollLeft: 0,
+    clientHeight: 20, clientWidth: 100,
+    // Elemen terlihat di browser nyata punya offsetParent (body); tiru itu.
+    offsetParent: (function(){ try { return (typeof __body !== "undefined" && __body) || null; } catch (_e) { return null; } })(),
+    textContent: '', innerText: '',
+    getBoundingClientRect: function(){ return __makeDomRect(); },
+    getClientRects: function(){ return [__makeDomRect()]; },
     style: { get cssText(){ return state._cssText; }, set cssText(v){ state._cssText = String(v||''); } },
     setAttribute: function(k, v){ if (String(k).toLowerCase()==='style') state._cssText = String(v||''); },
     getAttribute: function(k){ if (String(k).toLowerCase()==='style') return state._cssText; return null; },

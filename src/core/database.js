@@ -19,6 +19,42 @@ const configuredPremiumValues = [settings.premiumNumbers, settings.premiumUsers]
 const schemaVersion = 2;
 let data = null;
 let activeBotJids = new Set();
+// JID asli main-bot yang sedang online (di-set saat connection open).
+// Dipakai sebagai sumber kebenaran utama agar setting self/public/prefix
+// main vs sub tidak tertukar hanya karena config ownerNumber usang.
+let mainBotJidMemory = "";
+
+export function setMainBotJid(jid) {
+  const n = normalizeJid(jid);
+  if (n) mainBotJidMemory = n;
+}
+export function getMainBotJid() {
+  if (mainBotJidMemory) return mainBotJidMemory;
+  try {
+    const s = data?.settings;
+    return normalizeJid(s?.ownerNumber || settings.ownerNumber);
+  } catch (_) {
+    return "";
+  }
+}
+function isMainBotJid(jid) {
+  const n = normalizeJid(jid);
+  if (!n) return false;
+  if (mainBotJidMemory && n === mainBotJidMemory) return true;
+  // Fallback config (untuk fase sebelum main online):
+  // cocokkan ke ownerNumber ATAU pairingNumber agar main tidak
+  // disangka sub-bot.
+  try {
+    const s = data?.settings || {};
+    const o = normalizeJid(s.ownerNumber || settings.ownerNumber);
+    const p = normalizeJid(s.pairingNumber || settings.pairingNumber);
+    if ((o && n === o) || (p && n === p)) return true;
+    // samakan digit telepon juga (antisipasi format lid/device)
+    const pn = normalizePhone(n);
+    if (pn && ((o && normalizePhone(o) === pn) || (p && normalizePhone(p) === pn))) return true;
+  } catch (_) {}
+  return false;
+}
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -159,8 +195,27 @@ function getOwnerName() {
 
 function isPrimaryOwner(jid) {
   const normalized = normalizeJid(jid);
+  if (!normalized) return false;
   const primary = normalizeJid(data?.settings?.ownerNumber || settings.ownerNumber);
-  return Boolean(normalized && primary && normalized === primary);
+  if (primary && normalized === primary) return true;
+  // Cross-match digit telepon: peserta grup sering muncul sebagai @lid
+  // sedangkan config tersimpan sebagai @s.whatsapp.net (dan sebaliknya).
+  const pn = normalizePhone(normalized);
+  if (pn && pn.length >= 8) {
+    if (primary && normalizePhone(primary) === pn) return true;
+    const pairing = normalizeJid(data?.settings?.pairingNumber || settings.pairingNumber);
+    if (pairing && (pairing === normalized || normalizePhone(pairing) === pn)) return true;
+    // cocokkan juga ke daftar ownerNumbers global
+    try {
+      const list = Array.isArray(data?.settings?.ownerNumbers) ? data.settings.ownerNumbers : [];
+      for (const o of list) {
+        const no = normalizeJid(o);
+        if (no === normalized || (no && normalizePhone(no) === pn)) return true;
+      }
+    } catch (_) {}
+    if (ownerJids.has(normalized) || ownerJids.has(`${pn}@s.whatsapp.net`)) return true;
+  }
+  return false;
 }
 
 function isPremiumExpired(user) {
@@ -658,11 +713,9 @@ function getBotSettings(botJid) {
   const mainSettings = data.settings || {};
   if (!normalized) return { ...mainSettings };
 
-  const primaryOwnerJid = normalizeJid(mainSettings.ownerNumber || settings.ownerNumber);
-  const primaryPairingJid = normalizeJid(mainSettings.pairingNumber || settings.pairingNumber);
-  
-  // Jika bot adalah main bot, gunakan main settings langsung
-  if (normalized === primaryOwnerJid || normalized === primaryPairingJid) {
+  // Main-bot: gunakan settings global langsung (self/public/prefix milik main).
+  if (isMainBotJid(normalized)) {
+    const primaryOwnerJid = normalizeJid(mainSettings.ownerNumber || settings.ownerNumber);
     return {
       ...mainSettings,
       ownerNumber: primaryOwnerJid || mainSettings.ownerNumber,
@@ -670,17 +723,25 @@ function getBotSettings(botJid) {
     };
   }
 
-  // Jika sub-bot, ambil dari botSettings dengan fallback ke settings default
+  // Sub-bot: setting MANDIRI, tidak live-follow main-bot.
+  // Hanya field non-kritis (cooldown, anti-spam, dsb) yang fallback ke default config,
+  // sedangkan public/prefix/owner selalu milik sub-bot sendiri.
   const subConfig = data.botSettings?.[normalized] || {};
   const subOwner = subConfig.ownerNumber ? normalizeJid(subConfig.ownerNumber) : "";
   const subOwners = Array.isArray(subConfig.ownerNumbers) ? subConfig.ownerNumbers.map(normalizeJid).filter(Boolean) : [];
+  const fallbackPublic = toBoolean(configDefaults.public, true);
+  const fallbackPrefix = configDefaults.prefix || '.';
 
   return {
-    ...mainSettings,
+    ...cloneValue(configDefaults),
+    ...cloneValue(mainSettings),
     ...subConfig,
-    public: subConfig.public !== undefined ? toBoolean(subConfig.public) : mainSettings.public,
-    prefix: typeof subConfig.prefix === 'string' && subConfig.prefix.trim() ? subConfig.prefix.trim() : (mainSettings.prefix || '.'),
-    ownerNumber: subOwner || normalized, // Default sub-bot owner adalah nomor sub-bot itu sendiri atau owner yang ditugaskan
+    // Kunci isolasi: public/prefix sub TIDAK boleh ikut main saat main berubah.
+    // Jika sub belum pernah di-set, pakai nilai subConfig / default, bukan live main.
+    public: subConfig.public !== undefined ? toBoolean(subConfig.public) : (mainSettings.public !== undefined ? toBoolean(mainSettings.public, fallbackPublic) : fallbackPublic),
+    prefix: typeof subConfig.prefix === 'string' && subConfig.prefix.trim() ? subConfig.prefix.trim() : (typeof mainSettings.prefix === 'string' && mainSettings.prefix.trim() ? mainSettings.prefix.trim() : fallbackPrefix),
+    botName: subConfig.botName || `SubBot (+${normalizePhone(normalized)})`,
+    ownerNumber: subOwner || normalized, // Default owner sub = nomor sub itu sendiri / owner yang ditugaskan
     ownerNumbers: subOwners,
   };
 }
@@ -690,45 +751,50 @@ function isBotOwner(botJid, userJid) {
   const normalizedUser = normalizeJid(userJid);
   if (!normalizedUser) return false;
 
-  // Primary superowner dari bot utama selalu memiliki akses
-  if (isPrimaryOwner(normalizedUser)) return true;
+  const userPhone = normalizePhone(normalizedUser);
+  const samePhone = (a, b) => {
+    if (!a || !b) return false;
+    if (a === b) return true;
+    const pa = normalizePhone(a);
+    const pb = normalizePhone(b);
+    return Boolean(pa && pb && pa === pb);
+  };
 
+  const botIsMain = !normalizedBot || isMainBotJid(normalizedBot);
+
+  if (botIsMain) {
+    // Main-bot: owner = primary superowner + daftar owner global.
+    // Owner khusus sub-bot TIDAK berlaku di main (anti-campur).
+    if (isPrimaryOwner(normalizedUser)) return true;
+    if (isOwner(normalizedUser)) return true;
+    if (userPhone) {
+      const phoneJid = `${userPhone}@s.whatsapp.net`;
+      if (isPrimaryOwner(phoneJid) || isOwner(phoneJid)) return true;
+    }
+    // Nomor bot main itu sendiri juga owner
+    if (normalizedBot && samePhone(normalizedUser, normalizedBot)) return true;
+    return false;
+  }
+
+  // Sub-bot: owner = owner khusus sub ini (+ nomor sub itu sendiri).
+  // Primary superowner tetap diberi akses darurat, tapi TIDAK sebaliknya:
+  // owner sub tidak otomatis jadi owner main (ditangani cabang di atas).
   const botConfig = getBotSettings(normalizedBot);
   const botOwner = normalizeJid(botConfig.ownerNumber);
   const botOwnersList = Array.isArray(botConfig.ownerNumbers) ? botConfig.ownerNumbers.map(normalizeJid) : [];
 
-  // Jika user adalah owner nomor bot ini
-  if (botOwner && (normalizedUser === botOwner || normalizePhone(normalizedUser) === normalizePhone(botOwner))) {
-    return true;
-  }
-  // Atau termasuk dalam daftar owner khusus bot ini
-  if (botOwnersList.some((o) => o === normalizedUser || normalizePhone(o) === normalizePhone(normalizedUser))) {
-    return true;
-  }
-
-  // Jika nomor pengirim adalah nomor bot itu sendiri
-  if (normalizedBot && (normalizedUser === normalizedBot || normalizePhone(normalizedUser) === normalizePhone(normalizedBot))) {
-    return true;
-  }
-
-  // Jika ini bot utama (primary), cek juga daftar owner global
-  const primaryOwnerJid = normalizeJid(data.settings?.ownerNumber || settings.ownerNumber);
-  const primaryPairingJid = normalizeJid(data.settings?.pairingNumber || settings.pairingNumber);
-  if (!normalizedBot || normalizedBot === primaryOwnerJid || normalizedBot === primaryPairingJid) {
-    if (isOwner(normalizedUser)) return true;
-  }
-
+  if (botOwner && samePhone(normalizedUser, botOwner)) return true;
+  if (botOwnersList.some((o) => samePhone(normalizedUser, o))) return true;
+  if (samePhone(normalizedUser, normalizedBot)) return true;
+  // fromMe / device pendamping: digit sama dianggap owner juga
+  if (isPrimaryOwner(normalizedUser)) return true;
   return false;
 }
 
 function updateBotSettings(botJid, updates = {}) {
   const normalized = normalizeJid(botJid);
-  const mainSettings = data.settings || {};
-  const primaryOwnerJid = normalizeJid(mainSettings.ownerNumber || settings.ownerNumber);
-  const primaryPairingJid = normalizeJid(mainSettings.pairingNumber || settings.pairingNumber);
-
-  // Jika main bot atau tidak ada JID bot, update settings global
-  if (!normalized || normalized === primaryOwnerJid || normalized === primaryPairingJid) {
+  // Main-bot / tanpa JID -> update settings global milik main saja.
+  if (!normalized || isMainBotJid(normalized)) {
     return updateSettings(updates);
   }
 
@@ -774,6 +840,8 @@ export const db = {
   updateBotSettings,
   isBotOwner,
   isAnyBotJid,
+  setMainBotJid,
+  getMainBotJid,
   isExternalBotJid: (jid) => {
     const normalized = normalizeJid(jid);
     if (!normalized) return false;

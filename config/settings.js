@@ -17,7 +17,6 @@ export const settings = {
     cooldownTime: 3000,
     responseDelay: 0,
 
-    // ── Pengaman tambahan ──
     antiBotLuar: true, // abaikan perintah dari nomor bot luar yang terdaftar
     botNumbers: [], // daftar nomor bot luar, contoh: ["62812xxxx"]
     antiVirtex: true, // tolak pesan super panjang / crash
@@ -36,7 +35,7 @@ export const settings = {
     // Saluran / Channel (Newsletter) Management
     channelJid: "",
     channelName: "Official Channel",
-    autoForwardTrxToChannel: true,
+    autoForwardTrxToChannel: false,
 
     // QRIS Dinamis & Static Settings
     qrisString: "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
