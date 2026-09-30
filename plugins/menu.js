@@ -125,10 +125,10 @@ export default {
   aliases: ["help", "panduan"],
   description: "Menampilkan daftar seluruh perintah dan panduan cara penggunaannya.",
   category: "General",
-  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
     await sendTyping();
 
-    const activeSettings = db.getSettings();
+    const activeSettings = ctxSettings || db.getSettings();
     let rawArg = args[0]?.toLowerCase() || "";
     if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length);
 
@@ -229,12 +229,12 @@ export default {
 
       // Jika belum ada record usage, ambil 10 command populer default
       const topList = sortedUsage.length > 0
-        ? sortedUsage.map(([name, count], i) => `│ ${i + 1}. *${prefix}${name}* _(${count}x)_`)
+        ? sortedUsage.map(([name, count], i) => `${i + 1}. *${prefix}${name}* _(${count}x)_`)
         : ["sticker", "tiktok", "igdl", "ytdlpro", "deepseek", "brat", "jkt48", "kompastv", "ping", "profile"]
-            .filter((c) => commands.has(c))
-            .map((name, i) => `│ ${i + 1}. *${prefix}${name}*`);
+          .filter((c) => commands.has(c))
+          .map((name, i) => `${i + 1}. *${prefix}${name}*`);
 
-      menuText += `*TOP 10 POPULER*\n`;
+      menuText += `*Top 10 Populer:*\n`;
       menuText += topList.join("\n") + "\n\n";
     }
 
@@ -246,11 +246,11 @@ export default {
     });
 
     for (const cat of catKeys) {
-      menuText += `┌───「 *${cat}* 」\n`;
+      menuText += `*${cat}*\n`;
       for (const cmd of categories[cat]) {
-        menuText += `│ • ${prefix}${cmd.name}\n`;
+        menuText += `• ${prefix}${cmd.name}\n`;
       }
-      menuText += `└───\n\n`;
+      menuText += `\n`;
     }
 
     if (!targetCategory) {

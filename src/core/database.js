@@ -102,6 +102,20 @@ function registerBotJid(jid) {
   activeBotJids.add(normalized);
 }
 
+function isAnyBotJid(jid) {
+  const normalized = normalizeJid(jid);
+  if (!normalized) return false;
+  if (activeBotJids.has(normalized)) return true;
+  
+  const phone = normalizePhone(normalized);
+  if (phone) {
+    for (const b of activeBotJids) {
+      if (normalizePhone(b) === phone) return true;
+    }
+  }
+  return false;
+}
+
 function refreshConfiguredJids() {
   if (!data?.settings) return;
   const activeSettings = data.settings;
@@ -631,17 +645,62 @@ function getBotSettings(botJid) {
   
   // Jika bot adalah main bot, gunakan main settings langsung
   if (normalized === primaryOwnerJid || normalized === primaryPairingJid) {
-    return { ...mainSettings };
+    return {
+      ...mainSettings,
+      ownerNumber: primaryOwnerJid || mainSettings.ownerNumber,
+      ownerNumbers: Array.isArray(mainSettings.ownerNumbers) ? mainSettings.ownerNumbers : [],
+    };
   }
 
   // Jika sub-bot, ambil dari botSettings dengan fallback ke settings default
   const subConfig = data.botSettings?.[normalized] || {};
+  const subOwner = subConfig.ownerNumber ? normalizeJid(subConfig.ownerNumber) : "";
+  const subOwners = Array.isArray(subConfig.ownerNumbers) ? subConfig.ownerNumbers.map(normalizeJid).filter(Boolean) : [];
+
   return {
     ...mainSettings,
     ...subConfig,
     public: subConfig.public !== undefined ? toBoolean(subConfig.public) : mainSettings.public,
     prefix: typeof subConfig.prefix === 'string' && subConfig.prefix.trim() ? subConfig.prefix.trim() : (mainSettings.prefix || '.'),
+    ownerNumber: subOwner || normalized, // Default sub-bot owner adalah nomor sub-bot itu sendiri atau owner yang ditugaskan
+    ownerNumbers: subOwners,
   };
+}
+
+function isBotOwner(botJid, userJid) {
+  const normalizedBot = normalizeJid(botJid);
+  const normalizedUser = normalizeJid(userJid);
+  if (!normalizedUser) return false;
+
+  // Primary superowner dari bot utama selalu memiliki akses
+  if (isPrimaryOwner(normalizedUser)) return true;
+
+  const botConfig = getBotSettings(normalizedBot);
+  const botOwner = normalizeJid(botConfig.ownerNumber);
+  const botOwnersList = Array.isArray(botConfig.ownerNumbers) ? botConfig.ownerNumbers.map(normalizeJid) : [];
+
+  // Jika user adalah owner nomor bot ini
+  if (botOwner && (normalizedUser === botOwner || normalizePhone(normalizedUser) === normalizePhone(botOwner))) {
+    return true;
+  }
+  // Atau termasuk dalam daftar owner khusus bot ini
+  if (botOwnersList.some((o) => o === normalizedUser || normalizePhone(o) === normalizePhone(normalizedUser))) {
+    return true;
+  }
+
+  // Jika nomor pengirim adalah nomor bot itu sendiri
+  if (normalizedBot && (normalizedUser === normalizedBot || normalizePhone(normalizedUser) === normalizePhone(normalizedBot))) {
+    return true;
+  }
+
+  // Jika ini bot utama (primary), cek juga daftar owner global
+  const primaryOwnerJid = normalizeJid(data.settings?.ownerNumber || settings.ownerNumber);
+  const primaryPairingJid = normalizeJid(data.settings?.pairingNumber || settings.pairingNumber);
+  if (!normalizedBot || normalizedBot === primaryOwnerJid || normalizedBot === primaryPairingJid) {
+    if (isOwner(normalizedUser)) return true;
+  }
+
+  return false;
 }
 
 function updateBotSettings(botJid, updates = {}) {
@@ -672,6 +731,13 @@ function updateBotSettings(botJid, updates = {}) {
   if (updates.botName !== undefined) {
     current.botName = String(updates.botName).trim();
   }
+  if (updates.ownerNumber !== undefined) {
+    const clean = normalizeJid(updates.ownerNumber);
+    if (clean) current.ownerNumber = clean;
+  }
+  if (updates.ownerNumbers !== undefined && Array.isArray(updates.ownerNumbers)) {
+    current.ownerNumbers = updates.ownerNumbers.map(normalizeJid).filter(Boolean);
+  }
 
   save();
   return getBotSettings(normalized);
@@ -688,6 +754,8 @@ export const db = {
   updateSettings,
   getBotSettings,
   updateBotSettings,
+  isBotOwner,
+  isAnyBotJid,
   getUser: (jid) => ensureUser(normalizeJid(jid)),
   updateUser,
   registerBotJid,

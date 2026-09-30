@@ -88,7 +88,6 @@ export default [
 
         const lines = [
           `📋 *WHOIS DOMAIN INFORMATION*`,
-          `─────────────────────────`,
           `🌐 *Domain:* ${info.domain}`,
           `🏢 *Registrar:* ${info.registrar}`,
           `📅 *Didaftarkan:* ${info.createdDate}`,
@@ -96,7 +95,6 @@ export default [
           `⏳ *Kedaluwarsa:* ${info.expiryDate}`,
           info.abuseEmail !== "-" ? `🚨 *Abuse Email:* ${info.abuseEmail}` : "",
           info.registrarWhois !== "-" ? `🖥️ *Whois Server:* ${info.registrarWhois}` : "",
-          `─────────────────────────`,
         ].filter(Boolean);
 
         await reply(lines.join("\n"));

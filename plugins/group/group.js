@@ -28,8 +28,8 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   const userParticipant = meta.participants.find((p) => db.normalizeJid(p.id) === senderJid);
   const isUserAdmin = Boolean(
     context.isOwner ||
-      context.isAdmin ||
-      (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
+    context.isAdmin ||
+    (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
   );
 
   if (requireUserAdmin && !isUserAdmin) {
@@ -99,7 +99,7 @@ export default [
       const mentions = ctx.participants.map((p) => p.id);
       const customMessage = args.join(" ") || "Halo semuanya!";
 
-      let text = `📢 *TAG ALL - ${ctx.meta.subject}*\n`;
+      let text = `📢 *Tag All - ${ctx.meta.subject}*\n`;
       text += `📝 *Pesan:* ${customMessage}\n`;
       text += `👥 *Total Member:* ${mentions.length}\n\n`;
 
@@ -426,7 +426,7 @@ export default [
         })
         : "-";
 
-      let text = `📋 *INFORMASI GRUP*\n\n`;
+      let text = `📋 *Informasi Grup*\n\n`;
       text += `📌 *Nama Grup:* ${meta.subject}\n`;
       text += `🆔 *ID Grup:* ${meta.id}\n`;
       text += `👑 *Pembuat Grup:* ${creator}\n`;
@@ -479,7 +479,7 @@ export default [
       const creator = admins.find((p) => p.admin === "superadmin");
       const regularAdmins = admins.filter((p) => p.admin !== "superadmin");
 
-      let text = `👑 *DAFTAR ADMIN GRUP*\n`;
+      let text = `👑 *Daftar Admin Grup*\n`;
       text += `📌 *Grup:* ${ctx.meta.subject}\n`;
       text += `👥 *Total Admin:* ${admins.length}\n\n`;
 
@@ -521,7 +521,7 @@ export default [
       if (action !== "on" && action !== "off" && action !== "aktif" && action !== "mati") {
         const current = db.isAntilink(ctx.remoteJid);
         return context.reply(
-          `🛡️ *STATUS ANTI-LINK: ${current ? "🟢 AKTIF" : "🔴 MATI"}*\n\n` +
+          `🛡️ *Status Anti-Link: ${current ? "🟢 AKTIF" : "🔴 MATI"}*\n\n` +
           `Gunakan: *.antilink on* (aktifkan) atau *.antilink off* (matikan).`
         );
       }

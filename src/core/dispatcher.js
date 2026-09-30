@@ -131,7 +131,7 @@ export async function dispatchMessage(sock, msg, logger) {
             await sock.sendMessage(remoteJid, { delete: msg.key });
             // Kirim peringatan
             await sock.sendMessage(remoteJid, {
-              text: `⚠️ *ANTI-LINK DETECTED!*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini! Pesan Anda telah dihapus.`,
+              text: `⚠️ *Anti-Link*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini. Pesan Anda telah dihapus.`,
               mentions: [senderJid],
             });
           } catch (_) {}
@@ -153,7 +153,12 @@ export async function dispatchMessage(sock, msg, logger) {
     db.registerBotJid(botJid);
   }
 
-  // Ambil pengaturan khusus bot ini (jika subbot, memiliki settings mandiri)
+  // Jika pesan berasal dari bot lain yang terdaftar, ABAIKAN untuk mencegah infinite loop / spam antar bot
+  if (!isFromMe && db.isAnyBotJid(normalizedRawSender)) {
+    return;
+  }
+
+  // Ambil pengaturan khusus bot ini (jika subbot, memiliki settings mandiri: prefix, public/self, owner khusus)
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
   if (!messageContent.startsWith(prefix)) return;
@@ -170,13 +175,13 @@ export async function dispatchMessage(sock, msg, logger) {
     ? (botJid || normalizedRawSender)
     : normalizedRawSender;
 
-  // Cek apakah pengirim adalah owner (Primary Owner, terdaftar di db.isOwner, atau isFromMe pada bot ini)
+  // Cek apakah pengirim adalah owner khusus untuk bot INI (1 bot 1 owner mandiri)
   const isSenderOwner =
     isFromMe ||
-    db.isOwner(senderJid) ||
-    (normalizedRawSender && db.isOwner(normalizedRawSender)) ||
-    (rawSender && db.isOwner(rawSender)) ||
-    (remoteNormalized && db.isOwner(remoteNormalized));
+    db.isBotOwner(botJid, senderJid) ||
+    (normalizedRawSender && db.isBotOwner(botJid, normalizedRawSender)) ||
+    (rawSender && db.isBotOwner(botJid, rawSender)) ||
+    (remoteNormalized && db.isBotOwner(botJid, remoteNormalized));
 
   let user = db.getUser(senderJid);
   if (!user) return;
@@ -186,9 +191,13 @@ export async function dispatchMessage(sock, msg, logger) {
   const isAdmin = Boolean(isOwner || access.admin);
   const isPremium = Boolean(isOwner || isAdmin || access.premium);
 
-  // Jika bot dalam mode Self (public === false), hanya Owner atau pesan langsung dari bot sendiri yang diizinkan
-  if (activeSettings.public === false && !isOwner) return;
+  // Jika bot dalam mode Self (public === false), HANYA Owner bot ini yang diizinkan merespon
+  if (activeSettings.public === false && !isOwner) {
+    return;
+  }
 
+  // Jika grup dan pesan BUKAN dari owner bot ini, cek apakah bot ini yang dimaksud
+  // (Jika bot dalam mode self atau user bukan owner, bot tidak merespon perintah orang lain)
   if (isOwner && (!user.owner || !user.premium || user.role !== "owner")) {
     user = db.updateUser(senderJid, {
       owner: true,
@@ -225,9 +234,9 @@ export async function dispatchMessage(sock, msg, logger) {
         remoteJid,
         {
           text:
-            `⚠️ *PERINGATAN: KONTEN TERLARANG!*\n\n` +
-            `Pesan Anda mengandung kata atau permintaan konten terlarang 18+ (*"${check.matchedWord}"*).\n` +
-            `Permintaan dibatalkan. Harap gunakan bot secara bijak.`
+            `⚠️ *Peringatan Konten*\n\n` +
+            `Pesan mengandung kata atau permintaan konten terlarang (*"${check.matchedWord}"*).\n` +
+            `Permintaan dibatalkan.`
         },
         { quoted: msg }
       );
@@ -291,9 +300,14 @@ export async function dispatchMessage(sock, msg, logger) {
   const responseDelay = Number(activeSettings.responseDelay) || 0;
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const isPrimarySuperOwner = db.isPrimaryOwner(senderJid);
+  const isSub = Boolean(sock.isSubBot || (botJid && botJid !== db.normalizeJid(db.getSettings().ownerNumber)));
+
   const context = {
     logger,
     botJid,
+    isSubBot: isSub,
+    isPrimarySuperOwner,
     activeSettings,
     prefix,
     activePrefix: prefix,

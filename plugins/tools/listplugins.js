@@ -9,10 +9,10 @@ export default {
   aliases: ["plugins", "cmds", "commandslist"],
   description: "Menampilkan daftar semua plugin yang ter-load beserta detailnya",
   category: "Tools",
-  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
     await sendTyping();
 
-    const activeSettings = db.getSettings();
+    const activeSettings = ctxSettings || db.getSettings();
 
     const seen = new Set();
     const pluginsData = [];
