@@ -213,30 +213,8 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    let menuText = `*${activeSettings.botName}*\n`;
-    menuText += `• Prefix : [ *${prefix}* ]\n`;
-    menuText += `• Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
-    if (targetCategory) {
-      menuText += `• Kategori : *${targetCategory}*\n`;
-    }
-    // 4. Tampilkan Top 10 Fitur Terpopuler jika menu utama (bukan kategori)
-    if (!targetCategory) {
-      const usage = db.data?.usage || {};
-      const sortedUsage = Object.entries(usage)
-        .filter(([name]) => commands.has(name))
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-
-      // Jika belum ada record usage, ambil 10 command populer default
-      const topList = sortedUsage.length > 0
-        ? sortedUsage.map(([name, count], i) => `${i + 1}. *${prefix}${name}* _(${count}x)_`)
-        : ["sticker", "tiktok", "igdl", "ytdlpro", "deepseek", "brat", "jkt48", "kompastv", "ping", "profile"]
-          .filter((c) => commands.has(c))
-          .map((name, i) => `${i + 1}. *${prefix}${name}*`);
-
-      menuText += `*Top 10 Populer:*\n`;
-      menuText += topList.join("\n") + "\n\n";
-    }
+    let menuText = `*${activeSettings.botName || "WhatsApp Bot"}*\n`;
+    menuText += `Prefix: [ ${prefix} ] • Status: ${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User"}\n\n`;
 
     const order = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General"];
     const catKeys = Object.keys(categories).sort((a, b) => {
@@ -246,29 +224,15 @@ export default {
     });
 
     for (const cat of catKeys) {
-      menuText += `*${cat}*\n`;
-      for (const cmd of categories[cat]) {
-        menuText += `• ${prefix}${cmd.name}\n`;
-      }
-      menuText += `\n`;
+      menuText += `*${cat.toUpperCase()}*\n`;
+      const cmdList = categories[cat].map((cmd) => `${prefix}${cmd.name}`).join("  ");
+      menuText += `${cmdList}\n\n`;
     }
 
     if (!targetCategory) {
-      menuText += `*Kategori Menu:*\n`;
-      menuText += `• ${prefix}menu news\n`;
-      menuText += `• ${prefix}menu socmed\n`;
-      menuText += `• ${prefix}menu ai\n`;
-      menuText += `• ${prefix}menu sticker\n`;
-      menuText += `• ${prefix}menu tools\n`;
-      menuText += `• ${prefix}menu group\n`;
-      menuText += `• ${prefix}menu user\n`;
-      menuText += `• ${prefix}menu premium\n`;
-      if (isOwner) {
-        menuText += `• ${prefix}menu owner\n`;
-      }
-      menuText += `\n_Ketik *${prefix}help <command>* untuk info detail fitur._`;
+      menuText += `_Ketik *${prefix}menu <kategori>* atau *${prefix}help <perintah>*_`;
     } else {
-      menuText += `_Ketik *${prefix}menu* untuk melihat seluruh daftar menu._`;
+      menuText += `_Ketik *${prefix}menu* untuk semua menu._`;
     }
 
     const finalCaption = menuText.trim();

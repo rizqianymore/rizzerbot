@@ -18,8 +18,8 @@ function getPhoneDigits(value) {
 function isPhoneJid(jid, minimumDigits = 10) {
   return Boolean(
     jid &&
-      jid.endsWith("@s.whatsapp.net") &&
-      getPhoneDigits(jid).length >= minimumDigits
+    jid.endsWith("@s.whatsapp.net") &&
+    getPhoneDigits(jid).length >= minimumDigits
   );
 }
 
@@ -81,8 +81,8 @@ async function getGroupAccessError(sock, remoteJid, senderJid, cmd, access) {
     );
     const isGroupAdmin = Boolean(
       access.admin ||
-        (userParticipant &&
-          (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
+      (userParticipant &&
+        (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
     );
     if (!isGroupAdmin) {
       return "❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!";
@@ -134,7 +134,7 @@ export async function dispatchMessage(sock, msg, logger) {
               text: `⚠️ *Anti-Link*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini. Pesan Anda telah dihapus.`,
               mentions: [senderJid],
             });
-          } catch (_) {}
+          } catch (_) { }
           return;
         }
       }
@@ -386,11 +386,11 @@ export async function dispatchMessage(sock, msg, logger) {
     msg,
     quoted: msg.message?.extendedTextMessage?.contextInfo?.quotedMessage || null,
     sendTyping: async () => {
-      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
+      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
     },
     reply: async (text) => {
       if (responseDelay > 0) {
-        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
+        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
         await delay(responseDelay);
       }
       return sock.sendMessage(remoteJid, { text }, { quoted: msg });
