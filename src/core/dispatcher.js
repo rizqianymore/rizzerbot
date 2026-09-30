@@ -196,6 +196,43 @@ export async function dispatchMessage(sock, msg, logger) {
     return;
   }
 
+  // DISAMBIGUASI MULTI-BOT DI GRUP:
+  // Jika di dalam grup ada pesan mention atau reply target bot tertentu:
+  const isGroup = isGroupJid(remoteJid);
+  if (isGroup && !isFromMe) {
+    const mentionedJids = (
+      msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || []
+    ).map((j) => db.normalizeJid(j));
+    const quotedParticipant = db.normalizeJid(
+      msg.message?.extendedTextMessage?.contextInfo?.participant || ""
+    );
+
+    // Cek apakah ada bot terdaftar yang di-tag atau di-reply
+    const anyBotMentioned = mentionedJids.some((j) => db.isAnyBotJid(j));
+    const quotedIsBot = db.isAnyBotJid(quotedParticipant);
+
+    // Jika user me-mention bot lain, bot ini diam (tidak ikut menjawab)
+    if (anyBotMentioned && !mentionedJids.includes(botJid)) {
+      return;
+    }
+    // Jika user me-reply pesan dari bot lain, bot ini diam
+    if (quotedIsBot && quotedParticipant !== botJid) {
+      return;
+    }
+
+    // Untuk perintah konfigurasi owner seperti self/public/setprefix/delbot di grup tanpa tag:
+    // Jika pengirim bukan dedicated owner bot ini, dan ini sub-bot sedangkan main bot ada, sub-bot tidak merespons
+    const ownerCommands = ["self", "public", "pub", "setprefix", "delbot", "syncsubbot", "vps"];
+    if (ownerCommands.includes(commandName) && sock.isSubBot && !anyBotMentioned) {
+      const dedicatedOwner = db.normalizeJid(activeSettings.ownerNumber);
+      // Jika yang mengirim adalah superowner tapi bukan dedicated owner sub-bot ini dan tidak me-mention sub-bot ini,
+      // biarkan main bot yang menjawab agar tidak terjadi balasan dobel
+      if (dedicatedOwner && senderJid !== dedicatedOwner && !args.includes("--all") && !args.includes("-a")) {
+        return;
+      }
+    }
+  }
+
   // Jika grup dan pesan BUKAN dari owner bot ini, cek apakah bot ini yang dimaksud
   // (Jika bot dalam mode self atau user bukan owner, bot tidak merespon perintah orang lain)
   if (isOwner && (!user.owner || !user.premium || user.role !== "owner")) {

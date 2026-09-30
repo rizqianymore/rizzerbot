@@ -312,7 +312,7 @@ export default [
     description: "Change bot prefix (opsional: tambahkan --all untuk semua bot)",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner, isSubBot }) => {
+    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner }) => {
       const syncAll = args.includes("--all") || args.includes("-a");
       const cleanArgs = args.filter((a) => a !== "--all" && a !== "-a");
       const prefix = cleanArgs[0] || "";
@@ -326,9 +326,8 @@ export default [
       }
 
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      const isMainBot = !isSubBot && activeBotJid === db.normalizeJid(db.getSettings().ownerNumber);
 
-      if (syncAll || (isMainBot && isPrimarySuperOwner)) {
+      if (syncAll) {
         db.updateSettings({ prefix });
         const { getSubBotsList } = await import("@/src/services/subbot/subbot.js");
         const list = getSubBotsList();
@@ -396,16 +395,15 @@ export default [
     description: "Set bot to self mode (owner only). Tambahkan --all untuk semua bot",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner, isSubBot }) => {
+    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner }) => {
       const syncAll = args.includes("--all") || args.includes("-a");
       if (syncAll && !isPrimarySuperOwner) {
         return reply("❌ Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
       }
 
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      const isMainBot = !isSubBot && activeBotJid === db.normalizeJid(db.getSettings().ownerNumber);
 
-      if (syncAll || (isMainBot && isPrimarySuperOwner)) {
+      if (syncAll) {
         db.updateSettings({ public: false });
         const { getSubBotsList } = await import("@/src/services/subbot/subbot.js");
         const list = getSubBotsList();
@@ -426,16 +424,15 @@ export default [
     description: "Set bot to public mode. Tambahkan --all untuk semua bot",
     ownerOnly: true,
     category: "Owner",
-    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner, isSubBot }) => {
+    run: async (sock, msg, args, { reply, botJid, isPrimarySuperOwner }) => {
       const syncAll = args.includes("--all") || args.includes("-a");
       if (syncAll && !isPrimarySuperOwner) {
         return reply("❌ Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
       }
 
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      const isMainBot = !isSubBot && activeBotJid === db.normalizeJid(db.getSettings().ownerNumber);
 
-      if (syncAll || (isMainBot && isPrimarySuperOwner)) {
+      if (syncAll) {
         db.updateSettings({ public: true });
         const { getSubBotsList } = await import("@/src/services/subbot/subbot.js");
         const list = getSubBotsList();
