@@ -11,7 +11,7 @@ export default {
       if (!isPrimarySuperOwner) {
         return reply("❌ Pengaturan saluran resmi hanya dapat diubah oleh SuperOwner Bot Utama.");
       }
-      db.updateSettings({ channelJid: "" });
+      db.main().updateSettings({ channelJid: "" });
       reply("✅ Konfigurasi Saluran bot berhasil dinonaktifkan/dihapus.");
     },
 };

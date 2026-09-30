@@ -289,6 +289,11 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
 }
 
 export async function dispatchMessage(sock, msg, logger) {
+  // Lapisan pengaman: bila dipanggil tanpa konteks antrean, kunci ke database bot ini.
+  return db.runWithBot(resolveBotJid(sock), () => dispatchInner(sock, msg, logger));
+}
+
+async function dispatchInner(sock, msg, logger) {
   if (!msg.message || !msg.key?.id) return;
 
   const botJidEarly = resolveBotJid(sock);

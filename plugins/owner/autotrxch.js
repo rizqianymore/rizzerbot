@@ -13,7 +13,7 @@ export default {
       }
       const mode = args[0]?.toLowerCase();
       if (!mode || !["on", "off", "aktif", "mati"].includes(mode)) {
-        const cur = db.getSettings();
+        const cur = db.main().getSettings();
         return reply(
           `ℹ️ Status Auto Post TRX ke Saluran saat ini: *${cur.autoForwardTrxToChannel !== false ? "AKTIF (ON)" : "NONAKTIF (OFF)"}*\n\n` +
           `Gunakan: \`.autotrxch on\` atau \`.autotrxch off\``
@@ -21,7 +21,7 @@ export default {
       }
 
       const enabled = mode === "on" || mode === "aktif";
-      db.updateSettings({ autoForwardTrxToChannel: enabled });
+      db.main().updateSettings({ autoForwardTrxToChannel: enabled });
       reply(`✅ Auto-post transaksi ke Saluran sekarang: *${enabled ? "AKTIF (ON)" : "NONAKTIF (OFF)"}*.`);
     },
 };

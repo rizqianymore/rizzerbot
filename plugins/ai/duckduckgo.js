@@ -3,7 +3,7 @@ import { askDuckDuckGo, getLiveFreeModels } from '@/src/services/duckduckgo/clie
 
 export default {
   "name": "duckduckgo",
-  "aliases": ["ddg","duckai","claude"],
+  "aliases": ["ddg","duckai"],
   "description": "Tanya AI DuckDuckGo (GPT-5.4-mini, Claude-Haiku-4.5, Mistral-Small)",
   "premiumOnly": false,
   "category": "AI",

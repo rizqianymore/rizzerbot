@@ -1,6 +1,19 @@
 import { handleMessage } from "@/src/core/handler.js";
 import { db } from "@/src/core/database.js";
 
+// Identitas bot pemilik pesan — dipakai sebagai kunci konteks database
+// agar tiap bot memakai database MILIKNYA selama eksekusi perintah.
+function getTaskBotJid(sock) {
+  try {
+    const jid = db.normalizeJid(sock?.user?.id || "");
+    if (jid) return jid;
+  } catch (_) {}
+  if (sock?.isSubBot && sock?.subBotNumber) {
+    return db.normalizeJid(`${String(sock.subBotNumber).replace(/\D/g, "")}@s.whatsapp.net`);
+  }
+  return "";
+}
+
 const chatQueues = new Map();
 const QUEUE_DELAY_MS = 50;
 
@@ -28,7 +41,8 @@ async function processQueue(key, logger) {
     const { sock, msg } = queue.tasks[0];
 
     try {
-      await handleMessage(sock, msg, logger);
+      // Seluruh rantai penanganan pesan ini berjalan dalam database milik bot tersebut.
+      await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
     } catch (err) {
       if (logger) {
         logger.error(`[Queue Error] Failed to handle message in ${key}:`, err);

@@ -9,7 +9,7 @@ export default {
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const settings = db.getSettings();
+      const settings = db.main().getSettings();
       const channelJid = settings.channelJid;
 
       if (!channelJid) {

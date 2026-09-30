@@ -52,6 +52,17 @@ export default {
         return reply("❌ Balas pesan user atau masukkan nomor! Contoh:\n• *.addprem 628xxx 30* (30 hari)\n• *.addprem 628xxx* (Permanen)");
       }
 
+      if (!jid.endsWith("@s.whatsapp.net") || jid.split("@")[0].replace(/\D/g, "").length < 8) {
+        return reply("❌ Target harus nomor WhatsApp asli! Ketik manual nomornya.");
+      }
+      try {
+        const check = await sock.onWhatsApp(jid).catch(() => null);
+        if (!(Array.isArray(check) && check.some((r) => r && r.exists))) {
+          return reply(`❌ Nomor *${jid.split("@")[0]}* tidak terdaftar di WhatsApp. Pastikan nomornya benar.`);
+        }
+      } catch (_) {
+        return reply("❌ Gagal memverifikasi nomor ke WhatsApp. Coba lagi sebentar.");
+      }
       if (db.isOwner(jid)) return reply("ℹ️ Owner otomatis memiliki akses Premium selamanya.");
       if (db.isAdmin(jid)) return reply("ℹ️ Admin Bot otomatis memiliki akses Premium selamanya.");
 

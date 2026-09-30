@@ -6,7 +6,8 @@ import { baseSessionsDir } from "./store.js";
 import { createSubBot } from "./manager.js";
 
 /**
- * Auto update & sync database for all existing sub-bots on the server
+ * Daftarkan seluruh sub-bot yang ada di server + pastikan tiap sub
+ * punya database SENDIRI. Tidak pernah menimpa setting mandiri.
  */
 export async function syncSubBotsDatabase() {
   let updatedCount = 0;
@@ -38,34 +39,22 @@ export async function syncSubBotsDatabase() {
           } catch (_) {}
         }
 
-        // Update database: daftarkan JID, tapi JANGAN timpa setting mandiri
-        // (public/prefix/owner) yang sudah diatur owner sub via DM.
         for (const jid of jidsToSync) {
           db.registerBotJid(jid);
-          const hasConfig = Boolean(db.data?.botSettings?.[db.normalizeJid(jid)]);
-          if (!hasConfig) {
-            db.updateBotSettings(jid, {
-              botName,
-              ownerNumber: `${number}@s.whatsapp.net`,
-              ownerNumbers: [],
-            });
-          } else if (botName && botName !== `SubBot (+${number})`) {
-            // Hanya refresh nama, setting self/public/prefix dibiarkan apa adanya
-            db.updateBotSettings(jid, { botName });
-          }
-          db.updateUser(jid, {
-            name: botName,
-            registered: true,
-          });
         }
+        // Satu database per nomor: seed sekali, setting mandiri tidak disentuh.
+        const primaryJid = `${number}@s.whatsapp.net`;
+        db.ensureSubStore(primaryJid, { botName });
+        db.runWithBot(primaryJid, () => {
+          db.updateUser(primaryJid, { name: botName, registered: true });
+          for (const jid of jidsToSync) {
+            if (jid !== primaryJid) db.updateUser(jid, { name: botName, registered: true });
+          }
+        });
 
         updatedCount++;
-        logger?.info?.(`[SubBot Database Sync] Berhasil memperbarui data sub-bot: +${number} (Settings & Register Terpisah)`);
+        logger?.info?.(`[SubBot Database Sync] Sub-bot +${number} terdaftar dengan database sendiri (terisolasi)`);
       }
-    }
-
-    if (updatedCount > 0) {
-      db.save();
     }
   } catch (err) {
     logger?.error?.("[SubBot Database Sync Error]:", err.message);

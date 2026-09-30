@@ -22,7 +22,7 @@ function shouldSkipBeforeQueue(msg) {
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) return true;
-  } catch (_) {}
+  } catch (_) { }
   return false;
 }
 
@@ -67,42 +67,20 @@ export function setupSubBotEvents({
       // Daftarkan juga varian nomor bersih agar deteksi bot lintas format (lid/device) akurat
       db.registerBotJid(`${cleanNumber}@s.whatsapp.net`);
 
-      // ISOLASI SETTING: jangan overwrite public/prefix/owner yang sudah diatur
-      // owner sub via DM. Hanya inisialisasi sekali jika belum ada.
+      // ISOLASI PENUH: pastikan database sendiri ada; tulis nama saja,
+      // JANGAN sentuh public/prefix/owner (milik database sub itu).
       try {
-        const stored = db.data?.botSettings?.[botUserJid];
-        const storedAlt = db.data?.botSettings?.[db.normalizeJid(`${cleanNumber}@s.whatsapp.net`)];
-        const existing = stored || storedAlt;
-        if (!existing) {
-          db.updateBotSettings(botUserJid, {
-            botName: sock.user?.name || `SubBot (+${cleanNumber})`,
-            ownerNumber: `${cleanNumber}@s.whatsapp.net`,
-            ownerNumbers: [],
-          });
-        } else {
-          // Samakan alias JID agar lookup konsisten, tanpa merusak setting mandiri
-          if (!stored && storedAlt) {
-            db.updateBotSettings(botUserJid, {
-              botName: sock.user?.name || storedAlt.botName || `SubBot (+${cleanNumber})`,
-            });
-          } else if (sock.user?.name) {
-            db.updateUser(botUserJid, { name: sock.user.name, registered: true });
-          }
-        }
-      } catch (_) {
-        try {
-          db.updateBotSettings(botUserJid, {
-            botName: sock.user?.name || `SubBot (+${cleanNumber})`,
-          });
-        } catch (_) {}
-      }
-      try {
-        db.updateUser(botUserJid, {
-          name: sock.user?.name || `SubBot (+${cleanNumber})`,
-          registered: true,
+        db.ensureSubStore(botUserJid, {
+          botName: sock.user?.name || `SubBot (+${cleanNumber})`,
         });
-      } catch (_) {}
-      logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan pengaturan mandiri (self/public/prefix terisolasi).`);
+        db.runWithBot(botUserJid, () => {
+          db.updateUser(botUserJid, {
+            name: sock.user?.name || `SubBot (+${cleanNumber})`,
+            registered: true,
+          });
+        });
+      } catch (_) { }
+      logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan database sendiri (terisolasi).`);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -114,14 +92,14 @@ export function setupSubBotEvents({
       if (shouldReconnect) {
         botEntry.status = "reconnecting";
         setTimeout(() => {
-          reconnectFn().catch(() => {});
+          reconnectFn().catch(() => { });
         }, 5000);
       } else {
         botEntry.status = "disconnected";
         subBots.delete(botId);
         try {
           deleteFolderRecursive(sessionDir);
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   });
@@ -129,10 +107,13 @@ export function setupSubBotEvents({
   // Message dispatcher queue (dengan filter dini anti-loop)
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
+    const subJid = `${cleanNumber}@s.whatsapp.net`;
     for (const msg of messages) {
       if (shouldSkipBeforeQueue(msg)) continue;
-      if (db.getSettings().autoRead) {
-        try { await sock.readMessages([msg.key]).catch(() => {}); } catch (_) {}
+      // Hormati autoRead milik database sub ini (bukan main).
+      const autoRead = db.runWithBot(subJid, () => db.getSettings().autoRead);
+      if (autoRead) {
+        try { await sock.readMessages([msg.key]).catch(() => { }); } catch (_) { }
       }
       enqueueMessage(sock, msg, logger);
     }

@@ -14,7 +14,7 @@ export default {
       await sendTyping();
       const input = args[0]?.trim();
       if (!input) {
-        const cur = db.getSettings();
+        const cur = db.main().getSettings();
         return reply(
           `📢 *Manajemen Saluran*\n\n` +
           `• Saluran saat ini: *${cur.channelJid || "Belum diatur"}*\n` +
@@ -31,7 +31,7 @@ export default {
       if (input.toLowerCase() === "name" || input.toLowerCase() === "nama") {
         const newName = args.slice(1).join(" ").trim();
         if (!newName) return reply("❌ Masukkan nama baru untuk saluran!");
-        db.updateSettings({ channelName: newName });
+        db.main().updateSettings({ channelName: newName });
         return reply(`✅ Nama saluran bot berhasil diubah menjadi: *${newName}*`);
       }
 
@@ -64,7 +64,7 @@ export default {
         }
       }
 
-      db.updateSettings({ channelJid });
+      db.main().updateSettings({ channelJid });
       reply(
         `✅ *Saluran Berhasil Diatur!*\n\n` +
         `📢 *JID Saluran:* \`${channelJid}\`\n` +

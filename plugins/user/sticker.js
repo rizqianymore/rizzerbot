@@ -14,8 +14,6 @@ import {
 
 import { getUptimeString } from '@/src/utils/helper.js';
 
-
-
 export default {
   "name": "sticker",
   "aliases": ["s","stiker"],

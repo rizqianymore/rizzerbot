@@ -16,7 +16,24 @@ export default {
       logger?.warn?.(`[OwnerCmd] addowner oleh ${senderJid} via ${activeBotJid}`);
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addowner 628xx*");
-      
+      // Tolak JID non-telepon (@lid grup, @g.us, @newsletter, dsb) agar
+      // daftar owner tidak kemasukan ID sementara yang tidak bisa dihubungi.
+      if (!jid.endsWith("@s.whatsapp.net") || jid.split("@")[0].replace(/\D/g, "").length < 8) {
+        logger?.warn?.(`[OwnerCmd] addowner target INVALID: ${jid} oleh ${senderJid}`);
+        return reply("❌ Target owner harus nomor WhatsApp asli!\nKetik manual nomornya, contoh: *.addowner 6281234567890*");
+      }
+      // Verifikasi nomor benar-benar terdaftar di WhatsApp (menolak LID/nomor palsu).
+      try {
+        const check = await sock.onWhatsApp(jid).catch(() => null);
+        const exists = Array.isArray(check) && check.some((r) => r && r.exists);
+        if (!exists) {
+          logger?.warn?.(`[OwnerCmd] addowner nomor tidak terdaftar: ${jid} oleh ${senderJid}`);
+          return reply(`❌ Nomor *${jid.split("@")[0]}* tidak terdaftar di WhatsApp (atau gagal diverifikasi).\nPastikan nomornya benar lalu coba lagi.`);
+        }
+      } catch (_) {
+        return reply("❌ Gagal memverifikasi nomor ke WhatsApp. Coba lagi sebentar.");
+      }
+
       const isSub = Boolean(sock.isSubBot || (activeBotJid && activeBotJid !== db.normalizeJid(db.getSettings().ownerNumber)));
 
       if (isSub) {

@@ -85,14 +85,15 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
 
   const targetJid = `${cleanNumber}@s.whatsapp.net`;
   db.registerBotJid(targetJid);
-  const initialSettings = {
+  // Buatkan database SENDIRI untuk sub-bot (seed sekali; tidak menimpa yang sudah ada).
+  const seed = {
     botName: `SubBot (+${cleanNumber})`,
   };
   if (assignedOwner) {
     const normOwner = db.normalizeJid(assignedOwner);
-    if (normOwner) initialSettings.ownerNumber = normOwner;
+    if (normOwner) seed.ownerNumber = normOwner;
   }
-  db.updateBotSettings(targetJid, initialSettings);
+  db.ensureSubStore(targetJid, seed);
 
   setupSubBotEvents({
     sock,

@@ -161,17 +161,30 @@ export function periodicDatabaseSnapshot(logger) {
       fs.mkdirSync(backupDir, { recursive: true });
     }
 
-    const usersFile = path.join(dbDir, "users.json");
-    if (fs.existsSync(usersFile)) {
-      const timestamp = new Date().toISOString().slice(0, 10);
-      const snapshotPath = path.join(backupDir, `daily-snapshot-${timestamp}.json`);
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const snap = (src, name) => {
+      if (!fs.existsSync(src)) return;
+      const snapshotPath = path.join(backupDir, `${name}-${timestamp}.json`);
       if (!fs.existsSync(snapshotPath)) {
-        fs.copyFileSync(usersFile, snapshotPath);
+        fs.copyFileSync(src, snapshotPath);
         if (logger) {
-          logger.info(`[Auto Backup] Database snapshot created: daily-snapshot-${timestamp}.json`);
+          logger.info(`[Auto Backup] Database snapshot created: ${name}-${timestamp}.json`);
         }
       }
-    }
+    };
+    // Database utama
+    snap(path.join(dbDir, "users.json"), "daily-snapshot");
+    // Tiap sub-bot punya snapshot sendiri (isolasi backup)
+    try {
+      const subDir = path.join(dbDir, "subbots");
+      if (fs.existsSync(subDir)) {
+        for (const entry of fs.readdirSync(subDir)) {
+          const digits = String(entry).replace(/[^0-9]/g, "");
+          if (!digits) continue;
+          snap(path.join(subDir, entry, "users.json"), `sub-${digits}-snapshot`);
+        }
+      }
+    } catch (_) {}
   } catch (err) {
     if (logger) logger.error("[Auto Backup Error]", err.message);
   }

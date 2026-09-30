@@ -16,6 +16,7 @@ const COMMAND_USAGES = {
   // AI
   deepseek: "<pertanyaan> [--think / --search]",
   duckduckgo: "<pertanyaan> [--claude / --mistral]",
+  claudehaiku: "<pertanyaan>",
 
   // Sticker
   brat: "<teks> [--green]",
@@ -218,39 +219,18 @@ export default {
       return ia - ib;
     });
 
-    // Jika user hanya ketik .menu (tanpa kategori)
-    if (!targetCategory) {
-      menuText += `*Daftar Menu:*\n`;
-      const categoryCommandAliases = {
-        "News": "news",
-        "Social Media": "sosmed",
-        "AI": "ai",
-        "Sticker": "sticker",
-        "Tools": "tools",
-        "Group": "group",
-        "User": "user",
-        "Premium": "premium",
-        "Owner": "owner",
-        "General": "general"
-      };
-
-      for (const cat of catKeys) {
-        const alias = categoryCommandAliases[cat] || cat.toLowerCase();
-        menuText += `• ${prefix}menu ${alias}\n`;
+    // List polos ke bawah: semua perintah tanpa penjelasan.
+    // (.menu = semua kategori, .menu <kategori> = filter 1 kategori)
+    let totalCmds = 0;
+    for (const cat of catKeys) {
+      menuText += `*${cat.toUpperCase()}:*\n`;
+      for (const cmd of categories[cat]) {
+        menuText += `• ${prefix}${cmd.name}\n`;
+        totalCmds++;
       }
-      menuText += `\n_Ketik salah satu menu di atas untuk melihat perintahnya._`;
-    } else {
-      // Jika user memilih kategori spesifik (contoh: .menu owner atau .menu ai)
-      for (const cat of catKeys) {
-        menuText += `*Menu ${cat.toLowerCase()}:*\n`;
-        for (const cmd of categories[cat]) {
-          const desc = cmd.description ? ` - ${cmd.description}` : "";
-          menuText += `• ${prefix}${cmd.name}${desc}\n`;
-        }
-        menuText += `\n`;
-      }
-      menuText += `_Ketik *${prefix}menu* untuk kembali ke daftar menu._`;
+      menuText += `\n`;
     }
+    menuText += `_Total: ${totalCmds} perintah._`;
 
     const finalCaption = menuText.trim();
 

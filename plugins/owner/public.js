@@ -22,7 +22,7 @@ export default {
       }
 
       if (syncAll) {
-        db.updateSettings({ public: true });
+        db.main().updateSettings({ public: true });
         const { getSubBotsList } = await import("@/src/services/subbot/subbot.js");
         const list = getSubBotsList();
         for (const b of list) {

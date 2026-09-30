@@ -12,7 +12,7 @@ export default {
         return reply("❌ Posting ke saluran resmi hanya dapat dilakukan oleh SuperOwner Bot Utama.");
       }
       await sendTyping();
-      const settings = db.getSettings();
+      const settings = db.main().getSettings();
       const channelJid = settings.channelJid;
 
       if (!channelJid || !channelJid.includes("@newsletter")) {
