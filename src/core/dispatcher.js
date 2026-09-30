@@ -211,24 +211,45 @@ export async function dispatchMessage(sock, msg, logger) {
     const anyBotMentioned = mentionedJids.some((j) => db.isAnyBotJid(j));
     const quotedIsBot = db.isAnyBotJid(quotedParticipant);
 
-    // Jika user me-mention bot lain, bot ini diam (tidak ikut menjawab)
+    // DISAMBIGUASI MULTI-BOT DI GRUP:
+    // 1. Tagging: Jika bot terdaftar di-tag (mentioned), HANYA bot yang di-tag yang boleh merespon
     if (anyBotMentioned && !mentionedJids.includes(botJid)) {
       return;
     }
-    // Jika user me-reply pesan dari bot lain, bot ini diam
+
+    // 2. Quoted / Reply: Jika pesan me-reply pesan dari bot tertentu, HANYA bot tersebut yang merespon
     if (quotedIsBot && quotedParticipant !== botJid) {
       return;
     }
 
-    // Untuk perintah konfigurasi owner seperti self/public/setprefix/delbot di grup tanpa tag:
-    // Jika pengirim bukan dedicated owner bot ini, dan ini sub-bot sedangkan main bot ada, sub-bot tidak merespons
-    const ownerCommands = ["self", "public", "pub", "setprefix", "delbot", "syncsubbot", "vps"];
-    if (ownerCommands.includes(commandName) && sock.isSubBot && !anyBotMentioned) {
-      const dedicatedOwner = db.normalizeJid(activeSettings.ownerNumber);
-      // Jika yang mengirim adalah superowner tapi bukan dedicated owner sub-bot ini dan tidak me-mention sub-bot ini,
-      // biarkan main bot yang menjawab agar tidak terjadi balasan dobel
-      if (dedicatedOwner && senderJid !== dedicatedOwner && !args.includes("--all") && !args.includes("-a")) {
-        return;
+    // 3. Tanpa Tag / Mention dan Tanpa Reply ke Bot Tertentu:
+    if (!anyBotMentioned && !quotedIsBot) {
+      const ownerCommands = ["self", "public", "pub", "setprefix", "delbot", "syncsubbot", "vps"];
+
+      // Jika perintah owner dikirim di grup tanpa me-mention bot:
+      if (ownerCommands.includes(commandName)) {
+        // Sub-bot TIDAK BOLEH merespon perintah owner di grup tanpa di-tag atau di-reply
+        // (Owner sub-bot bisa menjalankannya lewat Private Chat / DM, atau me-mention @sub-bot di grup)
+        if (sock.isSubBot) {
+          return;
+        }
+
+        // Untuk Bot Utama (Main Bot):
+        // Jika sender HANYA owner dari sub-bot (bukan primary superowner bot utama),
+        // maka bot utama tidak boleh merespon
+        if (!sock.isSubBot) {
+          const isMainOwner = db.isPrimaryOwner(senderJid);
+          if (!isMainOwner) {
+            return;
+          }
+        }
+      } else {
+        // Untuk perintah non-owner / umum (menu, fitur, downloader, dll) di grup tanpa tag:
+        // Jika ini adalah sub-bot, sub-bot tetap diam di grup agar tidak terjadi respon ganda (tabrakan dengan bot utama).
+        // Sub-bot hanya merespon di grup jika di-tag (@subbot) atau di-reply, atau di Private Chat (DM).
+        if (sock.isSubBot) {
+          return;
+        }
       }
     }
   }
