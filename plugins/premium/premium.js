@@ -3,6 +3,7 @@ import {
   getMediaBuffer,
   upscaleImage,
   createSticker,
+  findDownloadableTarget,
 } from '@/src/services/media.js';
 import {
   textToSpeech,
@@ -19,8 +20,8 @@ export default [
     category: "Premium",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
-      const buffer = await getMediaBuffer(sock, quoted || msg);
+      const targetMsg = findDownloadableTarget(msg);
+      const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
       if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.hd*");
       await reply("✨ Memproses gambar ke HD...");
       try {
@@ -64,8 +65,8 @@ export default [
     category: "Premium",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
-      const buffer = await getMediaBuffer(sock, quoted || msg);
+      const targetMsg = findDownloadableTarget(msg);
+      const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
       if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.stickernowm*");
       // Parse text meme atas / bawah
       let topText = "";

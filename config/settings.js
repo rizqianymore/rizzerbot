@@ -14,8 +14,16 @@ export const settings = {
 
     autoRead: false,
     autoOnline: false,
-    cooldownTime: 0,
+    cooldownTime: 3000,
     responseDelay: 0,
+
+    // ── Pengaman tambahan ──
+    antiBotLuar: true, // abaikan perintah dari nomor bot luar yang terdaftar
+    botNumbers: [], // daftar nomor bot luar, contoh: ["62812xxxx"]
+    antiVirtex: true, // tolak pesan super panjang / crash
+    maxMessageLength: 5000,
+    antiBurst: true, // tolak spam burst: >6 perintah / 10 detik
+    antilinkExtra: true, // perluas pola link selain invite grup
 
     stickerPackName: "Rizzer Bot Stickers",
     stickerAuthor: "Rizzer Bot [Private]",

@@ -3,6 +3,7 @@ import {
   getMediaBuffer,
   createSticker,
   webpToImage,
+  findDownloadableTarget,
 } from '@/src/services/media.js';
 import {
   fetchLyrics,
@@ -126,34 +127,7 @@ export default [
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
 
-      // Deteksi media dari berbagai jenis pesan
-      const msgType = Object.keys(msg.message || {})[0];
-      const mediaTypes = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage"];
-
-      let targetMsg = null;
-
-      // 1. Gambar/video dikirim langsung dengan caption command
-      if (mediaTypes.includes(msgType)) {
-        targetMsg = msg;
-      }
-
-      // 2. Reply ke pesan yang berisi media
-      if (!targetMsg) {
-        const ctxInfo =
-          msg.message?.[msgType]?.contextInfo ||
-          msg.message?.extendedTextMessage?.contextInfo;
-        const quotedMsg = ctxInfo?.quotedMessage;
-        if (quotedMsg) {
-          const quotedType = Object.keys(quotedMsg)[0];
-          if (mediaTypes.includes(quotedType)) {
-            // Bungkus jadi format msg agar getMediaBuffer bisa baca
-            targetMsg = {
-              key: { ...msg.key, id: ctxInfo.stanzaId },
-              message: quotedMsg,
-            };
-          }
-        }
-      }
+      const targetMsg = findDownloadableTarget(msg);
 
       if (!targetMsg) {
         return reply(
@@ -164,7 +138,7 @@ export default [
       }
 
       const buffer = await getMediaBuffer(sock, targetMsg);
-      if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya.");
+      if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya (jangan forward dari View Once, kirim sebagai gambar biasa).");
 
       // Parse teks meme atas / bawah via format: teks atas | teks bawah
       let topText = "";
@@ -200,13 +174,10 @@ export default [
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
+      const targetMsg = findDownloadableTarget(msg);
       let buffer = null;
-      if (quoted?.stickerMessage) {
-        buffer = await getMediaBuffer(sock, {
-          ...msg,
-          message: { stickerMessage: quoted.stickerMessage },
-        });
+      if (targetMsg) {
+        buffer = await getMediaBuffer(sock, targetMsg);
       }
       if (!buffer) return reply("❌ Balas stiker dengan caption *\\.toimg*");
       try {

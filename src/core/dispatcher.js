@@ -8,8 +8,110 @@ function isGroupJid(jid) {
   return Boolean(jid?.endsWith("@g.us"));
 }
 
+function isSameBotJid(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const da = String(a).replace(/\D/g, "");
+  const dbb = String(b).replace(/\D/g, "");
+  return Boolean(da && dbb && da === dbb);
+}
+
 // Memory map untuk anti-spam & rate limiter per user
 const userCooldowns = new Map();
+
+// Anti-burst: hitung perintah per user dalam jendela 10 detik
+const burstTracker = new Map(); // jid -> { count, windowStart, mutedUntil }
+const BURST_WINDOW_MS = 10 * 1000;
+const BURST_MAX = 6;
+const BURST_MUTE_MS = 60 * 1000;
+
+function isBurstMuted(jid) {
+  const now = Date.now();
+  const rec = burstTracker.get(jid);
+  if (!rec) return false;
+  if (rec.mutedUntil && now < rec.mutedUntil) return rec.mutedUntil;
+  if (now - rec.windowStart > BURST_WINDOW_MS) {
+    burstTracker.delete(jid);
+    return false;
+  }
+  return false;
+}
+
+function registerBurst(jid) {
+  const now = Date.now();
+  let rec = burstTracker.get(jid);
+  if (!rec || now - rec.windowStart > BURST_WINDOW_MS) {
+    rec = { count: 1, windowStart: now, mutedUntil: 0 };
+  } else {
+    rec.count += 1;
+  }
+  if (rec.count > BURST_MAX) {
+    rec.mutedUntil = now + BURST_MUTE_MS;
+  }
+  burstTracker.set(jid, rec);
+  if (burstTracker.size > 2000) {
+    for (const [k, v] of burstTracker.entries()) {
+      if (now - v.windowStart > BURST_WINDOW_MS && (!v.mutedUntil || now > v.mutedUntil)) {
+        burstTracker.delete(k);
+      }
+    }
+  }
+  return rec;
+}
+
+// Heuristik bot luar: pushName seperti bot + pola pesan command kaku
+function looksLikeExternalBot(msg, text) {
+  const name = String(msg?.pushName || "").toLowerCase();
+  if (!name) return false;
+  if (!/bot|assistant|official|support|ai\b/.test(name)) return false;
+  // Pesan sangat kaku seperti output bot (banyak emoji + prefix command di dalam)
+  if (text && text.length > 200 && /[✅❌⚠️📊👑]/.test(text)) return true;
+  return /\bbot\b/.test(name);
+}
+// Anti-loop: cegah pesan yang sama diproses dua kali (retry / duplikat event)
+const seenMessageIds = new Map();
+function isDuplicateMessage(key) {
+  const id = key?.id;
+  if (!id) return false;
+  const now = Date.now();
+  const last = seenMessageIds.get(id);
+  if (last && now - last < 5 * 60 * 1000) return true;
+  seenMessageIds.set(id, now);
+  if (seenMessageIds.size > 2000) {
+    for (const [k, t] of seenMessageIds.entries()) {
+      if (now - t > 5 * 60 * 1000) seenMessageIds.delete(k);
+    }
+  }
+  return false;
+}
+
+// Ambil contextInfo dari SEMUA tipe pesan (bukan cuma extendedText),
+// agar tag / reply kedeteksi juga di caption gambar/video/dokumen/dll.
+function getUniversalContextInfo(message) {
+  if (!message || typeof message !== "object") return null;
+  const candidates = [
+    message.conversation,
+    message.extendedTextMessage,
+    message.imageMessage,
+    message.videoMessage,
+    message.documentMessage,
+    message.documentWithCaptionMessage?.message?.documentMessage,
+    message.stickerMessage,
+    message.audioMessage,
+    message.buttonsResponseMessage,
+    message.listResponseMessage,
+    message.templateButtonReplyMessage,
+    message.interactiveResponseMessage,
+  ];
+  for (const c of candidates) {
+    if (c && typeof c === "object" && c.contextInfo) return c.contextInfo;
+  }
+  // Fallback: cari field apa pun yang punya contextInfo
+  for (const v of Object.values(message)) {
+    if (v && typeof v === "object" && v.contextInfo) return v.contextInfo;
+  }
+  return null;
+}
 
 function getPhoneDigits(value) {
   return String(value || "").replace(/\D/g, "");
@@ -94,6 +196,7 @@ async function getGroupAccessError(sock, remoteJid, senderJid, cmd, access) {
 
 export async function dispatchMessage(sock, msg, logger) {
   if (!msg.message || !msg.key?.id) return;
+  if (isDuplicateMessage(msg.key)) return;
 
   msg.message = extractMessageContent(msg.message);
   if (!msg.message) return;
@@ -110,9 +213,36 @@ export async function dispatchMessage(sock, msg, logger) {
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
     "";
 
-  // Proteksi Anti-Link Grup WhatsApp
+  // ── Guard 0: Anti-virtex / pesan raksasa ──
+  // Diproses sebelum command agar crash-text tidak masuk ke plugin.
+  {
+    const _s = db.getSettings();
+    if (_s.antiVirtex !== false) {
+      const maxLen = Number(_s.maxMessageLength) || 5000;
+      if (messageContent.length > maxLen) {
+        logger?.warn?.(`[Anti-Virtex] Tolak pesan ${messageContent.length} char dari ${msg.key.participant || remoteJid}`);
+        if (isGroupJid(remoteJid)) {
+          try {
+            await sock.sendMessage(remoteJid, { delete: msg.key }).catch(() => {});
+          } catch (_) {}
+        }
+        return;
+      }
+      // Pola crash: 1 char diulang ribuan kali / zalgo berlebihan
+      if (/^(.)\1{2500,}$/s.test(messageContent.replace(/\s/g, ""))) {
+        logger?.warn?.(`[Anti-Virtex] Pola crash terdeteksi, diabaikan.`);
+        return;
+      }
+    }
+  }
+
+  // Proteksi Anti-Link Grup WhatsApp (diperluas)
   if (isGroupJid(remoteJid) && db.isAntilink(remoteJid)) {
-    const linkRegex = /(chat\.whatsapp\.com\/[A-Za-z0-9]{20,24}|wa\.me\/settings)/i;
+    const basePattern = `chat\\.whatsapp\\.com\\/[A-Za-z0-9]{16,26}|whatsapp\\.com\\/channel\\/[A-Za-z0-9]+|wa\\.me\\/settings`;
+    const extraPattern = db.getSettings()?.antilinkExtra !== false
+      ? `|wa\\.me\\/[0-9]{8,16}|t\\.me\\/[A-Za-z0-9_]{3,}|discord\\.(gg|com\\/invite)\\/[A-Za-z0-9]+|telegram\\.me\\/[A-Za-z0-9_]{3,}`
+      : ``;
+    const linkRegex = new RegExp(`(${basePattern}${extraPattern})`, "i");
     if (linkRegex.test(messageContent)) {
       const rawSender = msg.key.participant || remoteJid;
       const senderJid = db.normalizeJid(rawSender);
@@ -154,8 +284,26 @@ export async function dispatchMessage(sock, msg, logger) {
   }
 
   // Jika pesan berasal dari bot lain yang terdaftar, ABAIKAN untuk mencegah infinite loop / spam antar bot
+  // Prioritas: MAIN bot yang dipakai, sub-bot diam (diatur di bawah).
   if (!isFromMe && db.isAnyBotJid(normalizedRawSender)) {
     return;
+  }
+
+  // ── Guard 0b: Anti-bot luar (nomor terdaftar + heuristik) ──
+  {
+    const _g = db.getSettings();
+    if (!isFromMe && _g.antiBotLuar !== false) {
+      if (db.isExternalBotJid(normalizedRawSender)) {
+        logger?.warn?.(`[Anti-Bot] Abaikan perintah dari bot luar: ${normalizedRawSender}`);
+        return;
+      }
+      // Heuristik ringan: pushName mengandung "bot" + mengirim command → curigai bot, abaikan
+      // (owner/admin dikecualikan agar bot kesayangan owner tetap bisa perintah)
+      if (!db.isOwner(normalizedRawSender) && !db.isAdmin(normalizedRawSender) && looksLikeExternalBot(msg, messageContent) && messageContent.startsWith(_g.prefix || ".")) {
+        logger?.warn?.(`[Anti-Bot] Heuristik bot luar cocok: ${normalizedRawSender} (${msg.pushName})`);
+        return;
+      }
+    }
   }
 
   // Ambil pengaturan khusus bot ini (jika subbot, memiliki settings mandiri: prefix, public/self, owner khusus)
@@ -200,25 +348,25 @@ export async function dispatchMessage(sock, msg, logger) {
   // Jika di dalam grup ada pesan mention atau reply target bot tertentu:
   const isGroup = isGroupJid(remoteJid);
   if (isGroup && !isFromMe) {
-    const mentionedJids = (
-      msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || []
-    ).map((j) => db.normalizeJid(j));
-    const quotedParticipant = db.normalizeJid(
-      msg.message?.extendedTextMessage?.contextInfo?.participant || ""
-    );
+    const uniCtx = getUniversalContextInfo(msg.message) || {};
+    const mentionedJids = (uniCtx.mentionedJid || []).map((j) => db.normalizeJid(j));
+    const quotedParticipant = db.normalizeJid(uniCtx.participant || "");
 
     // Cek apakah ada bot terdaftar yang di-tag atau di-reply
     const anyBotMentioned = mentionedJids.some((j) => db.isAnyBotJid(j));
     const quotedIsBot = db.isAnyBotJid(quotedParticipant);
+    const isTaggedHere = mentionedJids.some((j) => isSameBotJid(j, botJid));
+    const isQuotedHere = Boolean(quotedParticipant && isSameBotJid(quotedParticipant, botJid));
 
     // DISAMBIGUASI MULTI-BOT DI GRUP:
-    // 1. Tagging: Jika bot terdaftar di-tag (mentioned), HANYA bot yang di-tag yang boleh merespon
-    if (anyBotMentioned && !mentionedJids.includes(botJid)) {
+    // 1. Tagging: Jika bot terdaftar di-tag (mentioned), HANYA bot yang di-tag yang boleh merespon.
+    //    Prioritas: main bot TIDAK ikut jawab kalau yang di-tag sub-bot, dan sebaliknya.
+    if (anyBotMentioned && !isTaggedHere) {
       return;
     }
 
     // 2. Quoted / Reply: Jika pesan me-reply pesan dari bot tertentu, HANYA bot tersebut yang merespon
-    if (quotedIsBot && quotedParticipant !== botJid) {
+    if (quotedIsBot && !isQuotedHere) {
       return;
     }
 
@@ -276,10 +424,14 @@ export async function dispatchMessage(sock, msg, logger) {
 
   if (!isOwner) {
     const { checkProfanity } = await import("@/src/utils/filter.js");
+    const uniCtxQ = getUniversalContextInfo(msg.message) || {};
+    const quotedMsgQ = uniCtxQ.quotedMessage || {};
     const quotedText =
-      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
-      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||
-      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage?.caption ||
+      quotedMsgQ.conversation ||
+      quotedMsgQ.extendedTextMessage?.text ||
+      quotedMsgQ.imageMessage?.caption ||
+      quotedMsgQ.videoMessage?.caption ||
+      quotedMsgQ.documentMessage?.caption ||
       "";
     const textToCheck = `${args.join(" ")} ${quotedText}`.trim();
     const check = checkProfanity(textToCheck);
@@ -314,8 +466,28 @@ export async function dispatchMessage(sock, msg, logger) {
     return sock.sendMessage(remoteJid, { text: "❌ Fitur ini hanya untuk pengguna Premium!" }, { quoted: msg });
   }
 
-  // Anti-Spam / Rate Limiter per User (Owner kebal cooldown)
+  // Anti-Spam / Rate Limiter + Anti-Burst per User (Owner kebal)
   if (!isOwner) {
+    // Burst: >6 perintah / 10 detik → mute 60 detik
+    if (activeSettings.antiBurst !== false) {
+      const mutedUntil = isBurstMuted(senderJid);
+      if (mutedUntil) {
+        const sisa = Math.ceil((mutedUntil - Date.now()) / 1000);
+        return sock.sendMessage(
+          remoteJid,
+          { text: `🚫 *Spam terdeteksi!* Tunggu ${sisa} detik sebelum perintah lagi.` },
+          { quoted: msg }
+        );
+      }
+      const rec = registerBurst(senderJid);
+      if (rec.mutedUntil && Date.now() < rec.mutedUntil) {
+        return sock.sendMessage(
+          remoteJid,
+          { text: `🚫 *Spam burst terdeteksi!* Kamu dimute 60 detik.` },
+          { quoted: msg }
+        );
+      }
+    }
     const cooldownMs = Number(activeSettings.cooldownTime) || 3000;
     const now = Date.now();
     const lastTime = userCooldowns.get(senderJid) || 0;
@@ -384,7 +556,7 @@ export async function dispatchMessage(sock, msg, logger) {
     isGroup: isGroupJid(remoteJid),
     user,
     msg,
-    quoted: msg.message?.extendedTextMessage?.contextInfo?.quotedMessage || null,
+    quoted: (getUniversalContextInfo(msg.message)?.quotedMessage) || null,
     sendTyping: async () => {
       Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
     },
@@ -396,14 +568,13 @@ export async function dispatchMessage(sock, msg, logger) {
       return sock.sendMessage(remoteJid, { text }, { quoted: msg });
     },
     getTargetJid: (targetArgs) => {
-      const quotedJid =
-        msg.message?.extendedTextMessage?.contextInfo?.participant ||
-        msg.message?.extendedTextMessage?.contextInfo?.remoteJid;
+      const _ctx = getUniversalContextInfo(msg.message) || {};
+      const quotedJid = _ctx.participant || _ctx.remoteJid;
       if (quotedJid && !quotedJid.endsWith("@g.us")) {
         return db.normalizeJid(quotedJid);
       }
 
-      const mentioned = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid;
+      const mentioned = _ctx.mentionedJid;
       if (Array.isArray(mentioned)) {
         for (const candidate of mentioned) {
           const normalized = db.normalizeJid(candidate);

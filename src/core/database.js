@@ -106,13 +106,22 @@ function isAnyBotJid(jid) {
   const normalized = normalizeJid(jid);
   if (!normalized) return false;
   if (activeBotJids.has(normalized)) return true;
-  
+
   const phone = normalizePhone(normalized);
-  if (phone) {
-    for (const b of activeBotJids) {
-      if (normalizePhone(b) === phone) return true;
-    }
+  const phoneMatch = (a, b) => a && b && normalizePhone(a) === normalizePhone(b);
+  for (const b of activeBotJids) {
+    if (b === normalized || (phone && phoneMatch(b, normalized))) return true;
   }
+  // Sub-bot yang pernah terdaftar (persist di botSettings) tetap dianggap bot
+  // walau proses restart / belum online — cegah loop main vs sub.
+  try {
+    const keys = data?.botSettings ? Object.keys(data.botSettings) : [];
+    for (const k of keys) {
+      const nk = normalizeJid(k);
+      if (!nk) continue;
+      if (nk === normalized || (phone && phoneMatch(nk, normalized))) return true;
+    }
+  } catch (_) {}
   return false;
 }
 
@@ -210,9 +219,18 @@ function normalizeSettings(storedSettings = {}) {
     result[key] = [...new Set(toJidList(sourceVal))];
   }
 
-  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel']) {
+  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel', 'antiBotLuar', 'antiVirtex', 'antiBurst', 'antilinkExtra']) {
     result[key] = toBoolean(result[key], configDefaults[key]);
   }
+  if (!Array.isArray(result.botNumbers)) {
+    result.botNumbers = toJidList(result.botNumbers ?? configDefaults.botNumbers ?? []);
+  } else {
+    result.botNumbers = [...new Set(toJidList(result.botNumbers))];
+  }
+  const maxLen = Number(result.maxMessageLength);
+  result.maxMessageLength = Number.isFinite(maxLen) && maxLen > 0
+    ? Math.min(maxLen, 20000)
+    : Number(configDefaults.maxMessageLength ?? 5000);
   if (
     typeof result.prefix !== 'string' ||
     !result.prefix.trim() ||
@@ -756,6 +774,20 @@ export const db = {
   updateBotSettings,
   isBotOwner,
   isAnyBotJid,
+  isExternalBotJid: (jid) => {
+    const normalized = normalizeJid(jid);
+    if (!normalized) return false;
+    if (isAnyBotJid(normalized)) return true;
+    const list = Array.isArray(data?.settings?.botNumbers) ? data.settings.botNumbers : [];
+    const phone = normalizePhone(normalized);
+    for (const b of list) {
+      const nb = normalizeJid(b);
+      if (!nb) continue;
+      if (nb === normalized) return true;
+      if (phone && normalizePhone(nb) === phone) return true;
+    }
+    return false;
+  },
   getUser: (jid) => ensureUser(normalizeJid(jid)),
   updateUser,
   registerBotJid,

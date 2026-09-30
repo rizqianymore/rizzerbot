@@ -8,6 +8,7 @@ import { promisify } from "util";
 import webpmux from "node-webpmux";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { db } from "@/src/core/database.js";
+import { downloadMediaMessage, extractMessageContent } from "baileys";
 
 const execFileAsync = promisify(execFile);
 
@@ -77,10 +78,88 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
   return canvas.toBuffer("image/png");
 }
 
-export async function getMediaBuffer(sock, msg) {
+const MEDIA_TYPES = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage", "audioMessage"];
+
+// Unwrap ephemeral / viewOnce / template wrappers to get true content
+export function unwrapMessageContent(content) {
   try {
-    return await sock.downloadMediaMessage(msg);
+    if (!content) return content;
+    return extractMessageContent(content) || content;
   } catch (_) {
+    return content;
+  }
+}
+
+export function getQuotedMessage(msg) {
+  const msgType = Object.keys(msg?.message || {})[0];
+  const ctxInfo =
+    msg?.message?.[msgType]?.contextInfo ||
+    msg?.message?.extendedTextMessage?.contextInfo ||
+    msg?.message?.imageMessage?.contextInfo ||
+    msg?.message?.videoMessage?.contextInfo ||
+    msg?.message?.documentMessage?.contextInfo ||
+    msg?.message?.stickerMessage?.contextInfo;
+  return { ctxInfo, quotedMsg: ctxInfo?.quotedMessage, stanzaId: ctxInfo?.stanzaId, participant: ctxInfo?.participant };
+}
+
+// Cari pesan yang bisa di-download: kiriman langsung atau reply.
+// Mengembalikan WAMessage siap download, atau null jika tidak ada media.
+export function findDownloadableTarget(msg) {
+  if (!msg?.message) return null;
+  const unwrapped = unwrapMessageContent(msg.message) || {};
+  const directType = Object.keys(unwrapped)[0];
+  if (MEDIA_TYPES.includes(directType)) {
+    // Pastikan msg.message sudah dalam bentuk unwrapped agar downloadMediaMessage mudah baca
+    return { ...msg, message: unwrapped };
+  }
+
+  const { ctxInfo, quotedMsg, stanzaId, participant } = getQuotedMessage(msg);
+  if (quotedMsg) {
+    const unwrappedQuoted = unwrapMessageContent(quotedMsg) || {};
+    const quotedType = Object.keys(unwrappedQuoted)[0];
+    if (MEDIA_TYPES.includes(quotedType)) {
+      return {
+        key: {
+          ...msg.key,
+          ...(stanzaId ? { id: stanzaId } : {}),
+          // participant asli quoted dibutuhkan untuk reupload di grup
+          ...(participant ? { participant } : {}),
+        },
+        message: unwrappedQuoted,
+      };
+    }
+  }
+  return null;
+}
+
+export async function getMediaBuffer(sock, msg) {
+  if (!msg) return null;
+  // Backward-compat: jika yang dilempar hanya inner content (quotedMessage),
+  // bungkus jadi WAMessage minimal agar downloadMediaMessage bisa baca.
+  let target = msg;
+  if (!target.key && !target.message && typeof target === "object") {
+    target = { key: {}, message: target };
+  }
+  try {
+    const buf = await downloadMediaMessage(
+      target,
+      "buffer",
+      {},
+      {
+        logger: sock?.logger || console,
+        reuploadRequest: sock?.updateMediaMessage?.bind(sock),
+      }
+    );
+    if (buf && buf.length > 0) return buf;
+    return buf;
+  } catch (err) {
+    // Fallback ke method lama jika masih ada (baileys v6)
+    try {
+      if (typeof sock?.downloadMediaMessage === "function") {
+        return await sock.downloadMediaMessage(target);
+      }
+    } catch (_) {}
+    console.warn("[getMediaBuffer] gagal download:", err?.message || err);
     return null;
   }
 }

@@ -5,7 +5,7 @@ import path from "path";
 import os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { createSticker, addTextToImage, getMediaBuffer } from "@/src/services/media.js";
+import { createSticker, addTextToImage, getMediaBuffer, findDownloadableTarget } from "@/src/services/media.js";
 import { db } from "@/src/core/database.js";
 
 const execFileAsync = promisify(execFile);
@@ -710,32 +710,7 @@ export default [
       await sendTyping();
 
       // ── Deteksi media (dikirim langsung atau reply) ──
-      const msgType = Object.keys(msg.message || {})[0];
-      const mediaTypes = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage"];
-
-      let targetMsg = null;
-
-      // Gambar dikirim langsung dengan caption command
-      if (mediaTypes.includes(msgType)) {
-        targetMsg = msg;
-      }
-
-      // Reply ke pesan yang berisi media
-      if (!targetMsg) {
-        const ctxInfo =
-          msg.message?.[msgType]?.contextInfo ||
-          msg.message?.extendedTextMessage?.contextInfo;
-        const quotedMsg = ctxInfo?.quotedMessage;
-        if (quotedMsg) {
-          const quotedType = Object.keys(quotedMsg)[0];
-          if (mediaTypes.includes(quotedType)) {
-            targetMsg = {
-              key: { ...msg.key, id: ctxInfo.stanzaId },
-              message: quotedMsg,
-            };
-          }
-        }
-      }
+      const targetMsg = findDownloadableTarget(msg);
 
       if (!targetMsg) {
         return reply(
