@@ -191,10 +191,6 @@ export default {
       if (seen.has(cmd.name)) return;
       seen.add(cmd.name);
 
-      if (cmd.ownerOnly && !isOwner) return;
-      if (cmd.adminOnly && !isAdmin) return;
-      if (cmd.premiumOnly && !isPremium) return;
-
       const cat = cmd.category || "General";
 
       // Filter jika user memilih kategori tertentu
@@ -207,9 +203,6 @@ export default {
     });
 
     if (targetCategory && Object.keys(categories).length === 0) {
-      if (targetCategory === "Owner" && !isOwner) {
-        return reply("❌ Kategori *Owner* hanya dapat diakses oleh Pemilik Bot!");
-      }
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
@@ -223,16 +216,38 @@ export default {
       return ia - ib;
     });
 
-    for (const cat of catKeys) {
-      menuText += `*${cat.toUpperCase()}*\n`;
-      const cmdList = categories[cat].map((cmd) => `${prefix}${cmd.name}`).join("  ");
-      menuText += `${cmdList}\n\n`;
-    }
-
+    // Jika user hanya ketik .menu (tanpa kategori)
     if (!targetCategory) {
-      menuText += `_Ketik *${prefix}menu <kategori>* atau *${prefix}help <perintah>*_`;
+      menuText += `*Daftar Menu:*\n`;
+      const categoryCommandAliases = {
+        "News": "news",
+        "Social Media": "sosmed",
+        "AI": "ai",
+        "Sticker": "sticker",
+        "Tools": "tools",
+        "Group": "group",
+        "User": "user",
+        "Premium": "premium",
+        "Owner": "owner",
+        "General": "general"
+      };
+
+      for (const cat of catKeys) {
+        const alias = categoryCommandAliases[cat] || cat.toLowerCase();
+        menuText += `• ${prefix}menu ${alias}\n`;
+      }
+      menuText += `\n_Ketik salah satu menu di atas untuk melihat perintahnya._`;
     } else {
-      menuText += `_Ketik *${prefix}menu* untuk semua menu._`;
+      // Jika user memilih kategori spesifik (contoh: .menu owner atau .menu ai)
+      for (const cat of catKeys) {
+        menuText += `*Menu ${cat.toLowerCase()}:*\n`;
+        for (const cmd of categories[cat]) {
+          const desc = cmd.description ? ` - ${cmd.description}` : "";
+          menuText += `• ${prefix}${cmd.name}${desc}\n`;
+        }
+        menuText += `\n`;
+      }
+      menuText += `_Ketik *${prefix}menu* untuk kembali ke daftar menu._`;
     }
 
     const finalCaption = menuText.trim();
