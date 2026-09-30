@@ -18,12 +18,14 @@ import {
 } from "@/src/services/qris.js";
 import { db } from "@/src/core/database.js";
 
+import { getPrimarySock } from "@/src/core/connection.js";
+
 // Cache status admin channel per JID saluran (TTL 5 menit)
 const channelAdminCache = new Map();
 // Cache deduplikasi pengiriman broadcast ke saluran agar 1 transaksi tidak dikirim ganda
 const recentBroadcastTrx = new Set();
 
-async function checkIsChannelAdmin(sock, channelJid) {
+async function checkIsChannelAdmin(targetSock, channelJid) {
   if (!channelJid || !channelJid.includes("@newsletter")) return false;
   const now = Date.now();
   const cached = channelAdminCache.get(channelJid);
@@ -31,22 +33,53 @@ async function checkIsChannelAdmin(sock, channelJid) {
     return cached.isAdmin;
   }
 
-  let isAdmin = false;
+  let isAdmin = true; // Default optimis: izinkan coba kirim
   try {
-    if (typeof sock.newsletterMetadata === "function") {
-      const meta = await sock.newsletterMetadata("jid", channelJid);
+    if (typeof targetSock?.newsletterMetadata === "function") {
+      const meta = await targetSock.newsletterMetadata("jid", channelJid);
       const role = meta?.viewer_metadata?.role;
-      isAdmin = role === "ADMIN" || role === "OWNER";
-    } else {
-      // Fallback: anggap true jika method tidak tersedia
-      isAdmin = true;
+      if (role) {
+        isAdmin = role === "ADMIN" || role === "OWNER";
+      }
     }
   } catch (_) {
-    isAdmin = false;
+    // Jika newsletterMetadata error (misal rate limit), biarkan coba kirim langsung
+    isAdmin = true;
   }
 
   channelAdminCache.set(channelJid, { isAdmin, timestamp: now });
   return isAdmin;
+}
+
+async function forwardTrxToChannel(sock, channelJid, payload) {
+  if (!channelJid || !channelJid.includes("@newsletter")) return false;
+
+  // Coba kirim via socket aktif terlebih dahulu
+  let sent = false;
+  try {
+    const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
+    if (isChannelAdmin) {
+      await sock.sendMessage(channelJid, payload);
+      sent = true;
+    }
+  } catch (err) {
+    console.error("[TRX-Channel] Gagal kirim via socket aktif:", err.message);
+  }
+
+  // Jika gagal dan socket saat ini bukan primary sock (misal sub-bot), fallback coba via Bot Utama
+  if (!sent) {
+    try {
+      const primary = getPrimarySock();
+      if (primary && primary !== sock) {
+        await primary.sendMessage(channelJid, payload);
+        sent = true;
+      }
+    } catch (err2) {
+      console.error("[TRX-Channel] Fallback kirim via primary bot juga gagal:", err2.message);
+    }
+  }
+
+  return sent;
 }
 
 function parseTrxInput(rawText, quoted, getTargetJid) {
@@ -226,36 +259,25 @@ export default [
         }
       }
 
-      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi & bot adalah admin di saluran
-      const channelJid = activeSettings.channelJid || "";
+      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi
+      const channelJid = activeSettings.channelJid || db.getSettings().channelJid || "";
       if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
-        // Cek duplikasi: jika ID transaksi ini sudah pernah dibroadcast (oleh bot utama / instance sub-bot yang sama), jangan kirim ulang
+        // Cek duplikasi: jika ID transaksi ini sudah pernah dibroadcast, jangan kirim ulang
         const dedupeKey = `create_${trx.id}`;
         if (!recentBroadcastTrx.has(dedupeKey)) {
-          const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
-          if (isChannelAdmin) {
-            recentBroadcastTrx.add(dedupeKey);
-            // Simpan riwayat maksimal 200 id agar memori tetap bersih
-            if (recentBroadcastTrx.size > 200) {
-              const [firstKey] = recentBroadcastTrx;
-              recentBroadcastTrx.delete(firstKey);
-            }
-
-            try {
-              if (cardBuffer) {
-                await sock.sendMessage(channelJid, {
-                  image: cardBuffer,
-                  caption,
-                });
-              } else {
-                await sock.sendMessage(channelJid, {
-                  text: caption,
-                });
-              }
-            } catch (channelErr) {
-              console.error("Gagal mengirim transaksi ke saluran:", channelErr.message);
-            }
+          recentBroadcastTrx.add(dedupeKey);
+          if (recentBroadcastTrx.size > 200) {
+            const [firstKey] = recentBroadcastTrx;
+            recentBroadcastTrx.delete(firstKey);
           }
+
+          const payload = cardBuffer
+            ? { image: cardBuffer, caption }
+            : { text: caption };
+
+          forwardTrxToChannel(sock, channelJid, payload).catch((e) => {
+            console.error("[TRX-Channel] Error forward create trx:", e.message);
+          });
         }
       }
     },
@@ -352,35 +374,25 @@ export default [
         await reply(caption);
       }
 
-      // Auto-forward update transaksi ke Saluran jika dikonfigurasi & bot adalah admin
-      const channelJid = activeSettings.channelJid || "";
+      // Auto-forward update transaksi ke Saluran jika dikonfigurasi
+      const channelJid = activeSettings.channelJid || db.getSettings().channelJid || "";
       if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
         // Cek duplikasi: jika update status transaksi ini sudah pernah dibroadcast, jangan kirim ulang
         const dedupeKey = `update_${updated.id}_${updated.status}`;
         if (!recentBroadcastTrx.has(dedupeKey)) {
-          const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
-          if (isChannelAdmin) {
-            recentBroadcastTrx.add(dedupeKey);
-            if (recentBroadcastTrx.size > 200) {
-              const [firstKey] = recentBroadcastTrx;
-              recentBroadcastTrx.delete(firstKey);
-            }
-
-            try {
-              if (cardBuffer) {
-                await sock.sendMessage(channelJid, {
-                  image: cardBuffer,
-                  caption,
-                });
-              } else {
-                await sock.sendMessage(channelJid, {
-                  text: caption,
-                });
-              }
-            } catch (channelErr) {
-              console.error("Gagal mengirim update transaksi ke saluran:", channelErr.message);
-            }
+          recentBroadcastTrx.add(dedupeKey);
+          if (recentBroadcastTrx.size > 200) {
+            const [firstKey] = recentBroadcastTrx;
+            recentBroadcastTrx.delete(firstKey);
           }
+
+          const payload = cardBuffer
+            ? { image: cardBuffer, caption }
+            : { text: caption };
+
+          forwardTrxToChannel(sock, channelJid, payload).catch((e) => {
+            console.error("[TRX-Channel] Error forward update trx:", e.message);
+          });
         }
       }
     },

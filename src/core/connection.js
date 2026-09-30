@@ -37,6 +37,10 @@ let primarySock = null;
 let isStarting = false;
 let reconnectTimer = null;
 
+export function getPrimarySock() {
+  return primarySock;
+}
+
 export async function startBot() {
   if (isStarting) {
     logger.warn("startBot is already initializing in the background. Skipping redundant call.");
