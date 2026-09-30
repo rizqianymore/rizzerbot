@@ -240,15 +240,32 @@ export default {
     // Coba kirim dengan gambar jika file lokal atau URL gambar tersedia
     try {
       let imagePayload = null;
+      const { existsSync, readFileSync } = await import("fs");
+      const { resolve } = await import("path");
+
       if (activeSettings.image) {
         if (typeof activeSettings.image === "string" && (activeSettings.image.startsWith("http://") || activeSettings.image.startsWith("https://"))) {
           imagePayload = { url: activeSettings.image };
         } else {
-          const { existsSync, readFileSync } = await import("fs");
-          const { resolve } = await import("path");
           const localPath = resolve(process.cwd(), activeSettings.image);
           if (existsSync(localPath)) {
             imagePayload = readFileSync(localPath);
+          }
+        }
+      }
+
+      // Fallback otomatis jika ada file banner di folder assets/image/
+      if (!imagePayload) {
+        const defaultBannerPaths = [
+          resolve(process.cwd(), "assets/image/banner.webp"),
+          resolve(process.cwd(), "assets/image/banner.jpg"),
+          resolve(process.cwd(), "assets/image/banner.jpeg"),
+          resolve(process.cwd(), "assets/image/banner.png"),
+        ];
+        for (const p of defaultBannerPaths) {
+          if (existsSync(p)) {
+            imagePayload = readFileSync(p);
+            break;
           }
         }
       }
