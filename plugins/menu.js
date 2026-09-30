@@ -24,6 +24,8 @@ const COMMAND_USAGES = {
   bratgojovid: "<teks>",
   bratvermeil: "<teks>",
   bratvermeilvid: "<teks>",
+  stikerteks: "[teks atas | bawah] (kirim/reply gambar)",
+  stikermeme: "[teks atas | bawah] (kirim/reply gambar)",
 
   // Tools
   jkt48: "<nama/id member>",

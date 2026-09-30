@@ -125,12 +125,48 @@ export default [
     category: "User",
     run: async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage;
-      const target = quoted || msg;
-      const buffer = await getMediaBuffer(sock, target);
-      if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.sticker* atau *\\.sticker atas | bawah*");
 
-      // Parse text meme atas / bawah
+      // Deteksi media dari berbagai jenis pesan
+      const msgType = Object.keys(msg.message || {})[0];
+      const mediaTypes = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage"];
+
+      let targetMsg = null;
+
+      // 1. Gambar/video dikirim langsung dengan caption command
+      if (mediaTypes.includes(msgType)) {
+        targetMsg = msg;
+      }
+
+      // 2. Reply ke pesan yang berisi media
+      if (!targetMsg) {
+        const ctxInfo =
+          msg.message?.[msgType]?.contextInfo ||
+          msg.message?.extendedTextMessage?.contextInfo;
+        const quotedMsg = ctxInfo?.quotedMessage;
+        if (quotedMsg) {
+          const quotedType = Object.keys(quotedMsg)[0];
+          if (mediaTypes.includes(quotedType)) {
+            // Bungkus jadi format msg agar getMediaBuffer bisa baca
+            targetMsg = {
+              key: { ...msg.key, id: ctxInfo.stanzaId },
+              message: quotedMsg,
+            };
+          }
+        }
+      }
+
+      if (!targetMsg) {
+        return reply(
+          "❌ Kirim/balas gambar atau video dengan caption:\n" +
+          "• *.sticker* — langsung jadi stiker\n" +
+          "• *.sticker Teks Atas | Teks Bawah* — stiker + teks meme"
+        );
+      }
+
+      const buffer = await getMediaBuffer(sock, targetMsg);
+      if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya.");
+
+      // Parse teks meme atas / bawah via format: teks atas | teks bawah
       let topText = "";
       let bottomText = "";
       if (args.length > 0) {
