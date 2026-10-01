@@ -175,7 +175,7 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": UA,
       },
-      timeout: 30000,
+      timeout: 15000,
     });
     const text = res.data?.ParsedResults?.[0]?.ParsedText || "";
     const clean = String(text).replace(/[^A-Za-z0-9]/g, "");
@@ -276,12 +276,18 @@ export function formatHasil(nik, parsed) {
  */
 export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
   let lastGuess = "";
+  let nullStreak = 0;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const session = await fetchFormSession();
     let image = await fetchCaptchaImage(session);
     const { guess } = await solveCaptcha(image);
     image = null; // lepas buffer segera (hemat memori)
-    if (!guess) continue; // solver gagal baca → captcha baru
+    if (!guess) {
+      // Solver mati total (API down/limit) 2x beruntun → langsung manual, hemat waktu.
+      if (++nullStreak >= 2) break;
+      continue;
+    }
+    nullStreak = 0;
     lastGuess = guess;
     const { success } = await submitNik(session, nik, guess);
     if (!success) {
