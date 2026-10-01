@@ -56,6 +56,7 @@ export default {
   "name": "setname",
   "aliases": ["setsubject","namagc"],
   "description": "Mengubah nama atau subjek grup",
+  "usage": "<nama baru>",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

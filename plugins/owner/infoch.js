@@ -5,6 +5,7 @@ export default {
   "name": "infoch",
   "aliases": ["chinfo","saluraninfo"],
   "description": "Cek informasi saluran yang terhubung dengan bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

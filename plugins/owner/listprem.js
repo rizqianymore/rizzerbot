@@ -5,6 +5,7 @@ export default {
   "name": "listprem",
   "aliases": ["prems","premiums"],
   "description": "Lihat daftar semua user Premium",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {

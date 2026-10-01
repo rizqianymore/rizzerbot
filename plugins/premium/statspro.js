@@ -18,6 +18,7 @@ import {
 export default {
   "name": "statspro",
   "description": "Detailed command statistics",
+  "usage": "",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

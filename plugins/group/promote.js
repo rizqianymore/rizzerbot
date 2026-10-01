@@ -56,6 +56,7 @@ export default {
   "name": "promote",
   "aliases": ["naikadmin"],
   "description": "Menaikkan member menjadi admin grup",
+  "usage": "@user",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

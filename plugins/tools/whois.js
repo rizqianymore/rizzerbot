@@ -12,6 +12,7 @@ export default {
   "name": "whois",
   "aliases": ["whoislookup","domaininfo"],
   "description": "Cek informasi kepemilikan, registrar, & masa berlaku domain",
+  "usage": "<domain>",
   "premiumOnly": false,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

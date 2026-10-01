@@ -162,6 +162,7 @@ export default {
   "name": "jkt48news",
   "aliases": ["jktnews","beritajkt48"],
   "description": "Rangkuman berita dan pengumuman resmi terbaru JKT48",
+  "usage": "[jumlah berita]",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

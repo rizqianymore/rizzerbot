@@ -5,6 +5,7 @@ export default {
   "name": "restart",
   "aliases": ["reboot"],
   "description": "Restart proses bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, senderJid, logger, isPrimarySuperOwner }) => {

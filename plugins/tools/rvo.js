@@ -14,6 +14,7 @@ export default {
   "name": "rvo",
   "aliases": ["readviewonce","viewonce"],
   "description": "Membuka dan mendownload media sekali lihat (view once)",
+  "usage": "(reply media view once)",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, quoted }) => {

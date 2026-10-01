@@ -465,6 +465,7 @@ export default {
   "name": "bratvid",
   "aliases": ["bratvideo","bratvid2"],
   "description": "Membuat stiker teks Brat video animasi teks berjalan",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

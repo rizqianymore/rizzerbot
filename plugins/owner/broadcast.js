@@ -5,6 +5,7 @@ export default {
   "name": "broadcast",
   "aliases": ["bc"],
   "description": "Broadcast message",
+  "usage": "<pesan>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {

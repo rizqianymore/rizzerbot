@@ -56,6 +56,7 @@ export default {
   "name": "setdesc",
   "aliases": ["setdeskripsi","descgc"],
   "description": "Mengubah deskripsi grup",
+  "usage": "<deskripsi baru>",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

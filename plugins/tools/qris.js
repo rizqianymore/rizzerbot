@@ -27,6 +27,7 @@ export default {
   "name": "qris",
   "aliases": ["qrisdinamis","payqris","bayarqris"],
   "description": "Buat kode QRIS Dinamis dengan nominal otomatis atau QRIS Statis",
+  "usage": "[nominal / bebas]",
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

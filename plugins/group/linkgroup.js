@@ -56,6 +56,7 @@ export default {
   "name": "linkgroup",
   "aliases": ["linkgc","linkgrup"],
   "description": "Mengambil link undangan grup WhatsApp",
+  "usage": "",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

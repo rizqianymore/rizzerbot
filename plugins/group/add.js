@@ -56,6 +56,7 @@ export default {
   "name": "add",
   "aliases": ["tambah","invite"],
   "description": "Menambahkan / mengundang member ke grup",
+  "usage": "628xxx",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

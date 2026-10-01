@@ -7,6 +7,7 @@ export default {
   "name": "bloombergstock",
   "aliases": ["bloomberg","stock","saham","ticker","bbg"],
   "description": "Pantau harga saham, komoditas emas/minyak, dan crypto secara realtime",
+  "usage": "<kode ticker / GC1:COM / saham>",
   "premiumOnly": false,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

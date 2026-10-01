@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "delprem",
   "description": "Hapus pengguna premium",
+  "usage": "<nomor>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid }) => {

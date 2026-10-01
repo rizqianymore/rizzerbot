@@ -18,6 +18,7 @@ export default {
   "name": "sticker",
   "aliases": ["s","stiker"],
   "description": "Convert image/video to sticker (bisa tambahkan teks atas/bawah)",
+  "usage": "[teks atas | bawah] (reply/kirim gambar)",
   "premiumOnly": false,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

@@ -18,6 +18,7 @@ import {
 export default {
   "name": "searchpro",
   "description": "Deep web search",
+  "usage": "<query>",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

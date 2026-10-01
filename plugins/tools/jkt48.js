@@ -162,6 +162,7 @@ export default {
   "name": "jkt48",
   "aliases": ["memberjkt","jkt","jktmember"],
   "description": "Informasi profil dan daftar member resmi JKT48",
+  "usage": "<nama/id member>",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {

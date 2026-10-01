@@ -20,6 +20,7 @@ export default {
   "name": "lyrics",
   "aliases": ["lirik"],
   "description": "Search song lyrics",
+  "usage": "<judul lagu>",
   "premiumOnly": true,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

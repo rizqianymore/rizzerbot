@@ -56,6 +56,7 @@ export default {
   "name": "group",
   "aliases": ["grup"],
   "description": "Buka atau tutup grup (chatting semua member / hanya admin)",
+  "usage": "<open / close>",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

@@ -6,6 +6,7 @@ export default {
   "name": "cnn",
   "aliases": ["cnnnews","beritacnn"],
   "description": "Cari berita internasional terkini dari CNN",
+  "usage": "<topik berita>",
   "premiumOnly": false,
   "category": "News",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

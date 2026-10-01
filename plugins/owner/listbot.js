@@ -5,6 +5,7 @@ export default {
   "name": "listbot",
   "aliases": ["bots","subbots"],
   "description": "Melihat daftar bot yang aktif",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, isPrimarySuperOwner, isSubBot, botJid, senderJid }) => {

@@ -5,6 +5,7 @@ export default {
   "name": "setch",
   "aliases": ["setsaluran","setchannel"],
   "description": "Atur ID/link saluran (newsletter) resmi bot untuk posting struk/update",
+  "usage": "<jid/link saluran>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner }) => {

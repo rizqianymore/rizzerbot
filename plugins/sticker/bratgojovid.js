@@ -465,6 +465,7 @@ export default {
   "name": "bratgojovid",
   "aliases": ["sbratgojovid"],
   "description": "Membuat stiker Brat Gojo video animasi berjalan",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

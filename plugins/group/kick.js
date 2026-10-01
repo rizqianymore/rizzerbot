@@ -56,6 +56,7 @@ export default {
   "name": "kick",
   "aliases": ["tendang","remove"],
   "description": "Mengeluarkan member dari grup",
+  "usage": "@user",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

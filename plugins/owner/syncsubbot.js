@@ -5,6 +5,7 @@ export default {
   "name": "syncsubbot",
   "aliases": ["updatesubbot","syncbot"],
   "description": "Perbarui dan sinkronkan database serta pengaturan seluruh sub-bot yang ada di server",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, senderJid, logger, isPrimarySuperOwner }) => {

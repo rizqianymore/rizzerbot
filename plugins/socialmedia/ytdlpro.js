@@ -1,11 +1,11 @@
 // plugins/socialmedia/ytdlpro.js — perintah "ytdlpro" (1 file = 1 perintah).
 import axios from "axios";
 
-
 export default {
   "name": "ytdlpro",
   "aliases": ["ytdl","yt"],
   "description": "Download video/audio YouTube",
+  "usage": "<url> [mp3]",
   "premiumOnly": true,
   "category": "Social Media",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

@@ -5,6 +5,7 @@ export default {
   "name": "claudehaiku",
   "aliases": ["claude","haiku","chiku"],
   "description": "Chat dengan Claude Haiku 4.5 via OverChat",
+  "usage": "<pertanyaan>",
   "premiumOnly": false,
   "category": "AI",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {

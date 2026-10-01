@@ -18,6 +18,7 @@ import {
 export default {
   "name": "hd",
   "description": "Upscale image to HD (2x)",
+  "usage": "(reply gambar)",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

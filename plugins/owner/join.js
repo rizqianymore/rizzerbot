@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "join",
   "description": "Join group via link",
+  "usage": "<link group>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {

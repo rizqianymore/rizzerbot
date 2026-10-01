@@ -8,6 +8,7 @@ export default {
   name: "listplugins",
   aliases: ["plugins", "cmds", "commandslist"],
   description: "Menampilkan daftar semua plugin yang ter-load beserta detailnya",
+  usage: "",
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
     await sendTyping();
@@ -32,6 +33,7 @@ export default {
         name: cmd.name,
         category: cat,
         description: cmd.description || "Tidak ada deskripsi",
+        usage: cmd.usage || "",
         aliases: cmd.aliases || [],
         file: fileName,
         ownerOnly: cmd.ownerOnly || false,
@@ -78,6 +80,7 @@ export default {
         const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map(a => `${prefix}${a}`).join(", ")}` : "";
         text += `│ • ${prefix}${p.name}${badgeStr}\n`;
         text += `│   ├ Desc: ${p.description}\n`;
+        if (p.usage) text += `│   ├ Usage: ${prefix}${p.name} ${p.usage}\n`;
         text += `│   ├ File: ${p.file}${aliasStr}\n`;
         text += `│   └\n`;
       }

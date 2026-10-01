@@ -18,6 +18,7 @@ import {
 export default {
   "name": "aipro",
   "description": "AI Chat (GPT/Gemini)",
+  "usage": "<prompt>",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

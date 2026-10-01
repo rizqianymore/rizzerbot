@@ -56,6 +56,7 @@ export default {
   "name": "revoke",
   "aliases": ["resetlink","revokelink"],
   "description": "Mereset link undangan grup dan membuat link baru",
+  "usage": "",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

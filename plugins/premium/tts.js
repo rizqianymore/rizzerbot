@@ -18,6 +18,7 @@ import {
 export default {
   "name": "tts",
   "description": "Text to speech (Google TTS)",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

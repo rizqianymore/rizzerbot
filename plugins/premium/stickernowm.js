@@ -18,6 +18,7 @@ import {
 export default {
   "name": "stickernowm",
   "description": "Create sticker without watermark",
+  "usage": "[teks atas | bawah] (reply gambar)",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

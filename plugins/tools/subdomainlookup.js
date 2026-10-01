@@ -12,6 +12,7 @@ export default {
   "name": "subdomainlookup",
   "aliases": ["subdomain","subdomains","findsub"],
   "description": "Mencari daftar subdomain aktif dari suatu domain",
+  "usage": "<domain>",
   "premiumOnly": false,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

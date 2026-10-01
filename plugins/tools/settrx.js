@@ -149,6 +149,7 @@ export default {
   "name": "settrx",
   "aliases": ["updatetrx","statustrx"],
   "description": "Update status transaksi (LUNAS, PENDING, PROSES, BATAL)",
+  "usage": "<id_trx> <status>",
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

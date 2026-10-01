@@ -19,6 +19,7 @@ export default {
   "name": "customprofile",
   "aliases": ["setprofile"],
   "description": "Set custom profile text",
+  "usage": "<teks bio>",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping, senderJid }) => {

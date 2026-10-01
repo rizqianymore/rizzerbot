@@ -5,6 +5,7 @@ export default {
   "name": "cleartmp",
   "aliases": ["clearsampah","clearcache","purgetmp"],
   "description": "Bersihkan file sampah, cache sesi usang, dan log sementara",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, logger, isPrimarySuperOwner }) => {

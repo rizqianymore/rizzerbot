@@ -19,6 +19,7 @@ import { getUptimeString } from '@/src/utils/helper.js';
 export default {
   "name": "ping",
   "description": "Check bot speed",
+  "usage": "",
   "category": "User",
   "run": async (sock, msg, args, { reply, senderJid, sendTyping }) => {
       await sendTyping();

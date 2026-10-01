@@ -5,6 +5,7 @@ export default {
   "name": "deepseek",
   "aliases": ["ds","deepseekai","r1"],
   "description": "Tanya AI DeepSeek (mendukung mode penalaran DeepSeek-R1)",
+  "usage": "<pertanyaan> [--think / --search]",
   "premiumOnly": true,
   "category": "AI",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

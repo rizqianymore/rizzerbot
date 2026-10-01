@@ -56,6 +56,7 @@ export default {
   "name": "infogrup",
   "aliases": ["gcinfo","groupinfo"],
   "description": "Menampilkan informasi detail grup WhatsApp saat ini",
+  "usage": "",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

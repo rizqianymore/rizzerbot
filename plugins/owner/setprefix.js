@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "setprefix",
   "description": "Change bot prefix (opsional: tambahkan --all untuk semua bot)",
+  "usage": "<simbol>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, botJid, senderJid, logger, isPrimarySuperOwner }) => {

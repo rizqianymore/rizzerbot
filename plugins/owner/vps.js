@@ -5,6 +5,7 @@ export default {
   "name": "vps",
   "aliases": ["cekvps","vpsstatus","serverinfo"],
   "description": "Cek spesifikasi dan kondisi server VPS (CPU, RAM, Disk, OS, Uptime)",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner }) => {

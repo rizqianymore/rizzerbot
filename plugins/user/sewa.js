@@ -20,6 +20,7 @@ export default {
   "name": "sewa",
   "aliases": ["sewabot","pricelist","harga","daftarharga","premiumprice"],
   "description": "Lihat daftar harga sewa bot dan paket user premium",
+  "usage": "",
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

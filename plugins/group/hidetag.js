@@ -56,6 +56,7 @@ export default {
   "name": "hidetag",
   "aliases": ["ht"],
   "description": "Mention semua member grup secara senyap/transparan",
+  "usage": "<pesan>",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

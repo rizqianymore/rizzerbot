@@ -5,6 +5,7 @@ export default {
   "name": "access",
   "aliases": ["checkaccess","useraccess"],
   "description": "Check user access",
+  "usage": "[nomor]",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid, senderJid }) => {

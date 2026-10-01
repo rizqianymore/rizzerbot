@@ -56,6 +56,7 @@ export default {
   "name": "demote",
   "aliases": ["turunadmin"],
   "description": "Menurunkan jabatan admin grup menjadi member biasa",
+  "usage": "@user",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

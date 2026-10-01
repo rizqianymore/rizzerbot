@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "delowner",
   "description": "Hapus owner tambahan dari bot",
+  "usage": "<nomor>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid, botJid, senderJid, logger }) => {

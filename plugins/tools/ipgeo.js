@@ -12,6 +12,7 @@ export default {
   "name": "ipgeo",
   "aliases": ["ipinfo","iplookup","checkip"],
   "description": "Lacak lokasi, negara, ISP, dan info jaringan IP atau domain",
+  "usage": "<ip / domain>",
   "premiumOnly": false,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

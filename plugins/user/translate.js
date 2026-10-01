@@ -20,6 +20,7 @@ export default {
   "name": "translate",
   "aliases": ["tr"],
   "description": "Translate text (default: id)",
+  "usage": "[kode_bahasa] <teks>",
   "premiumOnly": true,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

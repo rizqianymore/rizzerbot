@@ -27,6 +27,7 @@ export default {
   "name": "listtrx",
   "aliases": ["riwayattrx","orderlist","daftartrx"],
   "description": "Melihat daftar transaksi orderan terbaru",
+  "usage": "[jumlah]",
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, isGroup }) => {
       await sendTyping();

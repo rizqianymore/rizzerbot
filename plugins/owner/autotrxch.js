@@ -5,6 +5,7 @@ export default {
   "name": "autotrxch",
   "aliases": ["autochtrx","trxchannel"],
   "description": "Aktifkan atau nonaktifkan auto forward transaksi ke saluran (on/off)",
+  "usage": "<on / off>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, isPrimarySuperOwner }) => {

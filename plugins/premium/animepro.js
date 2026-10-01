@@ -18,6 +18,7 @@ import {
 export default {
   "name": "animepro",
   "description": "Search anime info (Jikan API)",
+  "usage": "<judul anime>",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

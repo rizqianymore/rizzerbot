@@ -20,6 +20,7 @@ export default {
   "name": "owner",
   "aliases": ["ownerinfo","creator"],
   "description": "Get owner info",
+  "usage": "",
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

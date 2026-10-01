@@ -465,6 +465,7 @@ export default {
   "name": "bratvermeilvid",
   "aliases": ["sbratvermeilvid"],
   "description": "Membuat stiker Brat Vermeil video animasi berjalan",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

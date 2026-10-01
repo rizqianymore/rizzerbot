@@ -20,6 +20,7 @@ export default {
   "name": "profile",
   "aliases": ["cekuser","userinfo","whois"],
   "description": "Cek informasi profil WhatsApp dan status data bot pengguna",
+  "usage": "[@user / nomor / reply]",
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping, senderJid, getTargetJid, prefix }) => {
       await sendTyping();

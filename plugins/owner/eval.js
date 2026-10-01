@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "eval",
   "description": "Evaluate javascript code",
+  "usage": "<kode js>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, senderJid, logger, isPrimarySuperOwner }) => {

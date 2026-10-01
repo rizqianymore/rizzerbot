@@ -12,6 +12,7 @@ export default {
   "name": "dnslookup",
   "aliases": ["dns","nslookup"],
   "description": "Cek catatan DNS domain (A, AAAA, MX, NS, TXT)",
+  "usage": "<domain>",
   "premiumOnly": false,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

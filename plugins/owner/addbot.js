@@ -5,6 +5,7 @@ export default {
   "name": "addbot",
   "aliases": ["jadibot","pairbot"],
   "description": "Tambahkan bot baru (sub-bot) via pairing code",
+  "usage": "<nomor whatsapp>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, senderJid, logger, getTargetJid }) => {

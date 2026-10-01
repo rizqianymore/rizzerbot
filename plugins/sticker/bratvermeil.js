@@ -465,6 +465,7 @@ export default {
   "name": "bratvermeil",
   "aliases": ["sbratvermeil"],
   "description": "Membuat stiker Brat versi Vermeil",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

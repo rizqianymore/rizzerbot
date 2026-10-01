@@ -5,6 +5,7 @@ export default {
   "name": "delch",
   "aliases": ["clearch","hapussaluran"],
   "description": "Hapus konfigurasi saluran resmi dari bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, isPrimarySuperOwner }) => {

@@ -5,6 +5,7 @@ export default {
   "name": "listowner",
   "aliases": ["owners"],
   "description": "Lihat daftar semua Owner bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, botJid }) => {

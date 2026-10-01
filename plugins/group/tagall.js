@@ -56,6 +56,7 @@ export default {
   "name": "tagall",
   "aliases": ["totag"],
   "description": "Mention semua member grup dengan daftar teks",
+  "usage": "[pesan]",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

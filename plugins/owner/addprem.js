@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "addprem",
   "description": "Tambahkan pengguna premium",
+  "usage": "<nomor> [hari]",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid }) => {

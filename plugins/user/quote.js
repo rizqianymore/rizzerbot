@@ -19,6 +19,7 @@ import { getUptimeString } from '@/src/utils/helper.js';
 export default {
   "name": "quote",
   "description": "Get a random rizz quote",
+  "usage": "",
   "premiumOnly": false,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

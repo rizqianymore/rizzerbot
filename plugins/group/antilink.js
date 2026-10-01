@@ -56,6 +56,7 @@ export default {
   "name": "antilink",
   "aliases": ["anti-link"],
   "description": "Aktifkan atau nonaktifkan proteksi anti link grup WhatsApp",
+  "usage": "<on / off>",
   "groupOnly": true,
   "groupAdminOnly": true,
   "category": "Group",

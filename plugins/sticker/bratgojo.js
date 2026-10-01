@@ -465,6 +465,7 @@ export default {
   "name": "bratgojo",
   "aliases": ["sbratgojo"],
   "description": "Membuat stiker Brat versi Gojo Satoru",
+  "usage": "<teks>",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

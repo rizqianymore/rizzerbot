@@ -27,6 +27,7 @@ export default {
   "name": "setqris",
   "aliases": ["updateqris"],
   "description": "Atur string QRIS statis utama bot (Khusus Owner)",
+  "usage": "<string qris>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

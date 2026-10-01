@@ -127,6 +127,7 @@ export default {
   name: "menu",
   aliases: ["help", "panduan"],
   description: "Menampilkan daftar seluruh perintah dan panduan cara penggunaannya.",
+  usage: "[command / kategori]",
   category: "General",
   run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
     await sendTyping();
@@ -169,7 +170,10 @@ export default {
     if (rawArg && !targetCategory) {
       const targetCmd = commands.get(rawArg);
       if (targetCmd) {
-        const usage = COMMAND_USAGES[targetCmd.name] ? ` *${prefix}${targetCmd.name} ${COMMAND_USAGES[targetCmd.name]}*` : ` *${prefix}${targetCmd.name}*`;
+        // Sumber kebenaran: field `usage` di masing-masing file plugin.
+        // COMMAND_USAGES di atas hanya fallback kompatibilitas (misal alias lama).
+        const usageArgs = targetCmd.usage ?? COMMAND_USAGES[targetCmd.name] ?? "";
+        const usage = usageArgs ? ` *${prefix}${targetCmd.name} ${usageArgs}*` : ` *${prefix}${targetCmd.name}*`;
         const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ") : "-";
 
         const detailText =

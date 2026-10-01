@@ -465,6 +465,7 @@ export default {
   "name": "brat",
   "aliases": ["bratimg","brattext","sbrat"],
   "description": "Membuat stiker teks Brat Classic (lokal generator)",
+  "usage": "<teks> [--green]",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, prefix }) => {

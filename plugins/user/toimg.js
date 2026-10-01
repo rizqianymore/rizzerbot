@@ -20,6 +20,7 @@ export default {
   "name": "toimg",
   "aliases": ["toimage"],
   "description": "Convert sticker to image",
+  "usage": "(reply stiker)",
   "premiumOnly": false,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

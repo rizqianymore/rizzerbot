@@ -4,6 +4,7 @@ import { db } from '@/src/core/database.js';
 export default {
   "name": "self",
   "description": "Set bot to self mode (owner only). Tambahkan --all untuk semua bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, botJid, senderJid, logger, isPrimarySuperOwner }) => {

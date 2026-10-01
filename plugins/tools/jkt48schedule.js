@@ -162,6 +162,7 @@ export default {
   "name": "jkt48schedule",
   "aliases": ["jktschedule","jadwaljkt48","jktjadwal","jkt48show"],
   "description": "Jadwal dan rincian show theater resmi JKT48 dengan pemilihan tanggal spesifik",
+  "usage": "[tanggal/kode show]",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {

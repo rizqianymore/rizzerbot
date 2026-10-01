@@ -162,6 +162,7 @@ export default {
   "name": "jkt48theater",
   "aliases": ["jkttheater","showtheater","jadwalteater"],
   "description": "Jadwal pertunjukan teater mingguan JKT48 beserta link tiket live streaming & teater",
+  "usage": "",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {

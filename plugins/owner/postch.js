@@ -5,6 +5,7 @@ export default {
   "name": "postch",
   "aliases": ["postsaluran","chpost"],
   "description": "Kirim pesan / pengumuman manual dari bot langsung ke saluran resmi",
+  "usage": "<pesan>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, quoted, isPrimarySuperOwner }) => {

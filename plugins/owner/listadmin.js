@@ -5,6 +5,7 @@ export default {
   "name": "listadmin",
   "aliases": ["admins","botadmins"],
   "description": "Lihat daftar semua Admin bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {

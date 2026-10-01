@@ -15,6 +15,7 @@ export default {
   "name": "jkt48showroom",
   "aliases": ["jktshowroom","showroomjkt","srjkt48","srjkt"],
   "description": "Peringkat dan leaderboard live Showroom member JKT48",
+  "usage": "",
   "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {

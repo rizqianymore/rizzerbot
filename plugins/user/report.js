@@ -19,6 +19,7 @@ import { getUptimeString } from '@/src/utils/helper.js';
 export default {
   "name": "report",
   "description": "Report bug to owner",
+  "usage": "<isi pesan laporan>",
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping, senderJid }) => {
       await sendTyping();

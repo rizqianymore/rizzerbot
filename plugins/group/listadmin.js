@@ -56,6 +56,7 @@ export default {
   "name": "listadmin",
   "aliases": ["adminlist","admins"],
   "description": "Menampilkan daftar seluruh admin grup saat ini",
+  "usage": "",
   "category": "Group",
   "run": async (sock, msg, args, context) => {
       await context.sendTyping();

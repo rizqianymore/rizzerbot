@@ -5,6 +5,7 @@ export default {
   "name": "botstatus",
   "aliases": ["statsbot","systemstatus"],
   "description": "Cek status kesehatan dan penggunaan memori bot",
+  "usage": "",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {

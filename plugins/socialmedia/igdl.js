@@ -1,109 +1,121 @@
 // plugins/socialmedia/igdl.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
-import axios from "axios";
 
-const IG_REGEX = /instagram\.com\/(p|reel|reels|stories|tv)\//i;
+function clean(s) {
+  return String(s || "").trim();
+}
 
-/**
- * Scraper Instagram menggunakan API azbry v2
- */
-async function instagramDownloader(url) {
-  const endpoint = "https://api.azbry.com/api/download/instagramv2";
-  const response = await axios.get(endpoint, {
-    params: { url: url },
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-    timeout: 30000,
-  });
-
-  const data = response.data;
-  if (!data || !data.status || !Array.isArray(data.links) || data.links.length === 0) {
-    throw new Error(data?.message || "Gagal mengambil media dari API Instagram");
-  }
-
-  const media = data.links.map((item) => {
-    const itemType = String(item.type || "").toLowerCase();
-    const itemUrl = String(item.url || "").toLowerCase();
-    const isVideo = itemType === "video" || itemType === "mp4" || itemUrl.includes(".mp4");
-    return {
-      type: isVideo ? "video" : "image",
-      url: item.url,
-      thumbnail: item.thumbnail || "",
-    };
-  });
-
-  const firstLink = data.links[0] || {};
-  const captionText = firstLink.text && firstLink.text !== "null" ? firstLink.text.trim() : "";
-  const authorName = data.author && data.author !== "Unknown" ? data.author : "-";
-
-  return {
-    username: authorName,
-    caption: captionText,
-    media,
-  };
+function cleanText(text = "") {
+  return String(text || "")
+    .replace(/\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export default {
   "name": "igdl",
-  "aliases": ["ig","instagram","instagramdl"],
+  "aliases": ["ig", "instagram", "instagramdl", "ig3", "igdl3", "instagram3"],
   "description": "Download video/foto Instagram",
+  "usage": "<url>",
   "category": "Social Media",
-  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
-      const url = args[0]?.trim();
+  "run": async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
+      const remoteJid = msg.key.remoteJid;
       const currentPrefix = prefix || ".";
+      const react = (emoji) =>
+        sock.sendMessage(remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
 
-      if (!url) {
-        return reply(
-          `📸 *Instagram Downloader*\n\n` +
-          `Gunakan: \`${currentPrefix}igdl <url>\`\n\n` +
-          `*Contoh:*\n` +
-          `> \`${currentPrefix}igdl https://www.instagram.com/reel/xxx\`\n` +
-          `> \`${currentPrefix}igdl https://www.instagram.com/p/xxx\``
-        );
+      const input = clean(args.join(" ") || args?.[0]);
+
+      if (!input) {
+        return reply(`Contoh:\n${currentPrefix}igdl https://instagram.com/...`);
       }
 
-      if (!IG_REGEX.test(url)) {
-        return reply("❌ URL tidak valid. Gunakan link Instagram (reel/post/story/tv).");
-      }
-
+      await react("✨");
       await sendTyping();
-      await reply("⏳ Mengunduh media Instagram...");
 
       try {
-        const result = await instagramDownloader(url);
+        const resApi = await fetch(
+          `https://api.nexray.eu.cc/downloader/v2/instagram?url=${encodeURIComponent(input)}`
+        );
 
-        if (!result?.media?.length) {
-          return reply("❌ Gagal mengambil media dari Instagram.");
+        if (!resApi.ok) throw new Error("API error");
+
+        const data = await resApi.json();
+
+        if (!data.status || !data.result?.media?.length) {
+          throw new Error("Media tidak ditemukan");
         }
 
-        const remoteJid = msg.key.remoteJid;
-        const author = result.username && result.username !== "-" ? `@${result.username}` : "";
-        const title = result.caption ? result.caption.slice(0, 100) : "";
+        const res = data.result;
 
-        let caption = `📸 *Instagram Downloader*`;
-        if (author) caption += `\n👤 *Author:* ${author}`;
-        if (title) caption += `\n📝 *Caption:* ${title}${result.caption.length > 100 ? "..." : ""}`;
+        const caption = [
+          "— instagram downloader —",
+          "",
+          `❀ author : ${cleanText(res.username)}`,
+          `❀ likes  : ${res.likes?.toLocaleString() || 0}`,
+          "",
+          "❀ title :",
+          `${cleanText(res.title || "-")}`,
+        ].join("\n").trim();
 
-        for (const item of result.media) {
-          const isVideo = item.type === "video";
-          if (isVideo) {
-            await sock.sendMessage(
-              remoteJid,
-              { video: { url: item.url }, caption },
-              { quoted: msg }
-            );
+        const annotations = [
+          {
+            polygonVertices: [
+              { x: 0, y: 0 },
+              { x: 1000, y: 0 },
+              { x: 1000, y: 1000 },
+              { x: 0, y: 1000 },
+            ],
+            shouldSkipConfirmation: true,
+            embeddedContent: {
+              embeddedMusic: {
+                musicContentMediaId: "1409620227516822",
+                songId: "244215252974958",
+                author: "Elaina - MD",
+                title: "​",
+                artistAttribution: "https://whatsapp.com/channel/0029VbAYjQgKrWQulDTYcg2K",
+                countryBlocklist: "",
+                isExplicit: false,
+                artworkMediaKey: "",
+              },
+            },
+            embeddedAction: true,
+          },
+        ];
+
+        const images = [];
+        const videos = [];
+
+        for (const item of res.media) {
+          if (item.type === "mp4") {
+            videos.push(item.url);
           } else {
-            await sock.sendMessage(
-              remoteJid,
-              { image: { url: item.url }, caption },
-              { quoted: msg }
-            );
+            images.push(item.url);
           }
-          caption = "";
         }
-      } catch (err) {
-        return reply(`❌ *Gagal mengunduh:*\n> ${err.message}`);
+
+        if (images.length) {
+          await sock.sendMessage(remoteJid, {
+            album: images.map((url, i) => ({
+              image: { url },
+              caption: i === 0 ? caption : "",
+              annotations,
+            })),
+          }, { quoted: msg });
+        }
+
+        for (const url of videos) {
+          await sock.sendMessage(remoteJid, {
+            video: { url },
+            caption,
+            annotations,
+          }, { quoted: msg });
+        }
+
+        await react("✅");
+      } catch (e) {
+        logger?.warn?.(`[igdl] ${e?.message || e}`);
+        await react("❌");
+        return reply("Error bang");
       }
     },
 };

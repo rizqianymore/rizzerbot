@@ -5,6 +5,7 @@ export default {
   "name": "delbot",
   "aliases": ["stopbot","removebot"],
   "description": "Hentikan dan hapus sub-bot",
+  "usage": "<nomor bot>",
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, isPrimarySuperOwner, senderJid, logger }) => {
