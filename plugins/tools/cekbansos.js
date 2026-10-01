@@ -7,6 +7,7 @@ import {
   parseHasil,
   cekBansosOtomatis,
   savePendingSession,
+  peekPendingSession,
   takePendingSession,
 } from "@/src/services/cekbansos.js";
 import { getNikInfoText } from "@/src/services/nikparse.js";
@@ -49,7 +50,7 @@ export default {
         if (!session) {
           return reply(
             `Sesi captcha tidak ditemukan / kedaluwarsa.\n` +
-            `Kirim dulu \`${currentPrefix}cekbansos ${nik}\` untuk dapat gambar captcha, lalu balas dengan \`${currentPrefix}cekbansos ${nik} <kode>\` maksimal 3 menit.`
+            `Kirim dulu \`${currentPrefix}cekbansos ${nik}\` untuk dapat gambar captcha, lalu balas dengan \`${currentPrefix}cekbansos ${nik} <kode>\` maksimal 5 menit.`
           );
         }
         await sendTyping();
@@ -75,9 +76,26 @@ export default {
         logger?.warn?.(`[cekbansos] solver mentok untuk ${nik.slice(0, 6)}****`);
 
         // ── Fallback manual: kirim gambar captcha, user ketik kodenya ──
+        // Anti double-send: kalau sesi untuk NIK ini masih hidup, kirim ulang
+        // gambar YANG SAMA (bukan sesi baru) agar kode user tetap cocok.
+        const existing = peekPendingSession(senderJid, nik);
+        if (existing?.image) {
+          await sock.sendMessage(
+            remoteJid,
+            {
+              image: existing.image,
+              caption:
+                `Ketik kode di gambar\n\n` +
+                `Balas dengan:\n\`${currentPrefix}cekbansos ${nik} <kode>\`\n\n` +
+                `Berlaku 5 menit.`,
+            },
+            { quoted: msg }
+          );
+          return;
+        }
         const session = await fetchFormSession();
         const image = await fetchCaptchaImage(session);
-        savePendingSession(senderJid, session, nik);
+        savePendingSession(senderJid, session, nik, image);
         await sock.sendMessage(
           remoteJid,
           {
@@ -85,7 +103,7 @@ export default {
             caption:
               `Ketik kode di gambar\n\n` +
               `Balas dengan:\n\`${currentPrefix}cekbansos ${nik} <kode>\`\n\n` +
-              `Berlaku 3 menit.`,
+              `Berlaku 5 menit.`,
           },
           { quoted: msg }
         );

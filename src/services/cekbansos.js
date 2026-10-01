@@ -160,13 +160,13 @@ export async function solveCaptchaOCR(imageBuffer) {
 // ── Solver remote (ocr.space, gratis, tanpa install; hanya gambar captcha yg dikirim, tanpa NIK) ──
 const OCRSPACE_URL = "https://api.ocr.space/parse/image";
 
-export async function solveCaptchaRemote(imageBuffer) {
+export async function solveCaptchaRemote(imageBuffer, engine = "2") {
   try {
     const pre = await preprocessCaptcha(imageBuffer);
     const b64 = `data:image/png;base64,${pre.toString("base64")}`;
     const body = new URLSearchParams({
       base64Image: b64,
-      OCREngine: "2",
+      OCREngine: engine,
       isTable: "false",
     }).toString();
     const res = await client.post(OCRSPACE_URL, body, {
@@ -185,12 +185,17 @@ export async function solveCaptchaRemote(imageBuffer) {
   }
 }
 
-/** Chain solver: lokal (tesseract, cepat) → remote (ocr.space, tanpa install). */
+/**
+ * Chain solver: lokal (tesseract, cepat) → remote Engine 2 → ulangi Engine 2
+ * (demo key kadang flaky) → Engine 1 sebagai opini kedua.
+ */
 export async function solveCaptcha(imageBuffer) {
   const local = await solveCaptchaOCR(imageBuffer);
   if (local) return { guess: local, via: "lokal" };
-  const remote = await solveCaptchaRemote(imageBuffer);
-  if (remote) return { guess: remote, via: "remote" };
+  for (const engine of ["2", "2", "1"]) {
+    const remote = await solveCaptchaRemote(imageBuffer, engine);
+    if (remote) return { guess: remote, via: `remote-e${engine}` };
+  }
   return { guess: null, via: null };
 }
 
@@ -289,21 +294,28 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
   return { status: "captcha-gagal", lastGuess };
 }
 
-/** Penampung session manual: senderJid → { jar, token, nik, expires }. TTL 3 menit. */
+/** Penampung session manual: senderJid → { jar, token, captchaUrl, image, nik, expires }. TTL 5 menit. */
 const pendingManual = new Map();
-const PENDING_TTL_MS = 3 * 60 * 1000;
+const PENDING_TTL_MS = 5 * 60 * 1000;
 
-export function savePendingSession(senderJid, session, nik) {
-  pendingManual.set(senderJid, { ...session, nik, expires: Date.now() + PENDING_TTL_MS });
+export function savePendingSession(senderJid, session, nik, image = null) {
+  pendingManual.set(senderJid, { ...session, nik, image, expires: Date.now() + PENDING_TTL_MS });
   if (pendingManual.size > 200) {
     const now = Date.now();
     for (const [k, v] of pendingManual.entries()) if (v.expires < now) pendingManual.delete(k);
   }
 }
 
-export function takePendingSession(senderJid, nik) {
+/** Intip tanpa menghapus (untuk kirim ulang gambar yang sama). */
+export function peekPendingSession(senderJid, nik) {
   const p = pendingManual.get(senderJid);
   if (!p || p.expires < Date.now() || p.nik !== nik) return null;
+  return p;
+}
+
+export function takePendingSession(senderJid, nik) {
+  const p = peekPendingSession(senderJid, nik);
+  if (!p) return null;
   pendingManual.delete(senderJid);
   return p;
 }
