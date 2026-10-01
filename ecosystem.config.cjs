@@ -13,6 +13,7 @@ module.exports = {
       min_uptime: "10s",
       env: {
         NODE_ENV: "production",
+        HEALTH_PORT: "3001",
       },
       error_file: "logs/pm2-error.log",
       out_file: "logs/pm2-out.log",

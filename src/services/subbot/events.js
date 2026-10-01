@@ -98,6 +98,10 @@ export function setupSubBotEvents({
         botEntry.status = "disconnected";
         subBots.delete(botId);
         try {
+          const { notifyOwner } = await import("@/src/services/health.js");
+          notifyOwner(`Subbot ${cleanNumber} logout, sesi dihapus.`).catch(() => {});
+        } catch (_) {}
+        try {
           deleteFolderRecursive(sessionDir);
         } catch (_) { }
       }

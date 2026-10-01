@@ -36,6 +36,7 @@ let _cleanIntervalStarted = false;
 let primarySock = null;
 let isStarting = false;
 let reconnectTimer = null;
+let lastDisconnectAt = 0;
 
 export function getPrimarySock() {
   return primarySock;
@@ -166,7 +167,7 @@ export async function startBot() {
       }
     }
 
-    sock.ev.on("connection.update", (update) => {
+    sock.ev.on("connection.update", async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr && !usePairingCode) {
@@ -187,6 +188,15 @@ export async function startBot() {
           `Primary connection closed. Reason: ${reason} (Status Code: ${statusCode || "N/A"
           }). Reconnecting: ${shouldReconnect}`
         );
+
+        lastDisconnectAt = Date.now();
+        try {
+          const { setPrimaryOnline, notifyOwner } = await import("@/src/services/health.js");
+          setPrimaryOnline(false);
+          if (!shouldReconnect) {
+            notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => {});
+          }
+        } catch (_) {}
 
         if (shouldReconnect) {
           logger.info("Attempting to reconnect primary in 5 seconds...");
@@ -220,6 +230,15 @@ export async function startBot() {
         }
       } else if (connection === "open") {
       logger.info("Primary Rizzer Bot successfully connected and is now online!");
+      try {
+        const { setPrimaryOnline, notifyOwner } = await import("@/src/services/health.js");
+        setPrimaryOnline(true);
+        if (lastDisconnectAt && Date.now() - lastDisconnectAt > 60 * 1000) {
+          const menit = Math.round((Date.now() - lastDisconnectAt) / 60000);
+          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => {});
+        }
+      } catch (_) {}
+      lastDisconnectAt = 0;
       if (sock.user?.id) {
         db.registerBotJid(sock.user.id);
         try {
