@@ -168,6 +168,10 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
       base64Image: b64,
       OCREngine: engine,
       isTable: "false",
+      // Captcha kecil (160x46): minta server upscale + tanpa deteksi orientasi.
+      scale: "true",
+      detectOrientation: "false",
+      isOverlayRequired: "false",
     }).toString();
     const res = await client.post(OCRSPACE_URL, body, {
       headers: {
@@ -175,7 +179,7 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": UA,
       },
-      timeout: 15000,
+      timeout: 12000,
     });
     const text = res.data?.ParsedResults?.[0]?.ParsedText || "";
     const clean = String(text).replace(/[^A-Za-z0-9]/g, "");
@@ -186,17 +190,28 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
 }
 
 /**
- * Chain solver: lokal (tesseract, cepat) → remote Engine 2 → ulangi Engine 2
- * (demo key kadang flaky) → Engine 1 sebagai opini kedua.
+ * Chain solver: lokal (tesseract binary, cepat bila terinstall) → remote Engine 2 → Engine 1.
+ * Kode captcha Kemensos 4 karakter: tebakan berpanjang 4 diutamakan, sisanya cadangan.
+ * Return { guess, via, alternates: [{ guess, via }] }.
  */
 export async function solveCaptcha(imageBuffer) {
+  const candidates = [];
+  const push = (g, via) => {
+    const clean = String(g || "").replace(/[^A-Za-z0-9]/g, "");
+    if (clean && !candidates.some((c) => c.guess === clean)) candidates.push({ guess: clean, via });
+  };
   const local = await solveCaptchaOCR(imageBuffer);
-  if (local) return { guess: local, via: "lokal" };
-  for (const engine of ["2", "2", "1"]) {
+  if (local) push(local, "lokal");
+  for (const engine of ["2", "1"]) {
     const remote = await solveCaptchaRemote(imageBuffer, engine);
-    if (remote) return { guess: remote, via: `remote-e${engine}` };
+    if (remote) push(remote, `remote-e${engine}`);
+    if (candidates.length >= 2) break;
   }
-  return { guess: null, via: null };
+  // Panjang 4 dulu, sisanya cadangan (server tetap penentu akhir).
+  candidates.sort((a, b) => Number(b.guess.length === 4) - Number(a.guess.length === 4));
+  if (!candidates.length) return { guess: null, via: null, alternates: [] };
+  const [first, ...rest] = candidates;
+  return { guess: first.guess, via: first.via, alternates: rest };
 }
 
 // ── Parser halaman hasil ──
@@ -271,33 +286,37 @@ export function formatHasil(nik, parsed) {
 }
 
 /**
- * Alur otomatis penuh: session baru → captcha → OCR → submit → hasil.
- * Ulangi dari awal (session+ captcha BARU) bila captcha ditolak.
+ * Alur otomatis penuh: session baru → captcha → solver (len-4 diutamakan) → submit.
+ * Tiap sesi dicoba maks 2 tebakan (tebakan-2 gratis bila server belum invalidate
+ * kode; bila sudah, request-nya gagal cepat dan loop lanjut ke sesi baru).
+ * Ulangi dengan session + captcha BARU bila ditolak.
  */
 export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
-  let lastGuess = "";
   let nullStreak = 0;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const session = await fetchFormSession();
-    let image = await fetchCaptchaImage(session);
-    const { guess } = await solveCaptcha(image);
-    image = null; // lepas buffer segera (hemat memori)
-    if (!guess) {
+    const image = await fetchCaptchaImage(session);
+    const { guess, alternates } = await solveCaptcha(image);
+    const tries = [guess, ...(alternates || []).map((a) => a.guess)]
+      .filter(Boolean)
+      .slice(0, 2);
+    if (!tries.length) {
       // Solver mati total (API down/limit) 2x beruntun → langsung manual, hemat waktu.
       if (++nullStreak >= 2) break;
       continue;
     }
     nullStreak = 0;
-    lastGuess = guess;
-    const { success } = await submitNik(session, nik, guess);
-    if (!success) {
+    for (const code of tries) {
+      const { success } = await submitNik(session, nik, code);
+      if (success) {
+        const html = await fetchHasil(session);
+        return { status: "ok", result: parseHasil(html), attempts: attempt };
+      }
       await new Promise((r) => setTimeout(r, 400)); // jeda sopan antar percobaan
-      continue; // kode salah → ulang dengan session+captcha baru
     }
-    const html = await fetchHasil(session);
-    return { status: "ok", result: parseHasil(html), attempts: attempt };
+    // Semua tebakan sesi ini salah → ulang dengan session + captcha baru.
   }
-  return { status: "captcha-gagal", lastGuess };
+  return { status: "captcha-gagal" };
 }
 
 /** Penampung session manual: senderJid → { jar, token, captchaUrl, image, nik, expires }. TTL 5 menit. */

@@ -29,7 +29,6 @@ export default {
 
         const lines = [
           `🌍 *IP GEOLOCATION LOOKUP*`,
-          `─────────────────────────`,
           `📌 *Query:* \`${geo.query}\``,
           `🏳️ *Negara:* ${geo.country} (${geo.countryCode})`,
           `🏙️ *Kota/Wilayah:* ${geo.city}, ${geo.regionName}`,
@@ -38,7 +37,6 @@ export default {
           `🕒 *Timezone:* ${geo.timezone}`,
           `🏢 *ISP / Org:* ${geo.isp} (${geo.org || "-"})`,
           `🔢 *AS:* ${geo.as || "-"}`,
-          `─────────────────────────`,
         ];
 
         await reply(lines.join("\n"));

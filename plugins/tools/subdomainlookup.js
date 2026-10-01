@@ -33,7 +33,6 @@ export default {
         const lines = [
           `🌐 *SUBDOMAIN SCANNER: ${data.domain.toUpperCase()}*`,
           `_Ditemukan ${data.count} subdomain_`,
-          `─────────────────────────`,
         ];
 
         // Tampilkan 25 teratas
@@ -47,7 +46,6 @@ export default {
           lines.push(`\n_...dan ${data.count - 25} subdomain lainnya._`);
         }
 
-        lines.push(`─────────────────────────`);
         await reply(lines.join("\n"));
       } catch (err) {
         await reply(`❌ Gagal mencari subdomain: ${err.message}`);

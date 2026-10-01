@@ -177,8 +177,7 @@ export default {
           return reply("❌ Tidak ada pengumuman berita JKT48 saat ini.");
         }
 
-        let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n`;
-        text += `─────────────────────────\n`;
+        let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n\n`;
 
         newsList.forEach((item, idx) => {
           const tgl = formatDate(item.valid_date_from);
@@ -189,7 +188,6 @@ export default {
           text += `   🔗 Link: ${url}\n\n`;
         });
 
-        text += `─────────────────────────\n`;
         text += `💡 _Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
 
         await reply(text.trim());

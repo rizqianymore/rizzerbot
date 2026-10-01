@@ -36,9 +36,7 @@ export default {
           const detail = await getInewsArticle(input);
           const lines = [
             `📰 *${detail.title}*`,
-            `─────────────────────────`,
             detail.content,
-            `─────────────────────────`,
             `🔗 *Tautan:* ${detail.url}`,
           ];
 
@@ -74,7 +72,6 @@ export default {
         const lines = [
           `📰 *HASIL PENCARIAN iNews.id*`,
           `_Topik: "${input}"_`,
-          `─────────────────────────`,
         ];
 
         for (let i = 0; i < results.length; i++) {

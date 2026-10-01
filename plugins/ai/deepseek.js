@@ -60,7 +60,7 @@ export default {
               ? `${result.reasoning.slice(0, 800)}... *(ringkasan)*`
               : result.reasoning;
 
-          output += `💭 *Proses Berpikir (Chain of Thought):*\n_${trimmedReasoning}_\n\n───────────────────\n\n`;
+          output += `💭 *PROSES BERPIKIR (CHAIN OF THOUGHT):*\n_${trimmedReasoning}_\n\n`;
         }
 
         output += `📝 *Jawaban:*\n${result.answer}`;

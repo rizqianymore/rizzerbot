@@ -29,7 +29,6 @@ export default {
 
         const lines = [
           `🌐 *DNS RECORDS: ${records.domain.toUpperCase()}*`,
-          `─────────────────────────`,
         ];
 
         if (records.a.length > 0) {
@@ -60,11 +59,10 @@ export default {
           }
         }
 
-        if (lines.length <= 2) {
+        if (lines.length <= 1) {
           return reply(`❌ Tidak ditemukan record DNS publik untuk *${domain}*.`);
         }
 
-        lines.push(`─────────────────────────`);
         await reply(lines.join("\n"));
       } catch (err) {
         await reply(`❌ Gagal DNS Lookup: ${err.message}`);

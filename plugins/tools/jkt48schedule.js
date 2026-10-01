@@ -249,8 +249,7 @@ export default {
         const exactShows = schedules.filter((s) => s.date === targetDateStr);
 
         if (exactShows.length > 0) {
-          let text = `🎭 *JADWAL TEATER JKT48 (${formattedTargetDate})*\n`;
-          text += `─────────────────────────\n`;
+          let text = `🎭 *JADWAL TEATER JKT48 (${formattedTargetDate})*\n\n`;
 
           exactShows.forEach((s, idx) => {
             const team = s.jkt48_member_type ? `[Tim ${s.jkt48_member_type}]` : "";
@@ -265,7 +264,6 @@ export default {
             text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
           });
 
-          text += `─────────────────────────\n`;
           text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk melihat line-up member penampil.`;
 
           return await reply(text.trim());
@@ -282,8 +280,7 @@ export default {
         const topAlternatives = sortedAlternatives.slice(0, 5);
 
         let text = `ℹ️ Tidak ada show pada tanggal *${formattedTargetDate}*.\n\n`;
-        text += `🎭 *5 PILIHAN SHOW TERDEKAT:*\n`;
-        text += `─────────────────────────\n`;
+        text += `🎭 *5 PILIHAN SHOW TERDEKAT:*\n\n`;
 
         topAlternatives.forEach((s, idx) => {
           const tgl = formatDate(s.date);
@@ -296,7 +293,6 @@ export default {
           text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
         });
 
-        text += `─────────────────────────\n`;
         text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk memilih dan melihat rincian member.`;
 
         await reply(text.trim());

@@ -177,8 +177,7 @@ export default {
             return reply("❌ Data member tidak ditemukan.");
           }
 
-          let text = `👥 *DAFTAR MEMBER JKT48 (${members.length} Member)*\n`;
-          text += `─────────────────────────\n`;
+          let text = `👥 *DAFTAR MEMBER JKT48 (${members.length} Member)*\n\n`;
 
           members.slice(0, 20).forEach((m, idx) => {
             text += `${idx + 1}. *${m.name}* (ID: ${m.id || "-"})\n`;
@@ -188,7 +187,6 @@ export default {
             text += `_... dan ${members.length - 20} member lainnya._\n`;
           }
 
-          text += `─────────────────────────\n`;
           text += `💡 *Cara Pilih Member:*\n`;
           text += `Ketik: *${prefix}jkt48 <nama / ID>*\n`;
           text += `_Contoh: *${prefix}jkt48 ${members[0]?.name || "Freya"}*_`;

@@ -383,7 +383,6 @@ export function formatTrxText(trx) {
   return (
     `🧾 *STRUK TRANSAKSI RESMI*\n` +
     `🏪 *${(trx.storeName || "RIZZER STORE").toUpperCase()}*\n` +
-    `─────────────────────────\n` +
     `🆔 *ID Trx:* \`${trx.id}\`\n` +
     `📅 *Tanggal:* ${trx.time}\n` +
     `👤 *Pembeli:* ${trx.buyer}\n` +
@@ -392,7 +391,6 @@ export function formatTrxText(trx) {
     `💰 *Total:* *${trx.formattedPrice}*\n` +
     `📌 *Status:* ${badge.text}\n` +
     (trx.note && trx.note !== "-" ? `📝 *Catatan:* ${trx.note}\n` : "") +
-    `─────────────────────────\n` +
     `_Terima kasih telah berbelanja!_`
   );
 }
