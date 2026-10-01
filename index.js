@@ -1,3 +1,4 @@
+import "./src/utils/log-filter.js";
 import fs from "fs";
 import path from "path";
 
@@ -84,11 +85,19 @@ async function gracefulShutdown(signal) {
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
-process.on("unhandledRejection", (reason) => {
+process.on("unhandledRejection", async (reason) => {
+  try {
+    const { shouldSuppressLog } = await import("./src/utils/log-filter.js");
+    if (shouldSuppressLog(reason)) return;
+  } catch (_) {}
   logger?.error?.("[Unhandled Rejection Trapped]", reason?.message || reason);
 });
 
-process.on("uncaughtException", (err) => {
+process.on("uncaughtException", async (err) => {
+  try {
+    const { shouldSuppressLog } = await import("./src/utils/log-filter.js");
+    if (shouldSuppressLog(err)) return;
+  } catch (_) {}
   logger?.error?.("[Uncaught Exception Trapped]", err?.message || err);
 });
 
