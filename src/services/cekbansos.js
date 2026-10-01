@@ -157,6 +157,43 @@ export async function solveCaptchaOCR(imageBuffer) {
   }
 }
 
+// ── Solver remote (ocr.space, gratis, tanpa install; hanya gambar captcha yg dikirim, tanpa NIK) ──
+const OCRSPACE_URL = "https://api.ocr.space/parse/image";
+
+export async function solveCaptchaRemote(imageBuffer) {
+  try {
+    const pre = await preprocessCaptcha(imageBuffer);
+    const b64 = `data:image/png;base64,${pre.toString("base64")}`;
+    const body = new URLSearchParams({
+      base64Image: b64,
+      OCREngine: "2",
+      isTable: "false",
+    }).toString();
+    const res = await client.post(OCRSPACE_URL, body, {
+      headers: {
+        apikey: process.env.OCRSPACE_API_KEY || "helloworld",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": UA,
+      },
+      timeout: 30000,
+    });
+    const text = res.data?.ParsedResults?.[0]?.ParsedText || "";
+    const clean = String(text).replace(/[^A-Za-z0-9]/g, "");
+    return clean || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Chain solver: lokal (tesseract, cepat) → remote (ocr.space, tanpa install). */
+export async function solveCaptcha(imageBuffer) {
+  const local = await solveCaptchaOCR(imageBuffer);
+  if (local) return { guess: local, via: "lokal" };
+  const remote = await solveCaptchaRemote(imageBuffer);
+  if (remote) return { guess: remote, via: "remote" };
+  return { guess: null, via: null };
+}
+
 // ── Parser halaman hasil ──
 function stripTags(s) {
   return String(s || "")
@@ -196,20 +233,34 @@ export function parseHasil(html) {
 
 export function formatHasil(nik, parsed) {
   const maskNik = (n) => (n.length === 16 ? `${n.slice(0, 6)}********${n.slice(-4)}` : n);
-  let text = `✅ *HASIL CEK BANSOS*\n`;
-  if (parsed.badge) text += `📛 ${parsed.badge}\n`;
-  text += `🪪 NIK: ${maskNik(nik)}\n\n`;
+  // Kapitalisasi rapi: kata biasa → huruf depan besar, singkatan → tetap besar.
+  const ACRONYMS = new Set(["dtsen", "nik", "pkh", "pbi", "jk", "kpd", "ktp"]);
+  const neatWord = (w) => {
+    const l = w.toLowerCase();
+    if (!l) return w;
+    if (ACRONYMS.has(l)) return l.toUpperCase();
+    return l.charAt(0).toUpperCase() + l.slice(1);
+  };
+  const neat = (s) =>
+    String(s || "-")
+      .toLowerCase()
+      .split(/(\s+|[()/|-])/)
+      .map((t) => (/^[\s()/|-]+$/.test(t) ? t : neatWord(t)))
+      .join("");
+  let text = `*Hasil Cek Bansos*\n`;
+  if (parsed.badge) text += `${neat(parsed.badge)}\n`;
+  text += `NIK: ${maskNik(nik)}\n\n`;
   if (!parsed.rows.length) {
-    return text + `ℹ️ Data tidak ditemukan untuk NIK tersebut (tidak terdaftar sebagai penerima manfaat).`;
+    return text + `Data tidak ditemukan untuk NIK tersebut (tidak terdaftar sebagai penerima manfaat).`;
   }
   for (const r of parsed.rows) {
     text +=
-      `👤 *Nama:* ${r.nama}\n` +
-      `📊 *Desil:* ${r.desil} (${r.ketDtsen})\n` +
-      `🍚 *Sembako:* ${r.sembako}${r.sembakoPeriode !== "-" ? ` (${r.sembakoPeriode})` : ""}\n` +
-      `👨‍👩‍👧 *PKH:* ${r.pkh}${r.pkhPeriode !== "-" ? ` (${r.pkhPeriode})` : ""}\n` +
-      `🏥 *PBI-JK:* ${r.pbi}${r.pbiPeriode !== "-" ? ` (${r.pbiPeriode})` : ""}${r.pbiKet !== "-" ? ` — ${r.pbiKet}` : ""}\n` +
-      `♿ *KPD:* ${r.kpd}\n`;
+      `Nama: ${neat(r.nama)}\n` +
+      `Desil: ${neat(r.desil)} (${neat(r.ketDtsen)})\n` +
+      `Sembako: ${neat(r.sembako)}${r.sembakoPeriode !== "-" ? ` (${neat(r.sembakoPeriode)})` : ""}\n` +
+      `PKH: ${neat(r.pkh)}${r.pkhPeriode !== "-" ? ` (${neat(r.pkhPeriode)})` : ""}\n` +
+      `PBI-JK: ${neat(r.pbi)}${r.pbiPeriode !== "-" ? ` (${neat(r.pbiPeriode)})` : ""}${r.pbiKet !== "-" ? ` — ${neat(r.pbiKet)}` : ""}\n` +
+      `KPD: ${neat(r.kpd)}\n`;
   }
   return text.trim();
 }
@@ -219,14 +270,13 @@ export function formatHasil(nik, parsed) {
  * Ulangi dari awal (session+ captcha BARU) bila captcha ditolak.
  */
 export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
-  if (!(await isOcrAvailable())) return { status: "no-ocr" };
   let lastGuess = "";
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const session = await fetchFormSession();
     let image = await fetchCaptchaImage(session);
-    const guess = await solveCaptchaOCR(image);
+    const { guess } = await solveCaptcha(image);
     image = null; // lepas buffer segera (hemat memori)
-    if (!guess) continue; // OCR gagal baca → captcha baru
+    if (!guess) continue; // solver gagal baca → captcha baru
     lastGuess = guess;
     const { success } = await submitNik(session, nik, guess);
     if (!success) {

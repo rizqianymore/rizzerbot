@@ -5,12 +5,21 @@ import {
   submitNik,
   fetchHasil,
   parseHasil,
-  formatHasil,
   cekBansosOtomatis,
-  isOcrAvailable,
   savePendingSession,
   takePendingSession,
 } from "@/src/services/cekbansos.js";
+import { getNikInfoText } from "@/src/services/nikparse.js";
+
+/** Hasil bansos + lookup info NIK dalam satu balasan. */
+async function buildHasilText(nik, parsed) {
+  const bansos = formatHasil(nik, parsed);
+  try {
+    const info = await getNikInfoText(nik);
+    if (info) return `${bansos}\n\n${info}`;
+  } catch (_) {}
+  return bansos;
+}
 
 const NIK_REGEX = /^\d{16}$/;
 
@@ -28,9 +37,9 @@ export default {
 
       if (!nik || !NIK_REGEX.test(nik)) {
         return reply(
-          `❌ NIK harus 16 digit angka!\n\n` +
-          `*Gunakan:* \`${currentPrefix}cekbansos <nik16>\`\n` +
-          `*Contoh:* \`${currentPrefix}cekbansos 3171051505590004\``
+          `NIK harus 16 digit angka!\n\n` +
+          `Gunakan: \`${currentPrefix}cekbansos <nik16>\`\n` +
+          `Contoh: \`${currentPrefix}cekbansos 3171051505590004\``
         );
       }
 
@@ -39,33 +48,31 @@ export default {
         const session = takePendingSession(senderJid, nik);
         if (!session) {
           return reply(
-            `❌ Sesi captcha tidak ditemukan / kedaluwarsa.\n` +
+            `Sesi captcha tidak ditemukan / kedaluwarsa.\n` +
             `Kirim dulu \`${currentPrefix}cekbansos ${nik}\` untuk dapat gambar captcha, lalu balas dengan \`${currentPrefix}cekbansos ${nik} <kode>\` maksimal 3 menit.`
           );
         }
         await sendTyping();
         try {
           const { success } = await submitNik(session, nik, manualCode);
-          if (!success) return reply("❌ Kode captcha salah. Ulangi: kirim lagi `.cekbansos " + nik + "`.");
+          if (!success) return reply("Kode captcha salah. Ulangi: kirim lagi `.cekbansos " + nik + "`.");
           const html = await fetchHasil(session);
-          return reply(formatHasil(nik, parseHasil(html)));
+          return reply(await buildHasilText(nik, parseHasil(html)));
         } catch (err) {
           logger?.warn?.(`[cekbansos] manual gagal: ${err.message}`);
-          return reply(`❌ Gagal memproses: ${err.message}`);
+          return reply(`Gagal memproses: ${err.message}`);
         }
       }
 
-      // ── Jalur otomatis: solver OCR + retry ──
+      // ── Jalur otomatis: solver langsung (lokal → remote) + retry ──
       await sendTyping();
-      await reply("⏳ Mengecek data ke Kemensos...");
+      await reply("Mengecek data ke Kemensos...");
 
       try {
-        if (await isOcrAvailable()) {
-          const res = await cekBansosOtomatis(nik, { maxAttempts: 4 });
-          if (res.status === "ok") return reply(formatHasil(nik, res.result));
-          // OCR mentok (4x salah) → jatuh ke manual di bawah
-          logger?.warn?.(`[cekbansos] OCR mentok untuk ${nik.slice(0, 6)}****`);
-        }
+        const res = await cekBansosOtomatis(nik, { maxAttempts: 4 });
+        if (res.status === "ok") return reply(await buildHasilText(nik, res.result));
+        // Solver mentok (4x salah) → jatuh ke manual di bawah
+        logger?.warn?.(`[cekbansos] solver mentok untuk ${nik.slice(0, 6)}****`);
 
         // ── Fallback manual: kirim gambar captcha, user ketik kodenya ──
         const session = await fetchFormSession();
@@ -76,15 +83,15 @@ export default {
           {
             image,
             caption:
-              `🔤 *Ketik kode di gambar*\n\n` +
+              `Ketik kode di gambar\n\n` +
               `Balas dengan:\n\`${currentPrefix}cekbansos ${nik} <kode>\`\n\n` +
-              `⏱️ Berlaku 3 menit.`,
+              `Berlaku 3 menit.`,
           },
           { quoted: msg }
         );
       } catch (err) {
         logger?.warn?.(`[cekbansos] gagal: ${err.message}`);
-        return reply(`❌ Gagal menghubungi server Kemensos: ${err.message}`);
+        return reply(`Gagal menghubungi server Kemensos: ${err.message}`);
       }
     },
 };
