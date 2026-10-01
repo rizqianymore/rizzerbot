@@ -163,9 +163,13 @@ export default {
       sosmed: "Social Media",
       news: "News",
       berita: "News",
+      sports: "Sports",
+      sport: "Sports",
+      general: "General",
     };
 
-    const targetCategory = rawArg ? categoryAliases[rawArg] : null;
+    const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
+    const targetCategory = rawArg && !showAll ? categoryAliases[rawArg] : null;
 
     // 2. Jika user meminta bantuan spesifik satu command (misal: .help tiktok atau .menu jkt48)
     if (rawArg && !targetCategory) {
@@ -214,28 +218,47 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    let menuText = `*${activeSettings.botName || "WhatsApp Bot"}*\n`;
-    menuText += `Prefix: [ ${prefix} ] • Status: ${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User"}\n\n`;
-
-    const order = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General"];
+    const order = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General", "Sports"];
     const catKeys = Object.keys(categories).sort((a, b) => {
       const ia = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
       const ib = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
       return ia - ib;
     });
 
-    // List polos ke bawah: semua perintah tanpa penjelasan.
-    // (.menu = semua kategori, .menu <kategori> = filter 1 kategori)
-    let totalCmds = 0;
-    for (const cat of catKeys) {
-      menuText += `*${cat.toUpperCase()}:*\n`;
-      for (const cmd of categories[cat]) {
-        menuText += `• ${prefix}${cmd.name}\n`;
-        totalCmds++;
+    const role = isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User";
+    const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
+    let menuText = "";
+
+    // .menu = cuma list kategori, super simple
+    if (!rawArg) {
+      menuText += `*${activeSettings.botName || "WhatsApp Bot"}* [${prefix}]\n\n`;
+      for (const cat of catKeys) {
+        menuText += `• *${cat}* — ${prefix}menu ${cat.toLowerCase()}\n`;
       }
-      menuText += `\n`;
+      menuText += `\n_Contoh: ${prefix}menu ai_`;
+    } else if (targetCategory) {
+      // .menu <kategori> = list perintah kategori itu aja, inline
+      const cat = catKeys[0];
+      const names = categories[cat].map((c) => `${prefix}${c.name}`).join(", ");
+      menuText += `*${cat.toUpperCase()} (${categories[cat].length})*\n${names}\n\n_Ketik ${prefix}menu <nama> untuk panduan_`;
+    } else if (showAll) {
+      // .menu all = semua kategori inline (khusus yang butuh)
+      menuText += `*${activeSettings.botName || "WhatsApp Bot"}* [${prefix}] • ${role}\n`;
+      menuText += `_Total ${totalCmds} perintah_\n\n`;
+      for (const cat of catKeys) {
+        menuText += `*${cat.toUpperCase()} (${categories[cat].length}):*\n`;
+        menuText += categories[cat].map((c) => `${prefix}${c.name}`).join(", ") + `\n\n`;
+      }
+      menuText += `_Ketik ${prefix}menu <nama> untuk panduan_`;
+    } else {
+      // arg tidak dikenal → balas list kategori + hint
+      menuText += `❌ *${rawArg}* tidak ditemukan.\n\n`;
+      menuText += `*${activeSettings.botName || "WhatsApp Bot"}* [${prefix}]\n`;
+      menuText += `${totalCmds} perintah • ${catKeys.length} kategori\n\n`;
+      for (const cat of catKeys) {
+        menuText += `• *${cat}* (${categories[cat].length}) — ${prefix}menu ${cat.toLowerCase()}\n`;
+      }
     }
-    menuText += `_Total: ${totalCmds} perintah._`;
 
     const finalCaption = menuText.trim();
 
