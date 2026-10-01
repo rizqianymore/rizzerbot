@@ -37,6 +37,10 @@ export const settings = {
     channelName: "Official Channel",
     autoForwardTrxToChannel: false,
 
+    // Data siswa via Google Apps Script (?query=<nis>&mode=nis, 302 -> googleusercontent)
+    // Bisa dioverride via env SISWA_API_URL tanpa edit kode.
+    siswaApiUrl: "https://script.google.com/macros/s/AKfycbzFd_CjY2y6jnle9hmlp71nyxy8mscur2tWF8gz773-IthSVkKF3v3Px3viPhPcA4U2mw/exec",
+
     // QRIS Dinamis & Static Settings
     qrisString: "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
     qrisMerchantName: "Rizzer Cloud",

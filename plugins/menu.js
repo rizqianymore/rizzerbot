@@ -43,6 +43,7 @@ const COMMAND_USAGES = {
   pinterest: "<kata kunci>",
   image: "<kata kunci>",
   listplugins: "",
+  ceknis: "<nis, cth: 539241249>",
   trx: "<barang> | <harga> | <buyer> | [metode]",
   cektrx: "<id_trx>",
   settrx: "<id_trx> <status>",
