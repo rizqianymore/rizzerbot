@@ -66,7 +66,7 @@ export default {
           }
 
           const lines = [
-            `*Hasil Pencarian Berita Kompas TV*`,
+            `*HASIL PENCARIAN BERITA KOMPAS TV*`,
             `_Kata Kunci: "${query}"_`,
             "",
           ];
@@ -113,7 +113,7 @@ export default {
         }
 
         const lines = [
-          `*Berita Terkini Kompas TV*`,
+          `*BERITA TERKINI KOMPAS TV*`,
           `_Pembaruan Langsung dari kompas.tv/news_`,
           "",
         ];

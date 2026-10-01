@@ -15,7 +15,7 @@ export default {
 
       if (!url || !/threads/i.test(url)) {
         return reply(
-          `🧵 *Threads Downloader*\n\n` +
+          `🧵 *THREADS DOWNLOADER*\n\n` +
           `Masukkan link postingan Threads yang ingin diunduh.\n\n` +
           `*Contoh:*\n` +
           `\`${currentPrefix}tdl https://www.threads.net/@zuck/post/xxx\``
@@ -88,7 +88,7 @@ export default {
 
         const cleanDesc = decodeEntities(info.title || info.description || "");
         const captionText =
-          `🧵 *Threads Downloader*\n\n` +
+          `🧵 *THREADS DOWNLOADER*\n\n` +
           `• Author: *${info.author || "Unknown"}*\n` +
           (cleanDesc ? `• Deskripsi: ${cleanDesc}\n` : "") +
           `• Total Media: ${mediaResults.length} file`;

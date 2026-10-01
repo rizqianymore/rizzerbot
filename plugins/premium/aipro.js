@@ -28,7 +28,7 @@ export default {
       await reply("🧠 Menganalisis...");
       try {
         const answer = await aiChat(prompt);
-        await reply(`🤖 *AI Answer:*\n\n${answer.slice(0, 3000)}`);
+        await reply(`🤖 *AI ANSWER:*\n\n${answer.slice(0, 3000)}`);
       } catch (err) {
         await reply(`❌ ${err.message}`);
       }

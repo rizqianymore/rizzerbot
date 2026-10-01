@@ -31,7 +31,7 @@ export default {
         const hdBuffer = await upscaleImage(buffer, 2);
         await sock.sendMessage(
           msg.key.remoteJid,
-          { image: hdBuffer, caption: "✨ *Hasil Upscale HD (2x)*" },
+          { image: hdBuffer, caption: "✨ *HASIL UPSCALE HD (2X)*" },
           { quoted: msg }
         );
       } catch (err) {

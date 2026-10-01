@@ -30,7 +30,7 @@ export default {
           const sJid = `${b.number}@s.whatsapp.net`;
           db.updateBotSettings(sJid, { public: false });
         }
-        reply("🔒 *Mode Self (Owner Only)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
+        reply("🔒 *MODE SELF (OWNER ONLY)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
       } else {
         db.updateBotSettings(activeBotJid, { public: false });
         reply(`🔒 Bot (+${activeBotJid.split('@')[0]}) sekarang dalam mode Self.`);

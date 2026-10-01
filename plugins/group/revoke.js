@@ -69,7 +69,7 @@ export default {
       try {
         const newCode = await sock.groupRevokeInvite(ctx.remoteJid);
         const newLink = `https://chat.whatsapp.com/${newCode}`;
-        await context.reply(`🔄 *Link undangan grup berhasil di-reset!*\n\nLink baru:\n🔗 ${newLink}`);
+        await context.reply(`🔄 *LINK UNDANGAN GRUP BERHASIL DI-RESET!*\n\nLink baru:\n🔗 ${newLink}`);
       } catch (err) {
         await context.reply(`❌ Gagal mereset link grup: ${err.message}`);
       }

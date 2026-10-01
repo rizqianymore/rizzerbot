@@ -14,7 +14,7 @@ export default {
     const text = args.join(" ").trim();
     if (!text) {
       return reply(
-        `🤍 *Claude Haiku 4.5*\n\n` +
+        `🤍 *CLAUDE HAIKU 4.5*\n\n` +
         `Tanya apa aja ke AI Claude Haiku — cepat dan ringan, cocok buat pertanyaan sehari-hari.\n\n` +
         `*PENGGUNAAN:*\n` +
         `> *${prefix}claudehaiku <pertanyaan>*\n\n` +
@@ -35,7 +35,7 @@ export default {
       if (!result.status) {
         await react("☢");
         return reply(
-          `❌ *Claude Haiku Gagal*\n\n> ${result.error || "Gagal mendapatkan respons"}`
+          `❌ *CLAUDE HAIKU GAGAL*\n\n> ${result.error || "Gagal mendapatkan respons"}`
         );
       }
 
@@ -45,7 +45,7 @@ export default {
       await reply(answer.length > 4000 ? answer.slice(0, 4000) + "..." : answer);
     } catch (err) {
       await react("☢");
-      reply(`❌ *Claude Haiku Gagal*\n\n> ${err?.message || "Terjadi kesalahan."}`);
+      reply(`❌ *CLAUDE HAIKU GAGAL*\n\n> ${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

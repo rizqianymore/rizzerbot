@@ -55,7 +55,7 @@ export default {
       categories[p.category].push(p);
     }
 
-    let text = `*${activeSettings.botName} - Daftar Plugin*\n`;
+    let text = `*${activeSettings.botName} - DAFTAR PLUGIN*\n`;
     text += `• Prefix : [ *${prefix}* ]\n`;
     text += `• Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
     text += `• Total  : *${pluginsData.length} Plugin*\n\n`;

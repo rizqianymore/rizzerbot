@@ -177,7 +177,7 @@ export default {
         const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ") : "-";
 
         const detailText =
-          `*Panduan Perintah: ${prefix}${targetCmd.name}*\n\n` +
+          `*PANDUAN PERINTAH: ${prefix}${targetCmd.name}*\n\n` +
           `• *Kategori:* ${targetCmd.category || "General"}\n` +
           `• *Deskripsi:* ${targetCmd.description || "Tidak ada deskripsi."}\n` +
           `• *Format Penggunaan:*${usage}\n` +

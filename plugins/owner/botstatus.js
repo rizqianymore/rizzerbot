@@ -23,7 +23,7 @@ export default {
       const activeSubBots = getSubBotsList().length;
 
       const text =
-        `⚙️ *Status Sistem*\n\n` +
+        `⚙️ *STATUS SISTEM*\n\n` +
         `• Uptime: ${hours}j ${minutes}m ${seconds}s\n` +
         `• RAM RSS: ${rssMB} MB\n` +
         `• Heap: ${heapUsedMB} MB / ${heapTotalMB} MB\n` +

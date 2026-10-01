@@ -177,7 +177,7 @@ export default {
         }
 
         const lines = [
-          `*Jadwal Teater JKT48 Minggu Ini*`,
+          `*JADWAL TEATER JKT48 MINGGU INI*`,
           `_Sumber: Live Theater & Showroom API_`,
           ``,
         ];

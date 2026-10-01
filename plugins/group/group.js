@@ -69,10 +69,10 @@ export default {
       const action = (args[0] || "").toLowerCase();
       if (action === "open" || action === "buka") {
         await sock.groupSettingUpdate(ctx.remoteJid, "not_announcement");
-        await context.reply("🔓 *Grup berhasil dibuka!* Semua member sekarang dapat mengirim pesan.");
+        await context.reply("🔓 *GRUP BERHASIL DIBUKA!* Semua member sekarang dapat mengirim pesan.");
       } else if (action === "close" || action === "tutup") {
         await sock.groupSettingUpdate(ctx.remoteJid, "announcement");
-        await context.reply("🔒 *Grup berhasil ditutup!* Hanya admin yang dapat mengirim pesan.");
+        await context.reply("🔒 *GRUP BERHASIL DITUTUP!* Hanya admin yang dapat mengirim pesan.");
       } else {
         await context.reply("❌ Perintah tidak valid! Gunakan: *.group open* (buka grup) atau *.group close* (tutup grup)");
       }

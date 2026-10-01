@@ -245,23 +245,19 @@ export function parsePlat(rawInput) {
 
 export function formatPlatInfo(p) {
   const lines = [];
-  lines.push(`*Info Plat ${p.formatted}*`);
-  lines.push(`Kode wilayah: ${p.kode}`);
+  lines.push(`*INFO PLAT*`);
+  lines.push(`Plat: ${p.formatted}`);
+  lines.push(`Kode Wilayah: ${p.kode}`);
   lines.push(`Provinsi: ${p.samsat?.provinsi || p.provinsi}`);
   lines.push(`Wilayah: ${p.wilayah}`);
-  if (p.negara) lines.push(`Negara/lembaga: ${p.negara}`);
-  // Detail presisi dari Firestore samsat.info bila ada (Daerah + Samsat + Alamat).
-  if (p.samsat?.daerah) lines.push(`Daerah presisi: ${p.samsat.daerah}`);
+  if (p.negara) lines.push(`Negara: ${p.negara}`);
+  if (p.samsat?.daerah) lines.push(`Daerah: ${p.samsat.daerah}`);
   if (p.samsat?.samsat) lines.push(`Samsat: ${p.samsat.samsat}`);
-  if (p.samsat?.alamat) lines.push(`Alamat Samsat: ${p.samsat.alamat}`);
-  lines.push(`Cakupan umum: ${p.areas.join(", ")}`);
-  lines.push(`No. registrasi: ${p.angka}${p.suffix ? ` ${p.suffix}` : ""}`);
-  lines.push(`Perkiraan jenis: ${p.jenis}`);
+  if (p.samsat?.alamat) lines.push(`Alamat: ${p.samsat.alamat}`);
+  if (!p.samsat?.daerah) lines.push(`Cakupan: ${p.areas.join(", ")}`);
+  lines.push(`No. Registrasi: ${p.angka}${p.suffix ? ` ${p.suffix}` : ""}`);
+  lines.push(`Jenis: ${p.jenis}`);
   if (p.khusus) lines.push(`Khusus: ${p.khusus}`);
-  if (p.samsat?.huruf) lines.push(`Huruf belakang: ${p.suffix || "-"} (${p.samsat.huruf} huruf, sistem TNKB)`);
-  lines.push(`_${p.note}_`);
-  if (p.samsat) lines.push(`_Sumber Samsat: samsat.info (Firestore informasisamsat)._`);
-  else lines.push(`_Bukan data pemilik/pajak. Untuk pajak & nama pemilik cek Samsat resmi._`);
   return lines.join("\n");
 }
 

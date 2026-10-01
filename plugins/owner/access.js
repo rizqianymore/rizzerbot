@@ -17,7 +17,7 @@ export default {
         ? new Date(user.premiumUntil).toLocaleDateString("id-ID")
         : "Tanpa batas waktu";
       reply(
-        `*Status Akses ${jid.split("@")[0]}*\n` +
+        `*STATUS AKSES ${jid.split("@")[0]}*\n` +
         `Role: *${access.role}*\n` +
         `Owner: *${access.owner ? "Ya" : "Tidak"}*\n` +
         `Admin: *${access.admin ? "Ya" : "Tidak"}*\n` +

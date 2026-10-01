@@ -17,7 +17,7 @@ export default {
         return reply("ℹ️ Belum ada Admin Bot tambahan yang terdaftar.");
       }
 
-      let text = `🛡️ *Daftar Admin*\n\n`;
+      let text = `🛡️ *DAFTAR ADMIN*\n\n`;
       uniqueAdmins.forEach((j, i) => {
         const num = j.split("@")[0];
         text += `${i + 1}. +${num}\n`;

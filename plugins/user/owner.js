@@ -27,7 +27,7 @@ export default {
       const activeSettings = db.getSettings();
       const ownerNumber = db.normalizeJid(activeSettings.ownerNumber).split("@")[0] || activeSettings.ownerNumber;
       const text =
-        `👤 *Owner Info*\n\n` +
+        `👤 *OWNER INFO*\n\n` +
         `*Nama:* ${activeSettings.ownerName}\n` +
         `*Nomor:* wa.me/${ownerNumber}\n\n` +
         `Hubungi owner jika ada kendala / ingin sewa bot atau upgrade premium.`;

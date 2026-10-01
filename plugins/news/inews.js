@@ -15,7 +15,7 @@ export default {
       const input = args.join(" ").trim();
       if (!input) {
         return reply(
-          `📰 *Panduan Berita iNews.id*\n\n` +
+          `📰 *PANDUAN BERITA INEWS.ID*\n\n` +
           `• *.inews [kata kunci/topik]*\n  _Mencari berita terkini di iNews.id_\n\n` +
           `• *.inews [link artikel]*\n  _Membaca isi lengkap berita iNews.id_\n\n` +
           `💡 *Contoh:*\n` +

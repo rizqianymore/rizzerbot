@@ -45,7 +45,7 @@ export default {
         }
 
         const text =
-          `🖥️ *Informasi Server VPS*\n\n` +
+          `🖥️ *INFORMASI SERVER VPS*\n\n` +
           `• OS: ${platform} ${arch} (${release})\n` +
           `• Uptime: ${sysDays}h ${sysHours}j ${sysMinutes}m\n` +
           `• CPU: ${cpuModel} (${cpuCores} Core)\n` +

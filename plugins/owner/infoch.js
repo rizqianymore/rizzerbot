@@ -15,7 +15,7 @@ export default {
 
       if (!channelJid) {
         return reply(
-          `📢 *Informasi Saluran*\n\n` +
+          `📢 *INFORMASI SALURAN*\n\n` +
           `Status: 🔴 Belum terhubung\n\n` +
           `Gunakan \`.setch <JID_SALURAN>\` untuk menghubungkan bot ke saluran.`
         );

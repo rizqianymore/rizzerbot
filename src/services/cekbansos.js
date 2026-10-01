@@ -252,7 +252,7 @@ export function formatHasil(nik, parsed) {
       .split(/(\s+|[()/|-])/)
       .map((t) => (/^[\s()/|-]+$/.test(t) ? t : neatWord(t)))
       .join("");
-  let text = `*Hasil Cek Bansos*\n`;
+  let text = `*HASIL CEK BANSOS*\n`;
   if (parsed.badge) text += `${neat(parsed.badge)}\n`;
   text += `NIK: ${maskNik(nik)}\n\n`;
   if (!parsed.rows.length) {

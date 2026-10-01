@@ -13,7 +13,7 @@ export default {
       const groups = listRentals();
       const ids = Object.keys(groups);
       if (!ids.length) return reply("Belum ada data sewa grup.");
-      let text = `*Daftar Sewa Grup (${ids.length})*\n\n`;
+      let text = `*DAFTAR SEWA GRUP (${ids.length})*\n\n`;
       for (const gid of ids) {
         const r = groups[gid];
         const sisa = Math.max(0, Math.ceil((r.until - Date.now()) / (24 * 60 * 60 * 1000)));

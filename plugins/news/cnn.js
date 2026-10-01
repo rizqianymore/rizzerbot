@@ -15,7 +15,7 @@ export default {
       const query = args.join(" ").trim();
       if (!query) {
         return reply(
-          `🌐 *Panduan Penggunaan Berita CNN*\n\n` +
+          `🌐 *PANDUAN PENGGUNAAN BERITA CNN*\n\n` +
           `• *.cnn [topik/kata kunci]*\n  _Mencari berita terkini dari CNN (Internasional)_\n\n` +
           `💡 *Contoh:*\n` +
           `*.cnn indonesia*\n` +

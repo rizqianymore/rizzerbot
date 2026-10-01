@@ -71,7 +71,7 @@ export default {
         : "-";
 
       const lines = [
-        `👤 *Informasi Profil Pengguna*`,
+        `👤 *INFORMASI PROFIL PENGGUNA*`,
         ``,
         `• *Nama:* ${displayName}`,
         `• *Nomor:* +${phoneNum}`,

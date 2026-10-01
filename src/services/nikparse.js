@@ -159,7 +159,7 @@ export async function enrichWilayah(parsed) {
 }
 
 export function formatNikInfo(p) {
-  let text = `*Info NIK*\n`;
+  let text = `*INFO NIK*\n`;
   text += `NIK: ${p.nik}\n`;
   text += `Format: ${p.formatted}\n`;
   text += `Jenis Kelamin: ${p.gender}\n`;

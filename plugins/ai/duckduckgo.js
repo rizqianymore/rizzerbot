@@ -14,7 +14,7 @@ export default {
       let text = args.join(" ").trim();
       if (!text) {
         return reply(
-          `🦆 *Panduan Penggunaan DuckDuckGo AI*\n\n` +
+          `🦆 *PANDUAN PENGGUNAAN DUCKDUCKGO AI*\n\n` +
           `• *.ddg [pertanyaan]*\n  _Model default (GPT-5.4-mini)_\n\n` +
           `• *.ddg --claude [pertanyaan]*\n  _Gunakan Claude Haiku 4.5_\n\n` +
           `• *.ddg --mistral [pertanyaan]*\n  _Gunakan Mistral Small 4_\n\n` +

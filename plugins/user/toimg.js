@@ -35,7 +35,7 @@ export default {
         const png = await webpToImage(buffer);
         await sock.sendMessage(
           msg.key.remoteJid,
-          { image: png, caption: "🖼️ *Hasil konversi stiker ke gambar*" },
+          { image: png, caption: "🖼️ *HASIL KONVERSI STIKER KE GAMBAR*" },
           { quoted: msg }
         );
       } catch (err) {

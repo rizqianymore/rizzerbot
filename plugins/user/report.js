@@ -26,7 +26,7 @@ export default {
       const activeSettings = db.getSettings();
       const ownerJid = db.normalizeJid(activeSettings.ownerNumber);
       const data =
-        `📩 *Laporan Masuk*\n\n` +
+        `📩 *LAPORAN MASUK*\n\n` +
         `*Dari:* ${msg.pushName || "User"}\n` +
         `*Nomor:* ${senderJid}\n\n` +
         `*Laporan:* ${args.join(" ") || "(kosong)"}`;

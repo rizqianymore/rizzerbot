@@ -22,7 +22,7 @@ export default {
       ].filter(Boolean);
       const uniqueOwners = [...new Set(ownerList.map(j => db.normalizeJid(j)))];
 
-      let text = `👑 *Daftar Owner (+${activeBotJid.split("@")[0]})*\n\n`;
+      let text = `👑 *DAFTAR OWNER (+${activeBotJid.split("@")[0]})*\n\n`;
       uniqueOwners.forEach((j, i) => {
         const num = j.split("@")[0];
         const isMain = j === primary;

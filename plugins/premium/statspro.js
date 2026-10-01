@@ -27,7 +27,7 @@ export default {
       const total = Object.values(usage).reduce((a, b) => a + b, 0);
       const top = Object.entries(usage).sort((a, b) => b[1] - a[1]).slice(0, 10);
       let text =
-        `📊 *Statistik Penggunaan Bot*\n\n` +
+        `📊 *STATISTIK PENGGUNAAN BOT*\n\n` +
         `*Total Perintah:* ${total}\n` +
         `*Jumlah Fitur:* ${Object.keys(usage).length}\n\n` +
         `*Top 10 Command:*\n`;

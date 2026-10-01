@@ -32,7 +32,7 @@ export default {
           results
             .map((r, i) => `${i + 1}. *${r.text}*\n${r.url || ""}`)
             .join("\n\n");
-        await reply(`🔎 *Hasil Pencarian:*\n\n${text.slice(0, 3000)}`);
+        await reply(`🔎 *HASIL PENCARIAN:*\n\n${text.slice(0, 3000)}`);
       } catch (err) {
         await reply(`❌ Gagal mencari: ${err.message}`);
       }

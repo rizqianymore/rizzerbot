@@ -28,7 +28,7 @@ export default {
       const speed = Date.now() - start;
       await sock.sendMessage(
         msg.key.remoteJid,
-        { text: `⚡ *Pong!*\nKecepatan: *${speed}ms*` },
+        { text: `⚡ *PONG!*\nKecepatan: *${speed}ms*` },
         { quoted: msg }
       );
     },

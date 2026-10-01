@@ -12,7 +12,7 @@ export default {
       if (!args.length) return reply("Masukkan pesan!");
       let chats = Object.keys(await sock.groupFetchAllParticipating());
       for (let jid of chats) {
-        await sock.sendMessage(jid, { text: `📢 *Broadcast*\n\n${args.join(" ")}` });
+        await sock.sendMessage(jid, { text: `📢 *BROADCAST*\n\n${args.join(" ")}` });
       }
       reply(`✅ Broadcast terkirim ke ${chats.length} grup.`);
     },

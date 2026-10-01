@@ -30,7 +30,7 @@ export default {
           const sJid = `${b.number}@s.whatsapp.net`;
           db.updateBotSettings(sJid, { public: true });
         }
-        reply("🌐 *Mode Public (Semua User)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
+        reply("🌐 *MODE PUBLIC (SEMUA USER)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
       } else {
         db.updateBotSettings(activeBotJid, { public: true });
         reply(`🌐 Bot (+${activeBotJid.split('@')[0]}) sekarang dalam mode Public.`);

@@ -74,7 +74,7 @@ export default {
       const creator = admins.find((p) => p.admin === "superadmin");
       const regularAdmins = admins.filter((p) => p.admin !== "superadmin");
 
-      let text = `👑 *Daftar Admin Grup*\n`;
+      let text = `👑 *DAFTAR ADMIN GRUP*\n`;
       text += `📌 *Grup:* ${ctx.meta.subject}\n`;
       text += `👥 *Total Admin:* ${admins.length}\n\n`;
 

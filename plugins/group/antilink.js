@@ -81,8 +81,8 @@ export default {
       db.setAntilink(ctx.remoteJid, enable);
       await context.reply(
         enable
-          ? "🛡️ *Anti-Link Berhasil Diaktifkan!*\nMember non-admin yang mengirim tautan grup WhatsApp akan dihapus pesannya secara otomatis."
-          : "🛡️ *Anti-Link Telah Dimatikan!*"
+          ? "🛡️ *ANTI-LINK BERHASIL DIAKTIFKAN!*\nMember non-admin yang mengirim tautan grup WhatsApp akan dihapus pesannya secara otomatis."
+          : "🛡️ *ANTI-LINK TELAH DIMATIKAN!*"
       );
     },
 };

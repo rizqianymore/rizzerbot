@@ -29,7 +29,7 @@ export default {
       }
 
       const lines = [
-        `🤖 *Daftar Bot Aktif (${filteredList.length})*\n`
+        `🤖 *DAFTAR BOT AKTIF (${filteredList.length})*\n`
       ];
 
       for (let i = 0; i < filteredList.length; i++) {

@@ -29,7 +29,7 @@ export default {
       if (!text) return reply("❌ Masukkan teks! Contoh: *.translate hello world*");
       try {
         const result = await translateText(text, "id");
-        await reply(`✅ *Terjemahan:*\n\n${result.translated}`);
+        await reply(`✅ *TERJEMAHAN:*\n\n${result.translated}`);
       } catch (err) {
         await reply(`❌ Terjemahan gagal: ${err.message}`);
       }

@@ -14,7 +14,7 @@ export default {
       let text = args.join(" ").trim();
       if (!text) {
         return reply(
-          `🧠 *Panduan Pengunaan Deepseek AI*\n\n` +
+          `🧠 *PANDUAN PENGGUNAAN DEEPSEEK AI*\n\n` +
           `• *.deepseek [pertanyaan]*\n  _Mode chat standar (DeepSeek-V3)_\n\n` +
           `• *.deepseek --think [pertanyaan]*\n  _Mode penalaran mendalam (DeepSeek-R1)_\n\n` +
           `• *.deepseek --search [pertanyaan]*\n  _Mode pencarian web terkini_\n\n` +

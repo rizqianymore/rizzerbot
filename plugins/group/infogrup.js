@@ -78,7 +78,7 @@ export default {
         })
         : "-";
 
-      let text = `📋 *Informasi Grup*\n\n`;
+      let text = `📋 *INFORMASI GRUP*\n\n`;
       text += `📌 *Nama Grup:* ${meta.subject}\n`;
       text += `🆔 *ID Grup:* ${meta.id}\n`;
       text += `👑 *Pembuat Grup:* ${creator}\n`;

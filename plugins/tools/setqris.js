@@ -63,7 +63,7 @@ export default {
       });
 
       reply(
-        `✅ *QRIS Berhasil Diperbarui!*\n\n` +
+        `✅ *QRIS BERHASIL DIPERBARUI!*\n\n` +
         `🏢 *Merchant:* ${parsed.merchantName}\n` +
         `📍 *Kota:* ${parsed.merchantCity}\n` +
         `🔐 *CRC16:* ${parsed.crc} (Valid)\n` +
