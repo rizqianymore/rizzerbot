@@ -1,11 +1,6 @@
 // plugins/tools/ceknis.js — perintah "ceknis" (1 file = 1 perintah).
 import { getSiswaInfoText, getMultiSiswaInfoText, parseMultiNis } from "@/src/services/ceknis.js";
 
-// Cooldown khusus ceknis (GAS kuota kecil): 8 detik per sender.
-// Global cooldown bot 3 detik tetap jalan, ini lapisan tambahan.
-const lastHit = new Map();
-const COOLDOWN_MS = 8000;
-
 export default {
   "name": "ceknis",
   "aliases": ["siswa", "datanis", "ceknisnis", "carinis"],
@@ -23,21 +18,8 @@ export default {
         );
       }
 
-      // Rate-limit lokal agar GAS tidak jebol kuota saat spam
-      const now = Date.now();
-      const last = lastHit.get(senderJid) || 0;
-      if (!isOwner && now - last < COOLDOWN_MS) {
-        const wait = Math.ceil((COOLDOWN_MS - (now - last)) / 1000);
-        return reply(`Sabar, tunggu ${wait} detik sebelum cek lagi.`);
-      }
-      lastHit.set(senderJid, now);
-      if (lastHit.size > 1000) {
-        for (const [k, t] of lastHit.entries()) {
-          if (now - t > 60_000) lastHit.delete(k);
-        }
-      }
-
-      await sendTyping();
+      sendTyping();
+      // Cache 5 mnt (hit) / 30 mnt (not-found) di service sudah melindungi kuota GAS.
       try {
         const showFullPhone = true;
         const { valid, invalid } = parseMultiNis(input, 5);

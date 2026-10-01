@@ -15,7 +15,7 @@ function getTaskBotJid(sock) {
 }
 
 const chatQueues = new Map();
-const QUEUE_DELAY_MS = 50;
+const QUEUE_DELAY_MS = 0;
 
 function getSockIdentity(sock) {
   try {

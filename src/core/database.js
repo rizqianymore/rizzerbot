@@ -293,7 +293,30 @@ class Store {
     if (changed || accessChanged || !fs.existsSync(usersDbPath)) this.save();
   }
 
+  saveSoon(ms = 1500) {
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      try {
+        this.save();
+      } catch (_) {}
+    }, ms);
+    if (this._saveTimer.unref) this._saveTimer.unref();
+  }
+
+  flush() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
+    this.save();
+  }
+
   save() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
     const dbDirectory = path.dirname(this.dbPath);
     fs.mkdirSync(dbDirectory, { recursive: true });
     fs.mkdirSync(path.dirname(this.usersDbPath), { recursive: true });
@@ -723,7 +746,7 @@ class Store {
 
   recordCommand(command) {
     this.data.usage[command] = (Number(this.data.usage[command]) || 0) + 1;
-    this.save();
+    this.saveSoon(2000);
   }
 
   isAntilink(groupId) {
@@ -1116,5 +1139,32 @@ export const db = {
   isAntilink: (groupId) => activeStore().isAntilink(groupId),
   setAntilink: (groupId, enabled) => activeStore().setAntilink(groupId, enabled),
 };
+
+export function flushAllStores() {
+  for (const store of stores.values()) {
+    try {
+      if (store._saveTimer) {
+        clearTimeout(store._saveTimer);
+        store._saveTimer = null;
+      }
+      store.save();
+    } catch (_) {}
+  }
+}
+
+if (typeof process !== "undefined" && !process.env.RIZZER_NO_FLUSH_HOOK) {
+  const flush = () => {
+    try {
+      flushAllStores();
+    } catch (_) {}
+  };
+  process.once("beforeExit", flush);
+  process.once("SIGINT", () => {
+    flush();
+  });
+  process.once("SIGTERM", () => {
+    flush();
+  });
+}
 
 export default db;

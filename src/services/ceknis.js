@@ -96,7 +96,7 @@ export function parseMultiNis(rawInput, max = 5) {
  *  - header browser diteruskan ke hop berikutnya
  *  - tidak hang saat chain panjang / user_content_key expired
  */
-async function fetchWithRedirect(url, { timeoutMs = 15000, maxRedirects = 5 } = {}) {
+async function fetchWithRedirect(url, { timeoutMs = 10000, maxRedirects = 5 } = {}) {
   let currentUrl = url;
   let redirects = 0;
 
@@ -178,7 +178,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
  * Ambil data siswa by NIS dengan retry transient (429/5xx/timeout).
  * Return array (kosong = tidak ditemukan). Cache hit termasuk empty (TTL lebih panjang).
  */
-export async function fetchSiswaByNis(nis, mode = "nis", { retries = 2 } = {}) {
+export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
   const query = String(nis ?? "").trim();
   const m = String(mode ?? "nis").trim().toLowerCase() || "nis";
   if (!query) throw new Error("NIS wajib diisi");
@@ -265,7 +265,7 @@ export async function getSiswaInfoText(input, mode = "nis", opts = {}) {
     return { text: out.join("\n") };
   } catch (err) {
     opts?.logger?.warn?.(`[ceknis] gagal nis=${parsed.query}: ${err.message}`);
-    if (err?.name === "AbortError") return { error: "Timeout menghubungi server data (15 dtk). Coba lagi." };
+    if (err?.name === "AbortError") return { error: "Timeout menghubungi server data (10 dtk). Coba lagi." };
     return { error: `Gagal mengambil data: ${err.message}` };
   }
 }

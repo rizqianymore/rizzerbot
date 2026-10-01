@@ -14,7 +14,7 @@ export const settings = {
 
     autoRead: false,
     autoOnline: false,
-    cooldownTime: 3000,
+    cooldownTime: 0,
     responseDelay: 0,
 
     antiBotLuar: true, // abaikan perintah dari nomor bot luar yang terdaftar
