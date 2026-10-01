@@ -129,17 +129,38 @@ export function parsePlat(rawInput) {
   const norm = normalizeInput(raw);
 
   // 1. Diplomatik / konsuler: CD / CC + kode negara + no registrasi
-  // Contoh: CD 12 34, CC 12 34, CD 12 P 34 (pribadi)
-  let m = norm.match(/^(CD|CC)\s+(\d{1,3})(?:\s+P)?\s+(\d{1,4})$/);
+  // Contoh: CD 12 34, CC 12 34, CD 12 P 34 (pribadi). Spasi opsional: CD1234 tetap diproses.
+  let m = norm.match(/^(CD|CC)\s*(\d{1,3})(?:\s*P)?\s*(\d{1,4})$/);
   if (m) {
-    const jenisKorps = m[1] === "CD" ? "Korps Diplomatik (Corps Diplomatique)" : "Korps Konsuler (Corps Consulaire)";
-    const kodeNegara = Number(m[2]);
+    let korps = m[1];
+    let negaraStr = m[2];
+    let regStr = m[3];
+    // Tanpa spasi (cth CD1234) itu ambigu: 12|34 vs 123|4.
+    // Prefer kode negara yang dikenal di CD_COUNTRY.
+    if (!/\s/.test(raw.trim()) && !raw.toUpperCase().includes("P")) {
+      const digits = `${negaraStr}${regStr}`;
+      let fixed = null;
+      for (const len of [2, 3, 1]) {
+        if (digits.length - len < 1 || digits.length - len > 4) continue;
+        const c = digits.slice(0, len);
+        if (CD_COUNTRY[Number(c)]) {
+          fixed = [c, digits.slice(len)];
+          break;
+        }
+      }
+      if (fixed) {
+        negaraStr = fixed[0];
+        regStr = fixed[1];
+      }
+    }
+    const jenisKorps = korps === "CD" ? "Korps Diplomatik (Corps Diplomatique)" : "Korps Konsuler (Corps Consulaire)";
+    const kodeNegara = Number(negaraStr);
     return {
       valid: true,
       kind: "diplomatik",
-      formatted: `${m[1]} ${m[2]} ${m[3]}`,
-      kode: m[1],
-      angka: m[3],
+      formatted: `${korps} ${negaraStr} ${regStr}`,
+      kode: korps,
+      angka: regStr,
       suffix: "",
       provinsi: "Jakarta (Kemlu)",
       wilayah: jenisKorps,
@@ -177,8 +198,9 @@ export function parsePlat(rawInput) {
     }
   }
 
-  // 3. Sipil standar: KODE ANGKA SUFFIX
-  m = norm.match(/^([A-Z]{1,2})\s+(\d{1,4})(?:\s+([A-Z]{1,3}))?$/);
+  // 3. Sipil standar: KODE ANGKA SUFFIX — spasi opsional semua.
+  // "B 1234 ABC", "B1234ABC", "B4378BTC", "AD1234AB" semuanya valid.
+  m = norm.match(/^([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})?$/);
   if (!m) {
     return { valid: false, reason: "format salah. Contoh: B 1234 ABC / AD 1234 AB / BK 5678 AA" };
   }
