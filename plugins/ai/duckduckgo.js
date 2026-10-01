@@ -8,30 +8,30 @@ export default {
   "usage": "<pertanyaan> [--claude / --mistral]",
   "premiumOnly": false,
   "category": "AI",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();
+      const p = prefix || ".";
 
       let text = args.join(" ").trim();
       if (!text) {
         return reply(
-          `🦆 *PANDUAN PENGGUNAAN DUCKDUCKGO AI*\n\n` +
-          `• *.ddg [pertanyaan]*\n  _Model default (GPT-5.4-mini)_\n\n` +
-          `• *.ddg --claude [pertanyaan]*\n  _Gunakan Claude Haiku 4.5_\n\n` +
-          `• *.ddg --mistral [pertanyaan]*\n  _Gunakan Mistral Small 4_\n\n` +
-          `• *.ddg --models*\n  _Lihat daftar model gratis yang tersedia_\n\n` +
-          `💡 *Contoh:*\n` +
-          `*.ddg Buatkan puisi tentang senja*\n` +
-          `*.ddg --claude Jelaskan teori relativitas secara ringkas*`
+          `*DUCKDUCKGO AI*\n\n` +
+          `Penggunaan:\n` +
+          `*${p}ddg [pertanyaan]* (default)\n` +
+          `*${p}ddg --claude [pertanyaan]*\n` +
+          `*${p}ddg --mistral [pertanyaan]*\n` +
+          `*${p}ddg --models* (daftar model)\n\n` +
+          `Contoh: *${p}ddg Buatkan puisi tentang senja*`
         );
       }
 
       if (text === "--models" || text === "-m") {
         try {
           const liveIds = await getLiveFreeModels();
-          const list = liveIds ? Array.from(liveIds).join("\n• ") : "gpt-5.4-mini\n• claude-haiku-4-5\n• mistral-small-2603";
-          return reply(`📋 *Daftar Model Gratis DuckDuckGo:*\n\n• ${list}`);
+          const list = liveIds ? Array.from(liveIds).join("\n") : "gpt-5.4-mini\nclaude-haiku-4-5\nmistral-small-2603";
+          return reply(`*MODEL DUCKDUCKGO*\n\n${list}`);
         } catch (err) {
-          return reply(`❌ Gagal mengambil daftar model: ${err.message}`);
+          return reply(`*MODEL DUCKDUCKGO GAGAL*\n${err.message}`);
         }
       }
 
@@ -49,17 +49,17 @@ export default {
       }
 
       if (!text) {
-        return reply("❌ Masukkan pertanyaan setelah model flag!");
+        return reply("Masukkan pertanyaan setelah model flag!");
       }
 
-      await reply(`🦆 *DuckDuckGo AI* sedang memproses jawaban via *${selectedModel}*...`);
+      await reply(`Memproses jawaban via ${selectedModel}...`);
 
       try {
         const result = await askDuckDuckGo(text, { model: selectedModel });
-        const output = `🦆 *DuckDuckGo AI* _(${result.model})_\n\n${result.text}`;
+        const output = `*DUCKDUCKGO AI (${result.model})*\n\n${result.text}`;
         await reply(output.slice(0, 4000));
       } catch (err) {
-        await reply(`❌ Gagal mendapatkan jawaban dari DuckDuckGo: ${err.message}`);
+        await reply(`*DUCKDUCKGO AI GAGAL*\n${err.message}`);
       }
     },
 };

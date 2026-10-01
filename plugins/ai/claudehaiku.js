@@ -14,14 +14,9 @@ export default {
     const text = args.join(" ").trim();
     if (!text) {
       return reply(
-        `🤍 *CLAUDE HAIKU 4.5*\n\n` +
-        `Tanya apa aja ke AI Claude Haiku — cepat dan ringan, cocok buat pertanyaan sehari-hari.\n\n` +
-        `*PENGGUNAAN:*\n` +
-        `> *${prefix}claudehaiku <pertanyaan>*\n\n` +
-        `*CONTOH:*\n` +
-        `> *${prefix}claudehaiku Jelaskan teori relativitas*\n` +
-        `> *${prefix}claudehaiku Tips biar produktif*\n\n` +
-        `_Respons cepat, tapi tetap cerdas_`
+        `*CLAUDE HAIKU*\n\n` +
+        `Penggunaan: *${prefix}claudehaiku <pertanyaan>*\n` +
+        `Contoh: *${prefix}claudehaiku Jelaskan teori relativitas*`
       );
     }
 
@@ -35,7 +30,7 @@ export default {
       if (!result.status) {
         await react("☢");
         return reply(
-          `❌ *CLAUDE HAIKU GAGAL*\n\n> ${result.error || "Gagal mendapatkan respons"}`
+          `*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`
         );
       }
 
@@ -45,7 +40,7 @@ export default {
       await reply(answer.length > 4000 ? answer.slice(0, 4000) + "..." : answer);
     } catch (err) {
       await react("☢");
-      reply(`❌ *CLAUDE HAIKU GAGAL*\n\n> ${err?.message || "Terjadi kesalahan."}`);
+      reply(`*CLAUDE HAIKU GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

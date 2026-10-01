@@ -8,19 +8,19 @@ export default {
   "usage": "<pertanyaan> [--think / --search]",
   "premiumOnly": true,
   "category": "AI",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();
+      const p = prefix || ".";
 
       let text = args.join(" ").trim();
       if (!text) {
         return reply(
-          `🧠 *PANDUAN PENGGUNAAN DEEPSEEK AI*\n\n` +
-          `• *.deepseek [pertanyaan]*\n  _Mode chat standar (DeepSeek-V3)_\n\n` +
-          `• *.deepseek --think [pertanyaan]*\n  _Mode penalaran mendalam (DeepSeek-R1)_\n\n` +
-          `• *.deepseek --search [pertanyaan]*\n  _Mode pencarian web terkini_\n\n` +
-          `💡 *Contoh:*\n` +
-          `*.deepseek Jelaskan konsep quantum computing*\n` +
-          `*.deepseek --think Analisis kompleksitas algoritma binary search*`
+          `*DEEPSEEK AI*\n\n` +
+          `Penggunaan:\n` +
+          `*${p}deepseek [pertanyaan]* (mode standar)\n` +
+          `*${p}deepseek --think [pertanyaan]* (mode penalaran)\n` +
+          `*${p}deepseek --search [pertanyaan]* (mode web)\n\n` +
+          `Contoh: *${p}deepseek Jelaskan quantum computing*`
         );
       }
 
@@ -40,38 +40,38 @@ export default {
       }
 
       if (!text) {
-        return reply("❌ Masukkan pertanyaan setelah flag!");
+        return reply("Masukkan pertanyaan setelah flag!");
       }
 
       await reply(
         thinking
-          ? "🧠 *DeepSeek-R1* sedang menganalisis & bernalar..."
-          : "💭 *DeepSeek* sedang memproses jawaban..."
+          ? "Menganalisis dengan DeepSeek-R1..."
+          : "Memproses jawaban..."
       );
 
       try {
         const result = await askDeepSeek(text, { thinking, search });
 
-        let output = `🤖 *DeepSeek AI* ${result.thinkingEnabled ? "*(R1 Reasoning)*" : ""}\n\n`;
+        let output = `*DEEPSEEK AI*${result.thinkingEnabled ? " (R1)" : ""}\n\n`;
 
         if (result.reasoning) {
           const trimmedReasoning =
             result.reasoning.length > 800
-              ? `${result.reasoning.slice(0, 800)}... *(ringkasan)*`
+              ? `${result.reasoning.slice(0, 800)}...`
               : result.reasoning;
 
-          output += `💭 *PROSES BERPIKIR (CHAIN OF THOUGHT):*\n_${trimmedReasoning}_\n\n`;
+          output += `Penalaran:\n${trimmedReasoning}\n\n`;
         }
 
-        output += `📝 *Jawaban:*\n${result.answer}`;
+        output += `${result.answer}`;
 
         if (result.isFallback) {
-          output += `\n\n⚠️ _(Catatan: Berjalan via gateway publik. Untuk performa maksimal, pasang DEEPSEEK_COOKIE_TOKEN di .env)_`;
+          output += `\n\n(Via gateway publik)`;
         }
 
         await reply(output.slice(0, 4000));
       } catch (err) {
-        await reply(`❌ Gagal: ${err.message}`);
+        await reply(`*DEEPSEEK AI GAGAL*\n${err.message}`);
       }
     },
 };

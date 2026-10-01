@@ -17,6 +17,9 @@ const COMMAND_USAGES = {
   deepseek: "<pertanyaan> [--think / --search]",
   duckduckgo: "<pertanyaan> [--claude / --mistral]",
   claudehaiku: "<pertanyaan>",
+  dream: "<nomor_model> <prompt>",
+  txt2img: "<prompt> [--style <nama_style>]",
+  text2speech: "<teks> | [lang: id/en]",
 
   // Sticker
   brat: "<teks> [--green]",
