@@ -6,6 +6,7 @@ export default {
   "aliases": ["plat", "ceknopol", "nopol"],
   "description": "Parse plat nomor Indonesia: wilayah, provinsi, perkiraan jenis kendaraan",
   "usage": "<plat, cth: B 1234 ABC>",
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       const currentPrefix = prefix || ".";

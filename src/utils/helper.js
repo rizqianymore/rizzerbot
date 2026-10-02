@@ -17,6 +17,16 @@ export function formatToWhatsAppJid(input) {
   return clean.length >= 7 ? `${clean}@s.whatsapp.net` : "";
 }
 
+// Bandingkan dua JID tanpa peduli format (@s.whatsapp.net vs @lid vs device `:xx`).
+// WAJIB dipakai untuk cek admin grup (jangan pakai === langsung, rawan mismatch LID).
+export function samePhoneJid(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const da = String(a).split("@")[0].split(":")[0].replace(/\D/g, "");
+  const dbb = String(b).split("@")[0].split(":")[0].replace(/\D/g, "");
+  return Boolean(da && dbb && da === dbb);
+}
+
 export function parsePhoneNumbers(args) {
   if (!args) return [];
   const list = Array.isArray(args) ? args.join(" ") : String(args);

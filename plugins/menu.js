@@ -57,7 +57,14 @@ export default {
     // 2. Jika user meminta bantuan spesifik satu command (misal: .help tiktok atau .menu jkt48)
     if (rawArg && !targetCategory) {
       const targetCmd = commands.get(rawArg);
+      // Sembunyikan command yang tak boleh dipakai role ini (anti-intip command premium/owner).
+      // Orang asing (tak terdaftar): grup-gated pun disembunyikan, mereka hanya boleh yang publik.
       if (targetCmd) {
+        const hiddenForStranger = !isOwner && !isAdmin && !isPremium &&
+          (targetCmd.groupOnly || targetCmd.groupAdminOnly || targetCmd.botAdminOnly);
+        if ((targetCmd.ownerOnly && !isOwner) || (targetCmd.adminOnly && !isAdmin) || (targetCmd.premiumOnly && !isPremium) || hiddenForStranger) {
+          return await reply(`❌ *${rawArg}* tidak ditemukan.\n\nKetik ${prefix}menu untuk daftar perintah.`);
+        }
         // Sumber kebenaran: field `usage` di masing-masing file plugin
         const usageArgs = targetCmd.usage || "";
         const usage = usageArgs ? ` *${prefix}${targetCmd.name} ${usageArgs}*` : ` *${prefix}${targetCmd.name}*`;
@@ -84,6 +91,13 @@ export default {
     commands.forEach((cmd) => {
       if (seen.has(cmd.name)) return;
       seen.add(cmd.name);
+
+      // Tampilkan hanya command yang boleh dipakai role pengirim (seperti listplugins).
+      // Orang asing: hanya command publik (tanpa gate apapun) yang terlihat.
+      if (cmd.ownerOnly && !isOwner) return;
+      if (cmd.adminOnly && !isAdmin) return;
+      if (cmd.premiumOnly && !isPremium) return;
+      if (!isOwner && !isAdmin && !isPremium && (cmd.groupOnly || cmd.groupAdminOnly || cmd.botAdminOnly)) return;
 
       const cat = cmd.category || "General";
 

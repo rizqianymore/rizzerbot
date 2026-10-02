@@ -35,7 +35,7 @@ export default {
   aliases: ["stalknpm", "npminfo"],
   description: "Intip info package NPM: versi, author, lisensi, repo (gratis)",
   usage: "<nama package, cth: axios>",
-  premiumOnly: false,
+  premiumOnly: true,
   category: "Stalker",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

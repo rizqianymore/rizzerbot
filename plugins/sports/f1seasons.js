@@ -6,6 +6,7 @@ export default {
   aliases: ["f1season", "f1musim", "seasons"],
   description: "List musim/kejuaraan F1 dari 1950–sekarang (sumber: f1api.dev)",
   usage: "[jumlah, cth: 5]",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

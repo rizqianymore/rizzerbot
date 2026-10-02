@@ -155,8 +155,16 @@ function normalizeSettings(storedSettings = {}) {
     result[key] = [...new Set(toJidList(sourceVal))].filter((j) => j.endsWith('@s.whatsapp.net'));
   }
 
-  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel', 'antiBotLuar', 'antiVirtex', 'antiBurst', 'antilinkExtra']) {
+  for (const key of ['public', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel', 'antiBotLuar', 'antiVirtex', 'antiBurst', 'antilinkExtra', 'silentDeny']) {
     result[key] = toBoolean(result[key], configDefaults[key]);
+  };
+  // Daftar command publik: hanya nama command valid (huruf kecil), selain itu dibuang.
+  if (!Array.isArray(result.publicCommands)) {
+    result.publicCommands = [...(configDefaults.publicCommands || [])];
+  } else {
+    result.publicCommands = [...new Set(
+      result.publicCommands.map((c) => String(c || '').trim().toLowerCase()).filter(Boolean)
+    )];
   }
   if (!Array.isArray(result.botNumbers)) {
     result.botNumbers = toJidList(result.botNumbers ?? configDefaults.botNumbers ?? []);

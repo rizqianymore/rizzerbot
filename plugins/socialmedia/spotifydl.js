@@ -7,6 +7,7 @@ export default {
   "aliases": ["spdl","spotify","spotdl","spotify-dl"],
   "description": "Unduh lagu dari Spotify",
   "usage": "<url>",
+  "premiumOnly": true,
   "category": "Social Media",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

@@ -21,7 +21,7 @@ export default {
   "aliases": ["toimage"],
   "description": "Convert sticker to image",
   "usage": "(reply stiker)",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

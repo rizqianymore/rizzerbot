@@ -6,6 +6,7 @@ export default {
   aliases: ["f1circuit", "f1sirkuit", "circuits"],
   description: "Cari/list sirkuit F1: monza, spa, suzuka, dst (sumber: f1api.dev)",
   usage: "[nama/id sirkuit, cth: monza]",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

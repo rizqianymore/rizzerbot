@@ -9,7 +9,7 @@ export default {
   "aliases": ["pin","pint"],
   "description": "Cari foto dan wallpaper berkualitas tinggi dari Pinterest",
   "usage": "<kata kunci>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

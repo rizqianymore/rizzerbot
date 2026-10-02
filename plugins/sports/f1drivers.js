@@ -6,6 +6,7 @@ export default {
   aliases: ["f1driver", "f1pembalap", "drivers"],
   description: "Cari/list pembalap F1: aktif & legendaris (sumber: f1api.dev)",
   usage: "[nama/id/shortname, cth: alonso / VER / verstappen]",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

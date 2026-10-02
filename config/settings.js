@@ -11,6 +11,12 @@ export const settings = {
 
     public: false,
     prefix: ".",
+    // Command yang boleh dipakai orang TAK terdaftar (bukan owner/admin/premium).
+    // Selain daftar ini: diabaikan total (tanpa balasan, tanpa tulis database).
+    publicCommands: ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
+    // true = penolakan akses (bukan owner/admin/premium) dilakukan diam-diam
+    // agar bot tidak bisa "disentuh". false = balas pesan ❌ seperti dulu.
+    silentDeny: true,
 
     autoRead: false,
     autoOnline: false,

@@ -6,6 +6,7 @@ export default {
   "aliases": ["ghstalk", "gh", "stalkgh"],
   "description": "Intip profil GitHub: bio, repo, followers, email publik, lokasi",
   "usage": "<username, cth: torvalds>",
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       const currentPrefix = prefix || ".";

@@ -13,7 +13,7 @@ export default {
   "aliases": ["ipinfo","iplookup","checkip"],
   "description": "Lacak lokasi, negara, ISP, dan info jaringan IP atau domain",
   "usage": "<ip / domain>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

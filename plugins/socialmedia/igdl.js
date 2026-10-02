@@ -16,6 +16,7 @@ export default {
   "aliases": ["ig", "instagram", "instagramdl", "ig3", "igdl3", "instagram3"],
   "description": "Download video/foto Instagram",
   "usage": "<url>",
+  "premiumOnly": true,
   "category": "Social Media",
   "run": async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
       const remoteJid = msg.key.remoteJid;

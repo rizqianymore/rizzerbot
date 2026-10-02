@@ -43,7 +43,7 @@ export default {
   aliases: ["stalkroblox", "roblox", "rblxstalk"],
   description: "Intip profil Roblox: bio, followers, presence, avatar (gratis)",
   usage: "<username / ID, cth: builderman>",
-  premiumOnly: false,
+  premiumOnly: true,
   category: "Stalker",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

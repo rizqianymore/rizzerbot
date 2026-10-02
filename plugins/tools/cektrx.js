@@ -28,6 +28,7 @@ export default {
   "aliases": ["cekorder","detailtrx","invoicetrx"],
   "description": "Cek detail struk transaksi berdasarkan ID Transaksi",
   "usage": "<id_trx>",
+  "adminOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

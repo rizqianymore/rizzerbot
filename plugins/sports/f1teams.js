@@ -6,6 +6,7 @@ export default {
   aliases: ["f1team", "f1tim", "teams"],
   description: "Cari/list tim F1: aktif & klasik (sumber: f1api.dev)",
   usage: "[nama/id tim, cth: ferrari / red_bull]",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

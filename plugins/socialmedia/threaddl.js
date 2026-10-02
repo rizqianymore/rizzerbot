@@ -7,6 +7,7 @@ export default {
   "aliases": ["tdl","threads","threadsdl"],
   "description": "Download foto dan video dari postingan Threads",
   "usage": "<url>",
+  "premiumOnly": true,
   "category": "Social Media",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

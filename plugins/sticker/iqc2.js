@@ -4,6 +4,7 @@ export default {
   "aliases": ["iqc"],
   "description": "Maker iPhone quoted chat via deline API",
   "usage": "<teks>|<chatTime>|<statusBarTime>",
+  "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       const text = args.join(" ").trim();

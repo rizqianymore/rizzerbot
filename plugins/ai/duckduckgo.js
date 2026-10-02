@@ -6,7 +6,7 @@ export default {
   "aliases": ["ddg","duckai"],
   "description": "Tanya AI DuckDuckGo (GPT-5.4-mini, Claude-Haiku-4.5, Mistral-Small)",
   "usage": "<pertanyaan> [--claude / --mistral]",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "AI",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

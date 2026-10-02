@@ -6,7 +6,7 @@ export default {
   "aliases": ["claude","haiku","chiku"],
   "description": "Chat dengan Claude Haiku 4.5 via OverChat",
   "usage": "<pertanyaan>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "AI",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

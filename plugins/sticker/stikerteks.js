@@ -15,7 +15,7 @@ export default {
   "aliases": ["stikermeme","smeme","stkteks"],
   "description": "Buat stiker dari gambar dengan teks atas/bawah gaya meme",
   "usage": "[teks atas | bawah] (kirim/reply gambar)",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

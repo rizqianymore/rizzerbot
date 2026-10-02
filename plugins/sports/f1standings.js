@@ -12,6 +12,7 @@ export default {
   aliases: ["f1klasemen", "standings", "f1points"],
   description: "Klasemen F1 pembalap/konstruktor per musim (sumber: f1api.dev)",
   usage: "[tahun|current] [drivers|constructors], cth: 2024 drivers",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

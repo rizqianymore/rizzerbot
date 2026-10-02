@@ -7,6 +7,7 @@ export default {
   aliases: ["bypass", "unshorten", "unshort"],
   description: "Bypass / decrypt tautan Safelink & shortener ke link asli",
   usage: "<url>",
+  premiumOnly: true,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

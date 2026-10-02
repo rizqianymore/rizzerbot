@@ -12,6 +12,7 @@ export default {
   aliases: ["f1result", "f1hasil", "f1qualy", "f1raceresults"],
   description: "Hasil balapan/kualifikasi/latihan/sprint F1 per seri",
   usage: "[tahun] <round> [race|qualy|fp1|fp2|fp3|sprint], cth: 2024 1 race",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

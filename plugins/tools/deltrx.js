@@ -28,6 +28,7 @@ export default {
   "aliases": ["hapustrx","canceltrx"],
   "description": "Hapus catatan transaksi dari database",
   "usage": "<id_trx>",
+  "adminOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

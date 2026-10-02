@@ -13,7 +13,7 @@ export default {
   "aliases": ["subdomain","subdomains","findsub"],
   "description": "Mencari daftar subdomain aktif dari suatu domain",
   "usage": "<domain>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

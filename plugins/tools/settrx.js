@@ -150,6 +150,7 @@ export default {
   "aliases": ["updatetrx","statustrx"],
   "description": "Update status transaksi (LUNAS, PENDING, PROSES, BATAL)",
   "usage": "<id_trx> <status>",
+  "adminOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

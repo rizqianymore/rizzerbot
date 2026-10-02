@@ -13,7 +13,7 @@ export default {
   "aliases": ["whoislookup","domaininfo"],
   "description": "Cek informasi kepemilikan, registrar, & masa berlaku domain",
   "usage": "<domain>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

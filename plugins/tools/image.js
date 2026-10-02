@@ -9,7 +9,7 @@ export default {
   "aliases": ["gimage","img","gambar"],
   "description": "Scrape dan cari gambar beresolusi tinggi langsung dari web",
   "usage": "<kata kunci>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();

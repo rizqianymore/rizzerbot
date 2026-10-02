@@ -20,7 +20,7 @@ export default {
   aliases: ["txt2imgv2", "text2img", "gambarai"],
   description: "Generate gambar dari teks (gratis, tanpa API key)",
   usage: "<prompt> [--style <nama_style>]",
-  premiumOnly: false,
+  premiumOnly: true,
   category: "AI",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

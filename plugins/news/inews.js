@@ -7,7 +7,7 @@ export default {
   "aliases": ["inewsnews","beritainews"],
   "description": "Cari berita dan baca artikel terkini dari portal iNews.id",
   "usage": "<topik / link berita>",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "News",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

@@ -150,6 +150,7 @@ export default {
   "aliases": ["order","invoice","struk","nota","addtrx"],
   "description": "Membuat struk transaksi / orderan otomatis (Text & Gambar Struk HD)",
   "usage": "<barang> | <harga> | <buyer> | [metode]",
+  "adminOnly": true,
   "category": "Tools",
   "run": async (sock, msg, args, { reply, sendTyping, quoted, getTargetJid, isGroup }) => {
       await sendTyping();

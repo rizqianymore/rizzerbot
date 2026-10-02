@@ -7,6 +7,7 @@ export default {
   aliases: ["mf", "mfdl"],
   description: "Download file langsung dari MediaFire (tanpa API pihak ketiga)",
   usage: "<url>",
+  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

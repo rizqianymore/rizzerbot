@@ -14,6 +14,7 @@ export default {
   aliases: ["f1race", "f1jadwal", "f1schedule", "f1next", "f1last"],
   description: "Jadwal F1 per musim + detail seri / balapan terakhir & berikutnya",
   usage: "[tahun|last|next] [round], cth: 2024 / 2024 1 / next",
+  premiumOnly: true,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping, prefix, commandName }) => {
     const currentPrefix = prefix || ".";

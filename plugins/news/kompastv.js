@@ -7,7 +7,7 @@ export default {
   "aliases": ["kompasnews","beritakompas","kompas"],
   "description": "Berita terkini, pencarian topik, dan baca berita dari Kompas TV",
   "usage": "[topik / link / jumlah]",
-  "premiumOnly": false,
+  "premiumOnly": true,
   "category": "News",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();

@@ -535,19 +535,49 @@ async function dispatchInner(sock, msg, logger) {
     (rawSender && db.isBotOwner(botJid, rawSender)) ||
     (remoteNormalized && !isGroupJid(remoteJid) && db.isBotOwner(botJid, remoteNormalized));
 
-  let user = db.getUser(senderJid);
-  if (!user) return;
-
+  // ANTI-SPAM DATABASE: akses dibaca SAJA di sini, TIDAK membuat entri user baru.
+  // Entri database hanya dibuat untuk owner/admin/premium (lihat blok eskalasi di bawah).
+  // Orang asing yang memanggil command tak-publik: diabaikan total (tanpa balasan, tanpa tulis DB).
   let access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
   const isAdmin = Boolean(isOwner || access.admin);
   const isPremium = Boolean(isOwner || isAdmin || access.premium);
+  const isRegistered = Boolean(isOwner || isAdmin || isPremium);
 
   // Jika bot dalam mode Self (public === false), HANYA Owner bot ini yang diizinkan merespon
   // (setting ini per-bot: self di sub tidak mematikan main, dan sebaliknya)
   if (activeSettings.public === false && !isOwner) {
     return;
   }
+
+  // Mode public di DM: pengirim tak terdaftar HANYA boleh memakai command publik (sewa/owner/ping/dll).
+  // Selain itu: abaikan diam-diam agar bot tidak bisa "disentuh" orang asing.
+  // Di dalam GRUP gate ini tidak berlaku: hak akses grup (admin grup/bot) dicek oleh
+  // getGroupAccessError + cek internal plugin, sehingga admin grup tetap bisa mengelola
+  // grupnya tanpa harus terdaftar sebagai premium bot. Command premium/owner/admin
+  // tetap terkunci oleh gate role di bawah (premiumOnly/ownerOnly/adminOnly).
+  if (!isRegistered && !isGroupJid(remoteJid)) {
+    const allowed = Array.isArray(activeSettings.publicCommands)
+      ? activeSettings.publicCommands.map((c) => String(c || "").toLowerCase())
+      : [];
+    const invoked = new Set(
+      [commandName, cmd.name?.toLowerCase(), ...((cmd.aliases || []).map((a) => String(a || "").toLowerCase()))]
+        .filter(Boolean)
+    );
+    const isPublicCommand = [...invoked].some((n) => allowed.includes(n));
+    if (!isPublicCommand) return;
+  }
+
+  // Objek user ephemeral untuk orang asing (tidak disimpan ke database).
+  // Untuk user terdaftar, pakai entri database asli.
+  let user = access.user || {
+    name: msg.pushName || "",
+    owner: false,
+    admin: false,
+    premium: false,
+    banned: false,
+    role: "user",
+  };
 
   // DISAMBIGUASI MULTI-BOT DI GRUP (agar hanya SATU yang menjawab):
   const isGroup = isGroupJid(remoteJid);
@@ -622,9 +652,13 @@ async function dispatchInner(sock, msg, logger) {
     access = db.getAccess(senderJid);
   }
 
-  if (msg.pushName && user.name !== msg.pushName) {
+  // Sinkronisasi nama HANYA untuk user yang sudah punya entri database.
+  // Orang asing tidak dibuatkan entri (tetap ephemeral, tanpa tulis DB).
+  if (access.user && msg.pushName && access.user.name !== msg.pushName) {
     user = db.updateUser(senderJid, { name: msg.pushName });
     access = db.getAccess(senderJid);
+  } else if (access.user) {
+    user = access.user;
   }
 
   if (user.banned && !isOwner) return;
@@ -661,16 +695,22 @@ async function dispatchInner(sock, msg, logger) {
     }
   }
 
+  // Penolakan akses: diam (tanpa balasan) bila silentDeny aktif, agar bot tak bisa "disentuh".
+  const deny = async (text) => {
+    if (activeSettings.silentDeny !== false) return;
+    await sock.sendMessage(remoteJid, { text }, { quoted: msg });
+  };
+
   if (cmd.ownerOnly && !isOwner) {
-    return sock.sendMessage(remoteJid, { text: "❌ Fitur ini hanya untuk Owner!" }, { quoted: msg });
+    return deny("❌ Fitur ini hanya untuk Owner!");
   }
 
   if (cmd.adminOnly && !isAdmin) {
-    return sock.sendMessage(remoteJid, { text: "❌ Fitur ini hanya untuk Admin Bot!" }, { quoted: msg });
+    return deny("❌ Fitur ini hanya untuk Admin Bot!");
   }
 
   if (cmd.premiumOnly && !isPremium) {
-    return sock.sendMessage(remoteJid, { text: "❌ Fitur ini hanya untuk pengguna Premium!" }, { quoted: msg });
+    return deny("❌ Fitur ini hanya untuk pengguna Premium!");
   }
 
   // Anti-Spam / Rate Limiter + Anti-Burst per User (Owner kebal)
@@ -728,6 +768,7 @@ async function dispatchInner(sock, msg, logger) {
     access
   );
   if (groupAccessError) {
+    if (activeSettings.silentDeny !== false) return;
     return sock.sendMessage(remoteJid, { text: groupAccessError }, { quoted: msg });
   }
 

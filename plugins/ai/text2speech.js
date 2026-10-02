@@ -8,7 +8,7 @@ export default {
   aliases: ["aitts", "speak", "ttsfree"],
   description: "Ubah teks jadi pesan suara (gratis, tanpa API key)",
   usage: "<teks> | [lang: id/en]",
-  premiumOnly: false,
+  premiumOnly: true,
   category: "AI",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();
