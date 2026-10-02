@@ -196,9 +196,54 @@ export function startChatLogCron(logger) {
   logger?.info?.("[Chat Logger] Perekam pesan aktif. Retensi: 3 hari auto-cleanup.");
 }
 
+/**
+ * Dapatkan daftar file log yang tersedia beserta ukurannya
+ */
+export function getChatLogsList() {
+  flushLogs();
+  if (!fs.existsSync(LOGS_DIR)) return [];
+  const files = fs.readdirSync(LOGS_DIR);
+  return files
+    .filter((f) => f.startsWith("messages-") && f.endsWith(".json"))
+    .map((file) => {
+      const filePath = path.join(LOGS_DIR, file);
+      const stat = fs.statSync(filePath);
+      return {
+        file,
+        size: stat.size,
+        date: file.replace("messages-", "").replace(".json", ""),
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/**
+ * Baca isi log berdasarkan nama file atau tanggal
+ */
+export function getChatLogContent(dateOrFile) {
+  flushLogs();
+  let fileName = dateOrFile;
+  if (!fileName.endsWith(".json")) {
+    fileName = `messages-${dateOrFile}.json`;
+  }
+  const filePath = path.join(LOGS_DIR, fileName);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    return {
+      file: fileName,
+      filePath,
+      data: JSON.parse(raw || "[]"),
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
 // Flush sisa log sebelum shutdown
 process.once("beforeExit", () => {
   try {
     flushLogs();
   } catch (_) {}
 });
+
