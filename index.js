@@ -70,6 +70,10 @@ startBot()
       const { startExpiryCron } = await import("./src/services/expiry.js");
       startExpiryCron(logger);
     } catch (_) { }
+    try {
+      const { startChatLogCron } = await import("./src/services/chatlogger.js");
+      startChatLogCron(logger);
+    } catch (_) { }
   })
   .catch((err) => {
     logger?.error?.("Fatal initialization error:", err);

@@ -13,6 +13,7 @@ import qrcode from "qrcode-terminal";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { loadPlugins } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
+import { recordMessage } from "@/src/services/chatlogger.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 
@@ -270,6 +271,9 @@ export async function startBot() {
         if (db.getSettings().autoRead) {
           await sock.readMessages([msg.key]).catch(() => { });
         }
+        try {
+          recordMessage(sock, msg);
+        } catch (_) {}
         enqueueMessage(sock, msg, logger);
       } catch (err) {
         logger.error("Error in primary message handler:", err);

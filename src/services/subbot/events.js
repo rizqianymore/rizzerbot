@@ -3,6 +3,7 @@ import { DisconnectReason } from "baileys";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { logger } from "@/src/core/connection.js";
 import { db } from "@/src/core/database.js";
+import { recordMessage } from "@/src/services/chatlogger.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots } from "./store.js";
 
@@ -119,6 +120,9 @@ export function setupSubBotEvents({
       if (autoRead) {
         try { await sock.readMessages([msg.key]).catch(() => { }); } catch (_) { }
       }
+      try {
+        recordMessage(sock, msg);
+      } catch (_) {}
       enqueueMessage(sock, msg, logger);
     }
   });

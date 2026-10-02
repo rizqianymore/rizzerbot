@@ -1,0 +1,204 @@
+import fs from "fs";
+import path from "path";
+
+const LOGS_DIR = path.join(process.cwd(), "database", "chat_logs");
+const RETENTION_MS = 3 * 24 * 60 * 60 * 1000; // 3 hari dalam milidetik
+
+// Pastikan folder log chat tersedia
+if (!fs.existsSync(LOGS_DIR)) {
+  try {
+    fs.mkdirSync(LOGS_DIR, { recursive: true });
+  } catch (_) {}
+}
+
+/**
+ * Format tanggal YYYY-MM-DD
+ */
+function getDateString(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Path file log per hari
+ */
+function getLogFilePath(date = new Date()) {
+  return path.join(LOGS_DIR, `messages-${getDateString(date)}.json`);
+}
+
+/**
+ * Baca log untuk tanggal tertentu
+ */
+function readLogFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, "utf-8");
+      return JSON.parse(content || "[]");
+    }
+  } catch (_) {}
+  return [];
+}
+
+// Queue flush berkala agar I/O hemat dan aman dari write collision
+let writeQueue = [];
+let flushTimeout = null;
+
+function flushLogs() {
+  if (writeQueue.length === 0) return;
+  const itemsToSave = [...writeQueue];
+  writeQueue = [];
+
+  // Kelompokkan pesan berdasarkan file log tanggalnya
+  const grouped = new Map();
+  for (const item of itemsToSave) {
+    const dateStr = item.date || getDateString(new Date(item.timestamp));
+    const filePath = path.join(LOGS_DIR, `messages-${dateStr}.json`);
+    if (!grouped.has(filePath)) {
+      grouped.set(filePath, []);
+    }
+    grouped.get(filePath).push(item);
+  }
+
+  for (const [filePath, newLogs] of grouped.entries()) {
+    try {
+      const existing = readLogFile(filePath);
+      const combined = existing.concat(newLogs);
+      fs.writeFileSync(filePath, JSON.stringify(combined, null, 2), "utf-8");
+    } catch (_) {}
+  }
+}
+
+/**
+ * Catat (rekam) pesan masuk ke file JSON
+ */
+export function recordMessage(sock, msg) {
+  try {
+    if (!msg || !msg.key || !msg.message) return;
+    const remoteJid = msg.key.remoteJid;
+    if (!remoteJid || remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter")) return;
+
+    const sender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
+    const isGroup = remoteJid.endsWith("@g.us");
+
+    // Ekstraksi ringkasan teks atau tipe media
+    const m = msg.message;
+    const text =
+      m.conversation ||
+      m.extendedTextMessage?.text ||
+      m.imageMessage?.caption ||
+      m.videoMessage?.caption ||
+      m.documentMessage?.caption ||
+      "";
+
+    let mediaType = null;
+    if (m.imageMessage) mediaType = "image";
+    else if (m.videoMessage) mediaType = "video";
+    else if (m.audioMessage) mediaType = "audio";
+    else if (m.documentMessage) mediaType = "document";
+    else if (m.stickerMessage) mediaType = "sticker";
+    else if (m.contactMessage) mediaType = "contact";
+    else if (m.locationMessage) mediaType = "location";
+
+    const timestamp = Number(msg.messageTimestamp) * 1000 || Date.now();
+    const now = new Date(timestamp);
+
+    const logEntry = {
+      id: msg.key.id,
+      timestamp,
+      date: getDateString(now),
+      time: now.toLocaleTimeString("id-ID"),
+      botJid: sock?.user?.id || null,
+      isSubBot: Boolean(sock?.isSubBot),
+      remoteJid,
+      isGroup,
+      fromMe: Boolean(msg.key.fromMe),
+      sender,
+      pushName: msg.pushName || null,
+      text: text || null,
+      mediaType,
+    };
+
+    writeQueue.push(logEntry);
+
+    if (!flushTimeout) {
+      flushTimeout = setTimeout(() => {
+        flushTimeout = null;
+        flushLogs();
+      }, 1500);
+      if (flushTimeout.unref) flushTimeout.unref();
+    }
+  } catch (_) {}
+}
+
+/**
+ * Hapus file log yang sudah berumur > 3 hari
+ */
+export function cleanupOldLogs(logger) {
+  try {
+    if (!fs.existsSync(LOGS_DIR)) return 0;
+    const files = fs.readdirSync(LOGS_DIR);
+    const now = Date.now();
+    let deletedCount = 0;
+
+    for (const file of files) {
+      if (!file.startsWith("messages-") || !file.endsWith(".json")) continue;
+      const filePath = path.join(LOGS_DIR, file);
+
+      try {
+        const stats = fs.statSync(filePath);
+        // Cek umur file berdasarkan mtime atau nama tanggal
+        const dateMatch = file.match(/^messages-(\d{4}-\d{2}-\d{2})\.json$/);
+        let fileAgeMs = now - stats.mtimeMs;
+
+        if (dateMatch) {
+          const fileDate = new Date(`${dateMatch[1]}T00:00:00`).getTime();
+          if (!isNaN(fileDate)) {
+            // Lebih akurat: bandingkan dengan tanggal log tersebut
+            fileAgeMs = Math.max(fileAgeMs, now - (fileDate + 24 * 60 * 60 * 1000));
+          }
+        }
+
+        if (fileAgeMs > RETENTION_MS) {
+          fs.unlinkSync(filePath);
+          deletedCount++;
+          logger?.info?.(`[Chat Logger] File log lama dihapus (> 3 hari): ${file}`);
+        }
+      } catch (_) {}
+    }
+
+    return deletedCount;
+  } catch (err) {
+    logger?.error?.("[Chat Logger] Gagal membersihkan log lama:", err.message);
+    return 0;
+  }
+}
+
+/**
+ * Jalankan cron berkala setiap 6 jam untuk membersihkan log yang sudah lewat 3 hari
+ */
+let cronStarted = false;
+export function startChatLogCron(logger) {
+  if (cronStarted) return;
+  cronStarted = true;
+
+  // Bersihkan saat startup
+  cleanupOldLogs(logger);
+
+  // Cek setiap 6 jam
+  const interval = 6 * 60 * 60 * 1000;
+  const timer = setInterval(() => {
+    cleanupOldLogs(logger);
+  }, interval);
+
+  if (timer && timer.unref) timer.unref();
+  logger?.info?.("[Chat Logger] Perekam pesan aktif. Retensi: 3 hari auto-cleanup.");
+}
+
+// Flush sisa log sebelum shutdown
+process.once("beforeExit", () => {
+  try {
+    flushLogs();
+  } catch (_) {}
+});

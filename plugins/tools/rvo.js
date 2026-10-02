@@ -1,6 +1,5 @@
 // plugins/tools/rvo.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { downloadContentFromMessage } from "baileys";
-import { getStockTicker } from "@/src/services/stock.js";
 
 async function streamToBuffer(stream) {
   let buffer = Buffer.from([]);
