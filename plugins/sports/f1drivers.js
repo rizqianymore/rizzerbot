@@ -1,5 +1,5 @@
 // plugins/sports/f1drivers.js — pembalap F1 (f1api.dev).
-import { searchDrivers, getDriverById, fmtDriver } from "@/src/services/f1.js";
+import { searchDrivers, getDriverById, fmtDriver, replyDetail } from "@/src/services/f1.js";
 
 export default {
   name: "f1drivers",
@@ -26,12 +26,12 @@ export default {
       if (/^[a-z0-9_]+$/i.test(query) && !query.includes(" ")) {
         try {
           const d = await getDriverById(query);
-          return reply(fmtDriver(d));
+          return replyDetail(sock, msg, reply, fmtDriver(d), d.url);
         } catch (_) { /* jatuh ke pencarian */ }
       }
       const hits = await searchDrivers(query, 10);
       if (!hits.length) return reply(`❌ Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``);
-      if (hits.length === 1) return reply(fmtDriver(hits[0]));
+      if (hits.length === 1) return replyDetail(sock, msg, reply, fmtDriver(hits[0]), hits[0].url);
       let text = `🏎️ *HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((d, i) => {
         text += `${i + 1}. *${d.name} ${d.surname}* (\`${d.driverId}\`${d.shortName ? ` / ${d.shortName}` : ""}) — ${d.nationality || "-"}\n`;

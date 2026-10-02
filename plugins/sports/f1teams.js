@@ -1,5 +1,5 @@
 // plugins/sports/f1teams.js — tim/konstruktor F1 (f1api.dev).
-import { searchTeams, getTeamById, fmtTeam } from "@/src/services/f1.js";
+import { searchTeams, getTeamById, fmtTeam, replyDetail } from "@/src/services/f1.js";
 
 export default {
   name: "f1teams",
@@ -25,12 +25,12 @@ export default {
       if (/^[a-z0-9_]+$/i.test(query) && !query.includes(" ")) {
         try {
           const t = await getTeamById(query);
-          return reply(fmtTeam(t));
+          return replyDetail(sock, msg, reply, fmtTeam(t), t.url);
         } catch (_) {}
       }
       const hits = await searchTeams(query, 10);
       if (!hits.length) return reply(`❌ Tim "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1teams ferrari\``);
-      if (hits.length === 1) return reply(fmtTeam(hits[0]));
+      if (hits.length === 1) return replyDetail(sock, msg, reply, fmtTeam(hits[0]), hits[0].url);
       let text = `🏁 *HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((t, i) => {
         text += `${i + 1}. *${t.teamName}* (\`${t.teamId}\`) — ${t.teamNationality || "-"}\n`;
