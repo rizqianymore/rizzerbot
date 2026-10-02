@@ -1,132 +1,6 @@
 import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 
-// Panduan contoh penggunaan untuk masing-masing command
-const COMMAND_USAGES = {
-  // News
-  cnn: "<topik berita>",
-  inews: "<topik / link berita>",
-  kompastv: "[topik / link / jumlah]",
-
-  // Social Media
-  tiktok: "<url> [mp3]",
-  igdl: "<url>",
-  ytdlpro: "<url> [mp3]",
-
-  // AI
-  deepseek: "<pertanyaan> [--think / --search]",
-  duckduckgo: "<pertanyaan> [--claude / --mistral]",
-  claudehaiku: "<pertanyaan>",
-  dream: "<nomor_model> <prompt>",
-  txt2img: "<prompt> [--style <nama_style>]",
-  text2speech: "<teks> | [lang: id/en]",
-
-  // Sticker
-  brat: "<teks> [--green]",
-  bratvid: "<teks>",
-  bratgojo: "<teks>",
-  bratgojovid: "<teks>",
-  bratvermeil: "<teks>",
-  bratvermeilvid: "<teks>",
-  stikerteks: "[teks atas | bawah] (kirim/reply gambar)",
-  stikermeme: "[teks atas | bawah] (kirim/reply gambar)",
-
-  // Tools
-  jkt48: "<nama/id member>",
-  jkt48news: "[jumlah berita]",
-  jkt48schedule: "[tanggal/kode show]",
-  jkt48theater: "",
-  jkt48showroom: "",
-  rvo: "(reply media view once)",
-  bloombergstock: "<kode ticker / GC1:COM / saham>",
-  dnslookup: "<domain>",
-  whois: "<domain>",
-  subdomainlookup: "<domain>",
-  ipgeo: "<ip / domain>",
-  pinterest: "<kata kunci>",
-  image: "<kata kunci>",
-  listplugins: "",
-  ceknis: "<nis, cth: 539241249>",
-  trx: "<barang> | <harga> | <buyer> | [metode]",
-  cektrx: "<id_trx>",
-  settrx: "<id_trx> <status>",
-  listtrx: "[jumlah]",
-  deltrx: "<id_trx>",
-  qris: "[nominal / bebas]",
-
-  // Group
-  hidetag: "<pesan>",
-  tagall: "[pesan]",
-  kick: "@user",
-  add: "628xxx",
-  promote: "@user",
-  demote: "@user",
-  group: "<open / close>",
-  linkgroup: "",
-  revoke: "",
-  setname: "<nama baru>",
-  setdesc: "<deskripsi baru>",
-  infogrup: "",
-  listadmin: "",
-  antilink: "<on / off>",
-
-  // User
-  ping: "",
-  owner: "",
-  uptime: "",
-  quote: "",
-  sticker: "[teks atas | bawah] (reply/kirim gambar)",
-  stiker: "[teks atas | bawah] (reply/kirim gambar)",
-  toimg: "(reply stiker)",
-  lyrics: "<judul lagu>",
-  translate: "[kode_bahasa] <teks>",
-  report: "<isi pesan laporan>",
-  profile: "[@user / nomor / reply]",
-
-  // Premium
-  hd: "(reply gambar)",
-  tts: "<teks>",
-  stickernowm: "[teks atas | bawah] (reply gambar)",
-  aipro: "<prompt>",
-  customprofile: "<teks bio>",
-  statspro: "",
-  searchpro: "<query>",
-  animepro: "<judul anime>",
-
-  // Owner
-  eval: "<kode js>",
-  addowner: "<nomor>",
-  delowner: "<nomor>",
-  listowner: "",
-  addadmin: "<nomor>",
-  deladmin: "<nomor>",
-  listadmin: "",
-  addprem: "<nomor> [hari]",
-  delprem: "<nomor>",
-  listprem: "",
-  access: "[nomor]",
-  broadcast: "<pesan>",
-  setprefix: "<simbol>",
-  block: "<nomor>",
-  unblock: "<nomor>",
-  join: "<link group>",
-  leave: "",
-  self: "",
-  public: "",
-  addbot: "<nomor whatsapp>",
-  listbot: "",
-  delbot: "<nomor bot>",
-  setch: "<jid/link saluran>",
-  delch: "",
-  infoch: "",
-  autotrxch: "<on / off>",
-  postch: "<pesan>",
-  setqris: "<string qris>",
-  botstatus: "",
-  cleartmp: "",
-  restart: "",
-};
-
 export default {
   name: "menu",
   aliases: ["help", "panduan"],
@@ -178,9 +52,8 @@ export default {
     if (rawArg && !targetCategory) {
       const targetCmd = commands.get(rawArg);
       if (targetCmd) {
-        // Sumber kebenaran: field `usage` di masing-masing file plugin.
-        // COMMAND_USAGES di atas hanya fallback kompatibilitas (misal alias lama).
-        const usageArgs = targetCmd.usage ?? COMMAND_USAGES[targetCmd.name] ?? "";
+        // Sumber kebenaran: field `usage` di masing-masing file plugin
+        const usageArgs = targetCmd.usage || "";
         const usage = usageArgs ? ` *${prefix}${targetCmd.name} ${usageArgs}*` : ` *${prefix}${targetCmd.name}*`;
         const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ") : "-";
 
