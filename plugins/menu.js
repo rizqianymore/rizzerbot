@@ -116,12 +116,8 @@ export default {
       }
       menuText += `\n_Contoh: ${prefix}menu ai_`;
     } else if (targetCategory) {
-      // .menu bug = tampilkan menu bug fancy (sama seperti perintah .bugmenu)
-      if (targetCategory.toLowerCase() === "bug") {
-        const { sendBugMenu } = await import("@/src/services/bug/menu.js");
-        return await sendBugMenu(sock, msg);
-      }
-      // .menu <kategori> = list perintah kategori itu aja, inline
+      // .menu <kategori> = list perintah kategori itu aja, teks polos (termasuk bug)
+      // Contoh: .menu bug → daftar perintah Bug, inline
       const cat = catKeys[0];
       const names = categories[cat].map((c) => `${prefix}${c.name}`).join(", ");
       menuText += `*${cat.toUpperCase()} (${categories[cat].length})*\n${names}\n\n_Ketik ${prefix}menu <nama> untuk panduan_`;
