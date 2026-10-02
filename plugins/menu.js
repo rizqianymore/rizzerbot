@@ -133,11 +133,10 @@ export default {
       }
       menuText += `\nContoh: ${prefix}menu ai`;
     } else if (targetCategory) {
-      // .menu <kategori> = list perintah kategori itu aja, teks polos (termasuk bug)
-      // Contoh: .menu bug → daftar perintah Bug, inline
+      // .menu <kategori> = list perintah kategori ke bawah (baris per baris)
       const cat = catKeys[0];
-      const names = categories[cat].map((c) => `${prefix}${c.name}`).join(", ");
-      menuText += `*${cat.toUpperCase()} (${categories[cat].length})*\n${names}\n\n_Ketik ${prefix}menu <nama> untuk panduan_`;
+      const listCmds = categories[cat].map((c) => `* ${prefix}${c.name}`).join("\n");
+      menuText += `*${cat.toUpperCase()} (${categories[cat].length})*\n\n${listCmds}\n\nKetik ${prefix}menu <nama> untuk panduan`;
     } else if (showAll) {
       // .menu all = semua kategori inline (khusus yang butuh)
       menuText += `*${activeSettings.botName || "WhatsApp Bot"}* [${prefix}] • ${role}\n`;
