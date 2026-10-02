@@ -34,6 +34,9 @@ export default {
       alat: "Tools",
       sticker: "Sticker",
       stiker: "Sticker",
+      bug: "Bug",
+      bugs: "Bug",
+      exploit: "Bug",
       ai: "AI",
       socialmedia: "Social Media",
       socmed: "Social Media",
@@ -94,7 +97,7 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    const order = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General", "Sports"];
+    const order = ["Bug", "News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General", "Sports"];
     const catKeys = Object.keys(categories).sort((a, b) => {
       const ia = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
       const ib = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
@@ -113,6 +116,11 @@ export default {
       }
       menuText += `\n_Contoh: ${prefix}menu ai_`;
     } else if (targetCategory) {
+      // .menu bug = tampilkan menu bug fancy (sama seperti perintah .bugmenu)
+      if (targetCategory.toLowerCase() === "bug") {
+        const { sendBugMenu } = await import("@/src/services/bug/menu.js");
+        return await sendBugMenu(sock, msg);
+      }
       // .menu <kategori> = list perintah kategori itu aja, inline
       const cat = catKeys[0];
       const names = categories[cat].map((c) => `${prefix}${c.name}`).join(", ");
