@@ -87,6 +87,30 @@ function registerBurst(jid) {
   return rec;
 }
 
+// Pelacak pengirim crash: 3 payload crash / 60 detik -> diabaikan total 5 menit
+const crashSenders = new Map();
+function trackCrashSender(jid) {
+  if (!jid) return;
+  const now = Date.now();
+  const rec = crashSenders.get(jid) || { count: 0, first: now, blockedUntil: 0 };
+  if (now - rec.first > 60 * 1000) {
+    rec.count = 0;
+    rec.first = now;
+  }
+  rec.count += 1;
+  if (rec.count >= 3) rec.blockedUntil = now + 5 * 60 * 1000;
+  crashSenders.set(jid, rec);
+  if (crashSenders.size > 1000) {
+    for (const [k, v] of crashSenders.entries()) {
+      if (now > v.blockedUntil && now - v.first > 60 * 1000) crashSenders.delete(k);
+    }
+  }
+}
+function isCrashBlocked(jid) {
+  const rec = crashSenders.get(jid);
+  return Boolean(rec && Date.now() < rec.blockedUntil);
+}
+
 // Heuristik bot luar: pushName seperti bot + pola pesan command kaku
 function looksLikeExternalBot(msg, text) {
   const name = String(msg?.pushName || "").toLowerCase();
@@ -318,6 +342,7 @@ async function dispatchInner(sock, msg, logger) {
 
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || remoteJid === "status@broadcast") return;
+  if (isCrashBlocked(msg.key.participant || remoteJid)) return;
   // Abaikan channel/newsletter & broadcast agar tidak loop / bug
   if (remoteJid.endsWith("@newsletter") || remoteJid.endsWith("@broadcast")) return;
 
@@ -342,24 +367,69 @@ async function dispatchInner(sock, msg, logger) {
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
     "";
 
-  // ── Guard 0: Anti-virtex / pesan raksasa ──
-  // Diproses sebelum command agar crash-text tidak masuk ke plugin.
+  // ── Guard 0: Anti-crasher (4 lapis, berurutan) ──
+  // L1 teks > batas | L2 satu char diulang | L3 payload mentah raksasa
+  // L4 kunci/field crash. Drop diam-diam, di grup coba hapus pesan.
   {
     const _s = db.getSettings();
     if (_s.antiVirtex !== false) {
-      const maxLen = Number(_s.maxMessageLength) || 5000;
-      if (messageContent.length > maxLen) {
-        logger?.warn?.(`[Anti-Virtex] Tolak pesan ${messageContent.length} char dari ${msg.key.participant || remoteJid}`);
-        if (isGroupJid(remoteJid)) {
-          try {
-            await sock.sendMessage(remoteJid, { delete: msg.key }).catch(() => {});
-          } catch (_) {}
-        }
+      const LIMIT = {
+        text: Number(_s.maxMessageLength) || 5000,
+        repeatChar: 2500,
+        rawBytes: 150000,
+        rawScan: 20000,
+        vcard: 5000,
+        extText: 20000,
+        buttons: 50,
+      };
+      const dropInGroup = async () => {
+        if (!isGroupJid(remoteJid)) return;
+        try {
+          await sock.sendMessage(remoteJid, { delete: msg.key }).catch(() => {});
+        } catch (_) {}
+      };
+      // L1: teks biasa terlalu panjang
+      if (messageContent.length > LIMIT.text) {
+        logger?.warn?.(`[Anti-Crash L1] Teks ${messageContent.length} char > ${LIMIT.text}`);
+        await dropInGroup();
         return;
       }
-      // Pola crash: 1 char diulang ribuan kali / zalgo berlebihan
+      // L2: satu karakter diulang ribuan kali
       if (/^(.)\1{2500,}$/s.test(messageContent.replace(/\s/g, ""))) {
-        logger?.warn?.(`[Anti-Virtex] Pola crash terdeteksi, diabaikan.`);
+        logger?.warn?.(`[Anti-Crash L2] Pola 1-char flood`);
+        await dropInGroup();
+        return;
+      }
+      // L3: ukuran payload mentah
+      let rawStr = "";
+      try {
+        rawStr = JSON.stringify(msg.message) || "";
+      } catch (_) {}
+      if (rawStr.length > LIMIT.rawBytes) {
+        logger?.warn?.(`[Anti-Crash L3] Payload ${rawStr.length} byte`);
+        await dropInGroup();
+        trackCrashSender(msg.key.participant || remoteJid);
+        return;
+      }
+      // L4a: kunci pesan yang tidak pernah dipakai chat normal
+      const m = msg.message || {};
+      const crashKey =
+        m.groupStatusMessageV2 ||
+        m.interactiveResponseMessage ||
+        m.viewOnceMessage?.message?.buttonsMessage ||
+        m.viewOnceMessage?.message?.interactiveMessage;
+      // L4b: field melewati batas wajar
+      const vcard = m.contactMessage?.vcard || "";
+      const vcardLen = typeof vcard === "string" ? vcard.length : 0;
+      const extLen = m.extendedTextMessage?.text?.length || 0;
+      const btns = m.interactiveMessage?.nativeFlowMessage?.buttons;
+      const btnCount = Array.isArray(btns) ? btns.length : 0;
+      const flood = rawStr.length > LIMIT.rawScan &&
+        /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/.test(rawStr);
+      if (crashKey || flood || vcardLen > LIMIT.vcard || extLen > LIMIT.extText || btnCount > LIMIT.buttons) {
+        logger?.warn?.(`[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`);
+        await dropInGroup();
+        trackCrashSender(msg.key.participant || remoteJid);
         return;
       }
     }
