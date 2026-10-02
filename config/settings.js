@@ -9,7 +9,7 @@ export const settings = {
     adminNumbers: [],
     usePairingCode: true,
 
-    public: true,
+    public: false,
     prefix: ".",
 
     autoRead: false,

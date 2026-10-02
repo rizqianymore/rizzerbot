@@ -3,18 +3,6 @@ import path from 'path';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { settings } from '@/config/settings.js';
 
-/**
- * ARSITEKTUR DATABASE TERISOLASI
- * - Main-bot memakai database/database.json + database/users.json (jalur lama, tidak berubah).
- * - Setiap sub-bot memakai database/subbots/<digit>/database.json + users.json SENDIRI:
- *   users, owner/admin/premium/banned, public/prefix, antilink, usage — mandiri penuh.
- * - Perutean otomatis via AsyncLocalStorage: seluruh pemanggilan db.* di dalam
- *   penanganan satu pesan memakai store milik bot yang menerima pesan tersebut.
- *   Di luar konteks perintah (koneksi utama, timer) → store MAIN.
- * - Registri identitas bot (anti-loop) tetap GLOBAL lintas store.
- */
-
-// ── Helper murni ──────────────────────────────────────────────
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -97,12 +85,11 @@ function getRole(user) {
 function isPremiumExpired(user) {
   return Boolean(
     user.premiumUntil &&
-      Number.isFinite(Number(user.premiumUntil)) &&
-      Number(user.premiumUntil) <= Date.now()
+    Number.isFinite(Number(user.premiumUntil)) &&
+    Number(user.premiumUntil) <= Date.now()
   );
 }
 
-// ── Config & konstanta ────────────────────────────────────────
 const configDefaults = cloneValue(settings);
 const configuredOwnerValues = [
   settings.ownerNumber,
@@ -115,10 +102,7 @@ const schemaVersion = 2;
 
 const MAIN_KEY = '';
 const SUBBOTS_DIR = path.join(process.cwd(), 'database', 'subbots');
-
-// ── Registri global lintas store (anti-loop butuh ini) ───────
 let activeBotJids = new Set();
-// JID asli main-bot yang sedang online (di-set saat connection open).
 let mainBotJidMemory = '';
 
 export function setMainBotJid(jid) {
@@ -144,7 +128,7 @@ function isMainBotJid(jid) {
     if ((o && n === o) || (p && n === p)) return true;
     const pn = normalizePhone(n);
     if (pn && ((o && normalizePhone(o) === pn) || (p && normalizePhone(p) === pn))) return true;
-  } catch (_) {}
+  } catch (_) { }
   return false;
 }
 
@@ -216,7 +200,7 @@ function loadStoreFiles(dbPath, usersDbPath) {
       const backupPath = `${dbPath}.corrupt-${Date.now()}`;
       try {
         fs.renameSync(dbPath, backupPath);
-      } catch (_) {}
+      } catch (_) { }
       stored = {};
     }
   }
@@ -235,7 +219,7 @@ function loadStoreFiles(dbPath, usersDbPath) {
       const backupUsersPath = `${usersDbPath}.corrupt-${Date.now()}`;
       try {
         fs.renameSync(usersDbPath, backupUsersPath);
-      } catch (_) {}
+      } catch (_) { }
       storedUsers = {};
     }
   }
@@ -299,7 +283,7 @@ class Store {
       this._saveTimer = null;
       try {
         this.save();
-      } catch (_) {}
+      } catch (_) { }
     }, ms);
     if (this._saveTimer.unref) this._saveTimer.unref();
   }
@@ -330,7 +314,7 @@ class Store {
       fs.writeFileSync(this.usersDbPath, usersSerialized, 'utf8');
       try {
         fs.rmSync(tempUsersPath, { force: true });
-      } catch (_) {}
+      } catch (_) { }
     }
 
     const serialized = JSON.stringify(this.data, null, 2);
@@ -342,7 +326,7 @@ class Store {
       fs.writeFileSync(this.dbPath, serialized, 'utf8');
       try {
         fs.rmSync(temporaryPath, { force: true });
-      } catch (_) {}
+      } catch (_) { }
     }
   }
 
@@ -837,7 +821,7 @@ function findLegacySubConfig(digits) {
     for (const [k, v] of Object.entries(legacy)) {
       if (normalizePhone(k) === digits && isRecord(v)) return v;
     }
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
@@ -909,7 +893,7 @@ function getKnownSubDigits() {
         if (digits) out.add(digits);
       }
     }
-  } catch (_) {}
+  } catch (_) { }
   return [...out];
 }
 
@@ -954,7 +938,7 @@ function isAnyBotJid(jid) {
       if (!nk) continue;
       if (nk === normalized || (phone && phoneMatch(nk, normalized))) return true;
     }
-  } catch (_) {}
+  } catch (_) { }
   return false;
 }
 
@@ -984,7 +968,7 @@ function getBotSettings(botJid) {
   const legacy = key ? findLegacySubConfig(key) : null;
   return {
     ...cloneValue(configDefaults),
-    public: legacy?.public !== undefined ? toBoolean(legacy.public, true) : toBoolean(configDefaults.public, true),
+    public: legacy?.public !== undefined ? toBoolean(legacy.public, configDefaults.public) : toBoolean(configDefaults.public, false),
     prefix: typeof legacy?.prefix === 'string' && legacy.prefix.trim() ? legacy.prefix.trim() : (configDefaults.prefix || '.'),
     botName: legacy?.botName || `SubBot (+${key || normalized})`,
     ownerNumber: (legacy?.ownerNumber && normalizeJid(legacy.ownerNumber)) || normalized,
@@ -1148,7 +1132,7 @@ export function flushAllStores() {
         store._saveTimer = null;
       }
       store.save();
-    } catch (_) {}
+    } catch (_) { }
   }
 }
 
@@ -1156,7 +1140,7 @@ if (typeof process !== "undefined" && !process.env.RIZZER_NO_FLUSH_HOOK) {
   const flush = () => {
     try {
       flushAllStores();
-    } catch (_) {}
+    } catch (_) { }
   };
   process.once("beforeExit", flush);
   process.once("SIGINT", () => {
