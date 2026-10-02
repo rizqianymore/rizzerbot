@@ -80,9 +80,9 @@ export async function solveCloudflare(targetUrl, options = {}) {
         try {
           const checkbox = await frame.$("input[type='checkbox'], #cf-stage");
           if (checkbox) {
-            await checkbox.click().catch(() => {});
+            await checkbox.click().catch(() => { });
           }
-        } catch (_) {}
+        } catch (_) { }
       }
 
       if (!isCloudflareTitle && (!content.includes("cf-turnstile") || turnstileToken)) {
@@ -91,8 +91,8 @@ export async function solveCloudflare(targetUrl, options = {}) {
           const submitBtn = await page.$("button[type='submit'], input[type='submit'], button.bg-blue-600");
           if (submitBtn) {
             await Promise.all([
-              page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {}),
-              submitBtn.click().catch(() => {}),
+              page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => { }),
+              submitBtn.click().catch(() => { }),
             ]);
           }
         }
@@ -103,7 +103,7 @@ export async function solveCloudflare(targetUrl, options = {}) {
     }
 
     if (waitForSelector) {
-      await page.waitForSelector(waitForSelector, { timeout: 10000 }).catch(() => {});
+      await page.waitForSelector(waitForSelector, { timeout: 10000 }).catch(() => { });
     }
 
     const finalUrl = page.url();
@@ -117,6 +117,6 @@ export async function solveCloudflare(targetUrl, options = {}) {
       turnstileToken,
     };
   } finally {
-    await browser.close().catch(() => {});
+    await browser.close().catch(() => { });
   }
 }
