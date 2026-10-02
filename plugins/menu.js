@@ -11,41 +11,44 @@ export default {
     await sendTyping();
 
     const activeSettings = ctxSettings || db.getSettings();
-    let rawArg = args[0]?.toLowerCase() || "";
-    if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length);
+    let rawArg = args.join(" ").trim().toLowerCase();
+    if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length).trim();
 
     // 1. Cek apakah user meminta kategori tertentu (misal: .menu owner, .menu premium, .menu user)
     const categoryAliases = {
-      owner: "Owner",
-      own: "Owner",
-      creator: "Owner",
-      prem: "Premium",
-      premium: "Premium",
-      pro: "Premium",
-      user: "User",
-      usr: "User",
-      pengguna: "User",
+      bug: "Bug",
+      bugs: "Bug",
+      exploit: "Bug",
+      news: "News",
+      berita: "News",
+      "social media": "Social Media",
+      socialmedia: "Social Media",
+      socmed: "Social Media",
+      sosmed: "Social Media",
+      ai: "AI",
+      sticker: "Sticker",
+      stiker: "Sticker",
+      tools: "Tools",
+      tool: "Tools",
+      alat: "Tools",
       group: "Group",
       grup: "Group",
       grub: "Group",
       gc: "Group",
-      tools: "Tools",
-      tool: "Tools",
-      alat: "Tools",
-      sticker: "Sticker",
-      stiker: "Sticker",
-      bug: "Bug",
-      bugs: "Bug",
-      exploit: "Bug",
-      ai: "AI",
-      socialmedia: "Social Media",
-      socmed: "Social Media",
-      sosmed: "Social Media",
-      news: "News",
-      berita: "News",
+      user: "User",
+      usr: "User",
+      pengguna: "User",
+      premium: "Premium",
+      prem: "Premium",
+      pro: "Premium",
+      owner: "Owner",
+      own: "Owner",
+      creator: "Owner",
+      general: "General",
       sports: "Sports",
       sport: "Sports",
-      general: "General",
+      stalker: "Stalker",
+      stalk: "Stalker",
     };
 
     const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
@@ -97,7 +100,21 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    const order = ["Bug", "News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General", "Sports"];
+    const order = [
+      "Bug",
+      "News",
+      "Social Media",
+      "AI",
+      "Sticker",
+      "Tools",
+      "Group",
+      "User",
+      "Premium",
+      "Owner",
+      "General",
+      "Sports",
+      "Stalker",
+    ];
     const catKeys = Object.keys(categories).sort((a, b) => {
       const ia = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
       const ib = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
@@ -108,13 +125,13 @@ export default {
     const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
     let menuText = "";
 
-    // .menu = cuma list kategori, super simple
+    // .menu = cuma list kategori, berformat: * <Nama> — .menu <nama>
     if (!rawArg) {
-      menuText += `*${activeSettings.botName || "WhatsApp Bot"}* [${prefix}]\n\n`;
+      menuText += `*${activeSettings.botName || "Rizzer Bot"}* [${prefix}]\n\n`;
       for (const cat of catKeys) {
-        menuText += `• *${cat}* — ${prefix}menu ${cat.toLowerCase()}\n`;
+        menuText += `* ${cat} — ${prefix}menu ${cat.toLowerCase()}\n`;
       }
-      menuText += `\n_Contoh: ${prefix}menu ai_`;
+      menuText += `\nContoh: ${prefix}menu ai`;
     } else if (targetCategory) {
       // .menu <kategori> = list perintah kategori itu aja, teks polos (termasuk bug)
       // Contoh: .menu bug → daftar perintah Bug, inline
