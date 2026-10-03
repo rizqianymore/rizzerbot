@@ -1,42 +1,96 @@
-// plugins/tools/cekplat.js — perintah "cekplat" (1 file = 1 perintah).
 import { parsePlat, enrichSamsat, formatPlatInfo } from "@/src/services/cekplat.js";
+import { searchByPlate, searchByNik, isSamsatReady } from "@/src/services/samsatService.js";
 
 export default {
-  "name": "cekplat",
-  "aliases": ["plat", "ceknopol", "nopol"],
-  "description": "Parse plat nomor Indonesia: wilayah, provinsi, perkiraan jenis kendaraan",
-  "usage": "<plat, cth: B 1234 ABC>",
-  "premiumOnly": true,
-  "category": "Tools",
-  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
-      const currentPrefix = prefix || ".";
-      const input = (args || []).join(" ").trim();
+  name: "cekplat",
+  aliases: ["plat", "ceknopol", "nopol", "samsat", "ceknikplat"],
+  description: "Cek data kendaraan SAMSAT / info plat nomor Indonesia",
+  usage: "<plat nomor / NIK>",
+  premiumOnly: true,
+  category: "Tools",
+  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+    const currentPrefix = prefix || ".";
+    const rawInput = (args || []).join(" ").trim();
 
-      if (!input) {
-        return reply(
-          `Masukkan plat nomor! Contoh: \`${currentPrefix}cekplat B 1234 ABC\`\n` +
-          `Contoh lain: \`${currentPrefix}cekplat AD 1234 AB\`, \`${currentPrefix}cekplat BK 5678 AA\`, \`${currentPrefix}cekplat CD 12 34\``
-        );
+    if (!rawInput) {
+      return reply(
+        `*FORMAT PENGGUNAAN*\n\n` +
+        `• Plat: \`${currentPrefix}cekplat B 1112 PYK\` (atau \`${currentPrefix}cekplat B1112PYK\`)\n` +
+        `• NIK : \`${currentPrefix}cekplat 3171010101550005\``
+      );
+    }
+
+    await sendTyping();
+
+    const cleanInput = rawInput.replace(/\s+/g, "").toUpperCase();
+    const isNik = /^\d{16}$/.test(cleanInput);
+    const startTime = performance.now();
+
+    try {
+      // 1. Jika input adalah 16 digit NIK
+      if (isNik && isSamsatReady()) {
+        const list = searchByNik(cleanInput);
+        const latency = (performance.now() - startTime).toFixed(2);
+
+        if (!list || list.length === 0) {
+          return reply(`Data kendaraan dengan NIK ${cleanInput} tidak ditemukan (${latency} ms).`);
+        }
+
+        let text = `*DATA KENDARAAN (NIK)*\n\n`;
+        text += `• NIK: ${cleanInput}\n`;
+        text += `• Total: ${list.length} Kendaraan\n\n`;
+
+        list.forEach((item, idx) => {
+          text += `[${idx + 1}] ${item.number}\n`;
+          text += `• Pemilik: ${item.name || '-'}\n`;
+          text += `• Tipe: ${[item.brand, item.type].filter(Boolean).join(' ') || '-'}\n`;
+          text += `• Rangka: ${item.vin || '-'}\n`;
+          text += `• Mesin: ${item.engine || '-'}\n`;
+          text += `• BPKB: ${item.bpkb || '-'}\n`;
+          if (item.address) text += `• Alamat: ${item.address}\n`;
+          text += `\n`;
+        });
+
+        text += `Query: ${latency} ms`;
+        return reply(text.trim());
       }
 
-      const parsed = parsePlat(input);
+      // 2. Lookup ke Database SAMSAT (bila DB tersedia)
+      if (isSamsatReady()) {
+        const data = searchByPlate(cleanInput);
+        if (data) {
+          const latency = (performance.now() - startTime).toFixed(2);
+          const text =
+            `*DATA KENDARAAN (SAMSAT)*\n\n` +
+            `• Plat: ${data.number}\n` +
+            `• Nama: ${data.name || '-'}\n` +
+            `• NIK: ${data.nik || '-'}\n` +
+            `• Alamat: ${data.address || '-'}\n` +
+            `• Merk: ${data.brand || '-'}\n` +
+            `• Tipe: ${data.type || '-'}\n` +
+            `• Rangka: ${data.vin || '-'}\n` +
+            `• Mesin: ${data.engine || '-'}\n` +
+            `• BPKB: ${data.bpkb || '-'}\n` +
+            `• Warna/Tahun: ${data.color || '-'} / ${data.year || '-'}\n\n` +
+            `Query: ${latency} ms`;
+
+          return reply(text);
+        }
+      }
+
+      // 3. Fallback: Parse info plat wilayah biasa
+      const parsed = parsePlat(rawInput);
       if (!parsed.valid) {
         return reply(
-          `Plat tidak valid: ${parsed.reason || "format salah"}\n\n` +
-          `Gunakan: \`${currentPrefix}cekplat <plat>\`\n` +
+          `Data tidak ditemukan di SAMSAT dan format plat tidak valid: ${parsed.reason || "format salah"}\n\n` +
           `Contoh: \`${currentPrefix}cekplat B 1234 ABC\``
         );
       }
 
-      await sendTyping();
-      try {
-        const parsed = parsePlat(input);
-        // Enrich presisi (Daerah + Samsat + Alamat) via Firestore samsat.info.
-        // Gagal network = fallback offline, tidak throw ke user.
-        await enrichSamsat(parsed);
-        return reply(formatPlatInfo(parsed));
-      } catch (err) {
-        return reply(`Gagal memproses: ${err.message}`);
-      }
-    },
+      await enrichSamsat(parsed);
+      return reply(formatPlatInfo(parsed));
+    } catch (err) {
+      return reply(`Gagal memproses: ${err.message}`);
+    }
+  },
 };
