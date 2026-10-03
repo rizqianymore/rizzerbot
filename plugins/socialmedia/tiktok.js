@@ -13,7 +13,7 @@ export default {
       await sendTyping();
       const url = args[0];
       if (!url) return reply("❌ Masukkan link TikTok! Contoh: *.tiktok https://tiktok.com/@user/video/xxxx*");
-      await reply("🎬 Mengunduh video TikTok...");
+      await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
       try {
         const { tiktokDownload, fetchBuffer } = await import("@/src/services/scrape.js");
         const info = await tiktokDownload(url);
@@ -21,18 +21,22 @@ export default {
         const dlUrl = isAudio ? info.mp3 : info.noWatermark;
         if (!dlUrl) throw new Error("Gagal menemukan link download media TikTok.");
         const isVideo = !isAudio;
-        const buffer = await fetchBuffer(dlUrl);
-        const caption =
-          `🎬 *TikTok Download*\n\n` +
-          `*Author:* ${info.author} (@${info.uniqueId})\n` +
-          (info.title ? `*Judul:* ${info.title}\n` : "") +
-          `*Durasi:* ${info.duration}s\n` +
-          `*Views:* ${info.playCount.toLocaleString()} | *Likes:* ${info.diggCount.toLocaleString()}`;
+        const buffer = await fetchBuffer(dlUrl, {
+          "User-Agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+          "Referer": "https://snaptik.fi/",
+        });
+        const lines = ["*TIKTOK DOWNLOADER*"];
+        if (info.title) lines.push(`Judul: ${info.title}`);
+        if (info.author) lines.push(`Author: ${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}`);
+        if (info.duration) lines.push(`Durasi: ${info.duration}s`);
+        if (info.playCount) lines.push(`Views: ${info.playCount.toLocaleString()}`);
+        if (info.diggCount) lines.push(`Likes: ${info.diggCount.toLocaleString()}`);
+        const caption = lines.join("\n");
         await sock.sendMessage(
           msg.key.remoteJid,
           isVideo
             ? { video: buffer, caption, mimetype: "video/mp4" }
-            : { audio: buffer, mimetype: "audio/mpeg", ptt: true },
+            : { audio: buffer, mimetype: "audio/mpeg", ptt: false },
           { quoted: msg }
         );
       } catch (err) {

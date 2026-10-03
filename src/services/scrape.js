@@ -205,40 +205,60 @@ export async function ytInfo(url) {
 }
 
 export async function tiktokDownload(url) {
-  const device = getRandomDevice("mobile");
-  const headers = buildScraperHeaders(device, {
-    "Content-Type": "application/json",
-    Origin: "https://snaptik.fi",
-    Referer: "https://snaptik.fi/id/download-tiktok-video",
-    Accept: "application/json, text/plain, */*",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-  });
+  const ratingId = `snaptik_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const headers = {
+    "authority": "snaptik.fi",
+    "accept": "*/*",
+    "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "content-type": "application/json",
+    "cookie": `snaptik_rating_id=${ratingId}`,
+    "origin": "https://snaptik.fi",
+    "priority": "u=1, i",
+    "referer": "https://snaptik.fi/id/download-tiktok-video",
+    "sec-ch-ua": '"Chromium";v="154", "Google Chrome";v="154", "Not A(Brand";v="99"',
+    "sec-ch-ua-mobile": "?1",
+    "sec-ch-ua-platform": '"Android"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+  };
 
-  const { data } = await http.post(
-    "https://snaptik.fi/api/tiktok",
-    { url, no_watermark: true },
-    { headers }
-  );
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const { data } = await http.post(
+        "https://snaptik.fi/api/tiktok",
+        { url: url.trim() },
+        { headers, timeout: 25000 }
+      );
 
-  if (!data?.download_link) {
-    throw new Error(data?.message || "Video tidak ditemukan");
+      if (!data?.download_link) {
+        throw new Error(data?.message || data?.error || "Video TikTok tidak ditemukan atau diproteksi.");
+      }
+
+      const author = data.author || {};
+      return {
+        title: data.title || data.description || "",
+        author: author.nickname || author.uniqueId || "",
+        uniqueId: author.uniqueId || "",
+        playCount: data.statistics?.play_count || 0,
+        diggCount: data.statistics?.digg_count || 0,
+        duration: data.duration || 0,
+        cover: data.cover || "",
+        mp3: data.download_link.mp3 || "",
+        noWatermark: data.download_link.no_watermark || "",
+        watermark: data.download_link.watermark || "",
+      };
+    } catch (err) {
+      lastError = err;
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    }
   }
 
-  const author = data.author || {};
-  return {
-    title: data.title || data.description || "",
-    author: author.nickname || author.uniqueId || "",
-    uniqueId: author.uniqueId || "",
-    playCount: data.statistics?.play_count || 0,
-    diggCount: data.statistics?.digg_count || 0,
-    duration: data.duration || 0,
-    cover: data.cover || "",
-    mp3: data.download_link.mp3 || "",
-    noWatermark: data.download_link.no_watermark || "",
-    watermark: data.download_link.watermark || "",
-  };
+  throw new Error(lastError?.response?.data?.error || lastError?.message || "Gagal mengambil data TikTok");
 }
 
 async function ytToolkitSession() {

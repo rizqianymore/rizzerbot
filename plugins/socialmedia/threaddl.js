@@ -23,7 +23,7 @@ export default {
         );
       }
 
-      await reply("⏳ Mengunduh media dari Threads...");
+      await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
       const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
 
@@ -88,11 +88,11 @@ export default {
         }
 
         const cleanDesc = decodeEntities(info.title || info.description || "");
-        const captionText =
-          `🧵 *THREADS DOWNLOADER*\n\n` +
-          `• Author: *${info.author || "Unknown"}*\n` +
-          (cleanDesc ? `• Deskripsi: ${cleanDesc}\n` : "") +
-          `• Total Media: ${mediaResults.length} file`;
+        const lines = ["*THREADS DOWNLOADER*"];
+        if (info.author) lines.push(`Author: ${info.author}`);
+        if (cleanDesc) lines.push(`Deskripsi: ${cleanDesc}`);
+        lines.push(`Total Media: ${mediaResults.length} file`);
+        const captionText = lines.join("\n");
 
         const remoteJid = msg.key.remoteJid;
 

@@ -23,20 +23,17 @@ export default {
       );
     }
 
-    await reply("⏳ Mengambil informasi dan link unduhan MediaFire...");
+    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     try {
       const data = await mediafireDownload(url);
       const { downloadUrl, filename, filesize, mimetype } = data;
 
-      const infoText =
-        `📁 *MEDIAFIRE DOWNLOADER*\n\n` +
-        `📄 *Nama:* ${filename}\n` +
-        `📊 *Ukuran:* ${filesize}\n` +
-        `🔗 *Direct Link:*\n${downloadUrl}\n\n` +
-        `_Mengunduh dan mengirim file ke WhatsApp..._`;
-
-      await reply(infoText);
+      const lines = ["*MEDIAFIRE DOWNLOADER*"];
+      if (filename) lines.push(`Nama: ${filename}`);
+      if (filesize) lines.push(`Ukuran: ${filesize}`);
+      if (downloadUrl) lines.push(`Link: ${downloadUrl}`);
+      const infoText = lines.join("\n");
 
       // Coba download file jika ukuran wajar (< 100MB untuk WhatsApp)
       // Cek apakah ukuran file di bawah batas

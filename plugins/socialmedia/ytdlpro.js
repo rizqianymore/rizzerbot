@@ -12,7 +12,6 @@ export default {
       await sendTyping();
       const url = args[0];
       if (!url) return reply("❌ Masukkan link YouTube! Contoh: *.ytdlpro https://youtu.be/xxx*");
-      await reply("🚀 Mendownload video...");
       const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
       const { ytToolkitDownload, cobaltDownload, fetchBuffer } = await import("@/src/services/scrape.js");
       try {
@@ -20,17 +19,21 @@ export default {
         try {
           result = await ytToolkitDownload(url, isAudio ? { type: "audio" } : { type: "video", quality: "720" });
         } catch (ytErr) {
-          await reply(`⚠️ youtubetoolkit tidak bisa (${ytErr.message}). Coba via Cobalt...`);
           result = await cobaltDownload(url, isAudio ? { mode: "audio", audioFormat: "mp3" } : { mode: "video" });
         }
         const downloadUrl = result?.url;
         if (!downloadUrl) throw new Error("Gagal mendapatkan link unduhan.");
         const buffer = await fetchBuffer(downloadUrl);
+        const lines = ["*YOUTUBE DOWNLOADER*"];
+        if (result?.title) lines.push(`Judul: ${result.title}`);
+        if (result?.channel) lines.push(`Channel: ${result.channel}`);
+        if (result?.duration) lines.push(`Durasi: ${result.duration}`);
+        const caption = lines.join("\n");
         await sock.sendMessage(
           msg.key.remoteJid,
           isAudio
             ? { audio: buffer, mimetype: "audio/mpeg" }
-            : { video: buffer, mimetype: "video/mp4" },
+            : { video: buffer, caption, mimetype: "video/mp4" },
           { quoted: msg }
         );
       } catch (err) {

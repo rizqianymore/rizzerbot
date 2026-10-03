@@ -23,7 +23,7 @@ export default {
         );
       }
 
-      await reply("⏳ Mengunduh lagu dari Spotify...");
+      await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
       try {
         const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
