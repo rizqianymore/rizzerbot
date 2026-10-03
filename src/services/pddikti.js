@@ -158,7 +158,7 @@ function mapApiError(status, snippet) {
 }
 
 /** Search semua kategori. Return json.data ({mahasiswa[], dosen[], pt[], prodi[]}). */
-export async function searchPddikti(keyword, { retries = 1 } = {}) {
+export async function searchPddikti(keyword, { retries = 2 } = {}) {
   const kw = String(keyword ?? "").trim();
   if (!kw) throw new Error("keyword wajib diisi");
   if (kw.length > 100) throw new Error("keyword terlalu panjang (maks 100 karakter)");
@@ -191,7 +191,7 @@ export async function searchPddikti(keyword, { retries = 1 } = {}) {
     } catch (err) {
       lastErr = err;
       if (/403|token|recaptcha/i.test(err.message) && attempt < retries) continue;
-      if ((err?.name === "AbortError" || /timeout|fetch failed|ECONN/i.test(err.message)) && attempt < retries) {
+      if ((err?.name === "AbortError" || /timeout|fetch failed|ECONN|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|socket hang up|net::|ERR_|NETWORK|Failed to fetch/i.test(err.message)) && attempt < retries) {
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         continue;
       }
