@@ -34,7 +34,12 @@ export default {
         );
       }
 
-      const buffer = await getMediaBuffer(sock, targetMsg);
+      let buffer = null;
+      try {
+        buffer = await getMediaBuffer(sock, targetMsg);
+      } catch (err) {
+        return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+      }
       if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya (jangan forward dari View Once, kirim sebagai gambar biasa).");
 
       // Parse teks meme atas / bawah via format: teks atas | teks bawah

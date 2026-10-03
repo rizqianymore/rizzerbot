@@ -71,27 +71,27 @@ export default {
         : "-";
 
       const lines = [
-        `👤 *INFORMASI PROFIL PENGGUNA*`,
+        `*INFORMASI PROFIL PENGGUNA*`,
         ``,
         `• *Nama:* ${displayName}`,
         `• *Nomor:* +${phoneNum}`,
         `• *Status Bot:* ${targetIsOwner ? "Owner Bot" : targetAccess.admin ? "Admin Bot" : targetIsPremium ? "Premium User" : "Free User"}`,
-        `• *Status Banned:* ${targetUser.banned ? "🔴 Diblokir / Banned" : "🟢 Aktif (Normal)"}`,
+        `• *Status Akun:* ${targetUser.banned ? "Diblokir (Banned)" : "Aktif"}`,
         `• *Terdaftar Bot:* ${regDate}`,
         ``,
-        `📝 *Bio / Status WhatsApp:*`,
+        `*Bio / Status WhatsApp:*`,
         `"${waStatus}"${waStatusSetAt ? ` _(Diperbarui: ${waStatusSetAt})_` : ""}`,
       ];
 
       if (targetUser.profile) {
-        lines.push(``, `📌 *Custom Bio Bot:*`, `"${targetUser.profile}"`);
+        lines.push(``, `*Custom Bio Bot:*`, `"${targetUser.profile}"`);
       }
 
       lines.push(
         ``,
-        `🔗 *Tautan Langsung:* wa.me/${phoneNum}`,
+        `• *Tautan Langsung:* wa.me/${phoneNum}`,
         ``,
-        `_💡 Ketik \`${prefix}profile @tag\` atau \`${prefix}profile 628xxx\` untuk lookup pengguna lain._`
+        `_Ketik \`${prefix}profile @tag\` atau \`${prefix}profile 628xxx\` untuk lookup pengguna lain._`
       );
 
       const captionText = lines.join("\n");

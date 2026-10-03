@@ -29,19 +29,19 @@ export default {
       }
 
       const lines = [
-        `🤖 *DAFTAR BOT AKTIF (${filteredList.length})*\n`
+        `*DAFTAR BOT AKTIF (${filteredList.length})*\n`
       ];
 
       for (let i = 0; i < filteredList.length; i++) {
         const b = filteredList[i];
-        const statusEmoji = b.status === "online" ? "🟢 Online" : b.status === "connecting" ? "🟡 Menghubungkan" : "🔴 " + b.status;
+        const statusText = b.status === "online" ? "Online" : b.status === "connecting" ? "Menghubungkan" : b.status;
         const bJid = `${b.number}@s.whatsapp.net`;
         const bSettings = db.getBotSettings(bJid);
         const ownerNum = bSettings.ownerNumber ? bSettings.ownerNumber.split("@")[0] : b.number;
-        const mode = bSettings.public === false ? "🔒 Self" : "🌐 Public";
+        const mode = bSettings.public === false ? "Self" : "Public";
 
         lines.push(`*${i + 1}. +${b.number}*`);
-        lines.push(`   • Status: ${statusEmoji} | Mode: ${mode}`);
+        lines.push(`   • Status: ${statusText} | Mode: ${mode}`);
         lines.push(`   • Owner: +${ownerNum} | Prefix: \`${bSettings.prefix || "."}\``);
         lines.push(`   • Uptime: ${Math.floor(b.uptime / 60)} menit\n`);
       }

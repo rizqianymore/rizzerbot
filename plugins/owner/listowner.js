@@ -22,12 +22,12 @@ export default {
       ].filter(Boolean);
       const uniqueOwners = [...new Set(ownerList.map(j => db.normalizeJid(j)))];
 
-      let text = `👑 *DAFTAR OWNER (+${activeBotJid.split("@")[0]})*\n\n`;
+      let text = `*DAFTAR OWNER (+${activeBotJid.split("@")[0]})*\n\n`;
       uniqueOwners.forEach((j, i) => {
         const num = j.split("@")[0];
         const isMain = j === primary;
         const isDedicated = j === botDedicatedOwner && !isMain;
-        text += `${i + 1}. +${num} ${isMain ? "⭐ _(Primary SuperOwner)_" : isDedicated ? "👑 _(Bot Owner)_" : "🔑 _(Owner)_"}\n`;
+        text += `${i + 1}. +${num} ${isMain ? "_(Primary SuperOwner)_" : isDedicated ? "_(Bot Owner)_" : "_(Owner)_"}\n`;
       });
       text += `\nTotal: ${uniqueOwners.length} owner terdaftar`;
       reply(text);

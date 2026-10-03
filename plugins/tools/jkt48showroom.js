@@ -42,7 +42,7 @@ export default {
         ];
 
         for (const item of list) {
-          const liveStatus = item.profile?.is_onlive ? "🔴 *Sedang Live*" : "⚪ *Offline*";
+          const liveStatus = item.profile?.is_onlive ? "*Sedang Live*" : "Offline";
           lines.push(`*#${item.rank}* • *${item.username}*`);
           lines.push(`• Total Live: *${item.total_live} kali* (${liveStatus})`);
           if (item.room_id) {

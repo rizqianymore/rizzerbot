@@ -24,7 +24,12 @@ export default {
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const targetMsg = findDownloadableTarget(msg);
-      const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
+      let buffer = null;
+      try {
+        buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
+      } catch (err) {
+        return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+      }
       if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.hd*");
       await reply("✨ Memproses gambar ke HD...");
       try {

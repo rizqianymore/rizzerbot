@@ -132,8 +132,31 @@ export function findDownloadableTarget(msg) {
   return null;
 }
 
-export async function getMediaBuffer(sock, msg) {
+// Batas unduhan media agar kiriman raksasa tidak bikin OOM/crash (DoS).
+// WhatsApp sendiri membatasi media ~16MB; default 25MB masih longgar untuk
+// stiker/HD/RVO, dan bisa dioverride per panggilan (mis. restore: 50MB).
+export const DEFAULT_MAX_MEDIA_BYTES = 25 * 1024 * 1024;
+
+export function formatBytes(n) {
+  if (!Number.isFinite(Number(n))) return "-";
+  n = Number(n);
+  if (n < 1024) return `${n} B`;
+  if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1048576).toFixed(1)} MB`;
+}
+
+function checkMediaSize(buf, maxBytes) {
+  if (buf && buf.length > maxBytes) {
+    throw new Error(
+      `Media terlalu besar (${formatBytes(buf.length)}, maks ${formatBytes(maxBytes)}). Kirim file yang lebih kecil.`
+    );
+  }
+  return buf;
+}
+
+export async function getMediaBuffer(sock, msg, opts = {}) {
   if (!msg) return null;
+  const maxBytes = Number(opts?.maxBytes) > 0 ? Number(opts.maxBytes) : DEFAULT_MAX_MEDIA_BYTES;
   // Backward-compat: jika yang dilempar hanya inner content (quotedMessage),
   // bungkus jadi WAMessage minimal agar downloadMediaMessage bisa baca.
   let target = msg;
@@ -150,15 +173,21 @@ export async function getMediaBuffer(sock, msg) {
         reuploadRequest: sock?.updateMediaMessage?.bind(sock),
       }
     );
-    if (buf && buf.length > 0) return buf;
+    if (buf && buf.length > 0) return checkMediaSize(buf, maxBytes);
     return buf;
   } catch (err) {
+    // Jangan telan error batas ukuran menjadi "gagal download" generik.
+    if (err && String(err.message || "").startsWith("Media terlalu besar")) throw err;
     // Fallback ke method lama jika masih ada (baileys v6)
     try {
       if (typeof sock?.downloadMediaMessage === "function") {
-        return await sock.downloadMediaMessage(target);
+        const buf2 = await sock.downloadMediaMessage(target);
+        if (buf2 && buf2.length > 0) return checkMediaSize(buf2, maxBytes);
+        return buf2;
       }
-    } catch (_) {}
+    } catch (err2) {
+      if (err2 && String(err2.message || "").startsWith("Media terlalu besar")) throw err2;
+    }
     console.warn("[getMediaBuffer] gagal download:", err?.message || err);
     return null;
   }

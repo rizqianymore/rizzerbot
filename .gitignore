@@ -21,6 +21,14 @@ config/database.json
 marketing.txt
 bin/
 
+# SAMSAT & Data files
+plat-nomor.csv
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+
 # Environment Variables & Secrets
 .env
 .env.*

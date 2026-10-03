@@ -37,18 +37,17 @@ export default {
       const list = listTransactions({ limit, groupJid: isGroup ? remoteJid : null });
 
       if (list.length === 0) {
-        return reply("📋 Belum ada riwayat transaksi yang tersimpan.");
+        return reply("Belum ada riwayat transaksi yang tersimpan.");
       }
 
-      let text = `📋 *DAFTAR TRANSAKSI TERBARU* (${list.length})\n`;
+      let text = `*DAFTAR TRANSAKSI TERBARU* (${list.length})\n\n`;
       for (const [i, t] of list.entries()) {
-        const statusIcon =
-          t.status === "LUNAS" ? "✅" : t.status === "PROSES" ? "🔄" : t.status === "BATAL" ? "❌" : "⏳";
         text +=
           `*${i + 1}.* \`${t.id}\`\n` +
-          `   🛒 *${t.item}* (${t.formattedPrice})\n` +
-          `   👤 ${t.buyer} | ${statusIcon} *${t.status}*\n` +
-          `   📅 ${t.time}\n\n`;
+          `• Item: ${t.item} (${t.formattedPrice})\n` +
+          `• Pembeli: ${t.buyer}\n` +
+          `• Status: ${t.status}\n` +
+          `• Waktu: ${t.time}\n\n`;
       }
       text += `_Ketik .cektrx <ID> untuk melihat struk lengkap._`;
 

@@ -1,6 +1,6 @@
 // plugins/group/tagall.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, invalidateGroupMeta, samePhoneJid } from "@/src/utils/helper.js";
+import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
 /**
  * Validates group context and checks bot/user admin permissions.
@@ -21,12 +21,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   const senderJid = context.senderJid;
   const botJid = db.normalizeJid(sock.user?.id);
 
-  const botParticipant = meta.participants.find((p) => samePhoneJid(db.normalizeJid(p.id), botJid));
+  const botParticipant = findGroupParticipant(meta, botJid);
   const isBotAdmin = Boolean(
     botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
   );
 
-  const userParticipant = meta.participants.find((p) => samePhoneJid(db.normalizeJid(p.id), senderJid));
+  const userParticipant = findGroupParticipant(meta, senderJid);
   const isUserAdmin = Boolean(
     context.isOwner ||
     context.isAdmin ||

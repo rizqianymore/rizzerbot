@@ -49,7 +49,7 @@ export default {
         // Multi NIS (2-5): fetch paralel, gabung 1 balasan
         const results = await getMultiSiswaInfoText(valid, { showFullPhone, logger });
         const blocks = results.map((r) => (r.text ? r.text : `*DATA SISWA*\nNIS: ${r.nis}\nError: ${r.error}`));
-        let text = blocks.join("\n\n────────────────\n\n");
+        let text = blocks.join("\n\n");
         if (invalid.length > 0) {
           text += `\n\n_Diabaikan (bukan NIS): ${invalid.slice(0, 5).join(", ")}_`;
         }

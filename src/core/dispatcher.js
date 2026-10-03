@@ -11,19 +11,55 @@ function getPhoneDigits(v) {
   return String(v || "").replace(/\D/g, "");
 }
 
+// Samakan identitas user dengan sadar-peta LID→HP (db.sameUser).
+// Pengganti samePhoneJid mentah yang buta namespace (digit LID ≠ nomor HP).
 function samePhoneJid(a, b) {
-  if (!a || !b) return false;
-  if (a === b) return true;
-  const da = getPhoneDigits(a);
-  const dbb = getPhoneDigits(b);
-  return Boolean(da && dbb && da === dbb);
+  return db.sameUser(a, b);
 }
 
 function isSameBotJid(a, b) {
-  return samePhoneJid(
-    a ? db.normalizeJid(a) : "",
-    b ? db.normalizeJid(b) : ""
-  );
+  return db.sameUser(a, b);
+}
+
+// Cari partisipan grup yang cocok dengan JID (sadar LID→HP):
+// cocokkan id + phoneNumber + lid metadata melawan JID target.
+function findParticipant(meta, jid) {
+  const parts = meta?.participants || [];
+  for (const p of parts) {
+    if (!p) continue;
+    const cands = typeof p === "string" ? [p] : [p.id, p.phoneNumber, p.lid];
+    for (const c of cands) {
+      if (c && db.sameUser(c, jid)) return p;
+    }
+  }
+  return null;
+}
+
+// Tentukan pengirim sebagai NOMOR HP (bukan LID):
+// 1. participantAlt / remoteJidAlt Baileys (pasangan HP saat addressing LID).
+// 2. participant / remoteJid langsung (saat addressing HP).
+// 3. Peta LID→HP yang sudah dipelajari.
+// Setiap pasangan LID+HP yang terlihat langsung diingat ke peta.
+function resolveSenderJid(msg) {
+  const key = msg?.key || {};
+  const primary = db.normalizeJid(key.participant || "");
+  const remote = db.normalizeJid(key.remoteJid || "");
+  const alt = db.pickPhoneJid(key.participantAlt, key.remoteJidAlt, key.participantPn, key.senderPn);
+  if (primary.endsWith("@lid") && alt) db.rememberLidPn(primary, alt);
+  if (alt) return alt;
+  if (primary) {
+    const viaMap = db.resolvePhoneJid(primary);
+    if (viaMap.endsWith("@s.whatsapp.net")) return viaMap;
+    // DM addressing-HP: remoteJid = nomor HP lawan bicara.
+    if (!isGroupJid(key.remoteJid) && remote.endsWith("@s.whatsapp.net")) {
+      if (primary.endsWith("@lid")) db.rememberLidPn(primary, remote);
+      return remote;
+    }
+    if (viaMap) return viaMap;
+    return primary;
+  }
+  if (!isGroupJid(key.remoteJid) && remote) return db.resolvePhoneJid(remote);
+  return remote;
 }
 
 function resolveBotJid(sock) {
@@ -190,9 +226,10 @@ function findPhoneJid(values) {
   for (let start = 0; start < parts.length; start += 1) {
     const directValue = parts[start];
     if (directValue.includes("@") || directValue.startsWith("+")) {
-      const directJid = db.normalizeJid(directValue);
+      // Petakan LID→HP dulu; hanya nomor HP yang diterima sebagai target.
+      const directJid = db.resolvePhoneJid(directValue);
       const explicitJid = directValue.includes("@") && directValue.indexOf("@", 1) >= 0;
-      if (directJid && !directJid.endsWith("@g.us") && (explicitJid || isPhoneJid(directJid))) return directJid;
+      if (directJid && !directJid.endsWith("@g.us") && directJid.endsWith("@s.whatsapp.net") && (explicitJid || isPhoneJid(directJid))) return directJid;
     }
 
     let candidate = "";
@@ -222,9 +259,7 @@ async function getGroupAccessError(sock, remoteJid, senderJid, cmd, access) {
   }
 
   const botJid = resolveBotJid(sock);
-  const botParticipant = meta.participants.find(
-    (participant) => samePhoneJid(db.normalizeJid(participant.id), botJid)
-  );
+  const botParticipant = findParticipant(meta, botJid);
   const isBotAdmin = Boolean(
     botParticipant &&
     (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
@@ -235,9 +270,7 @@ async function getGroupAccessError(sock, remoteJid, senderJid, cmd, access) {
   }
 
   if (cmd.groupAdminOnly) {
-    const userParticipant = meta.participants.find(
-      (participant) => samePhoneJid(db.normalizeJid(participant.id), senderJid)
-    );
+    const userParticipant = findParticipant(meta, senderJid);
     const isGroupAdmin = Boolean(
       access.admin ||
       (userParticipant &&
@@ -268,15 +301,28 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
   }
   if (!meta || !Array.isArray(meta.participants)) return { mode: "unknown" };
 
-  const participantJids = meta.participants.map((p) => db.normalizeJid(p.id)).filter(Boolean);
+  // Kumpulkan JID bot di grup: cocokkan id + phoneNumber + lid metadata
+  // (sadar LID→HP) agar bot tetap terdeteksi apa pun addressing_mode grup.
   const botsInGroup = [];
   const seen = new Set();
-  for (const pj of participantJids) {
-    if (!db.isAnyBotJid(pj)) continue;
-    const phone = getPhoneDigits(pj);
-    if (phone && seen.has(phone)) continue;
+  const considerBotJid = (rawJid) => {
+    const pj = db.resolvePhoneJid(rawJid);
+    if (!pj) return;
+    if (!db.isAnyBotJid(pj)) return;
+    const phone = pj.endsWith("@s.whatsapp.net") ? getPhoneDigits(pj) : pj;
+    if (phone && seen.has(phone)) return;
     if (phone) seen.add(phone);
     botsInGroup.push(pj);
+  };
+  for (const p of meta.participants) {
+    if (!p) continue;
+    if (typeof p === "string") {
+      considerBotJid(p);
+      continue;
+    }
+    considerBotJid(p.id);
+    considerBotJid(p.phoneNumber);
+    considerBotJid(p.lid);
   }
   // Bot sendiri belum tentu terdeteksi via participants (format lid), tambahkan
   if (botJid && !botsInGroup.some((b) => samePhoneJid(b, botJid))) {
@@ -443,14 +489,13 @@ async function dispatchInner(sock, msg, logger) {
       : ``;
     const linkRegex = new RegExp(`(${basePattern}${extraPattern})`, "i");
     if (linkRegex.test(messageContent)) {
-      const rawSender = msg.key.participant || remoteJid;
-      const senderJid = db.normalizeJid(rawSender);
+      const senderJid = resolveSenderJid(msg);
       const isOwner = db.isOwner(senderJid);
 
       if (!isOwner) {
-        // Cek apakah pengirim adalah admin grup
+        // Cek apakah pengirim adalah admin grup (sadar LID→HP)
         const meta = await getCachedGroupMeta(sock, remoteJid).catch(() => null);
-        const participant = meta?.participants?.find((p) => samePhoneJid(db.normalizeJid(p.id), senderJid));
+        const participant = findParticipant(meta, senderJid);
         const isGroupAdmin = participant && (participant.admin === "admin" || participant.admin === "superadmin");
 
         if (!isGroupAdmin) {
@@ -472,9 +517,11 @@ async function dispatchInner(sock, msg, logger) {
 
   const isFromMe = Boolean(msg.key?.fromMe);
   const botJid = botJidEarly || db.normalizeJid(sock.user?.id || "");
-  const rawSender = msg.key.participant || remoteJid;
-  const normalizedRawSender = db.normalizeJid(rawSender);
-  const remoteNormalized = db.normalizeJid(remoteJid);
+  // Pengirim SELALU dinormalisasi ke nomor HP (bukan LID) agar satu orang =
+  // satu identitas di database, apa pun addressing_mode grupnya.
+  const normalizedRawSender = resolveSenderJid(msg);
+  const rawSender = normalizedRawSender;
+  const remoteNormalized = db.resolvePhoneJid(remoteJid);
 
   // Auto-register bot JID if known
   if (botJid) {
@@ -550,6 +597,15 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
+  // Mode maintenance: bot dikunci, HANYA owner yang bisa pakai perintah.
+  if (activeSettings.maintenance === true && !isOwner) {
+    if (activeSettings.silentDeny === false) {
+      const mtext = String(activeSettings.maintenanceMessage || "🔧 Bot sedang maintenance. Coba lagi nanti.");
+      await sock.sendMessage(remoteJid, { text: mtext }, { quoted: msg }).catch(() => {});
+    }
+    return;
+  }
+
   // Mode public di DM: pengirim tak terdaftar HANYA boleh memakai command publik (sewa/owner/ping/dll).
   // Selain itu: abaikan diam-diam agar bot tidak bisa "disentuh" orang asing.
   // Di dalam GRUP gate ini tidak berlaku: hak akses grup (admin grup/bot) dicek oleh
@@ -585,8 +641,9 @@ async function dispatchInner(sock, msg, logger) {
   const isSubBotSock = sock.isSubBot === true;
   if (isGroup && !isFromMe) {
     const uniCtx = getUniversalContextInfo(msg.message) || {};
-    const mentionedJids = (uniCtx.mentionedJid || []).map((j) => db.normalizeJid(j));
-    const quotedParticipant = db.normalizeJid(uniCtx.participant || "");
+    // Tag/quote bisa datang sebagai @lid — petakan ke nomor HP bila dikenal.
+    const mentionedJids = (uniCtx.mentionedJid || []).map((j) => db.resolvePhoneJid(j)).filter(Boolean);
+    const quotedParticipant = db.resolvePhoneJid(uniCtx.participant || "");
 
     // Cek apakah ada bot terdaftar yang di-tag atau di-reply
     const anyBotMentioned = mentionedJids.some((j) => db.isAnyBotJid(j));
@@ -639,17 +696,19 @@ async function dispatchInner(sock, msg, logger) {
     }
   }
 
-  // Jika grup dan pesan BUKAN dari owner bot ini, cek apakah bot ini yang dimaksud
-  // (Jika bot dalam mode self atau user bukan owner, bot tidak merespon perintah orang lain)
-  if (isOwner && (!user.owner || !user.premium || user.role !== "owner")) {
-    user = db.updateUser(senderJid, {
-      owner: true,
-      admin: true,
-      premium: true,
-      banned: false,
-      role: "owner",
-    });
-    access = db.getAccess(senderJid);
+  // Hak owner BERSIFAT EPHEMERAL per-pesan (dari config/isBotOwner/fromMe).
+  // JANGAN PERNAH menulis owner:true ke database di sini — penulisan hak hanya
+  // boleh lewat db.setOwner()/setAdmin()/setPremium() (perintah eksplisit owner).
+  // Menulis otomatis di dispatcher adalah penyebab "tiba-tiba jadi owner/premium
+  // sendiri": sekali sinyal isOwner true secara transien (echo fromMe, LID vs
+  // phone collision, JID bot sendiri), flag owner:true menetap SELAMANYA di
+  // users.json via normalizeUser/syncPrivilegedUsers. Jadi di sini read-only:
+  // akses owner dipakai untuk perintah ini saja, tanpa persist.
+  if (isOwner && access.user && (!access.user.owner || !access.user.premium)) {
+    logger?.warn?.(
+      `[PrivEsc-Guard] ${senderJid} lolos cek owner via config/tugas tapi record DB belum owner. ` +
+      `Akses ephemeral untuk perintah ini saja, TANPA tulis database.`
+    );
   }
 
   // Sinkronisasi nama HANYA untuk user yang sudah punya entri database.
@@ -817,21 +876,20 @@ async function dispatchInner(sock, msg, logger) {
       return sock.sendMessage(remoteJid, { text }, { quoted: msg });
     },
     getTargetJid: (targetArgs) => {
+      // Target SELALU nomor HP: quoted/mention @lid dipetakan bila dikenal,
+      // fallback ke nomor ketik manual. LID tak terpetakan → null (minta ketik nomor).
       const _ctx = getUniversalContextInfo(msg.message) || {};
       const quotedJid = _ctx.participant || _ctx.remoteJid;
-      if (quotedJid && !quotedJid.endsWith("@g.us")) {
-        return db.normalizeJid(quotedJid);
+      if (quotedJid && !String(quotedJid).endsWith("@g.us")) {
+        const resolved = db.resolvePhoneJid(quotedJid);
+        if (resolved.endsWith("@s.whatsapp.net")) return resolved;
       }
 
       const mentioned = _ctx.mentionedJid;
-      if (Array.isArray(mentioned)) {
-        for (const candidate of mentioned) {
-          const normalized = db.normalizeJid(candidate);
-          if (normalized) return normalized;
-        }
-      } else if (mentioned) {
-        const normalized = db.normalizeJid(mentioned);
-        if (normalized) return normalized;
+      const mentionedList = Array.isArray(mentioned) ? mentioned : (mentioned ? [mentioned] : []);
+      for (const candidate of mentionedList) {
+        const resolved = db.resolvePhoneJid(candidate);
+        if (resolved.endsWith("@s.whatsapp.net")) return resolved;
       }
 
       return findPhoneJid(targetArgs);

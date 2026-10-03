@@ -63,10 +63,6 @@ startBot()
       await autoRestoreSubBots();
     } catch (_) { }
     try {
-      const { startHealthServer } = await import("./src/services/health.js");
-      startHealthServer(logger);
-    } catch (_) { }
-    try {
       const { startExpiryCron } = await import("./src/services/expiry.js");
       startExpiryCron(logger);
     } catch (_) { }

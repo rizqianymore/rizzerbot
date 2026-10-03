@@ -1,6 +1,6 @@
 // plugins/group/antilink.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, invalidateGroupMeta } from "@/src/utils/helper.js";
+import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
 /**
  * Validates group context and checks bot/user admin permissions.
@@ -21,12 +21,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   const senderJid = context.senderJid;
   const botJid = db.normalizeJid(sock.user?.id);
 
-  const botParticipant = meta.participants.find((p) => db.normalizeJid(p.id) === botJid);
+  const botParticipant = findGroupParticipant(meta, botJid);
   const isBotAdmin = Boolean(
     botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
   );
 
-  const userParticipant = meta.participants.find((p) => db.normalizeJid(p.id) === senderJid);
+  const userParticipant = findGroupParticipant(meta, senderJid);
   const isUserAdmin = Boolean(
     context.isOwner ||
     context.isAdmin ||
@@ -72,8 +72,9 @@ export default {
       if (action !== "on" && action !== "off" && action !== "aktif" && action !== "mati") {
         const current = db.isAntilink(ctx.remoteJid);
         return context.reply(
-          `🛡️ *Status Anti-Link: ${current ? "🟢 AKTIF" : "🔴 MATI"}*\n\n` +
-          `Gunakan: *.antilink on* (aktifkan) atau *.antilink off* (matikan).`
+          `*STATUS ANTI-LINK*\n\n` +
+          `• Status: ${current ? "AKTIF" : "MATI"}\n\n` +
+          `Gunakan: .antilink on (aktifkan) atau .antilink off (matikan).`
         );
       }
 
@@ -81,8 +82,8 @@ export default {
       db.setAntilink(ctx.remoteJid, enable);
       await context.reply(
         enable
-          ? "🛡️ *ANTI-LINK BERHASIL DIAKTIFKAN!*\nMember non-admin yang mengirim tautan grup WhatsApp akan dihapus pesannya secara otomatis."
-          : "🛡️ *ANTI-LINK TELAH DIMATIKAN!*"
+          ? "*ANTI-LINK DIAKTIFKAN*\nMember non-admin yang mengirim tautan grup WhatsApp akan dihapus pesannya secara otomatis."
+          : "*ANTI-LINK DIMATIKAN*"
       );
     },
 };

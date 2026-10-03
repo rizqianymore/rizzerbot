@@ -25,8 +25,10 @@ export default {
       await reply("Mengunduh + mengekstrak backup...");
       const tmpFile = path.join(process.cwd(), "temp", `restore-${Date.now()}.tar.gz`);
       try {
-        const buf = await getMediaBuffer(sock, target);
+        const buf = await getMediaBuffer(sock, target, { maxBytes: 50 * 1024 * 1024 });
         if (!buf?.length) return reply("Gagal mengunduh file backup.");
+        // Batas 50MB agar arsip raksasa tidak DoS memori/disk.
+        if (buf.length > 50 * 1024 * 1024) return reply("❌ File backup terlalu besar (maks 50MB).");
         fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
         fs.writeFileSync(tmpFile, buf);
         const { entries } = await restoreBackup(tmpFile);

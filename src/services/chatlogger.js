@@ -79,7 +79,21 @@ export function recordMessage(sock, msg) {
     const remoteJid = msg.key.remoteJid;
     if (!remoteJid || remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter")) return;
 
-    const sender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
+    // Sender dicatat sebagai NOMOR HP (bukan LID): pakai pasangan alt Baileys bila ada.
+    // Sinkron tanpa import db (cukup pilih yang @s.whatsapp.net; pemetaan LID
+    // dipelajari di dispatcher). Fallback ke sender mentah bila tak ada HP.
+    const toPhoneJid = (j) => {
+      if (!j || typeof j !== "string") return "";
+      const at = j.indexOf("@");
+      if (at < 0 || j.slice(at + 1).toLowerCase() !== "s.whatsapp.net") return "";
+      let d = j.slice(0, at).split(":")[0].replace(/\D/g, "");
+      if (d.startsWith("00")) d = d.slice(2);
+      if (d.startsWith("0")) d = `62${d.slice(1)}`;
+      else if (d.startsWith("8")) d = `62${d}`;
+      return d.length >= 8 ? `${d}@s.whatsapp.net` : "";
+    };
+    const rawSender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
+    const sender = toPhoneJid(msg.key.participantAlt) || toPhoneJid(msg.key.remoteJidAlt) || toPhoneJid(rawSender) || rawSender;
     const isGroup = remoteJid.endsWith("@g.us");
 
     // Ekstraksi ringkasan teks atau tipe media

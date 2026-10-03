@@ -10,6 +10,8 @@ export const settings = {
     usePairingCode: true,
 
     public: false,
+    maintenance: false, // true = bot dikunci, hanya owner yang bisa pakai perintah
+    maintenanceMessage: "🔧 Bot sedang maintenance. Coba lagi nanti.",
     prefix: ".",
     // Command yang boleh dipakai orang TAK terdaftar (bukan owner/admin/premium).
     // Selain daftar ini: diabaikan total (tanpa balasan, tanpa tulis database).

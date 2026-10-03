@@ -37,14 +37,14 @@ export default {
         return reply(`❌ File log untuk tanggal/nama \`${targetDate}\` tidak ditemukan.\n\nGunakan \`.chatlogs\` untuk melihat daftar file.`);
       }
 
-      await reply(`⏳ Mengirimkan file log \`${target.file}\` (${target.data.length} pesan)...`);
+      await reply(`Mengirimkan file log \`${target.file}\` (${target.data.length} pesan)...`);
       return sock.sendMessage(
         msg.key.remoteJid,
         {
           document: fs.readFileSync(target.filePath),
           mimetype: "application/json",
           fileName: target.file,
-          caption: `📂 *Chat Log WhatsApp*\n📅 *File:* ${target.file}\n📊 *Total Pesan:* ${target.data.length}\n⏱️ *Retensi:* Otomatis dihapus setelah 3 hari.`,
+          caption: `*Chat Log WhatsApp*\n• File: ${target.file}\n• Total Pesan: ${target.data.length}\n• Retensi: Otomatis dihapus setelah 3 hari.`,
         },
         { quoted: msg }
       );
@@ -55,25 +55,25 @@ export default {
       const targetDate = args[1];
       const logs = getChatLogsList();
       if (logs.length === 0) {
-        return reply("ℹ️ Belum ada log pesan yang tersimpan.");
+        return reply("Belum ada log pesan yang tersimpan.");
       }
 
       const target = targetDate ? getChatLogContent(targetDate) : getChatLogContent(logs[0].file);
       if (!target || !target.data) {
-        return reply(`❌ File log \`${targetDate || ""}\` tidak ditemukan.`);
+        return reply(`File log \`${targetDate || ""}\` tidak ditemukan.`);
       }
 
       const list = target.data.slice(-15); // Ambil 15 pesan terakhir
       if (list.length === 0) {
-        return reply(`ℹ️ File \`${target.file}\` masih kosong.`);
+        return reply(`File \`${target.file}\` masih kosong.`);
       }
 
-      let text = `📜 *PREVIEW 15 PESAN TERAKHIR (${target.file})*\n\n`;
+      let text = `*PREVIEW 15 PESAN TERAKHIR (${target.file})*\n\n`;
       list.forEach((item, idx) => {
-        const from = item.fromMe ? "🤖 Bot" : (item.pushName || item.sender.split("@")[0]);
-        const loc = item.isGroup ? "👥 Group" : "👤 Private";
+        const from = item.fromMe ? "Bot" : (item.pushName || item.sender.split("@")[0]);
+        const loc = item.isGroup ? "Group" : "Private";
         const content = item.text ? item.text.slice(0, 70) : `[Media: ${item.mediaType || "Unknown"}]`;
-        text += `*${idx + 1}.* [${item.time}] *${from}* (${loc}):\n   ${content}\n\n`;
+        text += `${idx + 1}. [${item.time}] *${from}* (${loc}):\n   ${content}\n\n`;
       });
       text += `_Ketik \`.chatlogs download ${target.file}\` untuk mengambil full file JSON._`;
       return reply(text);

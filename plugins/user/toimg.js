@@ -28,7 +28,11 @@ export default {
       const targetMsg = findDownloadableTarget(msg);
       let buffer = null;
       if (targetMsg) {
-        buffer = await getMediaBuffer(sock, targetMsg);
+        try {
+          buffer = await getMediaBuffer(sock, targetMsg);
+        } catch (err) {
+          return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+        }
       }
       if (!buffer) return reply("❌ Balas stiker dengan caption *\\.toimg*");
       try {

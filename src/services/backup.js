@@ -33,20 +33,52 @@ export async function createBackup() {
 /** Validasi + ekstrak arsip backup ke ROOT. Kembalikan daftar entry. */
 export async function restoreBackup(tarPath) {
   if (!fs.existsSync(tarPath)) throw new Error("File backup tidak ditemukan");
+  // Tolak symlink / path traversal: tarPath harus file biasa di dalam temp/.
+  try {
+    const stat = fs.lstatSync(tarPath);
+    if (!stat.isFile()) throw new Error("Path backup tidak valid");
+  } catch (err) {
+    throw new Error(`Path backup tidak valid: ${err.message}`);
+  }
   const list = await new Promise((resolve, reject) => {
     execFile("tar", ["-tzf", tarPath], { timeout: 30000 }, (err, stdout) =>
       err ? reject(new Error("File bukan arsip backup yang valid")) : resolve(String(stdout || ""))
     );
   });
-  const hasSessions = list.includes("assets/sessions");
-  const hasDb = list.includes("database/");
+  const entries = list.split("\n").map((s) => s.trim()).filter(Boolean);
+  // ALLOWLIST ketat: hanya sesi + database inti + sewa. Tolak absolute path,
+  // traversal (..), symlink entry, dan file di luar daftar (mis. plugins/,
+  // package.json, .env) agar arsip jahat tidak bisa overwrite kode / tanam
+  // owner via database/users.json palsu di path lain.
+  const ALLOWED = [
+    /^assets\/sessions\//,
+    /^assets\/sessions$/,
+    /^database\/database\.json$/,
+    /^database\/users\.json$/,
+    /^database\/rentals\.json$/,
+  ];
+  // Sub-bot DB diizinkan: database/subbots/<digits>/(database|users).json
+  const ALLOWED_SUB = /^database\/subbots\/[0-9]{8,16}\/(database|users)\.json$/;
+  for (const entry of entries) {
+    const e = entry.replace(/^\.\//, "");
+    if (!e || e.startsWith("/") || e.includes("..") || path.isAbsolute(e)) {
+      throw new Error(`Arsip ditolak: entry berbahaya (${e.slice(0, 80)})`);
+    }
+    const ok = ALLOWED.some((re) => re.test(e)) || ALLOWED_SUB.test(e);
+    if (!ok) {
+      throw new Error(`Arsip ditolak: entry di luar allowlist (${e.slice(0, 80)})`);
+    }
+  }
+  const hasSessions = entries.some((e) => e.replace(/^\.\//, "").startsWith("assets/sessions"));
+  const hasDb = entries.some((e) => e.replace(/^\.\//, "").startsWith("database/"));
   if (!hasSessions && !hasDb) throw new Error("Arsip tidak berisi data sesi/database rizzerbot");
   await new Promise((resolve, reject) => {
-    execFile("tar", ["-xzf", tarPath, "-C", ROOT], { timeout: 120000 }, (err) =>
+    // --no-same-owner agar tidak ada privilege escalation via ownership tar.
+    execFile("tar", ["-xzf", tarPath, "-C", ROOT, "--no-same-owner"], { timeout: 120000 }, (err) =>
       err ? reject(new Error(`Restore gagal: ${err.message}`)) : resolve()
     );
   });
-  return { entries: list.split("\n").filter(Boolean).length, hasSessions, hasDb };
+  return { entries: entries.length, hasSessions, hasDb };
 }
 
 export function formatBytes(n) {
