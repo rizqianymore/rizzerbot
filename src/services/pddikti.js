@@ -1,0 +1,386 @@
+// src/services/pddikti.js — lookup mahasiswa via PDDikti resmi.
+// Alur resmi (hasil reverse-engineering):
+//   1. Token reCAPTCHA v2 invisible (sitekey di bawah) dibuat di browser via
+//      grecaptcha.execute(sitekey, {action:'search'}).
+//   2. Search : GET /api/pencarian/enc/all/<keyword> + header x-recaptcha-token
+//   3. Detail: POST /api/detail/mhs body {id:<enc-id>} + header x-recaptcha-token
+// Tanpa token -> 403 Forbidden. Token dibuat via puppeteer (sudah jadi dep).
+// Browser dipakai HANYA untuk membuat token (ringan), API call via fetch Node.
+
+const BASE = "https://pddikti.kemdiktisaintek.go.id";
+const SITEKEY = "6LdqjDstAAAAAMW1whjCNKyvqmPBOIssWETjbLbh";
+
+const UA =
+  "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36";
+
+const TOKEN_TIMEOUT_MS = 30000;
+const API_TIMEOUT_MS = 15000;
+
+const SEARCH_TTL_MS = 5 * 60 * 1000;
+const DETAIL_TTL_MS = 60 * 60 * 1000;
+const searchCache = new Map(); // keyword-lower -> { data, expires }
+const detailCache = new Map(); // enc-id -> { data, expires }
+
+function cacheGet(map, key) {
+  const hit = map.get(key);
+  if (hit && hit.expires > Date.now()) return hit.data;
+  map.delete(key);
+  return null;
+}
+
+function cacheSet(map, key, data, ttl) {
+  map.set(key, { data, expires: Date.now() + ttl });
+  if (map.size > 300) map.delete(map.keys().next().value);
+}
+
+// ── Browser singleton (hanya untuk token) ──
+let browserPromise = null;
+let tokenPagePromise = null;
+let tokenLock = Promise.resolve();
+
+async function getBrowser() {
+  if (!browserPromise) {
+    const { default: puppeteer } = await import("puppeteer");
+    browserPromise = puppeteer
+      .launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      })
+      .catch((err) => {
+        browserPromise = null;
+        throw new Error(`Gagal launch browser (puppeteer): ${err.message}`);
+      });
+  }
+  return browserPromise;
+}
+
+async function getTokenPage() {
+  if (!tokenPagePromise) {
+    tokenPagePromise = (async () => {
+      const browser = await getBrowser();
+      const page = await browser.newPage();
+      await page.setUserAgent(UA);
+      await page.goto(`${BASE}/search/Raka`, {
+        waitUntil: "networkidle2",
+        timeout: TOKEN_TIMEOUT_MS,
+      });
+      // Tunggu grecaptcha siap (max ~10 dtk)
+      await page
+        .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
+          timeout: 15000,
+        })
+        .catch(() => {
+          throw new Error("grecaptcha tidak termuat (Cloudflare / jaringan bermasalah)");
+        });
+      return page;
+    })().catch((err) => {
+      tokenPagePromise = null;
+      throw err;
+    });
+  }
+  return tokenPagePromise;
+}
+
+function runSerialized(fn) {
+  const run = tokenLock.then(fn, fn);
+  tokenLock = run.catch(() => {});
+  return run;
+}
+
+/** Minta token reCAPTCHA segar dari browser. Selalu fresh (single-use / short-lived). */
+export async function getRecaptchaToken() {
+  return runSerialized(async () => {
+    const page = await getTokenPage();
+    try {
+      const token = await page.evaluate(
+        (sitekey) =>
+          new Promise((resolve, reject) => {
+            try {
+              const timer = setTimeout(() => reject(new Error("timeout grecaptcha.execute (15 dtk)")), 15000);
+              grecaptcha.ready(() => {
+                grecaptcha
+                  .execute(sitekey, { action: "search" })
+                  .then((t) => {
+                    clearTimeout(timer);
+                    resolve(t);
+                  })
+                  .catch((e) => {
+                    clearTimeout(timer);
+                    reject(e);
+                  });
+              });
+            } catch (e) {
+              reject(e);
+            }
+          }),
+        SITEKEY
+      );
+      if (!token || token.length < 100) throw new Error("token reCAPTCHA kosong/pendek");
+      return token;
+    } catch (err) {
+      // Halaman rusak -> buang agar request berikutnya buat halaman baru
+      try {
+        await page.close().catch(() => {});
+      } catch (_) {}
+      tokenPagePromise = null;
+      throw new Error(`Gagal membuat token reCAPTCHA: ${err.message}`);
+    }
+  });
+}
+
+export async function closePddiktiBrowser() {
+  try {
+    tokenPagePromise = null;
+    if (browserPromise) {
+      const b = await browserPromise.catch(() => null);
+      await b?.close().catch(() => {});
+    }
+  } catch (_) {}
+  browserPromise = null;
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function mapApiError(status, snippet) {
+  if (status === 403) return "Ditolak server PDDikti (403). Token expired — coba lagi.";
+  if (status === 429) return "Rate-limit PDDikti (429). Tunggu ±1 menit lalu coba lagi.";
+  if (status >= 500) return `Server PDDikti error (HTTP ${status}). Coba lagi nanti.`;
+  if (status === 404) return "Endpoint PDDikti tidak ditemukan (404).";
+  return `PDDikti HTTP ${status}${snippet ? `: ${snippet.slice(0, 150)}` : ""}`;
+}
+
+/** Search semua kategori. Return json.data ({mahasiswa[], dosen[], pt[], prodi[]}). */
+export async function searchPddikti(keyword, { retries = 1 } = {}) {
+  const kw = String(keyword ?? "").trim();
+  if (!kw) throw new Error("keyword wajib diisi");
+  if (kw.length > 100) throw new Error("keyword terlalu panjang (maks 100 karakter)");
+
+  const cached = cacheGet(searchCache, kw.toLowerCase());
+  if (cached) return cached;
+
+  let lastErr = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const token = await getRecaptchaToken();
+      const res = await fetchWithTimeout(`${BASE}/api/pencarian/enc/all/${encodeURIComponent(kw)}`, {
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+          Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
+          "User-Agent": UA,
+          "x-recaptcha-token": token,
+        },
+      });
+      if (!res.ok) {
+        const snippet = (await res.text().catch(() => "")).slice(0, 300);
+        throw new Error(mapApiError(res.status, snippet));
+      }
+      const json = await res.json();
+      if (json?.status !== "success") throw new Error(json?.message || "PDDikti mengembalikan status error");
+      const data = json.data || {};
+      cacheSet(searchCache, kw.toLowerCase(), data, SEARCH_TTL_MS);
+      return data;
+    } catch (err) {
+      lastErr = err;
+      if (/403|token|recaptcha/i.test(err.message) && attempt < retries) continue;
+      if ((err?.name === "AbortError" || /timeout|fetch failed|ECONN/i.test(err.message)) && attempt < retries) {
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        continue;
+      }
+      break;
+    }
+  }
+  throw lastErr;
+}
+
+/** Detail mahasiswa by enc-id (dari hasil search).
+ *  Catatan: POST /api/detail/mhs menolak token manual (403) — token detail
+ *  hanya valid bila dibuat oleh JS situs di halaman detail itu sendiri.
+ *  Maka detail diambil via navigasi puppeteer ke /detail-mahasiswa/<id>
+ *  lalu baca DOM render (field lengkap, terbukti stabil).
+ *  Return {nama, nim, nama_pt, jenjang, prodi, jenis_kelamin, tanggal_masuk,
+ *           jenis_daftar, status_saat_ini}.
+ */
+export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
+  const id = String(encId ?? "").trim();
+  if (!id) throw new Error("id mahasiswa wajib diisi");
+
+  const cached = cacheGet(detailCache, id);
+  if (cached) return cached;
+
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setUserAgent(UA);
+    await page.goto(`${BASE}/detail-mahasiswa/${encodeURIComponent(id)}`, {
+      waitUntil: "networkidle2",
+      timeout: timeoutMs,
+    });
+    // Tunggu biodata render (atau notFound)
+    await page
+      .waitForFunction(
+        () => /Biodata Mahasiswa|Tidak ada hasil|notFound/i.test(document.body.innerText),
+        { timeout: 25000 }
+      )
+      .catch(() => {});
+    await new Promise((r) => setTimeout(r, 2500));
+
+    const raw = await page.evaluate(() => {
+      const text = document.body.innerText || "";
+      // Ambil pasangan label-nilai dari blok biodata
+      const get = (label) => {
+        const re = new RegExp(label + "\\s*\\n+\\s*([^\\n]+)", "i");
+        const m = text.match(re);
+        return m ? m[1].trim() : "";
+      };
+      return {
+        nama: get("Nama"),
+        nama_pt: get("Perguruan Tinggi"),
+        jenis_kelamin_raw: get("Jenis Kelamin"),
+        tanggal_masuk_raw: get("Tanggal Masuk"),
+        nim: get("NIM"),
+        jenjang_prodi_raw: get("Jenjang - Program Studi"),
+        jenis_daftar: get("Status Awal Mahasiswa"),
+        status_saat_ini: get("Status Terakhir Mahasiswa"),
+      };
+    });
+
+    if (!raw.nim && !raw.nama) throw new Error("halaman detail tidak memuat biodata (mungkin ID expired)");
+
+    const [jenjang = "", prodi = ""] = String(raw.jenjang_prodi_raw || "")
+      .split("-")
+      .map((s) => s.trim());
+    const jkRaw = String(raw.jenis_kelamin_raw || "").toLowerCase();
+    const data = {
+      nama: raw.nama,
+      nim: raw.nim,
+      nama_pt: raw.nama_pt,
+      jenjang: jenjang || "-",
+      prodi: prodi || raw.jenjang_prodi_raw || "-",
+      jenis_kelamin: /perempuan/i.test(jkRaw) ? "P" : /laki/i.test(jkRaw) ? "L" : raw.jenis_kelamin_raw,
+      tanggal_masuk: raw.tanggal_masuk_raw,
+      jenis_daftar: raw.jenis_daftar,
+      status_saat_ini: raw.status_saat_ini,
+    };
+    cacheSet(detailCache, id, data, DETAIL_TTL_MS);
+    return data;
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
+
+// ── Format ──
+function neat(v) {
+  return String(v ?? "").trim() || "-";
+}
+
+function formatTanggal(tgl) {
+  const s = String(tgl ?? "").trim();
+  if (!s || s === "-") return "-";
+  if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}/.test(s)) return s; // sudah "11 April 2013" dari DOM
+  try {
+    const d = new Date(s.length <= 10 ? `${s}T00:00:00` : s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  } catch {
+    return s;
+  }
+}
+
+function jkLabel(jk) {
+  const s = String(jk ?? "").trim().toUpperCase();
+  if (s === "L") return "Laki-laki";
+  if (s === "P") return "Perempuan";
+  return neat(jk);
+}
+
+export function formatMhsDetail(d) {
+  const nim = neat(d.nim);
+  const lines = [];
+  lines.push(`*DATA MAHASISWA (PDDikti)*`);
+  lines.push(`Nama: ${neat(d.nama)}`);
+  lines.push(`NIM: ${nim}`);
+  lines.push(`PT: ${neat(d.nama_pt)}`);
+  lines.push(`Prodi: ${neat(d.jenjang)} - ${neat(d.prodi)}`);
+  lines.push(`JK: ${jkLabel(d.jenis_kelamin)}`);
+  lines.push(`Tgl Masuk: ${formatTanggal(d.tanggal_masuk)}`);
+  lines.push(`Status Awal: ${neat(d.jenis_daftar)}`);
+  lines.push(`Status: ${neat(d.status_saat_ini)}`);
+  return lines.join("\n");
+}
+
+export function formatMhsList(rows, total) {
+  const shown = rows.slice(0, 10);
+  const out = [`*HASIL PDDikti (${total} mahasiswa, tampil ${shown.length})*`, ``];
+  shown.forEach((m, i) => {
+    out.push(`${i + 1}. *${neat(m.nama)}* — ${neat(m.nim)}`);
+    out.push(`   ${neat(m.nama_pt)} | ${neat(m.nama_prodi)}`);
+  });
+  out.push(``, `Detail: \`.ceknim <nim>\` (cth: \`.ceknim ${neat(rows[0]?.nim)}\`)`);
+  return out.join("\n");
+}
+
+/**
+ * Satu panggilan untuk plugin .ceknim.
+ * - Input NIM persis (ditemukan exact, case-insensitive) -> ambil detail.
+ * - Selain itu -> tampilkan daftar 10 teratas agar user bisa persempit.
+ */
+export async function getCeknimInfoText(input, opts = {}) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return { error: "input kosong" };
+  if (raw.length > 100) return { error: "input terlalu panjang (maks 100 karakter)" };
+
+  try {
+    const data = await searchPddikti(raw);
+    const mhs = Array.isArray(data?.mahasiswa) ? data.mahasiswa : [];
+    if (mhs.length === 0) {
+      return { error: `Data mahasiswa "${raw}" tidak ditemukan di PDDikti.` };
+    }
+
+    const norm = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, "");
+    const exact = mhs.find((m) => norm(m.nim) === norm(raw));
+
+    if (exact?.id) {
+      try {
+        const detail = await detailMahasiswa(exact.id);
+        return { text: formatMhsDetail(detail || exact) };
+      } catch (err) {
+        opts?.logger?.warn?.(`[ceknim] detail gagal nim=${exact.nim}: ${err.message}`);
+        // Fallback: tampilkan ringkasan search bila detail gagal
+        const lines = [
+          `*DATA MAHASISWA (PDDikti)*`,
+          `Nama: ${neat(exact.nama)}`,
+          `NIM: ${neat(exact.nim)}`,
+          `PT: ${neat(exact.nama_pt)}`,
+          `Prodi: ${neat(exact.nama_prodi)}`,
+          ``,
+          `_Detail lengkap gagal dimuat: ${err.message}_`,
+        ];
+        return { text: lines.join("\n") };
+      }
+    }
+
+    if (mhs.length === 1 && mhs[0]?.id) {
+      try {
+        const detail = await detailMahasiswa(mhs[0].id);
+        return { text: formatMhsDetail(detail || mhs[0]) };
+      } catch (_) {
+        // jatuh ke list di bawah
+      }
+    }
+
+    return { text: formatMhsList(mhs, mhs.length) };
+  } catch (err) {
+    opts?.logger?.warn?.(`[ceknim] gagal keyword=${raw}: ${err.message}`);
+    if (err?.name === "AbortError") return { error: "Timeout menghubungi PDDikti (15 dtk). Coba lagi." };
+    return { error: `Gagal mengambil data PDDikti: ${err.message}` };
+  }
+}
