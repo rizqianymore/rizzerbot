@@ -49,6 +49,9 @@ export default {
       sport: "Sports",
       stalker: "Stalker",
       stalk: "Stalker",
+      osint: "OSINT",
+      recon: "OSINT",
+      intel: "OSINT",
     };
 
     const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
@@ -128,6 +131,7 @@ export default {
       "General",
       "Sports",
       "Stalker",
+      "OSINT",
     ];
     const catKeys = Object.keys(categories).sort((a, b) => {
       const ia = order.indexOf(a) === -1 ? 99 : order.indexOf(a);

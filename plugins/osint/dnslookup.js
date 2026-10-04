@@ -14,7 +14,7 @@ export default {
   "description": "Cek catatan DNS domain (A, AAAA, MX, NS, TXT)",
   "usage": "<domain>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const domain = args[0];

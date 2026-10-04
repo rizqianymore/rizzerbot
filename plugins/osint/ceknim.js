@@ -3,11 +3,11 @@ import { getCeknimInfoText } from "@/src/services/pddikti.js";
 
 export default {
   "name": "ceknim",
-  "aliases": ["cekstudent", "pddikti", "carinim", "mhs"],
+  "aliases": ["cekmahasiswa", "cekstudent", "pddikti", "carinim", "mhs"],
   "description": "Cek data mahasiswa via PDDikti (nama / NIM + detail)",
   "usage": "<nama atau NIM, cth: 201311413>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
       const currentPrefix = prefix || ".";
       const input = (args || []).join(" ").trim();

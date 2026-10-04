@@ -12,6 +12,8 @@ const SUBCOMMANDS = {
   bansos: "cekbansos",
   plat: "cekplat",
   nopol: "cekplat",
+  kodepos: "cekkodepos",
+  pos: "cekkodepos",
   trx: "cektrx",
   transaksi: "cektrx",
 };
@@ -22,7 +24,7 @@ export default {
   description: "Pintasan: cek nim/dosen/nis/bansos/plat/trx",
   usage: "<sub> <query>, cth: cek nim 201311413",
   premiumOnly: true,
-  category: "Tools",
+  category: "OSINT",
   run: async (sock, msg, args, ctx) => {
     const { reply, prefix } = ctx;
     const currentPrefix = prefix || ".";

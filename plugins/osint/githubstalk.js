@@ -7,7 +7,7 @@ export default {
   "description": "Intip profil GitHub: bio, repo, followers, email publik, lokasi",
   "usage": "<username, cth: torvalds>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       const currentPrefix = prefix || ".";
       const input = (args || []).join(" ").trim();

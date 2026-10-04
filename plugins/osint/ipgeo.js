@@ -14,7 +14,7 @@ export default {
   "description": "Lacak lokasi, negara, ISP, dan info jaringan IP atau domain",
   "usage": "<ip / domain>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const target = args[0];

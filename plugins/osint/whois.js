@@ -14,7 +14,7 @@ export default {
   "description": "Cek informasi kepemilikan, registrar, & masa berlaku domain",
   "usage": "<domain>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const domain = args[0];

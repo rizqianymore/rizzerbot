@@ -7,7 +7,7 @@ export default {
   "description": "Cek data siswa berdasarkan NIS via Google Apps Script (mode=nis)",
   "usage": "<nis, cth: 539241249>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping, prefix, senderJid, isOwner, isAdmin, logger }) => {
       const currentPrefix = prefix || ".";
       const input = (args || []).join(" ").trim();

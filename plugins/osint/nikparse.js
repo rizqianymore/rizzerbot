@@ -6,7 +6,7 @@ export default {
   "aliases": ["nik", "ceknik", "parsenik"],
   "description": "Parse NIK KTP: jk, tgl lahir, umur, zodiak, wilayah",
   "usage": "<nik16>",
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       const currentPrefix = prefix || ".";
       const nik = (args[0] || "").trim();

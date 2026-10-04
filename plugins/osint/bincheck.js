@@ -7,7 +7,7 @@ export default {
   "description": "Cek BIN kartu (6-8 digit pertama): skema, tipe, bank, negara",
   "usage": "<6-8 digit awal kartu, cth: 45717360>",
   "premiumOnly": true,
-  "category": "Tools",
+  "category": "OSINT",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       const currentPrefix = prefix || ".";
       const input = (args || []).join(" ").trim();
