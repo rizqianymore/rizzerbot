@@ -41,6 +41,7 @@ export async function searchCNNNews(query, options = {}) {
   const res = await fetch(url, {
     method: "GET",
     headers,
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {

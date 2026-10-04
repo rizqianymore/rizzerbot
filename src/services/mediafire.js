@@ -1,7 +1,13 @@
 import axios from "axios";
 
 export async function mediafireDownload(url) {
-  if (!url || !/mediafire\.com/i.test(url)) {
+  let host = "";
+  try {
+    host = new URL(String(url || "").trim()).hostname.toLowerCase();
+  } catch {
+    throw new Error("URL bukan merupakan tautan MediaFire yang valid.");
+  }
+  if (host !== "mediafire.com" && !host.endsWith(".mediafire.com")) {
     throw new Error("URL bukan merupakan tautan MediaFire yang valid.");
   }
 

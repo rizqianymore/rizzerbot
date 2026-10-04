@@ -3,8 +3,10 @@ import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 const INEWS_SEARCH_URL = "https://www.inews.id/find";
 
 export async function searchInews(query, limit = 5) {
-  const cleanQuery = query.trim();
+  const cleanQuery = String(query || "").trim().slice(0, 200);
   if (!cleanQuery) return [];
+
+  const maxResults = Math.min(Math.max(Number(limit) || 5, 1), 20);
 
   const device = getRandomDevice("desktop");
   const headers = buildScraperHeaders(device, {
@@ -14,7 +16,7 @@ export async function searchInews(query, limit = 5) {
   });
 
   const url = `${INEWS_SEARCH_URL}?q=${encodeURIComponent(cleanQuery)}`;
-  const res = await fetch(url, { headers });
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
 
   if (!res.ok) {
     throw new Error(`iNews HTTP ${res.status}`);
@@ -67,20 +69,23 @@ export async function searchInews(query, limit = 5) {
       }
     }
 
-    if (results.length >= limit) break;
+    if (results.length >= maxResults) break;
   }
 
   return results;
 }
 
 export async function getInewsArticle(articleUrl) {
+  if (!String(articleUrl || "").startsWith("https://www.inews.id/")) {
+    throw new Error("URL artikel iNews tidak valid");
+  }
   const device = getRandomDevice("desktop");
   const headers = buildScraperHeaders(device, {
     Referer: "https://www.inews.id/",
     Origin: "https://www.inews.id",
   });
 
-  const res = await fetch(articleUrl, { headers });
+  const res = await fetch(articleUrl, { headers, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`iNews HTTP ${res.status}`);
 
   const html = await res.text();

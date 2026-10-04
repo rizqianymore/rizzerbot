@@ -35,6 +35,7 @@ export async function getLiveFreeModels() {
         Accept: "application/json",
         "User-Agent": DEFAULT_USER_AGENT,
       },
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -83,6 +84,7 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
         Origin: DUCKDUCKGO_BASE,
         Referer: `${DUCKDUCKGO_BASE}/`,
       },
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!statusResp.ok) {
@@ -155,6 +157,7 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
     method: "POST",
     headers,
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(60000),
   });
 
   if (!chatResp.ok) {

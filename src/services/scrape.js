@@ -30,57 +30,23 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-import { STATIC_MEMBERS } from "@/src/services/jkt48.js";
-
-export async function jkt48ListMembers() {
-  return STATIC_MEMBERS.map((m) => ({
-    id: m.id,
-    name: m.name,
-    nickname: m.nickname,
-    code: m.code,
-    type: m.type,
-    photo: m.photo,
-  }));
-}
-
-export async function jkt48MemberDetail(idOrName) {
-  const list = await jkt48ListMembers();
-  const q = String(idOrName).trim().toLowerCase();
-  const target =
-    list.find((m) => String(m.id) === q) ||
-    list.find((m) => m.nickname && m.nickname.toLowerCase() === q) ||
-    list.find((m) => m.name.toLowerCase() === q) ||
-    list.find((m) => m.nickname && m.nickname.toLowerCase().includes(q)) ||
-    list.find((m) => m.name.toLowerCase().includes(q));
-  if (!target) throw new Error("Member tidak ditemukan.");
-  return {
-    id: target.id,
-    name: target.name,
-    nickname: target.nickname,
-    type: target.type || "",
-    birthPlace: "",
-    birthDate: "",
-    bloodType: "-",
-    height: "-",
-    horoscope: "-",
-    twitter: "",
-    instagram: "",
-    tiktok: "",
-    photo: target.photo || "",
-  };
-}
-
 export async function fetchLyrics(artist, title) {
+  const cleanArtist = String(artist || "").trim().slice(0, 100);
+  const cleanTitle = String(title || "").trim().slice(0, 100);
+  if (!cleanArtist || !cleanTitle) throw new Error("Artis dan judul lagu wajib diisi");
   const { data } = await http.get(
-    `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(
-      title
+    `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(
+      cleanTitle
     )}`
   );
-  if (!data.lyrics) throw new Error("Lirik tidak ditemukan");
+  if (!data?.lyrics?.trim) throw new Error("Lirik tidak ditemukan");
   return data.lyrics.trim();
 }
 
 export async function translateText(text, lang = "id") {
+  const clean = String(text || "").trim();
+  if (!clean) throw new Error("Teks untuk diterjemahkan kosong");
+  if (clean.length > 2000) throw new Error("Teks terlalu panjang (maksimal 2000 karakter)");
   const { data } = await http.get(
     "https://translate.googleapis.com/translate_a/single",
     {
@@ -89,20 +55,24 @@ export async function translateText(text, lang = "id") {
         sl: "auto",
         tl: lang,
         dt: "t",
-        q: text,
+        q: clean,
       },
     }
   );
-  const translated = data?.[0]?.map((seg) => seg?.[0]).join("");
+  const segments = Array.isArray(data?.[0]) ? data[0] : null;
+  const translated = segments?.map((seg) => seg?.[0]).join("");
   if (!translated) throw new Error("Terjemahan gagal");
   return {
-    original: text,
+    original: clean,
     translated,
     lang: data?.[2],
   };
 }
 
 export async function textToSpeech(text, lang = "id-ID") {
+  const clean = String(text || "").trim();
+  if (!clean) throw new Error("Teks untuk TTS kosong");
+  if (clean.length > 300) throw new Error("Teks terlalu panjang untuk TTS (maksimal 300 karakter)");
   const { data } = await http.get(
     "https://translate.google.com/translate_tts",
     {
@@ -110,7 +80,7 @@ export async function textToSpeech(text, lang = "id-ID") {
         ie: "UTF-8",
         client: "tw-ob",
         tl: lang,
-        q: text,
+        q: clean,
       },
       responseType: "arraybuffer",
     }
@@ -119,8 +89,10 @@ export async function textToSpeech(text, lang = "id-ID") {
 }
 
 export async function searchAnime(query) {
+  const clean = String(query || "").trim().slice(0, 100);
+  if (!clean) throw new Error("Kata kunci anime kosong");
   const { data } = await http.get("https://api.jikan.moe/v4/anime", {
-    params: { q: query, limit: 1 },
+    params: { q: clean, limit: 1 },
   });
   const anime = data?.data?.[0];
   if (!anime) throw new Error("Anime tidak ditemukan");
@@ -131,7 +103,7 @@ export async function searchAnime(query) {
     episodes: anime.episodes,
     status: anime.status,
     score: anime.score,
-    genres: anime.genres.map((g) => g.name).join(", "),
+    genres: anime.genres?.map((g) => g.name).join(", ") || "-",
     synopsis: anime.synopsis?.slice(0, 500),
     url: anime.url,
     image: anime.images?.jpg?.large_image_url,
@@ -139,66 +111,24 @@ export async function searchAnime(query) {
 }
 
 export async function webSearch(query) {
+  const clean = String(query || "").trim().slice(0, 200);
+  if (!clean) throw new Error("Kata kunci pencarian kosong");
   const { data } = await http.get(
     "https://api.duckduckgo.com/",
     {
-      params: { q: query, format: "json", no_html: 1 },
+      params: { q: clean, format: "json", no_html: 1 },
     }
   );
-  const results = data.RelatedTopics?.filter((t) => t.Text)
+  const results = data?.RelatedTopics?.filter((t) => t.Text)
     .slice(0, 5)
     .map((t) => ({
       text: t.Text.slice(0, 150),
       url: t.FirstURL,
     }));
   if (!results?.length) {
-    return [
-      {
-        text: `Hasil pencarian untuk: ${query}`,
-        url: "",
-      },
-    ];
+    throw new Error("Mesin pencarian tidak mengembalikan hasil untuk kata kunci tersebut");
   }
   return results;
-}
-
-export async function igDownload(url) {
-  const shortcode = url.match(/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1];
-  if (!shortcode) throw new Error("URL Instagram tidak valid");
-  const device = getRandomDevice("mobile");
-  const headers = buildScraperHeaders(device, {
-    "X-Requested-With": "XMLHttpRequest",
-    Referer: "https://www.instagram.com/",
-    Accept: "*/*",
-  });
-  const { data } = await http.get(
-    `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`,
-    { headers }
-  );
-  const result = data?.[0];
-  if (!result) throw new Error("Media tidak ditemukan");
-  const items = result.graphql?.shortcode_media || result;
-  const media = items.is_video ? items.video_url : items.display_url;
-  if (!media) throw new Error("Media tidak ditemukan");
-  return { type: items.is_video ? "video" : "image", url: media };
-}
-
-export async function ytInfo(url) {
-  const videoId =
-    url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1];
-  if (!videoId) throw new Error("URL YouTube tidak valid");
-  const { data } = await http.get(
-    `https://www.youtube.com/oembed`,
-    { params: { url: `https://www.youtube.com/watch?v=${videoId}`, format: "json" } }
-  );
-  return {
-    title: data.title,
-    channel: data.author_name,
-    id: videoId,
-    duration: "Lihat link asli",
-    views: 0,
-    url: `https://www.youtube.com/watch?v=${videoId}`,
-  };
 }
 
 export async function tiktokDownload(url) {
@@ -418,6 +348,9 @@ export async function cobaltDownload(url, { mode = "auto", audioFormat = "mp3", 
 }
 
 export async function fetchBuffer(url, customHeaders = {}) {
+  if (!/^https?:\/\//i.test(String(url || ""))) {
+    throw new Error("URL tidak valid (harus http/https)");
+  }
   return await request.buffer(url, {
     headers: customHeaders,
     bypassCloudflare: "auto",
