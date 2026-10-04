@@ -14,6 +14,8 @@ const SUBCOMMANDS = {
   operator: "cekoperator",
   hlr: "cekoperator",
   op: "cekoperator",
+  cert: "certtrace",
+  crt: "certtrace",
   kodepos: "cekkodepos",
   pos: "cekkodepos",
   trx: "cektrx",
@@ -23,7 +25,7 @@ const SUBCOMMANDS = {
 export default {
   name: "cek",
   aliases: [],
-  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/trx",
+  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/cert/kodepos/trx",
   usage: "<sub> <query>, cth: cek nim 201311413",
   premiumOnly: true,
   category: "OSINT",
@@ -35,8 +37,8 @@ export default {
 
     if (!target) {
       return reply(
-        `Pilih sub-perintah: ${Object.keys(SUBCOMMANDS).join(", ")}\n` +
-        `Contoh: \`${currentPrefix}cek nim 201311413\`, \`${currentPrefix}cek dosen 2013119103\``
+        `Pilih sub-perintah: nim, dosen, nis, bansos, plat, operator, cert, kodepos, trx\n` +
+        `Contoh: \`${currentPrefix}cek nim 201311413\`, \`${currentPrefix}cek dosen 2013119103\`, \`${currentPrefix}cek cert example.com\`, \`${currentPrefix}cek kodepos Kemanggisan\``
       );
     }
 

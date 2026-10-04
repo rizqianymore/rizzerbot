@@ -399,6 +399,42 @@ function drawJustifiedLine(ctx, line, x, y, maxWidth, useStroke, size) {
   }
 }
 
+function drawBlockFromLayout(ctx, frameText, layout, rect, options = {}) {
+  setFont(ctx, layout.size);
+  const lines = wrapText(ctx, frameText, rect.w);
+  const align = options.align || TEXT_STYLE.align;
+  const useStroke = options.stroke ?? layout.stroke ?? false;
+
+  lines.forEach((line, index) => {
+    const y = layout.startY + index * layout.lineHeight;
+    const isLastLine = index === lines.length - 1;
+    if (align === "justify" && !isLastLine) {
+      ctx.textAlign = "left";
+      drawJustifiedLine(ctx, line, rect.x, y, rect.w, useStroke, layout.size);
+      return;
+    }
+    ctx.textAlign = align === "justify" ? "left" : align;
+    const x = align === "justify" ? rect.x : rect.centerX;
+    if (useStroke) strokeLine(ctx, line, x, y, layout.size);
+    ctx.fillText(line, x, y);
+  });
+}
+
+export function layoutText(text, template) {
+  const canvas = createCanvas(template.width || 512, template.height || 512);
+  const ctx = canvas.getContext("2d");
+  const rect = getSafeRect(template.safeZone);
+  const fitted = fitText(ctx, text, rect);
+  return {
+    size: fitted.size,
+    lines: fitted.lines,
+    lineHeight: fitted.lineHeight,
+    totalHeight: fitted.totalHeight,
+    startY: rect.y + (rect.h - fitted.totalHeight) / 2,
+    stroke: template.stroke ?? false,
+  };
+}
+
 function drawCenteredText(ctx, text, zone, options = {}) {
   const rect = getSafeRect(zone);
   const fitted = fitText(ctx, text, rect);
@@ -449,6 +485,31 @@ async function renderBratCanvas(image, text, template, options = {}) {
   return canvas;
 }
 
+async function renderBratFrame(image, frameText, template, layout, options = {}) {
+  const width = template.width || 512;
+  const height = template.height || 512;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  if (template.isClassic) {
+    ctx.fillStyle = options.bgColor || "#FFFFFF";
+    ctx.fillRect(0, 0, width, height);
+  } else if (image) {
+    ctx.drawImage(image, 0, 0, width, height);
+  }
+
+  const rect = getSafeRect(template.safeZone);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  ctx.clip();
+  ctx.fillStyle = options.color || TEXT_STYLE.color;
+  ctx.textBaseline = "top";
+  drawBlockFromLayout(ctx, frameText, layout, rect, options);
+  ctx.restore();
+  return canvas;
+}
+
 export async function createBratImage(text, template, options = {}) {
   await ensureFont();
   const image = await loadTemplateImage(template);
@@ -478,8 +539,8 @@ async function encodeVideo(concatPath, outputPath, configObj) {
     "-i", concatPath,
     "-vf", `fps=${configObj.fps},scale=${configObj.width}:${configObj.height}:flags=lanczos`,
     "-c:v", "libx264",
-    "-preset", "veryfast",
-    "-crf", "30",
+    "-preset", "medium",
+    "-crf", "24",
     "-pix_fmt", "yuv420p",
     "-movflags", "+faststart",
     outputPath,
@@ -509,13 +570,14 @@ export async function createBratVideo(text, template, options = {}) {
 
   try {
     const image = await loadTemplateImage(template);
+    const layout = layoutText(text, template);
 
     const framePaths = frames.map((_, index) => {
       return path.join(tmpDir, `frame-${String(index + 1).padStart(4, "0")}.png`);
     });
 
     for (let index = 0; index < frames.length; index++) {
-      const canvas = await renderBratCanvas(image, frames[index].text, template, options);
+      const canvas = await renderBratFrame(image, frames[index].text, template, layout, options);
       const buf = await canvas.encode("png");
       await fsp.writeFile(framePaths[index], buf);
     }
