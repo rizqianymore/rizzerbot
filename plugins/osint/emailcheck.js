@@ -1,4 +1,3 @@
-// plugins/osint/emailcheck.js — analisis OSINT email, verifikasi format, MX domain, dan deteksi disposability.
 import dns from "node:dns/promises";
 
 const DISPOSABLE_DOMAINS = new Set([
@@ -51,7 +50,6 @@ export default {
       mxStatus = "Gagal resolve / Tidak aktif";
     }
 
-    // Cek SPF record di TXT
     let hasSpf = false;
     let hasDmarc = false;
     try {

@@ -83,7 +83,6 @@ export async function startBot() {
       fs.mkdirSync(authDir, { recursive: true });
     }
 
-    // Validasi integritas sesi yang sudah ada. Jika creds rusak / 0 byte, reset sesi agar fallback bersih.
     const credsPath = path.join(authDir, "creds.json");
     if (fs.existsSync(credsPath)) {
       try {

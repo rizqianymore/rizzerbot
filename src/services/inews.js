@@ -2,12 +2,6 @@ import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const INEWS_SEARCH_URL = "https://www.inews.id/find";
 
-/**
- * Mencari berita di iNews.id berdasarkan topik / kata kunci dengan filter relevansi ketat
- * @param {string} query
- * @param {number} [limit=5]
- * @returns {Promise<Array<{title: string, url: string, image: string|null, category: string, time: string}>>}
- */
 export async function searchInews(query, limit = 5) {
   const cleanQuery = query.trim();
   if (!cleanQuery) return [];
@@ -55,10 +49,8 @@ export async function searchInews(query, limit = 5) {
       const title = titleMatch[1].replace(/<[^>]+>/g, "").trim();
       const articleUrl = linkMatch[1];
 
-      // Skip tautan listen / playlist / non-berita
       if (articleUrl.includes("/playlists/")) continue;
 
-      // Verifikasi topik: pastikan berita berkaitan dengan kata kunci pencarian
       const titleLower = title.toLowerCase();
       const isRelevant =
         queryWords.length === 0 ||
@@ -81,11 +73,6 @@ export async function searchInews(query, limit = 5) {
   return results;
 }
 
-/**
- * Membaca isi lengkap artikel iNews.id dari link
- * @param {string} articleUrl
- * @returns {Promise<{title: string, image: string|null, content: string, url: string}>}
- */
 export async function getInewsArticle(articleUrl) {
   const device = getRandomDevice("desktop");
   const headers = buildScraperHeaders(device, {

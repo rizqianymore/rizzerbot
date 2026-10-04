@@ -24,9 +24,6 @@ const DEFAULT_FE_VERSION =
 let modelsCache = null;
 const MODEL_IDS_CACHE_TTL_MS = 10 * 60 * 1000;
 
-/**
- * Fetch available free model IDs with caching
- */
 export async function getLiveFreeModels() {
   const now = Date.now();
   if (modelsCache && now - modelsCache.fetchedAt < MODEL_IDS_CACHE_TTL_MS) {
@@ -51,24 +48,12 @@ export async function getLiveFreeModels() {
   }
 }
 
-/**
- * Get required reasoning effort for specific DDG models
- */
 function getReasoningEffort(model) {
   if (model === "claude-haiku-4-5") return "low";
   if (model === "tinfoil/gpt-oss-120b") return "low";
   return "none";
 }
 
-/**
- * Send chat request to DuckDuckGo Duck.ai
- *
- * @param {string|Array<{role: string, content: string}>} promptOrMessages
- * @param {object} options
- * @param {string} [options.model] - Target model (default: gpt-5.4-mini)
- * @param {string} [options.reasoningEffort] - 'none' | 'low'
- * @returns {Promise<{text: string, model: string}>}
- */
 export async function askDuckDuckGo(promptOrMessages, options = {}) {
   let messages = [];
   if (typeof promptOrMessages === "string") {
@@ -83,9 +68,6 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
   const liveModels = await getLiveFreeModels();
   const effectiveModel = pickDuckDuckGoModel(requestedModel, liveModels);
 
-  // 1. Get status and challenge header (dengan retry: Duck.ai merotasi
-  // varian challenge obfuscated; varian baru kadang butuh stub tambahan.
-  // Setiap percobaan mengambil challenge BARU dari server.)
   const CHALLENGE_ATTEMPTS = 3;
   let vqd4 = null;
   let solvedHash = null;
@@ -105,7 +87,7 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
 
     if (!statusResp.ok) {
       lastChallengeError = new Error(`DuckDuckGo status request failed with HTTP ${statusResp.status}`);
-      // Status HTTP gagal → coba lagi (kemungkinan rate-limit sesaat)
+
       if (attempt < CHALLENGE_ATTEMPTS) {
         await new Promise((r) => setTimeout(r, 800 * attempt));
         continue;
@@ -116,7 +98,7 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
     const vqdHash = statusResp.headers.get("x-vqd-hash-1");
     vqd4 = statusResp.headers.get("x-vqd-4");
 
-    if (!vqdHash) break; // tidak ada challenge → lanjut tanpa hash
+    if (!vqdHash) break;
 
     try {
       solvedHash = await solveDuckDuckGoChallenge(vqdHash, DEFAULT_USER_AGENT);
@@ -125,14 +107,14 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
     } catch (err) {
       lastChallengeError = err;
       solvedHash = null;
-      // Ambil challenge baru dan coba lagi
+
       if (attempt < CHALLENGE_ATTEMPTS) {
         await new Promise((r) => setTimeout(r, 500 * attempt));
       }
     }
   }
   if (lastChallengeError) {
-    // Jangan bocorkan detail obfuscated internal ke pengguna
+
     throw new Error(
       "DuckDuckGo anti-bot challenge gagal dipecahkan setelah 3x percobaan. Coba lagi dalam beberapa saat."
     );

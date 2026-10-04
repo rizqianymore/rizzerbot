@@ -1,4 +1,3 @@
-// plugins/owner/setch.js — perintah "setch" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -37,7 +36,7 @@ export default {
       }
 
       let channelJid = input;
-      // Jika input adalah link saluran whatsapp (whatsapp.com/channel/xxx)
+
       if (input.includes("whatsapp.com/channel/")) {
         const code = input.split("whatsapp.com/channel/")[1]?.split(/[\/\?\s]/)[0];
         if (code && sock.newsletterMetadata) {
@@ -47,13 +46,13 @@ export default {
               channelJid = meta.id;
             }
           } catch (e) {
-            // Biarkan lanjut atau beri tahu
+
           }
         }
       }
 
       if (!channelJid.includes("@newsletter")) {
-        // Cek jika hanya angka ID
+
         if (/^\d{15,20}$/.test(channelJid)) {
           channelJid = `${channelJid}@newsletter`;
         } else {

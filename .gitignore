@@ -57,6 +57,7 @@ dist/
 build/
 tmp/
 temp/
+.comment-clean-backup/
 *.tmp
 *.tmp.*
 .cache/

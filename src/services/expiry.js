@@ -45,7 +45,6 @@ export function listRentals() {
   return loadRentals().groups;
 }
 
-/** Bersihkan premium kedaluwarsa di main + semua sub (owner/admin dikecualikan). */
 export function cleanupExpiredPremium(logger) {
   let cleaned = 0;
   const stores = [{ key: "", jid: "" }];
@@ -77,7 +76,6 @@ export function cleanupExpiredPremium(logger) {
   return cleaned;
 }
 
-/** Keluarkan bot dari grup sewa yang habis masa + notifikasi owner. */
 export async function checkRentals(logger) {
   const data = loadRentals();
   const ids = Object.keys(data.groups);
@@ -124,7 +122,6 @@ export async function checkRentals(logger) {
 
 let _started = false;
 
-/** Jalan tiap jam: premium cleanup + cek sewa. */
 export function startExpiryCron(logger) {
   if (_started) return;
   _started = true;
@@ -136,7 +133,7 @@ export function startExpiryCron(logger) {
       await checkRentals(logger);
     } catch (_) {}
   };
-  setTimeout(run, 60 * 1000); // beri waktu koneksi online dulu
+  setTimeout(run, 60 * 1000);
   const timer = setInterval(run, 60 * 60 * 1000);
   if (timer && typeof timer.unref === "function") timer.unref();
   logger?.info?.("[expiry] cron aktif (cek tiap 1 jam).");

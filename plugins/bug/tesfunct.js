@@ -1,8 +1,3 @@
-// plugins/bug/tesfunct.js — perintah "tesfunct" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "tesfunct" — tanpa pengurangan.
-// Cara pakai: reply chat berisi kode fungsi, lalu .tesfunct <namaFungsi> <jumlah>
-// Kode yang di-reply dieval bareng fungsi bug dari @/src/services/bug/index.js
-// sehingga snippet lama seperti "await DelayHard(target)" tetap jalan.
 import * as Bug from "@/src/services/bug/index.js";
 
 export default {
@@ -41,7 +36,6 @@ export default {
 
     await reply(`*Success! Mengeksekusi fungsi ${namaFungsi} ke target sebanyak ${jumlah} kali...*`);
 
-    // Bungkus fungsi service agar snippet lama (sock dari closure, 1 arg target) tetap kompatibel.
     const DelayV1 = (t) => Bug.DelayV1(sock, t ?? target);
     const DelayV2 = (t) => Bug.DelayV2(sock, t ?? target);
     const DelayV3 = (t) => Bug.DelayV3(sock, t ?? target);

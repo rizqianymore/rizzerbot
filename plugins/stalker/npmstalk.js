@@ -1,5 +1,3 @@
-// plugins/stalker/npmstalk.js — perintah "npmstalk" (TANPA API key).
-// Backend: npm Registry publik (search + packument) — pengganti JereAPI yang sudah tidak ada.
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
 
@@ -53,14 +51,13 @@ export default {
     await react("🕕");
 
     try {
-      // 1. Cari package paling relevan
+
       const search = await getJson(
         `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`
       );
       const hit = search?.objects?.[0]?.package;
       if (!hit?.name) throw new Error(`Package NPM "${query}" tidak ditemukan`);
 
-      // 2. Ambil detail packument (ringan: hanya field yang dipakai)
       const detail = (await getJson(`https://registry.npmjs.org/${encodeURIComponent(hit.name)}`)) || {};
       const latestTag = detail?.["dist-tags"]?.latest;
       const latestMeta = (latestTag && detail?.versions?.[latestTag]) || {};

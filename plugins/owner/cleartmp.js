@@ -1,4 +1,3 @@
-// plugins/owner/cleartmp.js — perintah "cleartmp" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {

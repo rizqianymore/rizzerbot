@@ -1,5 +1,3 @@
-// plugins/stalker/robloxstalk.js — perintah "robloxstalk" (TANPA API key).
-// Backend: Roblox Public API (users/friends/thumbnails) — pengganti JereAPI yang sudah tidak ada.
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
 
@@ -24,7 +22,7 @@ async function getJson(url, options = {}) {
 }
 
 async function resolveUserId(input) {
-  // Input angka = langsung ID; selain itu lookup username -> ID
+
   if (/^\d+$/.test(input)) return Number(input);
   const data = await getJson("https://users.roblox.com/v1/usernames/users", {
     method: "POST",

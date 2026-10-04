@@ -1,4 +1,3 @@
-// plugins/tools/jkt48schedule.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import {
   getJkt48Members,
   getJkt48MemberDetail,
@@ -93,7 +92,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: YYYY-MM-DD
   let match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (match) {
     const y = parseInt(match[1], 10);
@@ -108,7 +106,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: DD-MM-YYYY atau DD/MM/YYYY
   match = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
   if (match) {
     const d = parseInt(match[1], 10);
@@ -123,7 +120,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: "4 September 2026" atau "4 September"
   match = raw.match(/^(\d{1,2})\s+([a-zA-Z]+)(?:\s+(\d{4}))?$/);
   if (match && MONTH_NAMES[match[2]]) {
     const d = parseInt(match[1], 10);
@@ -138,7 +134,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: Angka hari dalam bulan ini (misal "4" atau "15")
   if (/^\d{1,2}$/.test(raw)) {
     const d = parseInt(raw, 10);
     if (d >= 1 && d <= 31) {
@@ -154,7 +149,6 @@ function parseUserQuery(args, now = new Date()) {
     }
   }
 
-  // Jika bukan tanggal, dianggap sebagai kode show atau slug
   return { type: "code", code: args.join(" ").trim() };
 }
 
@@ -170,7 +164,6 @@ export default {
 
       const parsed = parseUserQuery(args);
 
-      // Jika input berupa kode show atau slug spesifik
       if (parsed.type === "code") {
         await reply(`Mencari rincian pertunjukan "${parsed.code}"...`);
 
@@ -230,7 +223,6 @@ export default {
         }
       }
 
-      // Pencarian berdasarkan tanggal spesifik
       const targetDateStr = parsed.dateStr;
       const formattedTargetDate = formatDate(targetDateStr);
 
@@ -245,7 +237,6 @@ export default {
           );
         }
 
-        // Cari jadwal yang tepat berada di tanggal yang dipilih
         const exactShows = schedules.filter((s) => s.date === targetDateStr);
 
         if (exactShows.length > 0) {
@@ -269,7 +260,6 @@ export default {
           return await reply(text.trim());
         }
 
-        // Jika tidak ada jadwal pada tanggal yang dipilih, tampilkan minimal 5 opsi alternatif terdekat
         const targetTime = new Date(targetDateStr).getTime();
         const sortedAlternatives = [...schedules].sort((a, b) => {
           const diffA = Math.abs(new Date(a.date).getTime() - targetTime);

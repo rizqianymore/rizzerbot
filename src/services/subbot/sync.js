@@ -5,10 +5,6 @@ import { db } from "@/src/core/database.js";
 import { baseSessionsDir } from "./store.js";
 import { createSubBot } from "./manager.js";
 
-/**
- * Daftarkan seluruh sub-bot yang ada di server + pastikan tiap sub
- * punya database SENDIRI. Tidak pernah menimpa setting mandiri.
- */
 export async function syncSubBotsDatabase() {
   let updatedCount = 0;
   try {
@@ -42,7 +38,7 @@ export async function syncSubBotsDatabase() {
         for (const jid of jidsToSync) {
           db.registerBotJid(jid);
         }
-        // Satu database per nomor: seed sekali, setting mandiri tidak disentuh.
+
         const primaryJid = `${number}@s.whatsapp.net`;
         db.ensureSubStore(primaryJid, { botName });
         db.runWithBot(primaryJid, () => {
@@ -62,12 +58,9 @@ export async function syncSubBotsDatabase() {
   return updatedCount;
 }
 
-/**
- * Auto restore existing saved sub bot sessions on startup
- */
 export async function autoRestoreSubBots() {
   try {
-    // 1. Sinkronkan dan perbarui database terlebih dahulu agar database tidak old
+
     await syncSubBotsDatabase();
 
     if (!fs.existsSync(baseSessionsDir)) return;

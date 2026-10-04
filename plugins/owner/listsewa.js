@@ -1,4 +1,3 @@
-// plugins/owner/listsewa.js — perintah "listsewa" (1 file = 1 perintah).
 import { listRentals } from "@/src/services/expiry.js";
 
 export default {

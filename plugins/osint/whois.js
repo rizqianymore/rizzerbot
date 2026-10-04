@@ -1,12 +1,9 @@
-// plugins/tools/whois.js — perintah "whois" (1 file = 1 perintah).
 import {
   getDnsRecords,
   getWhois,
   getSubdomains,
   getIpGeo,
 } from "@/src/services/network.js";
-
-
 
 export default {
   "name": "whois",

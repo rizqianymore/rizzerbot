@@ -1,4 +1,3 @@
-// plugins/owner/setprefix.js — perintah "setprefix" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -9,7 +8,7 @@ export default {
   "category": "Owner",
   "run": async (sock, msg, args, { reply, botJid, senderJid, logger, isPrimarySuperOwner }) => {
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      // Verifikasi ganda independen: hanya owner bot INI yang boleh ubah prefixnya.
+
       if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
         logger?.warn?.(`[OwnerCmd] setprefix DITOLAK untuk ${senderJid} via ${activeBotJid}`);
         return reply("❌ Perintah ini hanya untuk Owner bot ini!");

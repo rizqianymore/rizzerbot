@@ -1,6 +1,3 @@
-// plugins/owner/maintenance.js — perintah "maintenance" (SuperOwner saja).
-// Kunci/buka bot: saat ON, hanya owner yang bisa pakai perintah.
-// Mendukung --all untuk semua sub-bot (seperti pola self/public).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -30,7 +27,6 @@ export default {
         return true;
       };
 
-      // Tanpa argumen: tampilkan status.
       if (!arg) {
         const cur = db.getSettings();
         return reply(

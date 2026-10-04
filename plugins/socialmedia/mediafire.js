@@ -1,4 +1,3 @@
-// plugins/socialmedia/mediafire.js — Download file dari MediaFire tanpa API pihak ketiga
 import { mediafireDownload } from "@/src/services/mediafire.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
 
@@ -35,8 +34,6 @@ export default {
       if (downloadUrl) lines.push(`Link: ${downloadUrl}`);
       const infoText = lines.join("\n");
 
-      // Coba download file jika ukuran wajar (< 100MB untuk WhatsApp)
-      // Cek apakah ukuran file di bawah batas
       const isLarge = /\b\d+\s*GB/i.test(filesize) || (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
 
       if (isLarge) {

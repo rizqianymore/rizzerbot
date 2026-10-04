@@ -1,4 +1,3 @@
-// plugins/premium/tts.js — perintah "tts" (1 file = 1 perintah).
 import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
@@ -12,8 +11,6 @@ import {
   webSearch,
   aiChat,
 } from '@/src/services/scrape.js';
-
-
 
 export default {
   "name": "tts",

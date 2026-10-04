@@ -1,4 +1,3 @@
-// plugins/tools/ceknim.js — perintah "ceknim" (1 file = 1 perintah).
 import { getCeknimInfoText } from "@/src/services/pddikti.js";
 
 export default {

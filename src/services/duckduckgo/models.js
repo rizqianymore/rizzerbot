@@ -1,12 +1,9 @@
-// DuckDuckGo Duck.ai model catalog helpers (pure — no network, no DOM stubs).
-// Wire ids captured live from GET /duckchat/v1/models
-
 export const FE_VERSION_PATTERN = /serp_\d{8}_\d{6}_[A-Z]{2}-[0-9a-f]{20,40}/;
 
 export const DUCKDUCKGO_DEFAULT_MODEL = "gpt-5.4-mini";
 
 export const DUCKDUCKGO_MODEL_ALIASES = {
-  // retired OpenAI ids → current GPT-5.x free tier
+
   "gpt-4o-mini": "gpt-5.4-mini",
   "gpt-5-mini": "gpt-5.4-mini",
   "o3-mini": "gpt-5.4-mini",

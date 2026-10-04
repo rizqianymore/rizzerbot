@@ -1,4 +1,3 @@
-// plugins/news/cnn.js — perintah "cnn" (1 file = 1 perintah, dipecah dari news.js).
 import { searchCNNNews } from '@/src/services/cnn.js';
 import { fetchBuffer } from '@/src/services/scrape.js';
 

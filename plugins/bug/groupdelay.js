@@ -1,6 +1,3 @@
-// plugins/bug/groupdelay.js — perintah "groupdelay" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "groupdelay" — tanpa pengurangan
-// (55 iterasi DelayGB double-hit, fire-and-forget, proteksi rate-limit).
 import { sendGroupDelay, parseGroupInviteCode } from "@/src/services/bug/index.js";
 
 export default {
@@ -19,7 +16,6 @@ export default {
 
     await reply(`*SuccessFully! Send Bug To ${q}*`);
 
-    // Fire-and-forget seperti aslinya: user langsung dapat balasan, eksekusi jalan di background.
     (async () => {
       try {
         const log = logger || console;

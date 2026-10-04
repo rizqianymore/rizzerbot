@@ -18,8 +18,7 @@ function getFilesRecursive(dir, baseDir = dir) {
     if (file.isDirectory()) {
       results = results.concat(getFilesRecursive(fullPath, baseDir));
     } else if (file.isFile() && file.name.endsWith(".js")) {
-      // File helper bersama (awalan "_", misal plugins/owner/_helpers.js)
-      // bukan plugin dan wajib di-skip agar tidak dimuat sebagai command.
+
       if (file.name.startsWith("_")) continue;
       results.push({
         absolutePath: fullPath,

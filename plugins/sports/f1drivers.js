@@ -1,4 +1,3 @@
-// plugins/sports/f1drivers.js — pembalap F1 (f1api.dev).
 import { searchDrivers, getDriverById, fmtDriver, replyDetail } from "@/src/services/f1.js";
 
 export default {
@@ -22,12 +21,12 @@ export default {
         text += `\n💡 Cari: \`${currentPrefix}f1drivers alonso\` | Detail: \`${currentPrefix}f1drivers max_verstappen\``;
         return reply(text.trim());
       }
-      // ID langsung tanpa spasi (cth: max_verstappen) -> detail cepat
+
       if (/^[a-z0-9_]+$/i.test(query) && !query.includes(" ")) {
         try {
           const d = await getDriverById(query);
           return replyDetail(sock, msg, reply, fmtDriver(d), d.url);
-        } catch (_) { /* jatuh ke pencarian */ }
+        } catch (_) {  }
       }
       const hits = await searchDrivers(query, 10);
       if (!hits.length) return reply(`❌ Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``);

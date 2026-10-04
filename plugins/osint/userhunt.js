@@ -1,4 +1,3 @@
-// plugins/osint/userhunt.js — pencarian jejak username di berbagai platform online.
 const PLATFORMS = [
   { name: "GitHub", url: (u) => `https://github.com/${u}`, check: (u) => `https://api.github.com/users/${u}` },
   { name: "Telegram", url: (u) => `https://t.me/${u}`, check: (u) => `https://t.me/${u}` },
@@ -52,7 +51,6 @@ export default {
             signal: ctrl.signal,
           });
 
-          // Anggap ada jika status 200/301/302
           if (res.status === 200 || res.status === 301 || res.status === 302) {
             return { name: p.name, exists: true, url: profileUrl };
           }

@@ -1,8 +1,3 @@
-// src/services/cekplat.js — parse plat nomor Indonesia murni offline.
-// Sumber kewilayahan: TNKB Polri / Wikipedia TNKB Indonesia (kode depan).
-// Catatan: ini BUKAN data Samsat live (nama pemilik/pajak), hanya parse
-// kode wilayah + perkiraan golongan kendaraan dari rentang angka.
-
 export const PLAT_WILAYAH = {
   A: { provinsi: "Banten", wilayah: "Keresidenan Banten (Polda Banten)", areas: ["Kota Serang", "Kab. Serang", "Pandeglang", "Lebak", "Cilegon", "Kab. Tangerang (Samsat Balaraja)"] },
   B: { provinsi: "DKI Jakarta / Jabar / Banten", wilayah: "Polda Metro Jaya (Jabodetabek)", areas: ["Jakarta Pusat", "Jakarta Utara + Kep. Seribu", "Jakarta Barat", "Jakarta Selatan", "Jakarta Timur", "Kab. Bekasi", "Kota Bekasi", "Kota Depok", "Kab. Tangerang (Kelapa Dua)", "Kota Tangerang", "Kota Tangerang Selatan"] },
@@ -97,7 +92,6 @@ export const ZZ_MAP = {
   ZZB: "Dinas pejabat daerah / DPRD",
 };
 
-/** Perkiraan golongan dari angka. Beda aturan untuk B (Metro Jaya). */
 export function getJenisKendaraan(angka, kodeDepan) {
   const n = Number(angka);
   if (!Number.isFinite(n) || n < 1 || n > 9999) return "-";
@@ -119,24 +113,17 @@ function normalizeInput(raw) {
   return String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-/**
- * Parse plat. Terima "B 1234 ABC", "B1234ABC", "AD 1234 AB", "CD 12 34".
- * Return { valid, ... } — tidak pernah throw untuk input user.
- */
 export function parsePlat(rawInput) {
   const raw = String(rawInput || "").trim();
   if (!raw) return { valid: false, reason: "input kosong" };
   const norm = normalizeInput(raw);
 
-  // 1. Diplomatik / konsuler: CD / CC + kode negara + no registrasi
-  // Contoh: CD 12 34, CC 12 34, CD 12 P 34 (pribadi). Spasi opsional: CD1234 tetap diproses.
   let m = norm.match(/^(CD|CC)\s*(\d{1,3})(?:\s*P)?\s*(\d{1,4})$/);
   if (m) {
     let korps = m[1];
     let negaraStr = m[2];
     let regStr = m[3];
-    // Tanpa spasi (cth CD1234) itu ambigu: 12|34 vs 123|4.
-    // Prefer kode negara yang dikenal di CD_COUNTRY.
+
     if (!/\s/.test(raw.trim()) && !raw.toUpperCase().includes("P")) {
       const digits = `${negaraStr}${regStr}`;
       let fixed = null;
@@ -172,12 +159,9 @@ export function parsePlat(rawInput) {
     };
   }
 
-  // 2. TNI / Polri numerik murni: "1234-V", "12345", "1234 05", dsb.
   m = norm.match(/^(\d{1,6})\s*([IVXL]{1,5}|\d{1,2}|AD|AL|AU|PM|POLRI|TNI)?$/);
   if (m && norm.match(/^\d/)) {
-    // Hanya anggap TNI/Polri bila user eksplisit pakai konteks tsb
-    // atau format khas 4-6 digit + romawi. Kalau 1-4 digit polos tanpa kode
-    // depan huruf, itu BUKAN plat sipil valid -> beri arahan.
+
     const tail = (m[2] || "").trim();
     const looksMil = /^(I{1,3}V?|V|IV|VI{0,3}|IX|X|AD|AL|AU|PM)$/.test(tail) || /TNI|POLRI/.test(norm);
     if (looksMil || /^\d{4,6}(\s|$)/.test(norm)) {
@@ -198,8 +182,6 @@ export function parsePlat(rawInput) {
     }
   }
 
-  // 3. Sipil standar: KODE ANGKA SUFFIX — spasi opsional semua.
-  // "B 1234 ABC", "B1234ABC", "B4378BTC", "AD1234AB" semuanya valid.
   m = norm.match(/^([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]{1,3})?$/);
   if (!m) {
     return { valid: false, reason: "format salah. Contoh: B 1234 ABC / AD 1234 AB / BK 5678 AA" };
@@ -214,7 +196,6 @@ export function parsePlat(rawInput) {
   if (angka < 1 || angka > 9999) return { valid: false, reason: "angka harus 1-9999" };
   if (suffix && !/^[A-Z]{1,3}$/.test(suffix)) return { valid: false, reason: "huruf belakang harus 1-3 huruf A-Z" };
 
-  // Plat khusus berbasis suffix
   let khusus = null;
   if (/^ZZ[A-Z]$/.test(suffix)) {
     khusus = ZZ_MAP[suffix] || "Dinas pejabat negara (pengganti RF, sistem ZZ)";
@@ -261,27 +242,16 @@ export function formatPlatInfo(p) {
   return lines.join("\n");
 }
 
-/** Satu panggilan untuk plugin: parse + format. Return string atau null. */
 export function getPlatInfoText(input) {
   const parsed = parsePlat(input);
   if (!parsed.valid) return null;
   return formatPlatInfo(parsed);
 }
 
-// ── Enrich presisi via Firestore publik samsat.info (REST, bukan Listen/channel) ──
-// Struktur (hasil reverse dari capture user):
-//   collection "nopol" -> doc "{KODE_DEPAN}" (cth: B, AD, BK)
-//   subcollection "belakang" -> doc "{HURUF_PERTAMA_SUFFIX}" (cth: B 1234 *B*xx -> nopol/B/belakang/B)
-//   fields: { Daerah, Samsat, Alamat, Provinsi, Huruf }
-// Jangan pakai /Listen/channel (butuh gsessionid/SID/RID handshake browser).
-// Pakai REST GET biasa — publik, tanpa API key:
-//   GET {BASE}/nopol/{KODE}
-//   GET {BASE}/nopol/{KODE}/belakang/{HURUF}
-//   GET {BASE}/nopol/{KODE}/belakang?pageSize=100 (fallback list)
 const FIRESTORE_BASE =
   "https://firestore.googleapis.com/v1/projects/informasisamsat/databases/(default)/documents";
 const SAMSAT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const samsatCache = new Map(); // key -> { data, expires }
+const samsatCache = new Map();
 
 function samsatCacheGet(key) {
   const hit = samsatCache.get(key);
@@ -330,35 +300,27 @@ function parseSamsatDoc(doc) {
   };
 }
 
-/**
- * Ambil detail Samsat presisi. Return object { daerah, samsat, alamat, provinsi, huruf } atau null.
- * - kode: "B", "AD", dst (uppercase)
- * - suffix: "ABC" / "AB" / "" — dipakai huruf pertamanya sebagai key doc belakang.
- */
 export async function getSamsatDetail(kode, suffix) {
   const depan = String(kode || "").toUpperCase().trim();
   const belakangKey = String(suffix || "").toUpperCase().trim().charAt(0) || "";
   if (!depan) return null;
 
-  // Validasi kode depan ada (murah, cached).
   const depanDoc = await firestoreGet(`nopol/${encodeURIComponent(depan)}`).catch(() => null);
   if (!depanDoc) return null;
 
   if (!belakangKey || !/^[A-Z]$/.test(belakangKey)) {
-    // Tanpa suffix: caller yang putuskan (tampilkan cakupan umum saja).
+
     return null;
   }
 
-  // 1. Direct hit: nopol/{DEPAN}/belakang/{HURUF}
   try {
     const doc = await firestoreGet(`nopol/${encodeURIComponent(depan)}/belakang/${belakangKey}`);
     const parsed = parseSamsatDoc(doc);
     if (parsed) return parsed;
   } catch (_) {
-    // lanjut fallback list
+
   }
 
-  // 2. Fallback: list belakang?pageSize=100 lalu cocokkan key (antisipasi case/aturan baru).
   try {
     const list = await firestoreGet(`nopol/${encodeURIComponent(depan)}/belakang?pageSize=100`);
     const docs = Array.isArray(list?.documents) ? list.documents : [];
@@ -369,22 +331,20 @@ export async function getSamsatDetail(kode, suffix) {
   }
 }
 
-/** Lengkapi hasil parsePlat dengan detail Samsat. Tak pernah throw — gagal = offline apa adanya. */
 export async function enrichSamsat(parsed) {
   if (!parsed?.valid) return parsed;
-  // Hanya plat sipil/khusus yang punya kode wilayah + suffix yang bisa di-enrich.
+
   if (parsed.kind !== "sipil" && parsed.kind !== "khusus") return parsed;
   if (!parsed.suffix) return parsed;
   try {
     const detail = await getSamsatDetail(parsed.kode, parsed.suffix);
     if (detail) parsed.samsat = detail;
   } catch (_) {
-    // abaikan, fallback offline
+
   }
   return parsed;
 }
 
-/** Satu panggilan async untuk plugin: parse + enrich Firestore + format. */
 export async function getPlatInfoTextOnline(input) {
   const parsed = parsePlat(input);
   if (!parsed.valid) return null;

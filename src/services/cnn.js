@@ -3,16 +3,6 @@ import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const CNN_SEARCH_BASE = "https://search.prod.di.api.cnn.io/search/query";
 
-/**
- * Cari berita di CNN via Stellar Search API dengan anti-bot header rotation
- *
- * @param {string} query - Kata kunci pencarian
- * @param {object} [options]
- * @param {number} [options.size=5] - Jumlah berita yang diambil
- * @param {number} [options.page=1] - Halaman hasil pencarian
- * @param {string} [options.sort="relevance"] - newest | relevance
- * @returns {Promise<{total: number, items: Array}>}
- */
 export async function searchCNNNews(query, options = {}) {
   const cleanQuery = query.trim();
   if (!cleanQuery) return { total: 0, items: [] };

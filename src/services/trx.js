@@ -4,17 +4,11 @@ import { createCanvas } from "@napi-rs/canvas";
 
 const TRX_DB_PATH = path.join(process.cwd(), "database", "transactions.json");
 
-/**
- * Format number to Indonesian Rupiah (Rp xx.xxx)
- */
 export function formatRupiah(amount) {
   const num = typeof amount === "number" ? amount : Number(String(amount).replace(/[^0-9.-]+/g, "")) || 0;
   return "Rp " + Math.round(num).toLocaleString("id-ID");
 }
 
-/**
- * Ensure database file exists
- */
 function getTransactionsDb() {
   try {
     const dir = path.dirname(TRX_DB_PATH);
@@ -30,9 +24,6 @@ function getTransactionsDb() {
   }
 }
 
-/**
- * Save transactions to disk
- */
 function saveTransactionsDb(data) {
   try {
     const dir = path.dirname(TRX_DB_PATH);
@@ -43,9 +34,6 @@ function saveTransactionsDb(data) {
   }
 }
 
-/**
- * Generate formatted timestamp in WIB
- */
 export function getJakartaTime() {
   const d = new Date();
   const dateStr = d.toLocaleDateString("id-ID", {
@@ -63,9 +51,6 @@ export function getJakartaTime() {
   return `${dateStr} ${timeStr} WIB`;
 }
 
-/**
- * Create a new transaction
- */
 export function createTransaction({
   item,
   price,
@@ -104,16 +89,13 @@ export function createTransaction({
   };
 
   list.unshift(trx);
-  // Keep last 1000 transactions
+
   if (list.length > 1000) list.length = 1000;
   saveTransactionsDb(list);
 
   return trx;
 }
 
-/**
- * Normalize status string
- */
 export function normalizeStatus(raw) {
   const s = String(raw || "").trim().toLowerCase();
   if (s.includes("lunas") || s.includes("sukses") || s.includes("success") || s.includes("done") || s.includes("berhasil")) {
@@ -142,18 +124,12 @@ export function getStatusBadge(status) {
   }
 }
 
-/**
- * Get transaction by ID
- */
 export function getTransaction(id) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
   return list.find((t) => t.id === q || t.id.includes(q)) || null;
 }
 
-/**
- * Update transaction status
- */
 export function updateTransaction(id, updates = {}) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
@@ -168,9 +144,6 @@ export function updateTransaction(id, updates = {}) {
   return list[idx];
 }
 
-/**
- * List recent transactions
- */
 export function listTransactions({ limit = 10, groupJid = null } = {}) {
   const list = getTransactionsDb();
   let filtered = list;
@@ -180,9 +153,6 @@ export function listTransactions({ limit = 10, groupJid = null } = {}) {
   return filtered.slice(0, Math.min(limit, 50));
 }
 
-/**
- * Delete a transaction
- */
 export function deleteTransaction(id) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
@@ -193,27 +163,21 @@ export function deleteTransaction(id) {
   return true;
 }
 
-/**
- * Generate a modern, high-resolution aesthetic Receipt Card (PNG)
- */
 export async function generateReceiptCard(trx) {
   const width = 640;
   const height = 880;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Background - Deep Cyber Obsidian
   ctx.fillStyle = "#0d1117";
   ctx.fillRect(0, 0, width, height);
 
-  // Decorative ambient glow
   const grad = ctx.createRadialGradient(width / 2, 80, 20, width / 2, 80, 300);
   grad.addColorStop(0, "rgba(56, 189, 248, 0.15)");
   grad.addColorStop(1, "rgba(13, 17, 23, 0)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  // Main Card Container with sleek border
   const cardX = 30;
   const cardY = 30;
   const cardW = width - 60;
@@ -230,7 +194,6 @@ export async function generateReceiptCard(trx) {
   ctx.stroke();
   ctx.restore();
 
-  // Top Store Name
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 26px sans-serif";
@@ -240,7 +203,6 @@ export async function generateReceiptCard(trx) {
   ctx.font = "14px sans-serif";
   ctx.fillText("OFFICIAL TRANSACTION RECEIPT", width / 2, cardY + 75);
 
-  // Status Badge
   const badge = getStatusBadge(trx.status);
   const badgeW = 240;
   const badgeH = 36;
@@ -261,7 +223,6 @@ export async function generateReceiptCard(trx) {
   ctx.fillText(badge.text, width / 2, badgeY + 23);
   ctx.restore();
 
-  // Dashed receipt divider line
   ctx.save();
   ctx.strokeStyle = "#30363d";
   ctx.setLineDash([8, 6]);
@@ -272,7 +233,6 @@ export async function generateReceiptCard(trx) {
   ctx.stroke();
   ctx.restore();
 
-  // Detail Rows
   const details = [
     { label: "ID Transaksi", val: trx.id, isHighlight: true },
     { label: "Waktu / Tanggal", val: trx.time },
@@ -295,7 +255,6 @@ export async function generateReceiptCard(trx) {
     ctx.fillStyle = row.isHighlight ? "#58a6ff" : "#f0f6fc";
     ctx.font = row.isHighlight ? "bold 15px monospace" : "15px sans-serif";
 
-    // Text truncation if too long
     let valStr = String(row.val || "-");
     if (valStr.length > 28) valStr = valStr.substring(0, 26) + "...";
     ctx.fillText(valStr, rightX, currentY);
@@ -303,7 +262,6 @@ export async function generateReceiptCard(trx) {
     currentY += 38;
   }
 
-  // Dashed divider line before total
   ctx.save();
   ctx.strokeStyle = "#30363d";
   ctx.setLineDash([8, 6]);
@@ -316,7 +274,6 @@ export async function generateReceiptCard(trx) {
 
   currentY += 40;
 
-  // Total Box
   const totalBoxH = 80;
   const totalBoxW = cardW - 48;
   const totalBoxX = cardX + 24;
@@ -343,7 +300,6 @@ export async function generateReceiptCard(trx) {
 
   currentY += totalBoxH + 30;
 
-  // Note Box if note provided
   if (trx.note && trx.note !== "-") {
     ctx.textAlign = "left";
     ctx.fillStyle = "#8b949e";
@@ -352,7 +308,6 @@ export async function generateReceiptCard(trx) {
     currentY += 24;
   }
 
-  // Footer barcode simulation
   const barY = cardY + cardH - 85;
   const barCount = 42;
   const barStartX = (width - barCount * 8) / 2;
@@ -375,9 +330,6 @@ export async function generateReceiptCard(trx) {
   return canvas.toBuffer("image/png");
 }
 
-/**
- * Format transaction as WhatsApp text
- */
 export function formatTrxText(trx) {
   const badge = getStatusBadge(trx.status);
   return (

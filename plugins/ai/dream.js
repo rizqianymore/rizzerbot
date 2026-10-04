@@ -1,5 +1,3 @@
-// plugins/ai/dreamai.js — perintah "dream" (txt2img multi-model, TANPA API key).
-// Backend: DreamFace tools (login tamu otomatis + polling work_session).
 import crypto from "crypto";
 
 const BASE = "https://tools.dreamfaceapp.com/dw-server";

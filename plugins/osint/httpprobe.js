@@ -1,4 +1,3 @@
-// plugins/osint/httpprobe.js — Recon HTTP/HTTPS headers, server info, WAF & security posture.
 import { cleanDomain } from "@/src/services/network.js";
 
 export default {
@@ -43,7 +42,6 @@ export default {
       const latency = Date.now() - start;
       const headers = Object.fromEntries(res.headers.entries());
 
-      // Deteksi Web Server & WAF / CDN
       let server = headers["server"] || "-";
       let wafCdn = [];
       if (headers["cf-ray"] || /cloudflare/i.test(server)) wafCdn.push("Cloudflare");
@@ -54,7 +52,6 @@ export default {
       if (headers["x-github-request-id"]) wafCdn.push("GitHub Pages");
       if (headers["x-vercel-id"]) wafCdn.push("Vercel");
 
-      // Deteksi Security Headers
       const hsts = Boolean(headers["strict-transport-security"]);
       const csp = Boolean(headers["content-security-policy"]);
       const xfo = headers["x-frame-options"] || "-";

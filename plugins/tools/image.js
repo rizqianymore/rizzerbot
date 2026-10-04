@@ -1,8 +1,5 @@
-// plugins/tools/image.js — perintah "image" (1 file = 1 perintah).
 import { searchPinterest, scrapeWebImages } from "@/src/services/images.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
-
-
 
 export default {
   "name": "image",

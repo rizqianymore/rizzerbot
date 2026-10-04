@@ -1,9 +1,3 @@
-/**
- * Official JKT48 Scraper with Native Cloudflare & Anti-Bot Bypass.
- * Runs in-session API requests directly inside a headless stealth Chromium context,
- * delivering 100% Cloudflare Turnstile clearance with sub-100ms response times.
- */
-
 const JKT48_BASE = "https://jkt48.com";
 
 const USER_AGENT =
@@ -72,9 +66,6 @@ export const STATIC_MEMBERS = [
 
 import { request } from "@/src/utils/request.js";
 
-/**
- * Executes HTTP fetch to JKT48 endpoints with automatic Cloudflare & Anti-Bot bypass
- */
 export async function jktInPageFetch(apiUrl) {
   try {
     return await request.json(apiUrl, {
@@ -90,14 +81,9 @@ export async function jktInPageFetch(apiUrl) {
   }
 }
 
-/**
- * Fetch latest JKT48 Official News
- * Prioritizes high-speed HTTP API mirror with fallback to official browser session
- */
 export async function getJkt48News(limit = 5) {
   const safeLimit = Math.min(Math.max(limit, 1), 20);
 
-  // 1. Coba lewat mirror API publik super cepat (tanpa butuh browser/Cloudflare challenge)
   try {
     const { default: axios } = await import("axios");
     const res = await axios.get(`https://api.crstlnz.my.id/api/news?page=1&perpage=${safeLimit}`, {
@@ -114,7 +100,6 @@ export async function getJkt48News(limit = 5) {
     }
   } catch (_) {}
 
-  // 2. Fallback ke headless browser context jika mirror offline
   const json = await jktInPageFetch(
     `${JKT48_BASE}/api/v1/news?lang=id&limit=${safeLimit}`
   );
@@ -124,16 +109,11 @@ export async function getJkt48News(limit = 5) {
   return json.data;
 }
 
-/**
- * Fetch JKT48 Monthly Schedules
- * Prioritizes high-speed HTTP mirror with fallback to browser session
- */
 export async function getJkt48Schedules(month, year) {
   const now = new Date();
   const m = month || now.getMonth() + 1;
   const y = year || now.getFullYear();
 
-  // 1. Coba lewat HTTP mirror theater/schedules API
   try {
     const { default: axios } = await import("axios");
     const res = await axios.get("https://api.crstlnz.my.id/api/theater?page=1&perpage=50", {
@@ -168,7 +148,6 @@ export async function getJkt48Schedules(month, year) {
     }
   } catch (_) {}
 
-  // 2. Fallback ke headless browser context jika mirror offline
   const json = await jktInPageFetch(
     `${JKT48_BASE}/api/v1/schedules?lang=id&month=${m}&year=${y}`
   );
@@ -178,14 +157,9 @@ export async function getJkt48Schedules(month, year) {
   return { month: m, year: y, schedules: json.data };
 }
 
-/**
- * Fetch JKT48 Show / Schedule Details & Lineup
- * URL: https://jkt48.com/api/v1/schedules/{slugOrCode}?lang=id
- */
 export async function getJkt48ScheduleDetail(codeOrSlug) {
   let targetSlug = codeOrSlug.trim();
 
-  // 1. Coba lookup via mirror theater dulu
   try {
     const { schedules } = await getJkt48Schedules();
     const match = schedules.find(
@@ -208,7 +182,6 @@ export async function getJkt48ScheduleDetail(codeOrSlug) {
     }
   } catch (_) {}
 
-  // 2. Fallback ke in-page browser fetch
   const json = await jktInPageFetch(
     `${JKT48_BASE}/api/v1/schedules/${encodeURIComponent(targetSlug)}?lang=id`
   );
@@ -218,11 +191,8 @@ export async function getJkt48ScheduleDetail(codeOrSlug) {
   return json.data;
 }
 
-/**
- * Fetch all active JKT48 members
- */
 export async function getJkt48Members() {
-  // Coba ambil via browser session resmi
+
   try {
     const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/members/`);
     if (json?.status && Array.isArray(json?.data)) {
@@ -237,13 +207,9 @@ export async function getJkt48Members() {
     }
   } catch (_) {}
 
-  // Fallback cache statis member jika browser belum siap
   return STATIC_MEMBERS;
 }
 
-/**
- * Live scrape member details from AKB48 Fandom Wiki (https://akb48.fandom.com)
- */
 export async function getAkb48FandomMemberDetail(memberName) {
   if (!memberName) return null;
 
@@ -253,7 +219,6 @@ export async function getAkb48FandomMemberDetail(memberName) {
     );
     const apiUrl = `https://akb48.fandom.com/api.php?action=parse&page=${formattedTitle}&prop=wikitext|images&format=json`;
 
-    // Attempt direct fetch with axios first
     const { default: axios } = await import("axios");
     let parseData = null;
 
@@ -267,7 +232,7 @@ export async function getAkb48FandomMemberDetail(memberName) {
       });
       parseData = res.data?.parse;
     } catch (_) {
-      // If direct request blocked, fallback to browser session
+
       const pageResult = await jktInPageFetch(apiUrl);
       parseData = pageResult?.parse;
     }
@@ -275,7 +240,6 @@ export async function getAkb48FandomMemberDetail(memberName) {
     if (!parseData?.wikitext) return null;
     const wikitext = parseData.wikitext["*"];
 
-    // Ambil gambar profil member dari Fandom (cari file gambar non-icon/logo)
     let wikiImageUrl = null;
     const candidateImg = Array.isArray(parseData.images)
       ? parseData.images.find(
@@ -397,10 +361,6 @@ export async function getAkb48FandomMemberDetail(memberName) {
   }
 }
 
-/**
- * Fetch detail profile of a JKT48 member by name or ID
- * Combines live data from official JKT48 and akb48.fandom.com
- */
 export async function getJkt48MemberDetail(idOrName) {
   const list = await getJkt48Members();
   const q = String(idOrName).trim().toLowerCase();
@@ -420,7 +380,6 @@ export async function getJkt48MemberDetail(idOrName) {
     fandomData = await getAkb48FandomMemberDetail(target.name);
   } catch (_) {}
 
-  // If fandomData already resolved basic details, only try browser if needed
   if (!fandomData) {
     try {
       const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/members/${target.id}?lang=id`);
@@ -448,10 +407,6 @@ export async function getJkt48MemberDetail(idOrName) {
   };
 }
 
-/**
- * Fetch JKT48 Showroom Leaderboard
- * URL: https://admin.jkt48showroom-api.my.id/leaderboard-member/showroom
- */
 export async function getShowroomLeaderboard(page = 1, filterBy = "month", year = new Date().getFullYear()) {
   const { default: axios } = await import("axios");
   const url = `https://admin.jkt48showroom-api.my.id/leaderboard-member/showroom?page=${page}&filterBy=${filterBy}&year=${year}`;
@@ -464,10 +419,6 @@ export async function getShowroomLeaderboard(page = 1, filterBy = "month", year 
   return res.data;
 }
 
-/**
- * Fetch JKT48 Show Schedules from Showroom API
- * URL: https://admin.jkt48showroom-api.my.id/schedules?isOnWeekSchedule=true/false
- */
 export async function getShowroomSchedules(isOnWeek = true) {
   const { default: axios } = await import("axios");
   const url = `https://admin.jkt48showroom-api.my.id/schedules?isOnWeekSchedule=${isOnWeek ? "true" : "false"}`;
@@ -479,5 +430,3 @@ export async function getShowroomSchedules(isOnWeek = true) {
   });
   return Array.isArray(res.data) ? res.data : [];
 }
-
-

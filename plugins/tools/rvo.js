@@ -1,4 +1,3 @@
-// plugins/tools/rvo.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { downloadContentFromMessage } from "baileys";
 
 async function streamToBuffer(stream) {

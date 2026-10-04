@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Scrape langsung MediaFire tanpa API pihak ketiga
- * @param {string} url - Link MediaFire
- * @returns {Promise<{downloadUrl: string, filename: string, filesize: string, mimetype: string}>}
- */
 export async function mediafireDownload(url) {
   if (!url || !/mediafire\.com/i.test(url)) {
     throw new Error("URL bukan merupakan tautan MediaFire yang valid.");
@@ -25,7 +20,6 @@ export async function mediafireDownload(url) {
     throw new Error("Gagal mengambil halaman MediaFire.");
   }
 
-  // Regex pencocokan tombol unduhan langsung MediaFire
   const dlMatch =
     html.match(/href="([^"]+)"\s+id="downloadButton"/i) ||
     html.match(/id="downloadButton"[^>]*href="([^"]+)"/i) ||
@@ -38,17 +32,15 @@ export async function mediafireDownload(url) {
     throw new Error("Gagal menemukan link download langsung dari MediaFire. Kemungkinan file telah dihapus atau terkena proteksi password.");
   }
 
-  // Ekstraksi nama file
   const filenameMatch =
     html.match(/<div class="filename">([^<]+)<\/div>/i) ||
     html.match(/<span class="filename">([^<]+)<\/span>/i) ||
     html.match(/<title>([^<]+)<\/title>/i);
 
   let filename = filenameMatch ? filenameMatch[1].trim() : "file";
-  // Rapikan jika title berakhiran ' - MediaFire'
+
   filename = filename.replace(/\s*-\s*MediaFire$/i, "").trim();
 
-  // Ekstraksi ukuran file
   const sizeMatch =
     html.match(/<li>File size:\s*<span>([^<]+)<\/span>/i) ||
     html.match(/<span>\(([0-9.]+\s*(?:MB|GB|KB|B))\)<\/span>/i) ||
@@ -56,7 +48,6 @@ export async function mediafireDownload(url) {
 
   const filesize = sizeMatch ? sizeMatch[1].trim() : "Unknown size";
 
-  // Cek ekstensi file untuk mimetype sederhana
   let mimetype = "application/octet-stream";
   const ext = filename.split(".").pop()?.toLowerCase();
   if (ext === "zip") mimetype = "application/zip";
@@ -76,17 +67,10 @@ export async function mediafireDownload(url) {
   };
 }
 
-/**
- * Solver umum untuk safelink / URL shortener / redirector
- * Mencari link tujuan (seperti MediaFire, Google Drive, dll) langsung dari query/meta/redirect
- * @param {string} url - Link safelink
- * @returns {Promise<{originalUrl: string, targetUrl: string, type: string}>}
- */
 export async function solveSafelink(url) {
   let targetUrl = null;
   const rawUrl = url.trim();
 
-  // 1. Cek parameter query umum yang sering menyimpan base64 atau direct target
   try {
     const parsed = new URL(rawUrl);
     const searchParams = parsed.searchParams;
@@ -95,12 +79,12 @@ export async function solveSafelink(url) {
     for (const p of commonParams) {
       const val = searchParams.get(p);
       if (val) {
-        // Cek apakah string URL langsung
+
         if (/^https?:\/\//i.test(val)) {
           targetUrl = val;
           break;
         }
-        // Cek apakah Base64 encoded
+
         try {
           const decoded = Buffer.from(val, "base64").toString("utf-8");
           if (/^https?:\/\//i.test(decoded)) {
@@ -112,7 +96,6 @@ export async function solveSafelink(url) {
     }
   } catch (_) {}
 
-  // 2. Jika belum ditemukan, lakukan request HTTP untuk mengikuti redirect / membaca meta refresh & inline script
   if (!targetUrl) {
     try {
       const res = await axios.get(rawUrl, {
@@ -125,19 +108,16 @@ export async function solveSafelink(url) {
         validateStatus: () => true,
       });
 
-      // Cek URL akhir hasil redirect
       if (res.request?.res?.responseUrl && res.request.res.responseUrl !== rawUrl) {
         targetUrl = res.request.res.responseUrl;
       }
 
-      // Cek meta refresh di HTML
       if (!targetUrl && typeof res.data === "string") {
         const metaMatch = res.data.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^"']*url=([^"']+)["']/i);
         if (metaMatch && metaMatch[1]) {
           targetUrl = metaMatch[1].trim();
         }
 
-        // Cek window.location redirect
         if (!targetUrl) {
           const jsMatch = res.data.match(/window\.location(?:\.href)?\s*=\s*["'](https?:\/\/[^"']+)["']/i);
           if (jsMatch && jsMatch[1]) {
@@ -145,7 +125,6 @@ export async function solveSafelink(url) {
           }
         }
 
-        // Cek link keluar (mediafire, google drive, zippyshare, dll)
         if (!targetUrl) {
           const hostMatch = res.data.match(/href=["'](https?:\/\/(?:www\.)?(?:mediafire\.com|drive\.google\.com|mega\.nz|sfile\.mobi)[^"']+)["']/i);
           if (hostMatch && hostMatch[1]) {

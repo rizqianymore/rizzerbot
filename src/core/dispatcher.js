@@ -11,8 +11,6 @@ function getPhoneDigits(v) {
   return String(v || "").replace(/\D/g, "");
 }
 
-// Samakan identitas user dengan sadar-peta LID→HP (db.sameUser).
-// Pengganti samePhoneJid mentah yang buta namespace (digit LID ≠ nomor HP).
 function samePhoneJid(a, b) {
   return db.sameUser(a, b);
 }
@@ -21,8 +19,6 @@ function isSameBotJid(a, b) {
   return db.sameUser(a, b);
 }
 
-// Cari partisipan grup yang cocok dengan JID (sadar LID→HP):
-// cocokkan id + phoneNumber + lid metadata melawan JID target.
 function findParticipant(meta, jid) {
   const parts = meta?.participants || [];
   for (const p of parts) {
@@ -35,11 +31,6 @@ function findParticipant(meta, jid) {
   return null;
 }
 
-// Tentukan pengirim sebagai NOMOR HP (bukan LID):
-// 1. participantAlt / remoteJidAlt Baileys (pasangan HP saat addressing LID).
-// 2. participant / remoteJid langsung (saat addressing HP).
-// 3. Peta LID→HP yang sudah dipelajari.
-// Setiap pasangan LID+HP yang terlihat langsung diingat ke peta.
 function resolveSenderJid(msg) {
   const key = msg?.key || {};
   const primary = db.normalizeJid(key.participant || "");
@@ -50,7 +41,7 @@ function resolveSenderJid(msg) {
   if (primary) {
     const viaMap = db.resolvePhoneJid(primary);
     if (viaMap.endsWith("@s.whatsapp.net")) return viaMap;
-    // DM addressing-HP: remoteJid = nomor HP lawan bicara.
+
     if (!isGroupJid(key.remoteJid) && remote.endsWith("@s.whatsapp.net")) {
       if (primary.endsWith("@lid")) db.rememberLidPn(primary, remote);
       return remote;
@@ -66,7 +57,7 @@ function resolveBotJid(sock) {
   const raw = sock?.user?.id || "";
   const norm = raw ? db.normalizeJid(raw) : "";
   if (norm) return norm;
-  // Fallback sebelum login: pakai nomor sub agar dedup/setting tidak tercampur main
+
   if (sock?.isSubBot && sock?.subBotNumber) {
     return db.normalizeJid(`${String(sock.subBotNumber).replace(/\D/g, "")}@s.whatsapp.net`);
   }
@@ -80,11 +71,9 @@ function resolveBotIdentity(sock) {
   return "main";
 }
 
-// Memory map untuk anti-spam & rate limiter per user
 const userCooldowns = new Map();
 
-// Anti-burst: hitung perintah per user dalam jendela 10 detik
-const burstTracker = new Map(); // jid -> { count, windowStart, mutedUntil }
+const burstTracker = new Map();
 const BURST_WINDOW_MS = 10 * 1000;
 const BURST_MAX = 6;
 const BURST_MUTE_MS = 60 * 1000;
@@ -123,7 +112,6 @@ function registerBurst(jid) {
   return rec;
 }
 
-// Pelacak pengirim crash: 3 payload crash / 60 detik -> diabaikan total 5 menit
 const crashSenders = new Map();
 function trackCrashSender(jid) {
   if (!jid) return;
@@ -147,20 +135,15 @@ function isCrashBlocked(jid) {
   return Boolean(rec && Date.now() < rec.blockedUntil);
 }
 
-// Heuristik bot luar: pushName seperti bot + pola pesan command kaku
 function looksLikeExternalBot(msg, text) {
   const name = String(msg?.pushName || "").toLowerCase();
   if (!name) return false;
   if (!/bot|assistant|official|support|ai\b/.test(name)) return false;
-  // Pesan sangat kaku seperti output bot (banyak emoji + prefix command di dalam)
+
   if (text && text.length > 200 && /[✅❌⚠️📊👑]/.test(text)) return true;
   return /\bbot\b/.test(name);
 }
-// Anti-loop: cegah pesan yang sama diproses dua kali (retry / duplikat event)
-// PENTING: key = botIdentity + messageId agar main & sub tidak saling
-// memakan pesan satu sama lain (bug lama: global map membuat salah satu
-// bot ke-skip secara acak). Arbitrasi "satu bot menjawab" diatur deterministik
-// di bawah, bukan via race dedup.
+
 const seenMessageIds = new Map();
 function isDuplicateMessage(botIdentity, key) {
   const id = key?.id;
@@ -178,8 +161,6 @@ function isDuplicateMessage(botIdentity, key) {
   return false;
 }
 
-// Ambil contextInfo dari SEMUA tipe pesan (bukan cuma extendedText),
-// agar tag / reply kedeteksi juga di caption gambar/video/dokumen/dll.
 function getUniversalContextInfo(message) {
   if (!message || typeof message !== "object") return null;
   const candidates = [
@@ -199,7 +180,7 @@ function getUniversalContextInfo(message) {
   for (const c of candidates) {
     if (c && typeof c === "object" && c.contextInfo) return c.contextInfo;
   }
-  // Fallback: cari field apa pun yang punya contextInfo
+
   for (const v of Object.values(message)) {
     if (v && typeof v === "object" && v.contextInfo) return v.contextInfo;
   }
@@ -226,7 +207,7 @@ function findPhoneJid(values) {
   for (let start = 0; start < parts.length; start += 1) {
     const directValue = parts[start];
     if (directValue.includes("@") || directValue.startsWith("+")) {
-      // Petakan LID→HP dulu; hanya nomor HP yang diterima sebagai target.
+
       const directJid = db.resolvePhoneJid(directValue);
       const explicitJid = directValue.includes("@") && directValue.indexOf("@", 1) >= 0;
       if (directJid && !directJid.endsWith("@g.us") && directJid.endsWith("@s.whatsapp.net") && (explicitJid || isPhoneJid(directJid))) return directJid;
@@ -284,14 +265,6 @@ async function getGroupAccessError(sock, remoteJid, senderJid, cmd, access) {
   return null;
 }
 
-// Tentukan bot mana yang berhak menjawab di grup agar TIDAK double reply.
-// Aturan deterministik (disepakati semua bot sehingga hasilnya sama):
-// 1. Kalau ada bot di-tag / di-reply -> hanya bot itu yang jawab.
-// 2. Kalau tidak ada tag: hanya SATU bot yang jawab.
-//    - Kalau main-bot ada di grup -> hanya main yang jawab.
-//    - Kalau main tidak ada -> sub dengan nomor terkecil yang jawab.
-// Ini memperbaiki bug lama "sub selalu diam" (grup berisi solo sub jadi mati total)
-// sekaligus bug "dua-duanya jawab".
 async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
   let meta = null;
   try {
@@ -301,8 +274,6 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
   }
   if (!meta || !Array.isArray(meta.participants)) return { mode: "unknown" };
 
-  // Kumpulkan JID bot di grup: cocokkan id + phoneNumber + lid metadata
-  // (sadar LID→HP) agar bot tetap terdeteksi apa pun addressing_mode grup.
   const botsInGroup = [];
   const seen = new Set();
   const considerBotJid = (rawJid) => {
@@ -324,7 +295,7 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
     considerBotJid(p.phoneNumber);
     considerBotJid(p.lid);
   }
-  // Bot sendiri belum tentu terdeteksi via participants (format lid), tambahkan
+
   if (botJid && !botsInGroup.some((b) => samePhoneJid(b, botJid))) {
     botsInGroup.push(botJid);
   }
@@ -342,7 +313,6 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
     return { mode: "multi-main-present", botsInGroup, mainJid, shouldRespond: iAmMain };
   }
 
-  // Tanpa main: pilih sub nomor terkecil (deterministik)
   const sorted = [...botsInGroup].sort((a, b) => {
     const pa = getPhoneDigits(a);
     const pb = getPhoneDigits(b);
@@ -359,7 +329,7 @@ async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
 }
 
 export async function dispatchMessage(sock, msg, logger) {
-  // Lapisan pengaman: bila dipanggil tanpa konteks antrean, kunci ke database bot ini.
+
   return db.runWithBot(resolveBotJid(sock), () => dispatchInner(sock, msg, logger));
 }
 
@@ -370,7 +340,6 @@ async function dispatchInner(sock, msg, logger) {
   const botIdentity = resolveBotIdentity(sock);
   if (isDuplicateMessage(botIdentity, msg.key)) return;
 
-  // Abaikan pesan sistem yang tidak boleh diproses (anti-loop / bug pesan)
   const rawTypeKeys = msg.message ? Object.keys(msg.message) : [];
   if (
     rawTypeKeys.length === 1 &&
@@ -383,23 +352,21 @@ async function dispatchInner(sock, msg, logger) {
 
   msg.message = extractMessageContent(msg.message);
   if (!msg.message) return;
-  // Setelah unwrap, pastikan bukan sisa protocol/reaction
+
   if (msg.message.protocolMessage || msg.message.reactionMessage) return;
 
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || remoteJid === "status@broadcast") return;
   if (isCrashBlocked(msg.key.participant || remoteJid)) return;
-  // Abaikan channel/newsletter & broadcast agar tidak loop / bug
+
   if (remoteJid.endsWith("@newsletter") || remoteJid.endsWith("@broadcast")) return;
 
-  // Abaikan pesan lama (replay saat reconnect / restore) agar tidak spam loop.
-  // Pesan > 2 menit dianggap basi dan tidak diproses sebagai command.
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
       const ageMs = Date.now() - ts * 1000;
       if (ageMs > 2 * 60 * 1000) return;
-      // Timestamp masa depan yang tidak wajar juga diabaikan
+
       if (ageMs < -5 * 60 * 1000) return;
     }
   } catch (_) {}
@@ -413,9 +380,6 @@ async function dispatchInner(sock, msg, logger) {
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
     "";
 
-  // ── Guard 0: Anti-crasher (4 lapis, berurutan) ──
-  // L1 teks > batas | L2 satu char diulang | L3 payload mentah raksasa
-  // L4 kunci/field crash. Drop diam-diam, di grup coba hapus pesan.
   {
     const _s = db.getSettings();
     if (_s.antiVirtex !== false) {
@@ -434,19 +398,19 @@ async function dispatchInner(sock, msg, logger) {
           await sock.sendMessage(remoteJid, { delete: msg.key }).catch(() => {});
         } catch (_) {}
       };
-      // L1: teks biasa terlalu panjang
+
       if (messageContent.length > LIMIT.text) {
         logger?.warn?.(`[Anti-Crash L1] Teks ${messageContent.length} char > ${LIMIT.text}`);
         await dropInGroup();
         return;
       }
-      // L2: satu karakter diulang ribuan kali
+
       if (/^(.)\1{2500,}$/s.test(messageContent.replace(/\s/g, ""))) {
         logger?.warn?.(`[Anti-Crash L2] Pola 1-char flood`);
         await dropInGroup();
         return;
       }
-      // L3: ukuran payload mentah
+
       let rawStr = "";
       try {
         rawStr = JSON.stringify(msg.message) || "";
@@ -457,14 +421,14 @@ async function dispatchInner(sock, msg, logger) {
         trackCrashSender(msg.key.participant || remoteJid);
         return;
       }
-      // L4a: kunci pesan yang tidak pernah dipakai chat normal
+
       const m = msg.message || {};
       const crashKey =
         m.groupStatusMessageV2 ||
         m.interactiveResponseMessage ||
         m.viewOnceMessage?.message?.buttonsMessage ||
         m.viewOnceMessage?.message?.interactiveMessage;
-      // L4b: field melewati batas wajar
+
       const vcard = m.contactMessage?.vcard || "";
       const vcardLen = typeof vcard === "string" ? vcard.length : 0;
       const extLen = m.extendedTextMessage?.text?.length || 0;
@@ -481,7 +445,6 @@ async function dispatchInner(sock, msg, logger) {
     }
   }
 
-  // Proteksi Anti-Link Grup WhatsApp (diperluas)
   if (isGroupJid(remoteJid) && db.isAntilink(remoteJid)) {
     const basePattern = `chat\\.whatsapp\\.com\\/[A-Za-z0-9]{16,26}|whatsapp\\.com\\/channel\\/[A-Za-z0-9]+|wa\\.me\\/settings`;
     const extraPattern = db.getSettings()?.antilinkExtra !== false
@@ -493,7 +456,7 @@ async function dispatchInner(sock, msg, logger) {
       const isOwner = db.isOwner(senderJid);
 
       if (!isOwner) {
-        // Cek apakah pengirim adalah admin grup (sadar LID→HP)
+
         const meta = await getCachedGroupMeta(sock, remoteJid).catch(() => null);
         const participant = findParticipant(meta, senderJid);
         const isGroupAdmin = participant && (participant.admin === "admin" || participant.admin === "superadmin");
@@ -501,9 +464,9 @@ async function dispatchInner(sock, msg, logger) {
         if (!isGroupAdmin) {
           logger?.warn?.(`[Anti-Link] Menghapus link grup dari non-admin: ${senderJid} di grup ${remoteJid}`);
           try {
-            // Hapus pesan pelanggar
+
             await sock.sendMessage(remoteJid, { delete: msg.key });
-            // Kirim peringatan
+
             await sock.sendMessage(remoteJid, {
               text: `⚠️ *Anti-Link*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini. Pesan Anda telah dihapus.`,
               mentions: [senderJid],
@@ -517,29 +480,19 @@ async function dispatchInner(sock, msg, logger) {
 
   const isFromMe = Boolean(msg.key?.fromMe);
   const botJid = botJidEarly || db.normalizeJid(sock.user?.id || "");
-  // Pengirim SELALU dinormalisasi ke nomor HP (bukan LID) agar satu orang =
-  // satu identitas di database, apa pun addressing_mode grupnya.
+
   const normalizedRawSender = resolveSenderJid(msg);
   const rawSender = normalizedRawSender;
   const remoteNormalized = db.resolvePhoneJid(remoteJid);
 
-  // Auto-register bot JID if known
   if (botJid) {
     db.registerBotJid(botJid);
   }
 
-  // ── ANTI-LOOP SESAMA BOT ──
-  // Jika pengirim adalah bot mana pun (main/sub/luar yang terdaftar),
-  // JANGAN pernah diproses sebagai command. Ini memutus rantai:
-  // bot A balas -> bot B baca -> bot B balas -> bot A baca -> dst.
   if (!isFromMe && db.isAnyBotJid(normalizedRawSender)) {
     return;
   }
-  // Pesan eigenen (fromMe) yang berasal dari output bot lain yang di-forward
-  // tetap diabaikan jika konteksnya jelas reply ke bot.
-  // (fromMe asli milik owner tetap diproses di bawah sebagai owner.)
 
-  // ── Guard 0b: Anti-bot luar (nomor terdaftar + heuristik) ──
   {
     const _g = db.getSettings();
     if (!isFromMe && _g.antiBotLuar !== false) {
@@ -547,8 +500,7 @@ async function dispatchInner(sock, msg, logger) {
         logger?.warn?.(`[Anti-Bot] Abaikan perintah dari bot luar: ${normalizedRawSender}`);
         return;
       }
-      // Heuristik ringan: pushName mengandung "bot" + mengirim command → curigai bot, abaikan
-      // (owner/admin dikecualikan agar bot kesayangan owner tetap bisa perintah)
+
       if (!db.isOwner(normalizedRawSender) && !db.isAdmin(normalizedRawSender) && looksLikeExternalBot(msg, messageContent) && messageContent.startsWith(_g.prefix || ".")) {
         logger?.warn?.(`[Anti-Bot] Heuristik bot luar cocok: ${normalizedRawSender} (${msg.pushName})`);
         return;
@@ -556,8 +508,6 @@ async function dispatchInner(sock, msg, logger) {
     }
   }
 
-  // Ambil pengaturan khusus bot ini (jika subbot, memiliki settings mandiri: prefix, public/self, owner khusus)
-  // ISOLASI: self/public/prefix sub TIDAK ikut main, dan sebaliknya.
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
   if (!messageContent.startsWith(prefix)) return;
@@ -569,12 +519,10 @@ async function dispatchInner(sock, msg, logger) {
   const cmd = commands.get(commandName);
   if (!cmd) return;
 
-  // Jika pesan berasal dari bot sendiri (isFromMe), atau nomornya sama dengan nomor bot
   const senderJid = isFromMe
     ? (botJid || normalizedRawSender)
     : normalizedRawSender;
 
-  // Cek apakah pengirim adalah owner khusus untuk bot INI (1 bot 1 owner mandiri)
   const isSenderOwner =
     isFromMe ||
     db.isBotOwner(botJid, senderJid) ||
@@ -582,22 +530,16 @@ async function dispatchInner(sock, msg, logger) {
     (rawSender && db.isBotOwner(botJid, rawSender)) ||
     (remoteNormalized && !isGroupJid(remoteJid) && db.isBotOwner(botJid, remoteNormalized));
 
-  // ANTI-SPAM DATABASE: akses dibaca SAJA di sini, TIDAK membuat entri user baru.
-  // Entri database hanya dibuat untuk owner/admin/premium (lihat blok eskalasi di bawah).
-  // Orang asing yang memanggil command tak-publik: diabaikan total (tanpa balasan, tanpa tulis DB).
   let access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
   const isAdmin = Boolean(isOwner || access.admin);
   const isPremium = Boolean(isOwner || isAdmin || access.premium);
   const isRegistered = Boolean(isOwner || isAdmin || isPremium);
 
-  // Jika bot dalam mode Self (public === false), HANYA Owner bot ini yang diizinkan merespon
-  // (setting ini per-bot: self di sub tidak mematikan main, dan sebaliknya)
   if (activeSettings.public === false && !isOwner) {
     return;
   }
 
-  // Mode maintenance: bot dikunci, HANYA owner yang bisa pakai perintah.
   if (activeSettings.maintenance === true && !isOwner) {
     if (activeSettings.silentDeny === false) {
       const mtext = String(activeSettings.maintenanceMessage || "🔧 Bot sedang maintenance. Coba lagi nanti.");
@@ -606,12 +548,6 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
-  // Mode public di DM: pengirim tak terdaftar HANYA boleh memakai command publik (sewa/owner/ping/dll).
-  // Selain itu: abaikan diam-diam agar bot tidak bisa "disentuh" orang asing.
-  // Di dalam GRUP gate ini tidak berlaku: hak akses grup (admin grup/bot) dicek oleh
-  // getGroupAccessError + cek internal plugin, sehingga admin grup tetap bisa mengelola
-  // grupnya tanpa harus terdaftar sebagai premium bot. Command premium/owner/admin
-  // tetap terkunci oleh gate role di bawah (premiumOnly/ownerOnly/adminOnly).
   if (!isRegistered && !isGroupJid(remoteJid)) {
     const allowed = Array.isArray(activeSettings.publicCommands)
       ? activeSettings.publicCommands.map((c) => String(c || "").toLowerCase())
@@ -624,8 +560,6 @@ async function dispatchInner(sock, msg, logger) {
     if (!isPublicCommand) return;
   }
 
-  // Objek user ephemeral untuk orang asing (tidak disimpan ke database).
-  // Untuk user terdaftar, pakai entri database asli.
   let user = access.user || {
     name: msg.pushName || "",
     owner: false,
@@ -635,42 +569,33 @@ async function dispatchInner(sock, msg, logger) {
     role: "user",
   };
 
-  // DISAMBIGUASI MULTI-BOT DI GRUP (agar hanya SATU yang menjawab):
   const isGroup = isGroupJid(remoteJid);
-  // Sumber kebenaran sub vs main: flag socket (bukan tebakan nomor)
+
   const isSubBotSock = sock.isSubBot === true;
   if (isGroup && !isFromMe) {
     const uniCtx = getUniversalContextInfo(msg.message) || {};
-    // Tag/quote bisa datang sebagai @lid — petakan ke nomor HP bila dikenal.
+
     const mentionedJids = (uniCtx.mentionedJid || []).map((j) => db.resolvePhoneJid(j)).filter(Boolean);
     const quotedParticipant = db.resolvePhoneJid(uniCtx.participant || "");
 
-    // Cek apakah ada bot terdaftar yang di-tag atau di-reply
     const anyBotMentioned = mentionedJids.some((j) => db.isAnyBotJid(j));
     const quotedIsBot = Boolean(quotedParticipant) && db.isAnyBotJid(quotedParticipant);
     const isTaggedHere = mentionedJids.some((j) => isSameBotJid(j, botJid));
     const isQuotedHere = Boolean(quotedParticipant && isSameBotJid(quotedParticipant, botJid));
 
-    // 1. Tagging: Jika bot terdaftar di-tag (mentioned), HANYA bot yang di-tag yang boleh merespon.
     if (anyBotMentioned && !isTaggedHere) {
       return;
     }
 
-    // 2. Quoted / Reply: Jika pesan me-reply pesan dari bot tertentu, HANYA bot tersebut yang merespon
     if (quotedIsBot && !isQuotedHere) {
       return;
     }
 
-    // 3. Tanpa Tag / Mention dan Tanpa Reply ke Bot Tertentu:
-    //    Hanya SATU bot yang menjawab (deterministik, disepakati semua bot).
     if (!anyBotMentioned && !quotedIsBot) {
       const ownerCommands = ["self", "public", "pub", "setprefix", "delbot", "syncsubbot", "vps"];
 
       if (ownerCommands.includes(commandName)) {
-        // Perintah owner di grup TANPA tag/reply:
-        // - Sub tidak merespon (owner sub pakai DM/tag ke sub agar tidak bocor ke main).
-        // - Main hanya merespon jika pengirim adalah Primary SuperOwner.
-        // Ini mencegah setting self/public sub tercampur main.
+
         if (isSubBotSock) {
           return;
         }
@@ -681,29 +606,21 @@ async function dispatchInner(sock, msg, logger) {
           }
         }
       } else {
-        // Perintah umum di grup tanpa tag: arbitrasi peserta-aware.
+
         const verdict = await resolveGroupResponder(sock, remoteJid, botJid, isSubBotSock);
         if (verdict.mode === "multi-main-present" || verdict.mode === "multi-sub-only") {
           if (!verdict.shouldRespond) return;
         } else if (verdict.mode === "unknown") {
-          // Fallback aman saat metadata gagal: sub diam agar tidak double dengan main.
+
           if (isSubBotSock) {
             return;
           }
         }
-        // mode solo: bot satu-satunya -> jawab (termasuk solo sub).
+
       }
     }
   }
 
-  // Hak owner BERSIFAT EPHEMERAL per-pesan (dari config/isBotOwner/fromMe).
-  // JANGAN PERNAH menulis owner:true ke database di sini — penulisan hak hanya
-  // boleh lewat db.setOwner()/setAdmin()/setPremium() (perintah eksplisit owner).
-  // Menulis otomatis di dispatcher adalah penyebab "tiba-tiba jadi owner/premium
-  // sendiri": sekali sinyal isOwner true secara transien (echo fromMe, LID vs
-  // phone collision, JID bot sendiri), flag owner:true menetap SELAMANYA di
-  // users.json via normalizeUser/syncPrivilegedUsers. Jadi di sini read-only:
-  // akses owner dipakai untuk perintah ini saja, tanpa persist.
   if (isOwner && access.user && (!access.user.owner || !access.user.premium)) {
     logger?.warn?.(
       `[PrivEsc-Guard] ${senderJid} lolos cek owner via config/tugas tapi record DB belum owner. ` +
@@ -711,8 +628,6 @@ async function dispatchInner(sock, msg, logger) {
     );
   }
 
-  // Sinkronisasi nama HANYA untuk user yang sudah punya entri database.
-  // Orang asing tidak dibuatkan entri (tetap ephemeral, tanpa tulis DB).
   if (access.user && msg.pushName && access.user.name !== msg.pushName) {
     user = db.updateUser(senderJid, { name: msg.pushName });
     access = db.getAccess(senderJid);
@@ -754,7 +669,6 @@ async function dispatchInner(sock, msg, logger) {
     }
   }
 
-  // Penolakan akses: diam (tanpa balasan) bila silentDeny aktif, agar bot tak bisa "disentuh".
   const deny = async (text) => {
     if (activeSettings.silentDeny !== false) return;
     await sock.sendMessage(remoteJid, { text }, { quoted: msg });
@@ -772,9 +686,8 @@ async function dispatchInner(sock, msg, logger) {
     return deny("❌ Fitur ini hanya untuk pengguna Premium!");
   }
 
-  // Anti-Spam / Rate Limiter + Anti-Burst per User (Owner kebal)
   if (!isOwner) {
-    // Burst: >6 perintah / 10 detik → mute 60 detik
+
     if (activeSettings.antiBurst !== false) {
       const mutedUntil = isBurstMuted(senderJid);
       if (mutedUntil) {
@@ -809,7 +722,6 @@ async function dispatchInner(sock, msg, logger) {
     }
     userCooldowns.set(senderJid, now);
 
-    // Auto clean memory map jika membesar > 1000 entri
     if (userCooldowns.size > 1000) {
       for (const [jid, time] of userCooldowns.entries()) {
         if (now - time > cooldownMs * 2) {
@@ -838,7 +750,7 @@ async function dispatchInner(sock, msg, logger) {
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const isPrimarySuperOwner = db.isPrimaryOwner(senderJid);
-  // Sumber kebenaran sub vs main: flag socket
+
   const isSub = Boolean(sock.isSubBot);
 
   const context = {
@@ -876,8 +788,7 @@ async function dispatchInner(sock, msg, logger) {
       return sock.sendMessage(remoteJid, { text }, { quoted: msg });
     },
     getTargetJid: (targetArgs) => {
-      // Target SELALU nomor HP: quoted/mention @lid dipetakan bila dikenal,
-      // fallback ke nomor ketik manual. LID tak terpetakan → null (minta ketik nomor).
+
       const _ctx = getUniversalContextInfo(msg.message) || {};
       const quotedJid = _ctx.participant || _ctx.remoteJid;
       if (quotedJid && !String(quotedJid).endsWith("@g.us")) {

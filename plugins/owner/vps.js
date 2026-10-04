@@ -1,4 +1,3 @@
-// plugins/owner/vps.js — perintah "vps" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {

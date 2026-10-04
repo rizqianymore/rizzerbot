@@ -1,4 +1,3 @@
-// plugins/tools/sandbox.js — Eksekusi kode Javascript / Python dalam lingkungan Sandbox yang aman.
 import vm from "node:vm";
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
@@ -112,7 +111,6 @@ export default {
 
     await sendTyping();
 
-    // Deteksi bahasa
     let lang = "js";
     let code = raw;
 
@@ -124,7 +122,6 @@ export default {
       code = raw.replace(/^--?js\s*/i, "").trim();
     }
 
-    // Bersihkan markdown codeblock jika user mem-paste format ```js atau ```py
     code = code.replace(/^```(?:js|javascript|py|python)?\s*/i, "").replace(/```$/i, "").trim();
 
     if (!code) {

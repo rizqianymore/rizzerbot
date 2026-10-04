@@ -1,14 +1,8 @@
-// Clean-room reference derived from NIST FIPS 202, Algorithms 1-9. FIPS SHA3-256
-// uses KECCAK-p[1600,24]. Differential testing against the supplied black-box
-// vectors identifies DeepSeekHashV1 as the same sponge construction with
-// KECCAK-p[1600,23] (the last 23 rounds, with round indices 1 through 23).
-
 const LANE_MASK = (1n << 64n) - 1n;
 const SHA3_256_RATE_BYTES = 136;
 const SHA3_DOMAIN_SUFFIX = 0x06;
 const SHA3_256_OUTPUT_BYTES = 32;
 
-// Indexed as x + 5*y, matching the FIPS 202 state coordinates.
 const ROTATION_OFFSETS = [
   0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14,
 ];
@@ -40,29 +34,18 @@ const ROUND_CONSTANTS = [
   0x8000000080008008n,
 ];
 
-/**
- * @param {bigint} value
- * @param {number} amount
- * @returns {bigint}
- */
 function rotateLeft64(value, amount) {
   if (amount === 0) return value;
   const shift = BigInt(amount);
   return ((value << shift) | (value >> (64n - shift))) & LANE_MASK;
 }
 
-/**
- * Apply the last `roundCount` rounds of KECCAK-p[1600, roundCount].
- *
- * @param {bigint[]} state
- * @param {number} roundCount
- */
 function keccakP1600Reference(state, roundCount) {
-  /** @type {bigint[]} */
+
   const columnParity = new Array(5).fill(0n);
-  /** @type {bigint[]} */
+
   const thetaMix = new Array(5).fill(0n);
-  /** @type {bigint[]} */
+
   const rhoPiState = new Array(25).fill(0n);
   const firstRound = ROUND_CONSTANTS.length - roundCount;
 
@@ -101,11 +84,6 @@ function keccakP1600Reference(state, roundCount) {
   }
 }
 
-/**
- * @param {bigint[]} state
- * @param {Uint8Array} block
- * @param {number} roundCount
- */
 function absorbReferenceBlock(state, block, roundCount) {
   for (let index = 0; index < SHA3_256_RATE_BYTES; index++) {
     const lane = Math.floor(index / 8);
@@ -115,16 +93,9 @@ function absorbReferenceBlock(state, block, roundCount) {
   keccakP1600Reference(state, roundCount);
 }
 
-/**
- * SHA3-256's sponge parameters with a selectable KECCAK-p round count.
- *
- * @param {string} input
- * @param {number} roundCount
- * @returns {string}
- */
 function sha3_256ReferenceWithRoundCount(input, roundCount) {
   const bytes = new TextEncoder().encode(input);
-  /** @type {bigint[]} */
+
   const state = new Array(25).fill(0n);
   let offset = 0;
 
@@ -148,25 +119,10 @@ function sha3_256ReferenceWithRoundCount(input, roundCount) {
   return Array.from(output, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-/**
- * Readable FIPS 202 control implementation used to validate the permutation,
- * byte order, padding, and multi-block absorption against `node:crypto`.
- *
- * @param {string} input
- * @returns {string}
- */
 export function sha3_256Fips202Reference(input) {
   return sha3_256ReferenceWithRoundCount(input, 24);
 }
 
-/**
- * Readable DeepSeekHashV1 reference model. Runtime searches use an equivalent
- * 32-bit implementation below so a bounded synchronous compatibility call does
- * not turn a 144k challenge into minutes of BigInt work.
- *
- * @param {string} input
- * @returns {string}
- */
 export function deepSeekHashV1Reference(input) {
   return sha3_256ReferenceWithRoundCount(input, 23);
 }
@@ -198,16 +154,6 @@ const HEX_DIGITS = "0123456789abcdef";
 
 export const MAX_DEEPSEEK_POW_DIFFICULTY = 250_000;
 
-/**
- * Equivalent 32-bit form of the reference permutation. Each 64-bit lane is
- * stored as adjacent little-endian low/high uint32 words.
- *
- * @param {Uint32Array} state
- * @param {Uint32Array} rhoPiState
- * @param {Uint32Array} columnParity
- * @param {Uint32Array} thetaMix
- * @param {number} roundCount
- */
 function keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, roundCount) {
   const firstRound = ROUND_CONSTANTS.length - roundCount;
 
@@ -278,15 +224,6 @@ function keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, roundCount
   }
 }
 
-/**
- * @param {Uint32Array} state
- * @param {Uint8Array} bytes
- * @param {number} offset
- * @param {Uint32Array} rhoPiState
- * @param {Uint32Array} columnParity
- * @param {Uint32Array} thetaMix
- * @param {number} roundCount
- */
 function absorbFullUint32Block(
   state,
   bytes,
@@ -303,10 +240,6 @@ function absorbFullUint32Block(
   keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, roundCount);
 }
 
-/**
- * @param {Uint32Array} state
- * @returns {string}
- */
 function digestStateToHex(state) {
   let digest = "";
   for (let index = 0; index < SHA3_256_OUTPUT_BYTES; index++) {
@@ -316,11 +249,6 @@ function digestStateToHex(state) {
   return digest;
 }
 
-/**
- * @param {string} input
- * @param {number} roundCount
- * @returns {string}
- */
 function sha3_256Uint32WithRoundCount(input, roundCount) {
   const bytes = new TextEncoder().encode(input);
   const state = new Uint32Array(50);
@@ -344,20 +272,10 @@ function sha3_256Uint32WithRoundCount(input, roundCount) {
   return digestStateToHex(state);
 }
 
-/**
- * Optimized, allocation-bounded DeepSeekHashV1 digest.
- *
- * @param {string} input
- * @returns {string}
- */
 export function deepSeekHashV1(input) {
   return sha3_256Uint32WithRoundCount(input, DEEPSEEK_HASH_ROUNDS);
 }
 
-/**
- * @param {string} digestHex
- * @returns {Uint32Array}
- */
 function parseDigestWords(digestHex) {
   const words = new Uint32Array(SHA3_256_OUTPUT_BYTES / 4);
   for (let index = 0; index < SHA3_256_OUTPUT_BYTES; index++) {
@@ -367,16 +285,6 @@ function parseDigestWords(digestHex) {
   return words;
 }
 
-/**
- * Search `prefix + nonce` without allocating a digest or re-encoding the prefix
- * for every candidate. Inputs are validated here as well as at the public solver
- * boundary so the worker cannot be coerced into an unbounded loop.
- *
- * @param {string} prefix
- * @param {string} challenge
- * @param {number} difficulty
- * @returns {number}
- */
 export function findDeepSeekPowNonce(prefix, challenge, difficulty) {
   if (typeof prefix !== "string") throw new TypeError("DeepSeek PoW prefix must be a string");
   if (!DIGEST_HEX_PATTERN.test(challenge)) {

@@ -1,4 +1,3 @@
-// plugins/sports/f1results.js — hasil sesi F1: race/qualy/fp1-3/sprint (f1api.dev).
 import {
   parseSeasonParam,
   parseResultType,
@@ -19,13 +18,13 @@ export default {
     const [a0 = "", a1 = "", a2 = ""] = (args || []).map((a) => String(a).trim());
     await sendTyping();
     try {
-      // ".f1results last race" -> hasil balapan terakhir musim berjalan
+
       if (/^(last|terakhir)$/i.test(a0)) {
         const type = parseResultType(a1 || "race") || "race";
         const data = await getLastSessionResult(type, 10);
         return reply(fmtSessionResults(data));
       }
-      // Tentukan posisi tahun & round (mendukung "2024 1 race" dan "1 race" -> current)
+
       let seasonRaw = "current";
       let roundRaw = "";
       let typeRaw = "race";

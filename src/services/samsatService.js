@@ -19,7 +19,7 @@ function getDatabase() {
 
   try {
     dbInstance = new DatabaseSync(DB_PATH, { readOnly: true });
-    // Performance tuning for fast concurrent reads
+
     dbInstance.exec('PRAGMA query_only = 1;');
     dbInstance.exec('PRAGMA synchronous = NORMAL;');
 
@@ -38,11 +38,6 @@ function getDatabase() {
   }
 }
 
-/**
- * Mencari data kendaraan berdasarkan Plat Nomor.
- * @param {string} rawPlate - Nomor plat kendaraan (misal: "B 1234 ABC" atau "b1234abc")
- * @returns {object|null} Data kendaraan atau null jika tidak ditemukan
- */
 export function searchByPlate(rawPlate) {
   const db = getDatabase();
   if (!db || !queryPlateStmt) {
@@ -55,11 +50,6 @@ export function searchByPlate(rawPlate) {
   return queryPlateStmt.get(cleanPlate) || null;
 }
 
-/**
- * Mencari data kendaraan berdasarkan NIK pemilik.
- * @param {string} rawNik - NIK pemilik (16 digit)
- * @returns {Array} Daftar kendaraan milik NIK tersebut
- */
 export function searchByNik(rawNik) {
   const db = getDatabase();
   if (!db || !queryNikStmt) {
@@ -72,9 +62,6 @@ export function searchByNik(rawNik) {
   return queryNikStmt.all(cleanNik);
 }
 
-/**
- * Cek status kesiapan database SAMSAT.
- */
 export function isSamsatReady() {
   return fs.existsSync(DB_PATH);
 }

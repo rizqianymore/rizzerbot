@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Kode provinsi Kemendagri (sama persis dengan sumber API wilayah).
 const PROVINCES = {
   11: "ACEH", 12: "SUMATERA UTARA", 13: "SUMATERA BARAT", 14: "RIAU", 15: "JAMBI",
   16: "SUMATERA SELATAN", 17: "BENGKULU", 18: "LAMPUNG", 19: "KEPULAUAN BANGKA BELITUNG",
@@ -24,7 +23,6 @@ function neatWord(w) {
   return l.charAt(0).toUpperCase() + l.slice(1);
 }
 
-/** "KOTA PADANG" → "Kota Padang", "DI YOGYAKARTA" → "DI Yogyakarta". */
 export function neat(s) {
   return String(s || "-")
     .toLowerCase()
@@ -57,10 +55,6 @@ function generation(year) {
   return "Gen Alpha";
 }
 
-/**
- * Parse struktur NIK 16 digit (murni lokal, tanpa network).
- * Mengembalikan { valid, reason } bila struktur tak sah.
- */
 export function parseNik(nik) {
   const n = String(nik || "").trim();
   if (!/^\d{16}$/.test(n)) return { valid: false, reason: "nik harus 16 digit angka" };
@@ -112,16 +106,15 @@ export function parseNik(nik) {
     provinceCode: provCode,
     province: neat(PROVINCES[provCode]),
     cityCode,
-    city: null, // diisi enrichWilayah
+    city: null,
     districtCode,
-    district: null, // diisi enrichWilayah
+    district: null,
     sequence: seq,
   };
 }
 
-// ── Nama kota/kecamatan via API wilayah (cache kecil, fallback ke kode) ──
 const WILAYAH_BASE = "https://www.emsifa.com/api-wilayah-indonesia/api";
-const wilayahCache = new Map(); // key → { data, expires }
+const wilayahCache = new Map();
 const WILAYAH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function fetchWilayah(path) {
@@ -137,7 +130,6 @@ async function fetchWilayah(path) {
   return data;
 }
 
-/** Lengkapi nama kota & kecamatan. Tak pernah melempar — gagal = tampil kode. */
 export async function enrichWilayah(parsed) {
   if (!parsed?.valid) return parsed;
   try {
@@ -149,7 +141,7 @@ export async function enrichWilayah(parsed) {
   }
   try {
     const districts = await fetchWilayah(`districts/${parsed.cityCode}.json`);
-    // ID kecamatan 7 digit, NIK memakai 6 digit awal (tidak selalu cocok 1:1)
+
     const dist = districts.find((d) => String(d.id).startsWith(parsed.districtCode));
     parsed.district = dist ? neat(dist.name) : parsed.districtCode;
   } catch {
@@ -174,7 +166,6 @@ export function formatNikInfo(p) {
   return text;
 }
 
-/** Satu panggilan untuk plugin: parse + enrich (fallback lokal bila offline). */
 export async function getNikInfoText(nik) {
   const parsed = parseNik(nik);
   if (!parsed.valid) return null;

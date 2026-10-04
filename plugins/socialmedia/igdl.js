@@ -1,5 +1,3 @@
-// plugins/socialmedia/igdl.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
-
 function clean(s) {
   return String(s || "").trim();
 }
@@ -35,7 +33,7 @@ export default {
 
       try {
         let res = null;
-        // 1. Coba NexRay V2
+
         try {
           const resApi = await fetch(
             `https://api.nexray.eu.cc/downloader/v2/instagram?url=${encodeURIComponent(input)}`,
@@ -49,7 +47,6 @@ export default {
           }
         } catch (_) {}
 
-        // 2. Coba FastDL via stealth browser
         if (!res) {
           try {
             const { stealthBrowser } = await import("@/src/utils/request.js");

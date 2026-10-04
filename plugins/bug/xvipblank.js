@@ -1,5 +1,3 @@
-// plugins/bug/xvipblank.js — perintah "xvipblank" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "xvipblank" — tanpa pengurangan (35x lahora + UiOverload + DelayHard).
 import { sendXvipBlank, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/bug/index.js";
 
 export default {

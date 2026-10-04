@@ -1,8 +1,6 @@
 import { handleMessage } from "@/src/core/handler.js";
 import { db } from "@/src/core/database.js";
 
-// Identitas bot pemilik pesan — dipakai sebagai kunci konteks database
-// agar tiap bot memakai database MILIKNYA selama eksekusi perintah.
 function getTaskBotJid(sock) {
   try {
     const jid = db.normalizeJid(sock?.user?.id || "");
@@ -22,7 +20,7 @@ function getSockIdentity(sock) {
     const jid = db.normalizeJid(sock?.user?.id || "");
     if (jid) return jid;
   } catch (_) {}
-  // Fallback sebelum login: bedakan main vs sub agar antrean tidak tercampur
+
   if (sock?.isSubBot) return `sub_${sock?.subBotNumber || "unknown"}`;
   return "main";
 }
@@ -41,7 +39,7 @@ async function processQueue(key, logger) {
     const { sock, msg } = queue.tasks[0];
 
     try {
-      // Seluruh rantai penanganan pesan ini berjalan dalam database milik bot tersebut.
+
       await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
     } catch (err) {
       if (logger) {
@@ -51,10 +49,8 @@ async function processQueue(key, logger) {
       }
     }
 
-    // Remove the processed task
     queue.tasks.shift();
 
-    // Sleep before processing next task to prevent burst spamming
     if (queue.tasks.length > 0) {
       await new Promise((resolve) => setTimeout(resolve, QUEUE_DELAY_MS));
     }
@@ -87,7 +83,6 @@ export function enqueueMessage(sock, msg, logger) {
 
   queue.tasks.push({ sock, msg });
 
-  // Start processing loop asynchronously
   processQueue(key, logger).catch((err) => {
     console.error(`[Queue Fatal] Loop crash for ${key}:`, err);
   });

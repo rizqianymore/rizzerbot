@@ -1,12 +1,3 @@
-// src/services/pddikti.js — lookup mahasiswa via PDDikti resmi.
-// Alur resmi (hasil reverse-engineering):
-//   1. Token reCAPTCHA v2 invisible (sitekey di bawah) dibuat di browser via
-//      grecaptcha.execute(sitekey, {action:'search'}).
-//   2. Search : GET /api/pencarian/enc/all/<keyword> + header x-recaptcha-token
-//   3. Detail: POST /api/detail/mhs body {id:<enc-id>} + header x-recaptcha-token
-// Tanpa token -> 403 Forbidden. Token dibuat via puppeteer (sudah jadi dep).
-// Browser dipakai HANYA untuk membuat token (ringan), API call via fetch Node.
-
 const BASE = "https://pddikti.kemdiktisaintek.go.id";
 const SITEKEY = "6LdqjDstAAAAAMW1whjCNKyvqmPBOIssWETjbLbh";
 
@@ -18,8 +9,8 @@ const API_TIMEOUT_MS = 15000;
 
 const SEARCH_TTL_MS = 5 * 60 * 1000;
 const DETAIL_TTL_MS = 60 * 60 * 1000;
-const searchCache = new Map(); // keyword-lower -> { data, expires }
-const detailCache = new Map(); // enc-id -> { data, expires }
+const searchCache = new Map();
+const detailCache = new Map();
 
 function cacheGet(map, key) {
   const hit = map.get(key);
@@ -33,7 +24,6 @@ function cacheSet(map, key, data, ttl) {
   if (map.size > 300) map.delete(map.keys().next().value);
 }
 
-// ── Browser singleton (hanya untuk token) ──
 let browserPromise = null;
 let tokenPagePromise = null;
 let tokenLock = Promise.resolve();
@@ -64,7 +54,7 @@ async function getTokenPage() {
         waitUntil: "networkidle2",
         timeout: TOKEN_TIMEOUT_MS,
       });
-      // Tunggu grecaptcha siap (max ~10 dtk)
+
       await page
         .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
           timeout: 15000,
@@ -87,7 +77,6 @@ function runSerialized(fn) {
   return run;
 }
 
-/** Minta token reCAPTCHA segar dari browser. Selalu fresh (single-use / short-lived). */
 export async function getRecaptchaToken() {
   return runSerialized(async () => {
     const page = await getTokenPage();
@@ -118,7 +107,7 @@ export async function getRecaptchaToken() {
       if (!token || token.length < 100) throw new Error("token reCAPTCHA kosong/pendek");
       return token;
     } catch (err) {
-      // Halaman rusak -> buang agar request berikutnya buat halaman baru
+
       try {
         await page.close().catch(() => {});
       } catch (_) {}
@@ -157,7 +146,6 @@ function mapApiError(status, snippet) {
   return `PDDikti HTTP ${status}${snippet ? `: ${snippet.slice(0, 150)}` : ""}`;
 }
 
-/** Search semua kategori. Return json.data ({mahasiswa[], dosen[], pt[], prodi[]}). */
 export async function searchPddikti(keyword, { retries = 2 } = {}) {
   const kw = String(keyword ?? "").trim();
   if (!kw) throw new Error("keyword wajib diisi");
@@ -201,14 +189,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
   throw lastErr;
 }
 
-/** Detail mahasiswa by enc-id (dari hasil search).
- *  Catatan: POST /api/detail/mhs menolak token manual (403) — token detail
- *  hanya valid bila dibuat oleh JS situs di halaman detail itu sendiri.
- *  Maka detail diambil via navigasi puppeteer ke /detail-mahasiswa/<id>
- *  lalu baca DOM render (field lengkap, terbukti stabil).
- *  Return {nama, nim, nama_pt, jenjang, prodi, jenis_kelamin, tanggal_masuk,
- *           jenis_daftar, status_saat_ini}.
- */
 export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
   const id = String(encId ?? "").trim();
   if (!id) throw new Error("id mahasiswa wajib diisi");
@@ -224,7 +204,7 @@ export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
       waitUntil: "networkidle2",
       timeout: timeoutMs,
     });
-    // Tunggu biodata render (atau notFound)
+
     await page
       .waitForFunction(
         () => /Biodata Mahasiswa|Tidak ada hasil|notFound/i.test(document.body.innerText),
@@ -235,7 +215,7 @@ export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
 
     const raw = await page.evaluate(() => {
       const text = document.body.innerText || "";
-      // Ambil pasangan label-nilai dari blok biodata
+
       const get = (label) => {
         const re = new RegExp(label + "\\s*\\n+\\s*([^\\n]+)", "i");
         const m = text.match(re);
@@ -277,7 +257,6 @@ export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
   }
 }
 
-// ── Format ──
 function neat(v) {
   return String(v ?? "").trim() || "-";
 }
@@ -285,7 +264,7 @@ function neat(v) {
 function formatTanggal(tgl) {
   const s = String(tgl ?? "").trim();
   if (!s || s === "-") return "-";
-  if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}/.test(s)) return s; // sudah "11 April 2013" dari DOM
+  if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}/.test(s)) return s;
   try {
     const d = new Date(s.length <= 10 ? `${s}T00:00:00` : s);
     if (isNaN(d.getTime())) return s;
@@ -328,11 +307,6 @@ export function formatMhsList(rows, total) {
   return out.join("\n");
 }
 
-/**
- * Satu panggilan untuk plugin .ceknim.
- * - Input NIM persis (ditemukan exact, case-insensitive) -> ambil detail.
- * - Selain itu -> tampilkan daftar 10 teratas agar user bisa persempit.
- */
 export async function getCeknimInfoText(input, opts = {}) {
   const raw = String(input ?? "").trim();
   if (!raw) return { error: "input kosong" };
@@ -354,7 +328,7 @@ export async function getCeknimInfoText(input, opts = {}) {
         return { text: formatMhsDetail(detail || exact) };
       } catch (err) {
         opts?.logger?.warn?.(`[ceknim] detail gagal nim=${exact.nim}: ${err.message}`);
-        // Fallback: tampilkan ringkasan search bila detail gagal
+
         const lines = [
           `*DATA MAHASISWA (PDDikti)*`,
           `Nama: ${neat(exact.nama)}`,
@@ -373,7 +347,7 @@ export async function getCeknimInfoText(input, opts = {}) {
         const detail = await detailMahasiswa(mhs[0].id);
         return { text: formatMhsDetail(detail || mhs[0]) };
       } catch (_) {
-        // jatuh ke list di bawah
+
       }
     }
 
@@ -385,9 +359,6 @@ export async function getCeknimInfoText(input, opts = {}) {
   }
 }
 
-// ── Dosen ──
-
-/** Detail dosen by enc-id (dari hasil search) via DOM /detail-dosen/<id>. */
 export async function detailDosen(encId, { timeoutMs = 60000 } = {}) {
   const id = String(encId ?? "").trim();
   if (!id) throw new Error("id dosen wajib diisi");
@@ -471,11 +442,6 @@ export function formatDosenList(rows, total) {
   return out.join("\n");
 }
 
-/**
- * Satu panggilan untuk plugin .cekdosen.
- * - Input NIDN persis -> ambil detail.
- * - Selain itu -> daftar 10 teratas.
- */
 export async function getCekdosenInfoText(input, opts = {}) {
   const raw = String(input ?? "").trim();
   if (!raw) return { error: "input kosong" };
@@ -515,7 +481,7 @@ export async function getCekdosenInfoText(input, opts = {}) {
         const detail = await detailDosen(dosen[0].id);
         return { text: formatDosenDetail(detail || dosen[0], dosen[0].nidn) };
       } catch (_) {
-        // jatuh ke list di bawah
+
       }
     }
 

@@ -1,4 +1,3 @@
-// plugins/owner/delbot.js — perintah "delbot" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -15,7 +14,6 @@ export default {
 
       const targetJid = `${target}@s.whatsapp.net`;
 
-      // Jika bukan SuperOwner utama, verifikasi bahwa pemanggil adalah owner dari bot target tersebut
       if (!isPrimarySuperOwner) {
         const isOwnerOfTarget = db.isBotOwner(targetJid, senderJid);
         if (!isOwnerOfTarget) {

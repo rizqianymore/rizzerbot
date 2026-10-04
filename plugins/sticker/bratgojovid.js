@@ -1,4 +1,3 @@
-// plugins/sticker/bratgojovid.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import fsp from "fs/promises";

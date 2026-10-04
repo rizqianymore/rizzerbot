@@ -1,12 +1,9 @@
-// plugins/tools/ipgeo.js — perintah "ipgeo" (1 file = 1 perintah).
 import {
   getDnsRecords,
   getWhois,
   getSubdomains,
   getIpGeo,
 } from "@/src/services/network.js";
-
-
 
 export default {
   "name": "ipgeo",

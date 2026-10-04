@@ -1,4 +1,3 @@
-// plugins/tools/jkt48.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import {
   getJkt48Members,
   getJkt48MemberDetail,
@@ -93,7 +92,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: YYYY-MM-DD
   let match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (match) {
     const y = parseInt(match[1], 10);
@@ -108,7 +106,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: DD-MM-YYYY atau DD/MM/YYYY
   match = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
   if (match) {
     const d = parseInt(match[1], 10);
@@ -123,7 +120,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: "4 September 2026" atau "4 September"
   match = raw.match(/^(\d{1,2})\s+([a-zA-Z]+)(?:\s+(\d{4}))?$/);
   if (match && MONTH_NAMES[match[2]]) {
     const d = parseInt(match[1], 10);
@@ -138,7 +134,6 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  // Format: Angka hari dalam bulan ini (misal "4" atau "15")
   if (/^\d{1,2}$/.test(raw)) {
     const d = parseInt(raw, 10);
     if (d >= 1 && d <= 31) {
@@ -154,7 +149,6 @@ function parseUserQuery(args, now = new Date()) {
     }
   }
 
-  // Jika bukan tanggal, dianggap sebagai kode show atau slug
   return { type: "code", code: args.join(" ").trim() };
 }
 
@@ -277,7 +271,6 @@ export default {
 
         const caption = lines.join("\n");
 
-        // Gambar embed hanya dari situs resmi JKT48
         let photoUrl = info.photo;
         if (photoUrl && !photoUrl.startsWith("http")) {
           photoUrl = `${JKT48_BASE}${photoUrl.startsWith("/") ? "" : "/"}${photoUrl}`;

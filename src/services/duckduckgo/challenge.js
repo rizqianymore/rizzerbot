@@ -1,5 +1,3 @@
-// DuckDuckGo anti-abuse challenge solver + FE signals (pure of module state).
-// Adapted from OmniRoute challenge.ts
 import { createHash } from "node:crypto";
 import vm from "node:vm";
 import { parseFragment, serialize } from "parse5";

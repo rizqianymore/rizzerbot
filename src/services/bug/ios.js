@@ -1,5 +1,3 @@
-// src/services/bug/ios.js — varian iOS / FC invisible / UI overload.
-// Diekstrak dari hasil_date.js: lahora, iosCtt, fiOSNew, UiOverload.
 import { sleep } from "./helpers.js";
 
 export async function lahora(sock, target) {
@@ -95,7 +93,6 @@ export async function lahora(sock, target) {
   }
 }
 
-// FC invisible iOS (contactMessage raksasa)
 export async function iosCtt(sock, target) {
   await sock.relayMessage(
     target,

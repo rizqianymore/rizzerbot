@@ -1,10 +1,6 @@
-// plugins/group/kick.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { db } from "@/src/core/database.js";
 import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
-/**
- * Validates group context and checks bot/user admin permissions.
- */
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
@@ -79,7 +75,6 @@ export default {
         return context.reply("❌ Bot tidak bisa meng-kick diri sendiri!");
       }
 
-      // Lindungi owner bot
       if (db.isOwner(targetJid)) {
         return context.reply("❌ Tidak dapat mengeluarkan Owner Bot dari grup!");
       }

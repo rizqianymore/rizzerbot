@@ -1,4 +1,3 @@
-// plugins/tools/nikparse.js — perintah "nikparse" (1 file = 1 perintah).
 import { parseNik, getNikInfoText } from "@/src/services/nikparse.js";
 
 export default {

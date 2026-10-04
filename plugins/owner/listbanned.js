@@ -1,5 +1,3 @@
-// plugins/owner/listbanned.js — perintah "listbanned" (SuperOwner saja).
-// Tampilkan semua nomor yang di-banned beserta namanya.
 import { db } from '@/src/core/database.js';
 
 export default {

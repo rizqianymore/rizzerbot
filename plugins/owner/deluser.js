@@ -1,6 +1,3 @@
-// plugins/owner/deluser.js — perintah "deluser" (SuperOwner saja).
-// Hapus permanen 1 user dari database + cabut dari daftar peran.
-// Primary owner tidak bisa dihapus. Tercatat di privilege-audit.json.
 import { db } from '@/src/core/database.js';
 
 export default {

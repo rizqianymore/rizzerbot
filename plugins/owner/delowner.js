@@ -1,4 +1,3 @@
-// plugins/owner/delowner.js — perintah "delowner" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -9,7 +8,7 @@ export default {
   "category": "Owner",
   "run": async (sock, msg, args, { reply, getTargetJid, botJid, senderJid, logger }) => {
       const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
-      // Verifikasi ganda: hanya owner bot INI yang boleh hapus owner.
+
       if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
         logger?.warn?.(`[OwnerCmd] delowner DITOLAK untuk ${senderJid} via ${activeBotJid}`);
         return reply("❌ Perintah ini hanya untuk Owner bot ini!");

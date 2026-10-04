@@ -1,4 +1,3 @@
-// plugins/sports/f1races.js — jadwal & detail balapan F1 (f1api.dev).
 import {
   parseSeasonParam,
   getRacesByYear,

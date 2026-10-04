@@ -1,4 +1,3 @@
-// plugins/tools/cekbansos.js — perintah "cekbansos" (1 file = 1 perintah).
 import {
   fetchFormSession,
   fetchCaptchaImage,
@@ -13,7 +12,6 @@ import {
 } from "@/src/services/cekbansos.js";
 import { getNikInfoText } from "@/src/services/nikparse.js";
 
-/** Hasil bansos + lookup info NIK dalam satu balasan. */
 async function buildHasilText(nik, parsed) {
   const bansos = formatHasil(nik, parsed);
   try {
@@ -46,7 +44,6 @@ export default {
         );
       }
 
-      // ── Jalur manual: user mengetik kode captcha dari gambar ──
       if (manualCode) {
         const session = takePendingSession(senderJid, nik);
         if (!session) {
@@ -67,19 +64,15 @@ export default {
         }
       }
 
-      // ── Jalur otomatis: solver langsung (lokal → remote) + retry ──
       await sendTyping();
       await reply("Mengecek data ke Kemensos...");
 
       try {
         const res = await cekBansosOtomatis(nik, { maxAttempts: 4 });
         if (res.status === "ok") return reply(await buildHasilText(nik, res.result));
-        // Solver mentok (4x salah) → jatuh ke manual di bawah
+
         logger?.warn?.(`[cekbansos] solver mentok untuk ${nik.slice(0, 6)}****`);
 
-        // ── Fallback manual: kirim gambar captcha, user ketik kodenya ──
-        // Anti double-send: kalau sesi untuk NIK ini masih hidup, kirim ulang
-        // gambar YANG SAMA (bukan sesi baru) agar kode user tetap cocok.
         const existing = peekPendingSession(senderJid, nik);
         if (existing?.image) {
           await sock.sendMessage(

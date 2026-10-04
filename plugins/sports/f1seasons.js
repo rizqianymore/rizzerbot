@@ -1,4 +1,3 @@
-// plugins/sports/f1seasons.js — daftar musim F1 (f1api.dev).
 import { getSeasons } from "@/src/services/f1.js";
 
 export default {

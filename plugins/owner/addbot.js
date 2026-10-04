@@ -1,4 +1,3 @@
-// plugins/owner/addbot.js — perintah "addbot" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -12,7 +11,6 @@ export default {
       logger?.warn?.(`[OwnerCmd] addbot oleh ${senderJid} via ${db.normalizeJid(sock.user?.id)}`);
       await sendTyping();
 
-      // Pengecekan: Akun Sub-Bot atau nomor sub-bot dilarang menambahkan bot lagi
       const { isSubBotSocket, isSubBotNumber } = await import("@/src/services/subbot/subbot.js");
       if (isSubBotSocket(sock) || isSubBotNumber(senderJid)) {
         return reply(
@@ -26,7 +24,6 @@ export default {
         return reply("❌ Masukkan nomor WhatsApp untuk dijadikan bot! Contoh: *.addbot 6281234567890 [nomor_owner]*");
       }
 
-      // Tentukan owner untuk bot ini (jika ada argumen kedua atau default ke pemanggil perintah)
       const targetOwner = args[1] ? db.normalizeJid(args[1]) : senderJid;
 
       await reply(

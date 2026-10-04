@@ -1,4 +1,3 @@
-// plugins/tools/githubstalk.js — perintah "githubstalk" (1 file = 1 perintah).
 import { getGithubInfoText } from "@/src/services/githubstalk.js";
 
 export default {

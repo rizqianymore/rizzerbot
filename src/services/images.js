@@ -1,12 +1,3 @@
-/**
- * Scraper pencarian gambar Pinterest (via Nexray) & Web Images (via Bing High-Res)
- */
-
-/**
- * Cari gambar Pinterest via API Nexray
- * @param {string} query
- * @returns {Promise<Array<{title: string, image: string, pin: string, author: string}>>}
- */
 export async function searchPinterest(query) {
   const url = `https://api.nexray.eu.cc/search/pinterest?q=${encodeURIComponent(query)}`;
   const res = await fetch(url, {
@@ -31,12 +22,6 @@ export async function searchPinterest(query) {
   }));
 }
 
-/**
- * Scrape gambar web resolusi tinggi via Bing Images
- * @param {string} query
- * @param {number} [limit=15]
- * @returns {Promise<Array<{url: string, title: string, source: string}>>}
- */
 export async function scrapeWebImages(query, limit = 15) {
   const url = `https://www.bing.com/images/search?q=${encodeURIComponent(query)}&first=1&scenario=ImageBasicHover`;
   const res = await fetch(url, {

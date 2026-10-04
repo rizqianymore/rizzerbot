@@ -1,8 +1,5 @@
-// plugins/tools/pinterest.js — perintah "pinterest" (1 file = 1 perintah).
 import { searchPinterest, scrapeWebImages } from "@/src/services/images.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
-
-
 
 export default {
   "name": "pinterest",
@@ -22,7 +19,7 @@ export default {
 
       try {
         const results = await searchPinterest(query);
-        // Ambil acak salah satu gambar dari top results
+
         const randomItem = results[Math.floor(Math.random() * Math.min(results.length, 10))];
 
         const imgBuffer = await fetchBuffer(randomItem.image, { redirect: "follow" });

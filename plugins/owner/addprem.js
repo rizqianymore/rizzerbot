@@ -1,4 +1,3 @@
-// plugins/owner/addprem.js — perintah "addprem" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -11,7 +10,6 @@ export default {
       let jid = null;
       let durationDays = null;
 
-      // 1. Cek quoted message atau mentions terlebih dahulu
       const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.remoteJid;
       const mentionedJid = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
 
@@ -21,7 +19,7 @@ export default {
         if (!isNaN(days) && days > 0) durationDays = days;
       } else if (mentionedJid) {
         jid = db.normalizeJid(mentionedJid);
-        // Cari angka durasi setelah mention
+
         for (const arg of args) {
           const val = parseFloat(arg);
           if (!isNaN(val) && val > 0 && !arg.includes("@") && arg.replace(/\D/g, "").length < 7) {
@@ -30,7 +28,7 @@ export default {
           }
         }
       } else if (args.length > 0) {
-        // Mode input via teks: contoh: .addprem 6281234567890 30
+
         const firstDigits = args[0].replace(/\D/g, "");
         if (firstDigits.length >= 7) {
           jid = db.normalizeJid(args[0]);
@@ -39,7 +37,7 @@ export default {
             if (!isNaN(days) && days > 0) durationDays = days;
           }
         } else {
-          // Fallback ke getTargetJid jika ada
+
           jid = getTargetJid(args);
           const lastArg = args[args.length - 1];
           const days = parseFloat(lastArg);

@@ -1,4 +1,3 @@
-// plugins/owner/listbot.js — perintah "listbot" (1 file = 1 perintah, dipecah dari owner.js).
 import { db } from '@/src/core/database.js';
 
 export default {
@@ -16,7 +15,6 @@ export default {
         return reply("ℹ️ Belum ada sub-bot yang aktif.\nGunakan *.addbot <nomor>* untuk menambahkan bot baru.");
       }
 
-      // Jika yang meminta adalah Owner SubBot (bukan SuperOwner), hanya tampilkan bot yang dia miliki
       const filteredList = isPrimarySuperOwner
         ? list
         : list.filter((b) => {

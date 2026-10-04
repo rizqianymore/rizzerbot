@@ -6,7 +6,6 @@ export function setPrimaryOnline(v) {
   primaryOnline = Boolean(v);
 }
 
-/** Kirim pesan ke owner: via primary, fallback subbot online mana pun. */
 export async function notifyOwner(text) {
   let ownerJid = "";
   try {

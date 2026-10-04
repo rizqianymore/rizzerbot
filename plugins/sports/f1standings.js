@@ -1,4 +1,3 @@
-// plugins/sports/f1standings.js — klasemen pembalap & konstruktor (f1api.dev).
 import {
   parseSeasonParam,
   getDriversChampionship,
@@ -20,7 +19,7 @@ export default {
     const a1 = (args?.[1] || "").trim().toLowerCase();
     await sendTyping();
     try {
-      // Format fleksibel: ".f1standings", ".f1standings 2024", ".f1standings constructors", ".f1standings 2024 constructors"
+
       let seasonRaw = "current";
       let typeRaw = "drivers";
       if (a0 && /^(driver|pembalap)/i.test(a0)) typeRaw = "drivers";

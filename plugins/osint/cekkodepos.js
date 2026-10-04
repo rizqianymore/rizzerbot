@@ -1,5 +1,3 @@
-// plugins/osint/cekkodepos.js — Pencarian kode pos dan wilayah seluruh Indonesia.
-
 async function searchKodePos(query) {
   const clean = query.trim();
   const endpoints = [

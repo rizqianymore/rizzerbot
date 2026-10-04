@@ -27,7 +27,7 @@ export default {
     const startTime = performance.now();
 
     try {
-      // 1. Jika input adalah 16 digit NIK
+
       if (isNik && isSamsatReady()) {
         const list = searchByNik(cleanInput);
         const latency = (performance.now() - startTime).toFixed(2);
@@ -55,7 +55,6 @@ export default {
         return reply(text.trim());
       }
 
-      // 2. Lookup ke Database SAMSAT (bila DB tersedia)
       if (isSamsatReady()) {
         const data = searchByPlate(cleanInput);
         if (data) {
@@ -78,7 +77,6 @@ export default {
         }
       }
 
-      // 3. Fallback: Parse info plat wilayah biasa
       const parsed = parsePlat(rawInput);
       if (!parsed.valid) {
         return reply(

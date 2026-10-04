@@ -1,8 +1,3 @@
-/**
- * Service untuk memantau harga saham / komoditas / forex realtime
- * Menggunakan primary Bloomberg API (dengan fallback Yahoo Finance untuk bypass WAF PerimeterX)
- */
-
 const BLOOMBERG_URL = "https://www.bloomberg.com/lineup-next/api/tickers";
 
 const COMMODITY_TICKER_MAP = {
@@ -17,9 +12,6 @@ const COMMODITY_TICKER_MAP = {
   "ETH": "ETH-USD",
 };
 
-/**
- * Fetch ticker data from Bloomberg
- */
 async function fetchFromBloomberg(tickerId, cookie = "") {
   const url = `${BLOOMBERG_URL}?ids=${encodeURIComponent(tickerId)}`;
   const headers = {
@@ -50,12 +42,9 @@ async function fetchFromBloomberg(tickerId, cookie = "") {
   throw new Error("No data from Bloomberg");
 }
 
-/**
- * Fetch ticker data from Finance Engine (Yahoo Market Data) as resilient fallback
- */
 async function fetchFromYahooFinance(ticker) {
   let mapped = COMMODITY_TICKER_MAP[ticker.toUpperCase()] || ticker;
-  // Jika formatnya kode saham Indo (e.g. BBCA, BBRI), tambahkan .JK otomatis
+
   if (/^[A-Z]{4}$/.test(mapped)) {
     mapped = `${mapped}.JK`;
   }
@@ -96,16 +85,13 @@ async function fetchFromYahooFinance(ticker) {
   };
 }
 
-/**
- * Ambil data harga saham/aset
- */
 export async function getStockTicker(ticker, userCookie = "") {
   const cleanTicker = ticker.trim();
-  // Coba Bloomberg API
+
   try {
     return await fetchFromBloomberg(cleanTicker, userCookie);
   } catch (bbgErr) {
-    // Fallback ke global market ticker
+
     return await fetchFromYahooFinance(cleanTicker);
   }
 }

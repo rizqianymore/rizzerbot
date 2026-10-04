@@ -9,7 +9,6 @@ import {
 
 export { DEVICE_PROFILES, ACCEPT_LANGUAGES, getRandomDevice, buildScraperHeaders, request };
 
-// Global Axios client with auto-changing device and header rotation
 const http = axios.create({
   timeout: 20000,
 });
@@ -30,8 +29,6 @@ http.interceptors.request.use((config) => {
   }
   return config;
 });
-
-
 
 import { STATIC_MEMBERS } from "@/src/services/jkt48.js";
 

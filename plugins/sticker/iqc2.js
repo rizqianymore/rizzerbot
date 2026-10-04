@@ -1,4 +1,3 @@
-// plugins/sticker/iqc2.js — perintah "iqc2" (1 file = 1 perintah).
 export default {
   "name": "iqc2",
   "aliases": ["iqc"],

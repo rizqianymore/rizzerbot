@@ -1,4 +1,3 @@
-// plugins/user/toimg.js — perintah "toimg" (1 file = 1 perintah).
 import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
@@ -11,10 +10,7 @@ import {
   translateText,
 } from '@/src/services/scrape.js';
 
-
 import { getUptimeString } from '@/src/utils/helper.js';
-
-
 
 export default {
   "name": "toimg",

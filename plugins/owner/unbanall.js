@@ -1,6 +1,3 @@
-// plugins/owner/unbanall.js — perintah "unbanall" (SuperOwner saja).
-// Buka blokir SEMUA user yang dibanned (DB + blokir level WhatsApp).
-// 2 tahap: preview -> confirm.
 import { db } from '@/src/core/database.js';
 
 export default {

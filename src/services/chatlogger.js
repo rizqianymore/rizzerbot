@@ -2,18 +2,14 @@ import fs from "fs";
 import path from "path";
 
 const LOGS_DIR = path.join(process.cwd(), "database", "chat_logs");
-const RETENTION_MS = 3 * 24 * 60 * 60 * 1000; // 3 hari dalam milidetik
+const RETENTION_MS = 3 * 24 * 60 * 60 * 1000;
 
-// Pastikan folder log chat tersedia
 if (!fs.existsSync(LOGS_DIR)) {
   try {
     fs.mkdirSync(LOGS_DIR, { recursive: true });
   } catch (_) {}
 }
 
-/**
- * Format tanggal YYYY-MM-DD
- */
 function getDateString(date = new Date()) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -21,16 +17,10 @@ function getDateString(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
-/**
- * Path file log per hari
- */
 function getLogFilePath(date = new Date()) {
   return path.join(LOGS_DIR, `messages-${getDateString(date)}.json`);
 }
 
-/**
- * Baca log untuk tanggal tertentu
- */
 function readLogFile(filePath) {
   try {
     if (fs.existsSync(filePath)) {
@@ -41,7 +31,6 @@ function readLogFile(filePath) {
   return [];
 }
 
-// Queue flush berkala agar I/O hemat dan aman dari write collision
 let writeQueue = [];
 let flushTimeout = null;
 
@@ -50,7 +39,6 @@ function flushLogs() {
   const itemsToSave = [...writeQueue];
   writeQueue = [];
 
-  // Kelompokkan pesan berdasarkan file log tanggalnya
   const grouped = new Map();
   for (const item of itemsToSave) {
     const dateStr = item.date || getDateString(new Date(item.timestamp));
@@ -70,18 +58,12 @@ function flushLogs() {
   }
 }
 
-/**
- * Catat (rekam) pesan masuk ke file JSON
- */
 export function recordMessage(sock, msg) {
   try {
     if (!msg || !msg.key || !msg.message) return;
     const remoteJid = msg.key.remoteJid;
     if (!remoteJid || remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter")) return;
 
-    // Sender dicatat sebagai NOMOR HP (bukan LID): pakai pasangan alt Baileys bila ada.
-    // Sinkron tanpa import db (cukup pilih yang @s.whatsapp.net; pemetaan LID
-    // dipelajari di dispatcher). Fallback ke sender mentah bila tak ada HP.
     const toPhoneJid = (j) => {
       if (!j || typeof j !== "string") return "";
       const at = j.indexOf("@");
@@ -96,7 +78,6 @@ export function recordMessage(sock, msg) {
     const sender = toPhoneJid(msg.key.participantAlt) || toPhoneJid(msg.key.remoteJidAlt) || toPhoneJid(rawSender) || rawSender;
     const isGroup = remoteJid.endsWith("@g.us");
 
-    // Ekstraksi ringkasan teks atau tipe media
     const m = msg.message;
     const text =
       m.conversation ||
@@ -146,9 +127,6 @@ export function recordMessage(sock, msg) {
   } catch (_) {}
 }
 
-/**
- * Hapus file log yang sudah berumur > 3 hari
- */
 export function cleanupOldLogs(logger) {
   try {
     if (!fs.existsSync(LOGS_DIR)) return 0;
@@ -162,14 +140,14 @@ export function cleanupOldLogs(logger) {
 
       try {
         const stats = fs.statSync(filePath);
-        // Cek umur file berdasarkan mtime atau nama tanggal
+
         const dateMatch = file.match(/^messages-(\d{4}-\d{2}-\d{2})\.json$/);
         let fileAgeMs = now - stats.mtimeMs;
 
         if (dateMatch) {
           const fileDate = new Date(`${dateMatch[1]}T00:00:00`).getTime();
           if (!isNaN(fileDate)) {
-            // Lebih akurat: bandingkan dengan tanggal log tersebut
+
             fileAgeMs = Math.max(fileAgeMs, now - (fileDate + 24 * 60 * 60 * 1000));
           }
         }
@@ -189,18 +167,13 @@ export function cleanupOldLogs(logger) {
   }
 }
 
-/**
- * Jalankan cron berkala setiap 6 jam untuk membersihkan log yang sudah lewat 3 hari
- */
 let cronStarted = false;
 export function startChatLogCron(logger) {
   if (cronStarted) return;
   cronStarted = true;
 
-  // Bersihkan saat startup
   cleanupOldLogs(logger);
 
-  // Cek setiap 6 jam
   const interval = 6 * 60 * 60 * 1000;
   const timer = setInterval(() => {
     cleanupOldLogs(logger);
@@ -210,9 +183,6 @@ export function startChatLogCron(logger) {
   logger?.info?.("[Chat Logger] Perekam pesan aktif. Retensi: 3 hari auto-cleanup.");
 }
 
-/**
- * Dapatkan daftar file log yang tersedia beserta ukurannya
- */
 export function getChatLogsList() {
   flushLogs();
   if (!fs.existsSync(LOGS_DIR)) return [];
@@ -231,9 +201,6 @@ export function getChatLogsList() {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
-/**
- * Baca isi log berdasarkan nama file atau tanggal
- */
 export function getChatLogContent(dateOrFile) {
   flushLogs();
   let fileName = dateOrFile;
@@ -254,10 +221,8 @@ export function getChatLogContent(dateOrFile) {
   }
 }
 
-// Flush sisa log sebelum shutdown
 process.once("beforeExit", () => {
   try {
     flushLogs();
   } catch (_) {}
 });
-

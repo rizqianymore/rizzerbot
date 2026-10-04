@@ -1,4 +1,3 @@
-// plugins/owner/delsewa.js — perintah "delsewa" (1 file = 1 perintah).
 import { removeRental } from "@/src/services/expiry.js";
 
 export default {

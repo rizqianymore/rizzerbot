@@ -1,4 +1,3 @@
-// plugins/ai/claudehaiku.js — perintah "claudehaiku" (1 file = 1 perintah).
 import { ClaudeHaiku } from "@/src/services/overchat.js";
 
 export default {

@@ -1,4 +1,3 @@
-// plugins/user/profile.js — perintah "profile" (1 file = 1 perintah).
 import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
@@ -11,10 +10,7 @@ import {
   translateText,
 } from '@/src/services/scrape.js';
 
-
 import { getUptimeString } from '@/src/utils/helper.js';
-
-
 
 export default {
   "name": "profile",
@@ -36,7 +32,6 @@ export default {
       const targetIsOwner = targetAccess.owner;
       const targetIsPremium = targetAccess.premium;
 
-      // Ambil foto profil dari WhatsApp (jika diizinkan privasi WA user)
       let ppUrl = null;
       try {
         ppUrl = await sock.profilePictureUrl(targetJid, "image");
@@ -44,7 +39,6 @@ export default {
         ppUrl = null;
       }
 
-      // Ambil Status / About / Bio dari WhatsApp
       let waStatus = "-";
       let waStatusSetAt = null;
       try {
@@ -55,13 +49,10 @@ export default {
         }
       } catch (_) { }
 
-      // Nomor bersih
       const phoneNum = targetJid.split("@")[0];
 
-      // Nama tampilan
       let displayName = targetUser.name || (isSelf ? (msg.pushName || "Pengguna") : "Pengguna");
 
-      // Tanggal registrasi bot
       const regDate = targetUser.createdAt
         ? new Date(targetUser.createdAt).toLocaleDateString("id-ID", {
           day: "numeric",
@@ -96,7 +87,6 @@ export default {
 
       const captionText = lines.join("\n");
 
-      // Kirim bersama gambar profil jika ada
       if (ppUrl) {
         try {
           const { fetchBuffer } = await import("@/src/services/scrape.js");
@@ -113,7 +103,6 @@ export default {
         } catch (_) { }
       }
 
-      // Fallback pesan teks jika tidak ada foto profil / error fetch
       await sock.sendMessage(
         msg.key.remoteJid,
         {

@@ -1,4 +1,3 @@
-// plugins/news/kompastv.js — perintah "kompastv" (1 file = 1 perintah, dipecah dari news.js).
 import { getLatestKompasNews, searchKompasNews, getKompasArticleDetail } from '@/src/services/kompastv.js';
 import { fetchBuffer } from '@/src/services/scrape.js';
 
@@ -14,7 +13,6 @@ export default {
 
       const firstArg = args[0]?.trim();
 
-      // Membaca detail artikel dari link Kompas TV
       if (firstArg && (firstArg.startsWith("http://") || firstArg.startsWith("https://"))) {
         if (!firstArg.includes("kompas.tv/")) {
           return reply("❌ Tautan harus berasal dari situs resmi Kompas TV (kompas.tv)!");
@@ -53,7 +51,6 @@ export default {
         }
       }
 
-      // Pencarian berita berdasarkan kata kunci
       if (firstArg && isNaN(parseInt(firstArg, 10))) {
         const query = args.join(" ").trim();
         await reply(`🔍 Mencari berita dengan topik "${query}" di Kompas TV...`);
@@ -101,7 +98,6 @@ export default {
         }
       }
 
-      // Menampilkan berita terbaru / headline terkini Kompas TV
       const limit = parseInt(firstArg, 10) || 5;
       await reply("📰 Memuat rangkuman berita terkini dari Kompas TV...");
 

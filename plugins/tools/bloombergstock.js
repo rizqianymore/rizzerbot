@@ -1,7 +1,5 @@
-// plugins/tools/bloombergstock.js — perintah "bloombergstock" (1 file = 1 perintah).
 import { downloadContentFromMessage } from "baileys";
 import { getStockTicker } from "@/src/services/stock.js";
-
 
 export default {
   "name": "bloombergstock",

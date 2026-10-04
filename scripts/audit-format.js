@@ -4,10 +4,8 @@ import path from 'path';
 
 const PLUGINS_DIR = path.resolve('plugins');
 
-// Regex untuk mendeteksi separator panjang (5 karakter berulang atau lebih: ━, ─, =, -, _, ~, *)
 const SEPARATOR_REGEX = /([━─═\-_~*=]{5,})/g;
 
-// Regex mendeteksi emoji (rentang umum emoji Unicode)
 const EMOJI_REGEX = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}]/gu;
 
 function walkDir(dir) {
@@ -43,10 +41,9 @@ for (const filePath of files) {
   lines.forEach((line, idx) => {
     const lineNum = idx + 1;
 
-    // Abaikan komentar kode jika perlu, tapi kita fokus ke teks pesan string
     const sepMatches = line.match(SEPARATOR_REGEX);
     if (sepMatches) {
-      // Kecualikan baris kode yang wajar seperti divider komentar // === atau header
+
       const isCommentOnly = /^\s*(\/\/|\/\*|\*)/.test(line);
       if (!isCommentOnly) {
         fileIssues.separators.push({
@@ -57,11 +54,10 @@ for (const filePath of files) {
       }
     }
 
-    // Hitung emoji di baris
     const emojis = line.match(EMOJI_REGEX) || [];
     if (emojis.length > 0) {
       fileIssues.totalEmojis += emojis.length;
-      // Jika dalam 1 baris string balasan ada >= 2 emoji atau baris ber-emoji berturut-turut
+
       if (emojis.length >= 2) {
         fileIssues.excessiveEmojiLines.push({
           line: lineNum,
@@ -78,7 +74,6 @@ for (const filePath of files) {
   }
 }
 
-// Tampilkan hasil
 console.log('='.repeat(60));
 console.log('HASIL ANALISIS FORMAT TEKS & EMOJI DI SELURUH PLUGINS');
 console.log('='.repeat(60));
@@ -93,7 +88,7 @@ let countEmoji = 0;
 
 for (const item of report) {
   console.log(`\n📄 [${item.file}] (Total Emoji: ${item.totalEmojis})`);
-  
+
   if (item.separators.length > 0) {
     countSep += item.separators.length;
     console.log('  ⚠️  SEPARATOR PANJANG DITEMUKAN:');

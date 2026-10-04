@@ -1,4 +1,3 @@
-// plugins/owner/backup.js — perintah "backup" (1 file = 1 perintah).
 import fs from "fs";
 import { createBackup, formatBytes } from "@/src/services/backup.js";
 

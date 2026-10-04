@@ -1,4 +1,3 @@
-// plugins/tools/steam.js — perintah "steam" (promo/latest Steam, IDR + gambar).
 import { parseSteamKind, getSteamDeals, fmtSteamDeals, getSteamDealImage } from "@/src/services/steam.js";
 
 export default {

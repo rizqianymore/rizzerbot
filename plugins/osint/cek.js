@@ -1,4 +1,3 @@
-// plugins/tools/cek.js — alias multi-kata: ".cek nim ...", ".cek dosen ...", dst.
 import { commands } from "@/src/core/loader.js";
 
 const SUBCOMMANDS = {

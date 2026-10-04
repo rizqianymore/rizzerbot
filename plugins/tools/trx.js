@@ -1,4 +1,3 @@
-// plugins/tools/trx.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import {
   createTransaction,
   getTransaction,
@@ -21,9 +20,8 @@ import { db } from "@/src/core/database.js";
 
 import { getPrimarySock } from "@/src/core/connection.js";
 
-// Cache status admin channel per JID saluran (TTL 5 menit)
 const channelAdminCache = new Map();
-// Cache deduplikasi pengiriman broadcast ke saluran agar 1 transaksi tidak dikirim ganda
+
 const recentBroadcastTrx = new Set();
 
 async function checkIsChannelAdmin(targetSock, channelJid) {
@@ -34,7 +32,7 @@ async function checkIsChannelAdmin(targetSock, channelJid) {
     return cached.isAdmin;
   }
 
-  let isAdmin = true; // Default optimis: izinkan coba kirim
+  let isAdmin = true;
   try {
     if (typeof targetSock?.newsletterMetadata === "function") {
       const meta = await targetSock.newsletterMetadata("jid", channelJid);
@@ -44,7 +42,7 @@ async function checkIsChannelAdmin(targetSock, channelJid) {
       }
     }
   } catch (_) {
-    // Jika newsletterMetadata error (misal rate limit), biarkan coba kirim langsung
+
     isAdmin = true;
   }
 
@@ -55,7 +53,6 @@ async function checkIsChannelAdmin(targetSock, channelJid) {
 async function forwardTrxToChannel(sock, channelJid, payload) {
   if (!channelJid || !channelJid.includes("@newsletter")) return false;
 
-  // Coba kirim via socket aktif terlebih dahulu
   let sent = false;
   try {
     const isChannelAdmin = await checkIsChannelAdmin(sock, channelJid);
@@ -67,7 +64,6 @@ async function forwardTrxToChannel(sock, channelJid, payload) {
     console.error("[TRX-Channel] Gagal kirim via socket aktif:", err.message);
   }
 
-  // Jika gagal dan socket saat ini bukan primary sock (misal sub-bot), fallback coba via Bot Utama
   if (!sent) {
     try {
       const primary = getPrimarySock();
@@ -93,7 +89,6 @@ function parseTrxInput(rawText, quoted, getTargetJid) {
 
   const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
 
-  // Check if multiline Key: Value format
   const isKeyValue = lines.some((l) => /^(barang|pesanan|item|harga|price|nominal|buyer|pembeli|metode|payment|status|catatan|note):/i.test(l));
 
   if (isKeyValue) {
@@ -119,10 +114,10 @@ function parseTrxInput(rawText, quoted, getTargetJid) {
     if (parts[4]) status = parts[4];
     if (parts[5]) note = parts[5];
   } else {
-    // Space-separated fallback: item... price [buyer]
+
     const words = rawText.split(/\s+/);
     if (words.length >= 2) {
-      // Find the word that is numeric or looks like price
+
       const priceIdx = words.findIndex((w) => /^\d+(\.\d+)?k?$/i.test(w) || /^rp\.?\d+/i.test(w));
       if (priceIdx !== -1) {
         item = words.slice(0, priceIdx).join(" ");
@@ -137,7 +132,6 @@ function parseTrxInput(rawText, quoted, getTargetJid) {
     }
   }
 
-  // Handle buyer fallback from quoted message or target
   if (!buyer && quoted) {
     buyer = "Customer (Replied)";
   }
@@ -183,7 +177,6 @@ export default {
         );
       }
 
-      // Check mentioned user for buyer tag
       const mentionedJid = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const remoteJid = msg.key.remoteJid;
       const activeSettings = db.getSettings();
@@ -234,7 +227,6 @@ export default {
         await reply(caption);
       }
 
-      // Jika pembayaran QRIS dan status transaksi PENDING, kirimkan QRIS Dinamis otomatis!
       if (trx.payment.includes("QRIS") && (trx.status === "PENDING" || trx.status === "PROSES")) {
         try {
           const qrisStatic = getActiveQrisString();
@@ -261,10 +253,9 @@ export default {
         }
       }
 
-      // Auto-forward ke Saluran WhatsApp jika dikonfigurasi
       const channelJid = activeSettings.channelJid || db.getSettings().channelJid || "";
       if (activeSettings.autoForwardTrxToChannel !== false && channelJid && channelJid.includes("@newsletter")) {
-        // Cek duplikasi: jika ID transaksi ini sudah pernah dibroadcast, jangan kirim ulang
+
         const dedupeKey = `create_${trx.id}`;
         if (!recentBroadcastTrx.has(dedupeKey)) {
           recentBroadcastTrx.add(dedupeKey);

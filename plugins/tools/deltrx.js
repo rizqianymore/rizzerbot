@@ -1,4 +1,3 @@
-// plugins/tools/deltrx.js — perintah "deltrx" (1 file = 1 perintah).
 import {
   createTransaction,
   getTransaction,
@@ -19,9 +18,7 @@ import {
 } from "@/src/services/qris.js";
 import { db } from "@/src/core/database.js";
 
-
 import { getPrimarySock } from "@/src/core/connection.js";
-
 
 export default {
   "name": "deltrx",

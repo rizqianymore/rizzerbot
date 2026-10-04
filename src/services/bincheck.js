@@ -1,9 +1,3 @@
-// src/services/bincheck.js — cek BIN kartu (6-8 digit pertama) murni + enrich online.
-// Sumber online: lookup.binlist.net (gratis, tanpa API key, header Accept-Version: 3).
-// Privasi: TIDAK PERNAH meminta/menyimpan nomor kartu lengkap. Input >8 digit
-// otomatis dipotong 8 digit untuk lookup & dimask di output.
-
-/** Deteksi skema dari rentang IIN (ISO/IEC 7812). Urutan penting (spesifik dulu). */
 export function detectScheme(digits) {
   const d = String(digits || "");
   if (/^4/.test(d)) return { scheme: "Visa", lengths: [16], note: "Kartu kredit/debit internasional terpopuler." };
@@ -29,10 +23,6 @@ function maskPan(digits) {
   return `${digits.slice(0, 6)}****${digits.slice(-2)}`;
 }
 
-/**
- * Parse input BIN. Terima "45717360", "4571 7360", "5521-7500".
- * Return { valid, ... } — tidak pernah throw untuk input user.
- */
 export function parseBin(rawInput) {
   const raw = String(rawInput || "").trim();
   const digits = raw.replace(/[^0-9]/g, "");
@@ -79,17 +69,15 @@ export function formatBinInfo(p) {
   return lines.join("\n");
 }
 
-/** Satu panggilan sinkron: parse + format offline. Return string atau null. */
 export function getBinInfoText(input) {
   const parsed = parseBin(input);
   if (!parsed.valid) return null;
   return formatBinInfo(parsed);
 }
 
-// ── Enrich online via binlist.net (gratis, tanpa key) ──
 const BINLIST_BASE = "https://lookup.binlist.net";
 const BIN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const binCache = new Map(); // bin -> { data, expires }
+const binCache = new Map();
 
 function cacheGet(key) {
   const hit = binCache.get(key);
@@ -106,7 +94,6 @@ function cacheSet(key, data) {
   }
 }
 
-/** Ambil detail BIN. Return { brand, type, prepaid, bank, country, currency } atau null. */
 export async function getBinDetail(bin) {
   const key = String(bin || "").replace(/[^0-9]/g, "").slice(0, 8);
   if (key.length < 6) return null;
@@ -124,7 +111,7 @@ export async function getBinDetail(bin) {
       cacheSet(key, null);
       return null;
     }
-    // 429 = rate limit tier gratis → fallback offline, jangan cache.
+
     if (res.status === 429) return null;
     if (!res.ok) throw new Error(`BINLIST HTTP ${res.status}`);
     const d = await res.json();
@@ -154,19 +141,17 @@ export async function getBinDetail(bin) {
   }
 }
 
-/** Lengkapi hasil parseBin dengan detail online. Tak pernah throw — gagal = offline apa adanya. */
 export async function enrichBin(parsed) {
   if (!parsed?.valid) return parsed;
   try {
     const detail = await getBinDetail(parsed.bin);
     if (detail) parsed.detail = detail;
   } catch (_) {
-    // abaikan, fallback offline
+
   }
   return parsed;
 }
 
-/** Satu panggilan async untuk plugin: parse + enrich + format. */
 export async function getBinInfoTextOnline(input) {
   const parsed = parseBin(input);
   if (!parsed.valid) return null;

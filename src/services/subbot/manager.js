@@ -12,9 +12,6 @@ import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots, baseSessionsDir } from "./store.js";
 import { setupSubBotEvents } from "./events.js";
 
-/**
- * Start a new sub bot instance with phone number pairing code
- */
 export async function createSubBot(number, onPairingCode, assignedOwner = null) {
   const cleanNumber = number.replace(/[^0-9]/g, "");
   if (!cleanNumber || cleanNumber.length < 8) {
@@ -31,7 +28,6 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
     fs.mkdirSync(sessionDir, { recursive: true });
   }
 
-  // Validasi file creds sesi subbot
   const credsPath = path.join(sessionDir, "creds.json");
   if (fs.existsSync(credsPath)) {
     try {
@@ -85,7 +81,7 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
 
   const targetJid = `${cleanNumber}@s.whatsapp.net`;
   db.registerBotJid(targetJid);
-  // Buatkan database SENDIRI untuk sub-bot (seed sekali; tidak menimpa yang sudah ada).
+
   const seed = {
     botName: `SubBot (+${cleanNumber})`,
   };
@@ -109,9 +105,6 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
   return botEntry;
 }
 
-/**
- * Stop and delete a sub bot
- */
 export async function stopSubBot(identifier) {
   const clean = identifier.replace(/[^0-9]/g, "");
   const botId = clean ? `sub_${clean}` : identifier;

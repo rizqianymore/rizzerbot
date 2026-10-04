@@ -1,4 +1,3 @@
-// plugins/owner/restore.js — perintah "restore" (1 file = 1 perintah).
 import fs from "fs";
 import path from "path";
 import { restoreBackup } from "@/src/services/backup.js";
@@ -27,7 +26,7 @@ export default {
       try {
         const buf = await getMediaBuffer(sock, target, { maxBytes: 50 * 1024 * 1024 });
         if (!buf?.length) return reply("Gagal mengunduh file backup.");
-        // Batas 50MB agar arsip raksasa tidak DoS memori/disk.
+
         if (buf.length > 50 * 1024 * 1024) return reply("❌ File backup terlalu besar (maks 50MB).");
         fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
         fs.writeFileSync(tmpFile, buf);

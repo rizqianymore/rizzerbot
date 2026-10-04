@@ -1,4 +1,3 @@
-// plugins/ai/deepseek.js — perintah "deepseek" (1 file = 1 perintah, dipecah dari ai.js).
 import { askDeepSeek } from '@/src/services/ai-gateway.js';
 
 export default {
@@ -27,13 +26,11 @@ export default {
       let thinking = false;
       let search = false;
 
-      // Deteksi flag --think atau --r1
       if (text.includes("--think") || text.includes("--r1") || text.includes("-r1")) {
         thinking = true;
         text = text.replace(/--think|--r1|-r1/gi, "").trim();
       }
 
-      // Deteksi flag --search
       if (text.includes("--search") || text.includes("-s")) {
         search = true;
         text = text.replace(/--search|-s/gi, "").trim();

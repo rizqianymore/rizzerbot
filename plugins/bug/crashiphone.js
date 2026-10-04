@@ -1,5 +1,3 @@
-// plugins/bug/crashiphone.js — perintah "crashiphone" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "crashiphone" — tanpa pengurangan (35x fiOSNew + iosCtt).
 import { sendCrashIphone, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/bug/index.js";
 
 export default {

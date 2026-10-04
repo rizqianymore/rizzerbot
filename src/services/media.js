@@ -46,13 +46,11 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Draw original image
   ctx.drawImage(baseImage, 0, 0, width, height);
 
   const fontSize = Math.max(22, Math.floor(width / 10));
   const strokeWidth = Math.max(3, Math.floor(fontSize / 7));
 
-  // Configure text style with emoji-supporting font stack
   ctx.font = `900 ${fontSize}px "Impact", "DejaVu Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
@@ -80,7 +78,6 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
 
 const MEDIA_TYPES = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage", "audioMessage"];
 
-// Unwrap ephemeral / viewOnce / template wrappers to get true content
 export function unwrapMessageContent(content) {
   try {
     if (!content) return content;
@@ -102,14 +99,12 @@ export function getQuotedMessage(msg) {
   return { ctxInfo, quotedMsg: ctxInfo?.quotedMessage, stanzaId: ctxInfo?.stanzaId, participant: ctxInfo?.participant };
 }
 
-// Cari pesan yang bisa di-download: kiriman langsung atau reply.
-// Mengembalikan WAMessage siap download, atau null jika tidak ada media.
 export function findDownloadableTarget(msg) {
   if (!msg?.message) return null;
   const unwrapped = unwrapMessageContent(msg.message) || {};
   const directType = Object.keys(unwrapped)[0];
   if (MEDIA_TYPES.includes(directType)) {
-    // Pastikan msg.message sudah dalam bentuk unwrapped agar downloadMediaMessage mudah baca
+
     return { ...msg, message: unwrapped };
   }
 
@@ -122,7 +117,7 @@ export function findDownloadableTarget(msg) {
         key: {
           ...msg.key,
           ...(stanzaId ? { id: stanzaId } : {}),
-          // participant asli quoted dibutuhkan untuk reupload di grup
+
           ...(participant ? { participant } : {}),
         },
         message: unwrappedQuoted,
@@ -132,9 +127,6 @@ export function findDownloadableTarget(msg) {
   return null;
 }
 
-// Batas unduhan media agar kiriman raksasa tidak bikin OOM/crash (DoS).
-// WhatsApp sendiri membatasi media ~16MB; default 25MB masih longgar untuk
-// stiker/HD/RVO, dan bisa dioverride per panggilan (mis. restore: 50MB).
 export const DEFAULT_MAX_MEDIA_BYTES = 25 * 1024 * 1024;
 
 export function formatBytes(n) {
@@ -157,8 +149,7 @@ function checkMediaSize(buf, maxBytes) {
 export async function getMediaBuffer(sock, msg, opts = {}) {
   if (!msg) return null;
   const maxBytes = Number(opts?.maxBytes) > 0 ? Number(opts.maxBytes) : DEFAULT_MAX_MEDIA_BYTES;
-  // Backward-compat: jika yang dilempar hanya inner content (quotedMessage),
-  // bungkus jadi WAMessage minimal agar downloadMediaMessage bisa baca.
+
   let target = msg;
   if (!target.key && !target.message && typeof target === "object") {
     target = { key: {}, message: target };
@@ -176,9 +167,9 @@ export async function getMediaBuffer(sock, msg, opts = {}) {
     if (buf && buf.length > 0) return checkMediaSize(buf, maxBytes);
     return buf;
   } catch (err) {
-    // Jangan telan error batas ukuran menjadi "gagal download" generik.
+
     if (err && String(err.message || "").startsWith("Media terlalu besar")) throw err;
-    // Fallback ke method lama jika masih ada (baileys v6)
+
     try {
       if (typeof sock?.downloadMediaMessage === "function") {
         const buf2 = await sock.downloadMediaMessage(target);
@@ -207,7 +198,6 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
   const authorName = author === undefined ? activeSettings.stickerAuthor : author;
 
-  // Check if buffer is mp4 or gif
   const isMp4 =
     (processedBuffer.length > 8 &&
       (processedBuffer.slice(4, 8).toString() === "ftyp" ||
@@ -252,7 +242,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
       await fsp.unlink(outWebp).catch(() => {});
     }
   } else {
-    // If it's already a WebP image/sticker, try to load directly or normalize with sharp
+
     try {
       webpBuffer = await sharp(processedBuffer)
         .resize(512, 512, {
@@ -266,7 +256,6 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
     }
   }
 
-  // Inject WhatsApp EXIF Metadata
   try {
     const img = new WebpMuxImage();
     await img.load(webpBuffer);

@@ -1,6 +1,4 @@
-// plugins/socialmedia/threaddl.js — perintah "threaddl" (1 file = 1 perintah).
 import axios from "axios";
-
 
 export default {
   "name": "threaddl",

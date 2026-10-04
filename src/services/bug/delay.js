@@ -1,5 +1,3 @@
-// src/services/bug/delay.js — varian Delay (private chat).
-// Diekstrak dari hasil_date.js: DelayV1, DelayV2, DelayV3, DelayV4, DelayV5, DelayHard.
 import { generateWAMessageFromContent } from "baileys";
 import { sleep } from "./helpers.js";
 

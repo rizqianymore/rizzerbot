@@ -12,14 +12,14 @@ function shouldSkipBeforeQueue(msg) {
   const rjid = msg.key.remoteJid;
   if (rjid === "status@broadcast") return true;
   if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) return true;
-  // Pesan sistem (hapus/reaction/poll-update) tidak perlu masuk antrean
+
   if (msg.message) {
     const keys = Object.keys(msg.message);
     if (keys.length === 1 && (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")) {
       return true;
     }
   }
-  // Pesan basi (>2 menit) dari riwayat/reconnect -> abaikan agar tidak loop spam
+
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) return true;
@@ -27,9 +27,6 @@ function shouldSkipBeforeQueue(msg) {
   return false;
 }
 
-/**
- * Setup Baileys event handlers for a sub-bot
- */
 export function setupSubBotEvents({
   sock,
   botEntry,
@@ -42,7 +39,6 @@ export function setupSubBotEvents({
 }) {
   sock.ev.on("creds.update", saveCreds);
 
-  // Request pairing code if not registered yet
   if (!sock.authState.creds.registered) {
     setTimeout(async () => {
       try {
@@ -56,7 +52,6 @@ export function setupSubBotEvents({
     }, 2500);
   }
 
-  // Connection update event
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
 
@@ -65,11 +60,9 @@ export function setupSubBotEvents({
       logger.info(`[SubBot ${cleanNumber}] Connected successfully!`);
       const botUserJid = db.normalizeJid(sock.user?.id) || `${cleanNumber}@s.whatsapp.net`;
       db.registerBotJid(botUserJid);
-      // Daftarkan juga varian nomor bersih agar deteksi bot lintas format (lid/device) akurat
+
       db.registerBotJid(`${cleanNumber}@s.whatsapp.net`);
 
-      // ISOLASI PENUH: pastikan database sendiri ada; tulis nama saja,
-      // JANGAN sentuh public/prefix/owner (milik database sub itu).
       try {
         db.ensureSubStore(botUserJid, {
           botName: sock.user?.name || `SubBot (+${cleanNumber})`,
@@ -109,13 +102,12 @@ export function setupSubBotEvents({
     }
   });
 
-  // Message dispatcher queue (dengan filter dini anti-loop)
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
     const subJid = `${cleanNumber}@s.whatsapp.net`;
     for (const msg of messages) {
       if (shouldSkipBeforeQueue(msg)) continue;
-      // Hormati autoRead milik database sub ini (bukan main).
+
       const autoRead = db.runWithBot(subJid, () => db.getSettings().autoRead);
       if (autoRead) {
         try { await sock.readMessages([msg.key]).catch(() => { }); } catch (_) { }

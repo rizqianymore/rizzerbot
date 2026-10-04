@@ -1,4 +1,3 @@
-// plugins/owner/addsewa.js — perintah "addsewa" (1 file = 1 perintah).
 import { addRental } from "@/src/services/expiry.js";
 import { db } from "@/src/core/database.js";
 

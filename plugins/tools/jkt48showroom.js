@@ -1,4 +1,3 @@
-// plugins/tools/jkt48showroom.js — perintah "jkt48showroom" (1 file = 1 perintah).
 import {
   getJkt48Members,
   getJkt48MemberDetail,
@@ -9,7 +8,6 @@ import {
   getShowroomSchedules,
 } from "@/src/services/jkt48.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
-
 
 export default {
   "name": "jkt48showroom",

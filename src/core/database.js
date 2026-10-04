@@ -90,8 +90,6 @@ function isPremiumExpired(user) {
   );
 }
 
-// ── Audit permanen untuk setiap perubahan hak (jawab "kok tiba-tiba jadi owner?") ──
-// Ditulis ke database/privilege-audit.json (max 500 entri, append-only).
 function auditPrivilege(storeKey, action, targetJid, enabled, extra = {}) {
   try {
     const auditPath = path.join(process.cwd(), 'database', 'privilege-audit.json');
@@ -100,7 +98,7 @@ function auditPrivilege(storeKey, action, targetJid, enabled, extra = {}) {
       try {
         const parsed = JSON.parse(fs.readFileSync(auditPath, 'utf8'));
         if (Array.isArray(parsed)) entries = parsed;
-      } catch (_) { /* file korup -> mulai baru */ }
+      } catch (_) {  }
     }
     entries.push({
       at: new Date().toISOString(),
@@ -113,13 +111,9 @@ function auditPrivilege(storeKey, action, targetJid, enabled, extra = {}) {
     if (entries.length > 500) entries = entries.slice(entries.length - 500);
     fs.mkdirSync(path.dirname(auditPath), { recursive: true });
     fs.writeFileSync(auditPath, JSON.stringify(entries, null, 2), 'utf8');
-  } catch (_) { /* audit tidak boleh menggagalkan perintah */ }
+  } catch (_) {  }
 }
 
-// PENTING: JID @lid (privacy-preserving ID) dan nomor telepon @s.whatsapp.net
-// adalah NAMESPACE BERBEDA. Digit LID bukan nomor telepon, jadi dilarang
-// membandingkan digit keduanya (false match = eskalasi owner ke orang salah).
-// Semua perbandingan nomor telepon WAJIB memakai helper strict di bawah.
 function phoneDigitsOfPhoneJid(jid) {
   if (!jid || !String(jid).endsWith('@s.whatsapp.net')) return '';
   return normalizePhone(jid);
@@ -134,14 +128,7 @@ function samePhoneJidStrict(a, b) {
   return Boolean(da && dbb && da === dbb);
 }
 
-// ── Peta LID → nomor HP: database SELALU nomor HP, bukan LID ──
-// WhatsApp kini mengirim participant grup sebagai @lid (privacy ID) dan
-// menyertakan pasangan nomor HP di participantAlt / remoteJidAlt pesan serta
-// groupMetadata (participant.phoneNumber). Setiap pasangan yang terlihat
-// disimpan di sini (persisted di main DB, max 5000) sehingga seluruh akses
-// database — sender, quoted, mention, admin grup — memakai nomor HP.
-// Tanpa peta ini, satu orang bisa punya 2 identitas (LID + HP) dan lolos cek.
-const lidToPnMemory = new Map(); // digit LID -> '62xxx@s.whatsapp.net'
+const lidToPnMemory = new Map();
 const LID_MAP_MAX = 5000;
 let _lidMapSaveTimer = null;
 
@@ -167,8 +154,6 @@ function persistLidMapSoon() {
   } catch (_) { }
 }
 
-// Tulis peta LID→HP dari memori ke main DB SEKARANG (dipakai saat flush/exit
-// agar pemetaan yang baru dipelajari tidak hilang bila timer belum jalan).
 export function flushLidMap(cancelTimer = true) {
   try {
     if (cancelTimer && _lidMapSaveTimer) {
@@ -196,8 +181,6 @@ function rememberLidPnMapping(lidJid, pnJid) {
   return true;
 }
 
-// Kembalikan nomor HP untuk JID apa pun: HP tetap, LID dipetakan bila dikenal,
-// LID tak dikenal dikembalikan apa adanya (pemanggil yang memutuskan).
 function resolvePhoneJid(jid) {
   const n = normalizeJid(jid);
   if (!n) return '';
@@ -209,8 +192,6 @@ function resolvePhoneJid(jid) {
   return n;
 }
 
-// Ambil kandidat nomor HP pertama dari banyak sumber (participantAlt,
-// remoteJidAlt, participant, phoneNumber, dsb) — termasuk via peta LID.
 function pickPhoneJid(...candidates) {
   const flat = candidates.flat(Infinity).filter(Boolean);
   for (const c of flat) {
@@ -224,8 +205,6 @@ function pickPhoneJid(...candidates) {
   return '';
 }
 
-// Samakan dua identitas user dengan sadar-peta: LID terpetakan dianggap sama
-// dengan nomor HP-nya. LID tak dikenal TIDAK PERNAH sama dengan nomor HP.
 function sameUser(a, b) {
   const na = resolvePhoneJid(a);
   const nb = resolvePhoneJid(b);
@@ -237,7 +216,6 @@ function sameUser(a, b) {
   return false;
 }
 
-// Pelajari pasangan LID↔HP dari metadata grup (participant.phoneNumber / .lid).
 function learnGroupLidMap(meta) {
   try {
     const parts = meta?.participants || [];
@@ -306,7 +284,6 @@ function registerBotJid(jid) {
   activeBotJids.add(normalized);
 }
 
-// ── Store: satu database mandiri (main atau satu sub-bot) ────
 function normalizeSettings(storedSettings = {}) {
   const result = { ...cloneValue(configDefaults), ...cloneValue(storedSettings) };
 
@@ -318,15 +295,14 @@ function normalizeSettings(storedSettings = {}) {
   for (const key of Object.keys(roleAliases)) {
     const rawVal = storedSettings[key] ?? roleAliases[key].find(k => storedSettings[k] !== undefined);
     const sourceVal = rawVal !== undefined ? rawVal : configDefaults[key];
-    // Hanya nomor telepon asli (@s.whatsapp.net) yang boleh jadi daftar peran.
-    // ID sementara (@lid), grup, dan channel otomatis dibuang saat save.
+
     result[key] = [...new Set(toJidList(sourceVal))].filter((j) => j.endsWith('@s.whatsapp.net'));
   }
 
   for (const key of ['public', 'maintenance', 'usePairingCode', 'autoRead', 'autoOnline', 'autoForwardTrxToChannel', 'antiBotLuar', 'antiVirtex', 'antiBurst', 'antilinkExtra', 'silentDeny']) {
     result[key] = toBoolean(result[key], configDefaults[key]);
   };
-  // Daftar command publik: hanya nama command valid (huruf kecil), selain itu dibuang.
+
   if (!Array.isArray(result.publicCommands)) {
     result.publicCommands = [...(configDefaults.publicCommands || [])];
   } else {
@@ -450,7 +426,6 @@ class Store {
     if (!isRecord(source.lidMap)) changed = true;
     if (source.schemaVersion !== schemaVersion) changed = true;
 
-    // Muat peta LID→HP global (satu kebenaran untuk semua store) dari main DB.
     if (this.isMain && isRecord(source.lidMap)) {
       for (const [lidKey, pn] of Object.entries(source.lidMap)) {
         const cleanKey = String(lidKey || '').replace(/\D/g, '');
@@ -461,10 +436,6 @@ class Store {
       }
     }
 
-    // Sapu database dari entri @lid: database HANYA untuk nomor HP.
-    // - @lid yang sudah terpetakan → digabung ke entri nomor HP-nya.
-    // - @lid sampah (tanpa hak & tak terdaftar) → dibuang.
-    // - @lid berhak tapi tak terpetakan (warisan) → dipertahankan + peringatan.
     for (const [jid, user] of Object.entries(this.data.users)) {
       if (!jid.endsWith('@lid')) continue;
       const mapped = lidToPnMemory.get(lidKeyOf(jid));
@@ -547,8 +518,7 @@ class Store {
 
   refreshConfiguredJids() {
     const s = this.data.settings;
-    // Main mewarisi config file (perilaku lama dipertahankan persis).
-    // Sub hanya memakai setting database MILIKNYA (isolasi penuh).
+
     this.ownerJids = getConfiguredJids(
       this.isMain
         ? [...configuredOwnerValues, s.ownerNumber, s.pairingNumber, s.ownerNumbers]
@@ -619,10 +589,10 @@ class Store {
   }
 
   ensureUser(normalizedInput) {
-    // Selalu kerja dalam nomor HP: LID terpetakan → HP-nya.
+
     const normalized = resolvePhoneJid(normalizedInput);
     if (!normalized) return null;
-    // LID tak terpetakan: jangan buat baris DB — kembalikan sementara.
+
     if (normalized.endsWith('@lid') && !this.data.users[normalized]) {
       return this.normalizeUser(normalized, {});
     }
@@ -686,7 +656,7 @@ class Store {
   }
 
   isOwner(jid) {
-    // LID terpetakan otomatis jadi nomor HP di sini (owner kirim via LID tetap dikenali).
+
     const normalized = resolvePhoneJid(jid);
     if (!normalized) return false;
     if (
@@ -697,8 +667,6 @@ class Store {
       return true;
     }
 
-    // Fallback varian format nomor (08xx vs 628xx) — HANYA untuk JID telepon.
-    // @lid tidak punya nomor telepon, jadi tidak ada fallback untuknya.
     if (!normalized.endsWith('@s.whatsapp.net')) return false;
     const digits = phoneDigitsOfPhoneJid(normalized);
     if (digits && digits.length >= 8) {
@@ -726,7 +694,6 @@ class Store {
     if (!normalized) return false;
     if (this.isOwner(normalized) || this.isAdmin(normalized) || this.premiumJids.has(normalized)) return true;
 
-    // Fallback varian format nomor — HANYA untuk JID telepon (@lid tidak difallback).
     if (!normalized.endsWith('@s.whatsapp.net')) {
       const user = this.data.users[normalized];
       return Boolean(user?.premium && !isPremiumExpired(user));
@@ -792,19 +759,12 @@ class Store {
     });
   }
 
-  // Jalur umum (plugin biasa, sync nama, dsb) HANYA boleh mengubah field
-  // non-hak. Perubahan owner/admin/premium/banned/premiumUntil WAJIB lewat
-  // setOwner/setAdmin/setPremium/setBanned (opts.privileged=true) agar tidak ada
-  // plugin yang tidak sengaja / disusupi bisa eskalasi hak via updateUser.
-  // Ini menutup vektor "tiba-tiba jadi owner/premium sendiri".
   updateUser(jid, updates = {}, opts = {}) {
-    // LID terpetakan otomatis jadi nomor HP — baris DB selalu nomor HP.
+
     const normalized = resolvePhoneJid(jid);
     if (!normalized) return null;
     if (!normalized.endsWith('@s.whatsapp.net') && !normalized.endsWith('@lid')) return null;
-    // LID yang belum terpetakan: JANGAN buat baris DB baru (DB khusus nomor HP).
-    // Kembalikan objek sementara agar alur baca (nama, profil) tetap jalan.
-    // Hanya field aman yang disalin — field hak TIDAK PERNAH dari input.
+
     if (normalized.endsWith('@lid') && !this.data.users[normalized]) {
       return this.normalizeUser(normalized, {
         name: updates.name,
@@ -818,7 +778,7 @@ class Store {
     const privileged = Boolean(opts && opts.privileged === true);
 
     const next = { ...current };
-    // Field aman untuk jalur umum (dibatasi panjang agar tidak spam DB).
+
     if (updates.name !== undefined) {
       next.name = String(updates.name ?? '').slice(0, 100);
     }
@@ -834,9 +794,7 @@ class Store {
     if (updates.lastSeen !== undefined && Number.isFinite(Number(updates.lastSeen))) {
       next.lastSeen = Number(updates.lastSeen);
     }
-    // Salin field statistik non-hak lain yang sudah ada (energy/exp/level/dll)
-    // hanya bila pemanggil menyebutkannya eksplisit — selain daftar di bawah
-    // dan selain field hak, agar perilaku plugin lama tidak rusak.
+
     const EXTRA_SAFE = new Set(['energy', 'energyLastRefill', 'exp', 'level', 'crystals', 'spinsWon']);
     for (const key of EXTRA_SAFE) {
       if (updates[key] !== undefined) next[key] = updates[key];
@@ -859,8 +817,7 @@ class Store {
       }
       if (updates.banned !== undefined && nextOwner) next.banned = false;
     } else {
-      // Jalur umum: pertahankan hak existing; abaikan upaya perubahan hak.
-      // premiumUntil dari jalur umum juga diabaikan (hanya setPremium boleh set).
+
       next.owner = toBoolean(current.owner);
       next.admin = toBoolean(current.admin) || next.owner;
       next.premium = toBoolean(current.premium) || next.owner || next.admin;
@@ -884,10 +841,10 @@ class Store {
   setOwner(jid, enabled) {
     const normalized = normalizeJid(jid);
     if (!normalized) return null;
-    // Tolak JID non-telepon (@lid, grup, channel) sebagai owner.
+
     if (enabled && !normalized.endsWith('@s.whatsapp.net')) return null;
     if (!enabled && isPrimaryOwnerJid(normalized)) {
-      return this.data.users[normalized] || null; // Primary owner cannot be removed
+      return this.data.users[normalized] || null;
     }
 
     const currentList = Array.isArray(this.data.settings.ownerNumbers) ? this.data.settings.ownerNumbers : [];
@@ -972,16 +929,13 @@ class Store {
   setBanned(jid, enabled) {
     const normalized = resolvePhoneJid(jid);
     if (!normalized || this.isOwner(normalized)) return this.data.users[normalized] || null;
-    // Ban LID tak terpetakan tidak ada gunanya (identitas tak stabil) — tolak.
+
     if (normalized.endsWith('@lid') && !this.data.users[normalized]) return null;
     const user = this.updateUser(normalized, { banned: toBoolean(enabled) }, { privileged: true });
     auditPrivilege(this.isMain ? 'main' : this.key, 'setBanned', normalized, enabled);
     return user;
   }
 
-  // Hapus permanen 1 user dari database + cabut dari daftar peran agar tidak
-  // lahir kembali via syncPrivilegedUsers. Primary owner TAK BISA dihapus.
-  // Dipakai plugin deluser/cleanusers (wajib SuperOwner di level plugin).
   deleteUser(jid) {
     const normalized = resolvePhoneJid(jid);
     if (!normalized || !normalized.endsWith('@s.whatsapp.net')) return false;
@@ -1077,7 +1031,6 @@ class Store {
   }
 }
 
-// ── Registri store + konteks async ────────────────────────────
 const botAls = new AsyncLocalStorage();
 const stores = new Map();
 
@@ -1111,7 +1064,7 @@ function activeStore() {
   if (key === undefined || key === null) return mainStore;
   const s = stores.get(key);
   if (s) return s;
-  // Store sub dihapus di tengah jalan? Muat ulang bila folder masih ada.
+
   if (key !== MAIN_KEY) {
     const peeked = peekSubStoreByKey(key);
     if (peeked) return peeked;
@@ -1148,7 +1101,7 @@ function ensureSubStore(botJid, seed = {}) {
   if (!key || key === MAIN_KEY) return mainStore;
   const existing = peekSubStoreByKey(key);
   if (existing) {
-    // Lengkapi seed yang belum ada TANPA menimpa setting mandiri.
+
     let touched = false;
     if (seed.botName && !existing.data.settings.botName) {
       existing.data.settings.botName = String(seed.botName);
@@ -1188,7 +1141,7 @@ function ensureSubStore(botJid, seed = {}) {
 
   const s = new Store(key, false, dbPath, usersDbPath);
   s.data.settings = normalizeSettings({ ...s.data.settings, ...initial });
-  // Pastikan identitas owner sub selalu valid
+
   if (!normalizeJid(s.data.settings.ownerNumber)) {
     s.data.settings.ownerNumber = `${key}@s.whatsapp.net`;
   }
@@ -1215,13 +1168,8 @@ function getKnownSubDigits() {
   return [...out];
 }
 
-// Primary SuperOwner = HANYA nomor utama (ownerNumber/pairingNumber + varian formatnya).
-// Daftar ownerNumbers TIDAK termasuk primary (mereka owner biasa: bisa dihapus,
-// tidak punya hak superowner seperti eval/restart/--all).
-// Hanya JID telepon (@s.whatsapp.net) yang bisa jadi primary — @lid DITOLAK
-// (namespace berbeda, digitnya bukan nomor telepon).
 function isPrimaryOwnerJid(jid) {
-  // LID terpetakan → nomor HP dulu, jadi owner yang kirim via LID tetap dikenali.
+
   const normalized = resolvePhoneJid(jid);
   if (!normalized || !normalized.endsWith('@s.whatsapp.net')) return false;
   const primary = normalizeJid(mainStore.data?.settings?.ownerNumber || settings.ownerNumber);
@@ -1241,20 +1189,18 @@ function isAnyBotJid(jid) {
   if (!normalized) return false;
   if (activeBotJids.has(normalized)) return true;
 
-  // Perbandingan digit hanya sesama nomor telepon. @lid tidak pernah
-  // disamakan digitnya dengan nomor bot (namespace berbeda).
   const phone = phoneDigitsOfPhoneJid(normalized);
   const phoneMatch = (a, b) => samePhoneJidStrict(a, b);
   for (const b of activeBotJids) {
     if (b === normalized || (phone && phoneMatch(b, normalized))) return true;
   }
-  // Sub-bot yang punya database sendiri tetap dianggap bot walau belum online.
+
   if (phone) {
     for (const digits of getKnownSubDigits()) {
       if (digits === phone) return true;
     }
   }
-  // Kompat lama: sub yang pernah terdaftar di botSettings main.
+
   try {
     const keys = mainStore.data?.botSettings ? Object.keys(mainStore.data.botSettings) : [];
     for (const k of keys) {
@@ -1266,7 +1212,6 @@ function isAnyBotJid(jid) {
   return false;
 }
 
-// ── API lintas-store (dispatcher & plugin pakai ini) ──────────
 function getBotSettings(botJid) {
   const normalized = normalizeJid(botJid);
   if (!normalized || isMainBotJid(normalized)) {
@@ -1288,7 +1233,7 @@ function getBotSettings(botJid) {
       ownerNumbers: Array.isArray(s.ownerNumbers) ? s.ownerNumbers : [],
     };
   }
-  // Fallback untuk JID sub yang belum punya database: mandiri, tidak ikut main.
+
   const legacy = key ? findLegacySubConfig(key) : null;
   return {
     ...cloneValue(configDefaults),
@@ -1335,22 +1280,19 @@ function updateBotSettings(botJid, updates = {}) {
 
 function isBotOwner(botJid, userJid) {
   const normalizedBot = normalizeJid(botJid);
-  // LID pengirim yang sudah terpetakan langsung jadi nomor HP di sini.
+
   const normalizedUser = resolvePhoneJid(userJid);
   if (!normalizedUser) return false;
 
-  // samPhone STRICT: hanya sesama @s.whatsapp.net. @lid tidak pernah
-  // dianggap sama dengan nomor telepon (cegah impersonasi owner via LID).
   const samePhone = samePhoneJidStrict;
 
   const botIsMain = !normalizedBot || isMainBotJid(normalizedBot);
 
   if (botIsMain) {
-    // Main-bot: owner = primary superowner + daftar owner global main.
-    // Owner khusus sub-bot TIDAK berlaku di main (anti-campur).
+
     if (isPrimaryOwnerJid(normalizedUser)) return true;
     if (mainStore.isOwner(normalizedUser)) return true;
-    // Fallback varian format nomor — hanya untuk JID telepon.
+
     if (normalizedUser.endsWith('@s.whatsapp.net')) {
       const userPhone = phoneDigitsOfPhoneJid(normalizedUser);
       if (userPhone) {
@@ -1362,7 +1304,6 @@ function isBotOwner(botJid, userJid) {
     return false;
   }
 
-  // Sub-bot: baca dari database MILIK sub itu (atau fallback mandiri).
   const key = phoneDigitsOfPhoneJid(normalizedBot);
   const store = key ? peekSubStoreByKey(key) : null;
   const botOwner = store ? normalizeJid(store.data.settings.ownerNumber) : '';
@@ -1408,7 +1349,6 @@ function mainAccessor() {
   };
 }
 
-// ── Facade db (nama & perilaku kompatibel) ────────────────────
 export const db = {
   get data() { return activeStore().data; },
   save: () => activeStore().save(),

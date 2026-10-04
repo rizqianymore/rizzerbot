@@ -8,9 +8,6 @@ const __dirname = path.dirname(__filename);
 const CACHE_DIR = path.join(__dirname, "..", "..", "assets", "cache");
 const COOKIES_CACHE_FILE = path.join(CACHE_DIR, "session_cookies.json");
 
-/**
- * Realistic and modern device profiles for anti-bot & browser fingerprinting
- */
 export const DEVICE_PROFILES = [
   {
     name: "Windows 11 Chrome",
@@ -115,12 +112,9 @@ export function buildScraperHeaders(device = getRandomDevice(), customHeaders = 
   return { ...headers, ...customHeaders };
 }
 
-/**
- * Domain-specific cookie manager with disk persistence
- */
 class CookieJar {
   constructor() {
-    this.cookies = new Map(); // domain -> Map(key, value)
+    this.cookies = new Map();
     this._load();
   }
 
@@ -212,9 +206,6 @@ class CookieJar {
 
 export const cookieJar = new CookieJar();
 
-/**
- * Detect Cloudflare challenge / Turnstile / Anti-Bot block
- */
 export function isCloudflareChallenge(status, headers = {}, body = "") {
   if (status === 403 || status === 503 || status === 429) {
     const h = JSON.stringify(headers).toLowerCase();
@@ -237,9 +228,6 @@ export function isCloudflareChallenge(status, headers = {}, body = "") {
   return false;
 }
 
-/**
- * Headless Stealth Browser Controller for Cloudflare & Anti-Bot Bypass
- */
 class StealthBrowserManager {
   constructor() {
     this.browser = null;
@@ -286,7 +274,7 @@ class StealthBrowserManager {
 
   _resetIdleTimer() {
     if (this.idleTimer) clearTimeout(this.idleTimer);
-    // Auto-close browser after 45 seconds of idle time to conserve memory
+
     this.idleTimer = setTimeout(() => {
       this.close();
     }, 45000);
@@ -306,9 +294,6 @@ class StealthBrowserManager {
     }
   }
 
-  /**
-   * Navigate with Cloudflare Turnstile / Challenge clearance
-   */
   async solveChallenge(targetUrl, { timeoutMs = 25000, preferredDevice = "desktop" } = {}) {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
@@ -318,23 +303,21 @@ class StealthBrowserManager {
       await page.setViewport(device.viewport || { width: 1280, height: 800 });
       await page.setUserAgent(device.userAgent);
 
-      // Stealth evasion overrides
       await page.evaluateOnNewDocument(() => {
-        // Hide webdriver
+
         Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-        // Fake chrome object
+
         window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
-        // Fake plugins
+
         Object.defineProperty(navigator, "plugins", {
           get: () => [1, 2, 3, 4, 5],
         });
-        // Fake languages
+
         Object.defineProperty(navigator, "languages", {
           get: () => ["id-ID", "id", "en-US", "en"],
         });
       });
 
-      // Attach existing domain cookies if any
       const existingCookieStr = cookieJar.getCookieString(targetUrl);
       if (existingCookieStr) {
         const u = new URL(targetUrl);
@@ -355,7 +338,6 @@ class StealthBrowserManager {
         timeout: timeoutMs,
       });
 
-      // Poll until Cloudflare clearance is achieved or timeout
       const startTime = Date.now();
       let cleared = false;
 
@@ -379,7 +361,6 @@ class StealthBrowserManager {
           break;
         }
 
-        // Try to click turnstile checkbox if visible in iframe
         try {
           const frames = page.frames();
           for (const frame of frames) {
@@ -393,13 +374,11 @@ class StealthBrowserManager {
         await new Promise((r) => setTimeout(r, 600));
       }
 
-      // Collect resolved cookies and save to jar
       const currentCookies = await page.cookies();
       for (const c of currentCookies) {
         cookieJar.setCookie(targetUrl, c.name, c.value);
       }
 
-      // Extract result
       const pageTitle = await page.title().catch(() => "");
       const pageContent = await page.content().catch(() => "");
       const currentUrl = page.url();
@@ -416,9 +395,6 @@ class StealthBrowserManager {
     }
   }
 
-  /**
-   * Execute in-page fetch using the browser's cleared session
-   */
   async inPageFetch(apiUrl, { method = "GET", headers = {}, body = null } = {}) {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
@@ -426,10 +402,9 @@ class StealthBrowserManager {
     const origin = u.origin;
 
     try {
-      // First ensure the origin has a cleared session
+
       await this.solveChallenge(origin);
 
-      // Now open page at origin and run in-page fetch with origin credentials
       await page.goto(`${origin}/favicon.ico`, { waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});
 
       const result = await page.evaluate(
@@ -472,22 +447,6 @@ class StealthBrowserManager {
 
 export const stealthBrowser = new StealthBrowserManager();
 
-/**
- * Universal Intelligent HTTP Request Engine with Anti-Bot & Cloudflare Bypass
- *
- * @param {string} url - Target URL
- * @param {object} [options]
- * @param {string} [options.method="GET"] - HTTP Method
- * @param {object} [options.headers] - Additional headers
- * @param {any} [options.data] - Request body (for POST/PUT)
- * @param {object} [options.params] - Query parameters
- * @param {string} [options.responseType="json"] - "json" | "text" | "buffer" | "arraybuffer"
- * @param {boolean|"auto"} [options.bypassCloudflare="auto"] - Auto bypass or force browser
- * @param {number} [options.timeout=20000] - Request timeout ms
- * @param {number} [options.retries=2] - Retry attempts on transient network errors
- * @param {string} [options.preferredDevice="any"] - "desktop" | "mobile" | "any"
- * @returns {Promise<any>}
- */
 export async function smartRequest(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const responseType = options.responseType || "json";
@@ -499,7 +458,6 @@ export async function smartRequest(url, options = {}) {
   const device = getRandomDevice(preferredDevice);
   const defaultHeaders = buildScraperHeaders(device);
 
-  // Attach stored cookies
   const cookiesStr = cookieJar.getCookieString(url);
   const headers = {
     ...defaultHeaders,
@@ -507,7 +465,6 @@ export async function smartRequest(url, options = {}) {
     ...(options.headers || {}),
   };
 
-  // If forced browser bypass is requested
   if (bypassCloudflare === true) {
     if (responseType === "json") {
       return await stealthBrowser.inPageFetch(url, {
@@ -523,7 +480,6 @@ export async function smartRequest(url, options = {}) {
     return solved.content;
   }
 
-  // Fast HTTP Attempt
   let attempt = 0;
   let lastError = null;
 
@@ -538,17 +494,15 @@ export async function smartRequest(url, options = {}) {
         data: options.data,
         timeout,
         responseType: responseType === "buffer" ? "arraybuffer" : responseType,
-        validateStatus: () => true, // inspect all status codes
+        validateStatus: () => true,
       };
 
       const res = await axios(axiosConfig);
 
-      // Record any Set-Cookie headers
       if (res.headers && res.headers["set-cookie"]) {
         cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
       }
 
-      // Check for Cloudflare / Anti-Bot challenge
       const isChallenge = isCloudflareChallenge(
         res.status,
         res.headers,
@@ -560,7 +514,6 @@ export async function smartRequest(url, options = {}) {
           throw new Error(`Cloudflare challenge detected (HTTP ${res.status}) and bypass is disabled.`);
         }
 
-        // Automatic fallback to stealth browser solver
         const solved = await stealthBrowser.solveChallenge(url, {
           timeoutMs: timeout,
           preferredDevice,
@@ -570,13 +523,12 @@ export async function smartRequest(url, options = {}) {
           throw new Error(`Cloudflare verification failed after timeout on ${url}`);
         }
 
-        // Retry with newly captured cf_clearance cookies
         const refreshedCookies = cookieJar.getCookieString(url);
         headers.Cookie = refreshedCookies;
 
         if (responseType === "json") {
           try {
-            // Attempt in-page fetch for guaranteed session sharing
+
             return await stealthBrowser.inPageFetch(url, {
               method,
               headers: options.headers,
@@ -624,7 +576,6 @@ export async function smartRequest(url, options = {}) {
   throw lastError;
 }
 
-// Convenient shorthand methods
 export const request = smartRequest;
 request.get = (url, options = {}) => smartRequest(url, { ...options, method: "GET" });
 request.post = (url, data, options = {}) => smartRequest(url, { ...options, method: "POST", data });

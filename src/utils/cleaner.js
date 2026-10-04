@@ -48,7 +48,6 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   let deletedCount = 0;
   let freedBytes = 0;
 
-  // 1. Clean root junk files
   const rootClean = cleanRootJunkFiles();
   deletedCount += rootClean.count;
   freedBytes += rootClean.bytes;
@@ -123,13 +122,9 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   return { deletedCount, freedBytes };
 }
 
-/**
- * Clears ALL cache, temporary dump files, cached cookies/tokens,
- * and kills orphaned browser processes.
- */
 export function clearAllCache({ logger } = {}) {
   cleanOrphanChromeProcesses(logger);
-  const result = cleanTempFiles({ maxAgeMs: 0 }); // 0 = purge immediately without age limit
+  const result = cleanTempFiles({ maxAgeMs: 0 });
   if (logger) {
     const mb = (result.freedBytes / (1024 * 1024)).toFixed(2);
     logger.info(`[System Cache Clean] Total ${result.deletedCount} cache/junk files purged (${mb} MB freed).`);
@@ -172,9 +167,9 @@ export function periodicDatabaseSnapshot(logger) {
         }
       }
     };
-    // Database utama
+
     snap(path.join(dbDir, "users.json"), "daily-snapshot");
-    // Tiap sub-bot punya snapshot sendiri (isolasi backup)
+
     try {
       const subDir = path.join(dbDir, "subbots");
       if (fs.existsSync(subDir)) {
@@ -193,7 +188,7 @@ export function periodicDatabaseSnapshot(logger) {
 export function cleanOrphanChromeProcesses(logger) {
   try {
     import("child_process").then(({ exec }) => {
-      // Bunuh process chrome yang orphaned atau defunct jika ada
+
       exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {
         if (!err && logger) {
           logger.info("[System Cleaner] Membersihkan proses browser renderer yang tidak terpakai.");
@@ -204,13 +199,12 @@ export function cleanOrphanChromeProcesses(logger) {
 }
 
 export function startAutoCleanInterval(logger) {
-  // Langsung bersihkan cache, sampah sesi, dan temporary files saat bot aktif
+
   try {
     clearAllCache({ logger });
     periodicDatabaseSnapshot(logger);
   } catch (_) {}
 
-  // Interval otomatis pembersihan berkala setiap 15 menit
   const AUTO_CLEAN_INTERVAL_MS = 15 * 60 * 1000;
   const timer = setInterval(() => {
     try {
@@ -223,4 +217,3 @@ export function startAutoCleanInterval(logger) {
     timer.unref();
   }
 }
-

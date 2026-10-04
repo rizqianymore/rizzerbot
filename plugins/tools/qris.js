@@ -1,4 +1,3 @@
-// plugins/tools/qris.js — perintah "qris" (1 file = 1 perintah).
 import {
   createTransaction,
   getTransaction,
@@ -19,9 +18,7 @@ import {
 } from "@/src/services/qris.js";
 import { db } from "@/src/core/database.js";
 
-
 import { getPrimarySock } from "@/src/core/connection.js";
-
 
 export default {
   "name": "qris",
@@ -37,7 +34,7 @@ export default {
       const activeSettings = db.getSettings();
 
       if (!rawInput) {
-        // Tampilkan QRIS Statis Toko
+
         try {
           const parsed = parseQRIS(staticQris);
           const qrBuffer = await generatePureQR(staticQris);
@@ -60,7 +57,6 @@ export default {
         }
       }
 
-      // Bersihkan nominal harga
       let cleanInput = rawInput.toLowerCase().replace(/^rp\.?/, "").trim();
       if (cleanInput.endsWith("k")) cleanInput = String(parseFloat(cleanInput) * 1000);
       const amount = Number(cleanInput.replace(/[^0-9.]/g, ""));

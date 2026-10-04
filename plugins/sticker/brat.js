@@ -1,4 +1,3 @@
-// plugins/sticker/brat.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import fsp from "fs/promises";
@@ -491,7 +490,6 @@ export default {
         return reply(`⚠️ Masukkan teks untuk stiker!\nContoh: \`${prefix}brat Hai semua\``);
       }
 
-      // Validasi batas panjang teks / kalimat
       if (!isVideo && text.length > MAX_BRAT_STATIC_LENGTH) {
         return reply(
           `⚠️ *Teks Terlalu Panjang!*\n\n` +

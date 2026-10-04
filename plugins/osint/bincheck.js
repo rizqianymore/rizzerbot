@@ -1,4 +1,3 @@
-// plugins/tools/bincheck.js — perintah "bincheck" (1 file = 1 perintah).
 import { parseBin, enrichBin, formatBinInfo } from "@/src/services/bincheck.js";
 
 export default {

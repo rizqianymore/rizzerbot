@@ -1,6 +1,4 @@
-// plugins/socialmedia/spotifydl.js — perintah "spotifydl" (1 file = 1 perintah).
 import axios from "axios";
-
 
 export default {
   "name": "spotifydl",

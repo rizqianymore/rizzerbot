@@ -1,12 +1,9 @@
-// plugins/tools/subdomainlookup.js — perintah "subdomainlookup" (1 file = 1 perintah).
 import {
   getDnsRecords,
   getWhois,
   getSubdomains,
   getIpGeo,
 } from "@/src/services/network.js";
-
-
 
 export default {
   "name": "subdomainlookup",
@@ -35,7 +32,6 @@ export default {
           `_Ditemukan ${data.count} subdomain_`,
         ];
 
-        // Tampilkan 25 teratas
         const displayed = data.subdomains.slice(0, 25);
         for (let i = 0; i < displayed.length; i++) {
           const item = displayed[i];

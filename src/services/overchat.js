@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 
-// Claude Haiku 4.5 via OverChat (https://overchat.ai) — SSE streaming.
 const API = "https://api.overchat.ai/v1/chat/completions";
 
 const UA =
@@ -9,12 +8,6 @@ const UA =
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 const TIMEOUT_MS = 90000;
 
-/**
- * Tanya Claude Haiku.
- * @param {string} prompt
- * @param {object} [options] - { chatId, deviceId, history: [{role, content}], model, maxTokens }
- * @returns {Promise<{status: true, code, question, chatId, deviceId, responseId, model, answer} | {status: false, code, error}>}
- */
 export async function ClaudeHaiku(prompt, options = {}) {
   if (!prompt || !String(prompt).trim()) {
     return { status: false, code: 400, error: "Prompt kosong." };

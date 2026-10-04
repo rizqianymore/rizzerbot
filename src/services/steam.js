@@ -1,14 +1,8 @@
-// src/services/steam.js — Steam Store promo (https://store.steampowered.com).
-// Endpoint publik tanpa key/login: /api/featuredcategories (specials, top sellers,
-// new releases) + capsule image per appid.
-// Rate limit Steam ~300 req/5 mnt -> cache 30 menit. Anti-bug: timeout,
-// validasi magic-bytes + ukuran minimum, selalu fallback ke teks.
-
 const STEAM_BASE = "https://store.steampowered.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MIN_BYTES = 8 * 1024;
 
-const cache = new Map(); // key -> { data, expires }
+const cache = new Map();
 function cacheGet(key) {
   const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) return hit.data;
@@ -78,7 +72,6 @@ export function formatIDR(cents) {
   return "Rp" + Math.round(n / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-/** Ambil daftar deal ternormalisasi: { id, name, discount,was, now, image }. */
 export async function getSteamDeals(kindKey = "specials", limit = 8) {
   const data = await fetchCategories();
   const items = data?.[kindKey]?.items || [];
@@ -103,7 +96,6 @@ export function fmtSteamDeals(title, deals) {
   return lines.join("\n");
 }
 
-/** Download capsule art terdepan yang valid. Return Buffer atau null. */
 export async function getSteamDealImage(deals) {
   for (const d of deals || []) {
     try {

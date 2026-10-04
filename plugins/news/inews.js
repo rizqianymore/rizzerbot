@@ -1,4 +1,3 @@
-// plugins/news/inews.js — perintah "inews" (1 file = 1 perintah, dipecah dari news.js).
 import { searchInews, getInewsArticle } from '@/src/services/inews.js';
 import { fetchBuffer } from '@/src/services/scrape.js';
 
@@ -24,7 +23,6 @@ export default {
         );
       }
 
-      // Membaca artikel dari link URL iNews.id
       if (input.startsWith("http://") || input.startsWith("https://")) {
         if (!input.includes("inews.id/")) {
           return reply("❌ Tautan harus berasal dari situs resmi iNews.id!");
@@ -59,7 +57,6 @@ export default {
         }
       }
 
-      // Mencari berita berdasarkan topik
       await reply(`🔍 Mencari berita di iNews.id dengan topik *"${input}"*...`);
 
       try {

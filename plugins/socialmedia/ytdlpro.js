@@ -1,4 +1,3 @@
-// plugins/socialmedia/ytdlpro.js — perintah "ytdlpro" (1 file = 1 perintah).
 import axios from "axios";
 
 export default {

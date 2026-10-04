@@ -1,9 +1,6 @@
 import dns from "node:dns/promises";
 import net from "node:net";
 
-/**
- * Clean domain input from protocol or path
- */
 export function cleanDomain(input) {
   let domain = input.trim().toLowerCase();
   domain = domain.replace(/^https?:\/\//i, "");
@@ -11,9 +8,6 @@ export function cleanDomain(input) {
   return domain;
 }
 
-/**
- * DNS Lookup (A, AAAA, MX, TXT, NS, CNAME)
- */
 export async function getDnsRecords(rawDomain) {
   const domain = cleanDomain(rawDomain);
   const [a, aaaa, mx, txt, ns, cname] = await Promise.allSettled([
@@ -42,9 +36,6 @@ export async function getDnsRecords(rawDomain) {
   };
 }
 
-/**
- * Socket WHOIS lookup via TCP port 43
- */
 function queryWhoisServer(query, server) {
   return new Promise((resolve, reject) => {
     const socket = net.createConnection(43, server, () => {
@@ -62,9 +53,6 @@ function queryWhoisServer(query, server) {
   });
 }
 
-/**
- * Comprehensive WHOIS lookup following referral chains
- */
 export async function getWhois(rawDomain) {
   const domain = cleanDomain(rawDomain);
   let rawData = await queryWhoisServer(domain, "whois.iana.org");
@@ -82,7 +70,6 @@ export async function getWhois(rawDomain) {
     } catch (_) {}
   }
 
-  // Parse key attributes
   const extract = (regex) => {
     const m = rawData.match(regex);
     return m ? m[1].trim() : "-";
@@ -108,9 +95,6 @@ export async function getWhois(rawDomain) {
   };
 }
 
-/**
- * Subdomain Lookup via HackerTarget API
- */
 export async function getSubdomains(rawDomain) {
   const domain = cleanDomain(rawDomain);
   const url = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}`;
@@ -145,9 +129,6 @@ export async function getSubdomains(rawDomain) {
   };
 }
 
-/**
- * IP Geolocation lookup
- */
 export async function getIpGeo(ipOrDomain) {
   const target = cleanDomain(ipOrDomain);
   const url = `http://ip-api.com/json/${encodeURIComponent(target)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;

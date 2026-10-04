@@ -1,10 +1,6 @@
-// plugins/group/hidetag.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { db } from "@/src/core/database.js";
 import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
-/**
- * Validates group context and checks bot/user admin permissions.
- */
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
@@ -68,7 +64,6 @@ export default {
       const mentions = ctx.participants.map((p) => p.id);
       let text = args.join(" ");
 
-      // Jika user membalas pesan orang lain tanpa mengetik teks tambahan, gunakan teks pesan yang dibalas
       if (!text && context.quoted) {
         text =
           context.quoted.conversation ||

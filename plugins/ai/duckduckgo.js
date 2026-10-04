@@ -1,4 +1,3 @@
-// plugins/ai/duckduckgo.js — perintah "duckduckgo" (1 file = 1 perintah, dipecah dari ai.js).
 import { askDuckDuckGo, getLiveFreeModels } from '@/src/services/duckduckgo/client.js';
 
 export default {

@@ -16,7 +16,6 @@ if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
-// Hapus file db lama jika ada
 if (fs.existsSync(DB_PATH)) {
   console.log(`Menghapus database lama: ${DB_PATH}`);
   fs.unlinkSync(DB_PATH);
@@ -25,11 +24,10 @@ if (fs.existsSync(DB_PATH)) {
 console.log(`🚀 Menyiapkan SQLite database di: ${DB_PATH}`);
 const db = new DatabaseSync(DB_PATH);
 
-// Konfigurasi performa SQLite
 db.exec('PRAGMA journal_mode = OFF;');
 db.exec('PRAGMA synchronous = 0;');
 db.exec('PRAGMA temp_store = MEMORY;');
-db.exec('PRAGMA cache_size = -64000;'); // ~64MB cache
+db.exec('PRAGMA cache_size = -64000;');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS samsat (
@@ -95,7 +93,7 @@ rl.on('line', (line) => {
   if (!line || !line.trim()) return;
 
   const cols = parseCsvLine(line);
-  // Format: Number, BPKB, Name, NIK, Address, Brand, Type, VIN Number, Engine Number, Color, Year
+
   const rawNumber = cols[0] || '';
   const cleanNumber = rawNumber.replace(/\s+/g, '').toUpperCase();
   if (!cleanNumber) return;

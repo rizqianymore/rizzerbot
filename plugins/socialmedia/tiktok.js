@@ -1,6 +1,4 @@
-// plugins/socialmedia/tiktok.js — perintah "tiktok" (1 file = 1 perintah).
 import axios from "axios";
-
 
 export default {
   "name": "tiktok",

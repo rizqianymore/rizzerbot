@@ -1,21 +1,15 @@
-// Filter log noise yang TEPAT dari libsignal/baileys.
-// Hanya menyenyapkan pattern yang terbukti noise (lihat pm2 logs).
-// Cara pakai: import file ini PALING AWAL (baris 1 di index.js).
-// Bypass: LOG_VERBOSE=1 atau DEBUG_LIBSIGNAL=1 untuk tampilkan semua.
-
 const BYPASS = process.env.LOG_VERBOSE === "1" || process.env.DEBUG_LIBSIGNAL === "1";
 
-// Daftar eksak dari node_modules/libsignal/src/*.js — JANGAN tambah yang lain sembarangan.
 const SUPPRESSED_SUBSTRINGS = [
-  // session_builder.js:74
+
   "Closing open session in favor of incoming prekey bundle",
-  // session_cipher.js:157,159 — gagal decrypt 1 pesan duplikat/out-of-order
+
   "Failed to decrypt message with any known session",
   "Key used already or never filled",
   "MessageCounterError",
-  // session_cipher.js:182 — info biasa
+
   "Decrypted message with closed session",
-  // session_record.js:270,273,279,281,301,193 — dump object session (rootKey/indexInfo/pendingPreKey)
+
   "Session already closed",
   "Closing session:",
   "Session already open",
@@ -32,7 +26,7 @@ function argsToText(args) {
         if (typeof a === "string") return a;
         if (a instanceof Error) return `${a.message}\n${a.stack || ""}`;
         if (typeof a === "object") {
-          // Jangan JSON.stringify Buffer besar — cukup cek constructor/name
+
           const s = String(a?.message || a?.stack || "");
           if (s && s !== "[object Object]") return s;
           return "";
@@ -50,8 +44,7 @@ export function shouldSuppressLog(...args) {
   if (!args.length) return false;
   const text = argsToText(args);
   if (!text) {
-    // console.info("Closing session:", sessionObject) → arg pertama cocok,
-    // arg kedua object kosong-string. Cek arg pertama saja.
+
     const first = typeof args[0] === "string" ? args[0] : "";
     return SUPPRESSED_SUBSTRINGS.some((p) => first.includes(p));
   }

@@ -1,4 +1,3 @@
-// plugins/user/sticker.js — perintah "sticker" (1 file = 1 perintah).
 import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
@@ -10,7 +9,6 @@ import {
   fetchLyrics,
   translateText,
 } from '@/src/services/scrape.js';
-
 
 import { getUptimeString } from '@/src/utils/helper.js';
 
@@ -42,7 +40,6 @@ export default {
       }
       if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya (jangan forward dari View Once, kirim sebagai gambar biasa).");
 
-      // Parse teks meme atas / bawah via format: teks atas | teks bawah
       let topText = "";
       let bottomText = "";
       if (args.length > 0) {

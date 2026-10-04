@@ -1,9 +1,6 @@
-// src/services/githubstalk.js — stalk profil GitHub via API publik (gratis, tanpa key).
-// GET https://api.github.com/users/{username} (limit 60 req/jam tanpa token).
-
 const GITHUB_API = "https://api.github.com/users";
 const GH_TTL_MS = 60 * 60 * 1000;
-const ghCache = new Map(); // username -> { data, expires }
+const ghCache = new Map();
 
 function cacheGet(key) {
   const hit = ghCache.get(key);
@@ -20,10 +17,6 @@ function cacheSet(key, data) {
   }
 }
 
-/**
- * Validasi username GitHub: alfanumerik/hyphen, maks 39 char,
- * tidak boleh diawali/diakhiri hyphen.
- */
 export function parseGithubUser(rawInput) {
   const raw = String(rawInput || "").trim().replace(/^@/, "");
   if (!raw) return { valid: false, reason: "input kosong. Contoh: .githubstalk torvalds" };
@@ -41,7 +34,6 @@ function fmtDate(iso) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
-/** Ambil profil. Return object detail atau { notFound: true } / throw saat rate-limit. */
 export async function getGithubProfile(username) {
   const user = String(username || "").trim().replace(/^@/, "");
   const cached = cacheGet(user.toLowerCase());
@@ -106,7 +98,6 @@ export function formatGithubInfo(p) {
   return lines.join("\n");
 }
 
-/** Satu panggilan async untuk plugin: validasi + fetch + format. */
 export async function getGithubInfoText(input) {
   const parsed = parseGithubUser(input);
   if (!parsed.valid) return { error: parsed.reason };

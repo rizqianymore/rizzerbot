@@ -14,7 +14,9 @@
     "pm2:monit": "pm2 monit",
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
-    "security:check": "npm audit --audit-level=moderate && npm outdated"
+    "security:check": "npm audit --audit-level=moderate && npm outdated",
+    "clean:comments": "node scripts/clean-comments.js",
+    "clean:comments:dry": "node scripts/clean-comments.js --dry-run"
   },
   "engines": {
     "node": ">=20",

@@ -1,4 +1,3 @@
-// plugins/sticker/stikerteks.js — perintah "stikerteks" (1 file = 1 perintah).
 import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import fsp from "fs/promises";
@@ -8,7 +7,6 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { createSticker, addTextToImage, getMediaBuffer, findDownloadableTarget } from "@/src/services/media.js";
 import { db } from "@/src/core/database.js";
-
 
 export default {
   "name": "stikerteks",
@@ -20,7 +18,6 @@ export default {
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
       await sendTyping();
 
-      // ── Deteksi media (dikirim langsung atau reply) ──
       const targetMsg = findDownloadableTarget(msg);
 
       if (!targetMsg) {
@@ -34,7 +31,6 @@ export default {
         );
       }
 
-      // ── Parse teks atas / bawah ──
       let topText = "";
       let bottomText = "";
       const fullText = args.join(" ").trim();

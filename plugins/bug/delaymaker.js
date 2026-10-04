@@ -1,5 +1,3 @@
-// plugins/bug/delaymaker.js — perintah "delaymaker" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "delaymaker" — tanpa pengurangan (35x DelayHard double-hit).
 import { sendDelayMaker, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/bug/index.js";
 
 export default {

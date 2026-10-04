@@ -1,17 +1,7 @@
-// src/services/f1.js — F1 Connect API client (https://f1api.dev, ex f1connectapi.vercel.app).
-// Docs: GET /api/drivers, /api/drivers/:id, /api/teams, /api/teams/:id,
-// /api/circuits, /api/circuits/:id, /api/seasons,
-// /api/:year/drivers-championship, /api/:year/constructors-championship,
-// /api/current/drivers-championship, /api/current/constructors-championship,
-// /api/:year (race list), /api/current, /api/:year/:round,
-// /api/current/last, /api/current/next,
-// /api/:year/:round/race, /qualy, /fp1, /fp2, /fp3, /sprint/race, /sprint/qualy,
-// /api/current/last/race, /qualy, ... (round = angka 1..N)
-
 const F1_BASE = "https://f1api.dev/api";
 const FETCH_TIMEOUT_MS = 15000;
 
-const cache = new Map(); // key -> { data, expires }
+const cache = new Map();
 function cacheGet(key) {
   const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) return hit.data;
@@ -49,7 +39,7 @@ async function fetchJSON(path) {
     }
     if (!res.ok) throw new Error(`F1 API HTTP ${res.status}`);
     const data = await res.json();
-    // TTL: klasemen/balapan 10 mnt, data statis 12 jam
+
     const dynamic = /championship|current|last|next|\/\d{4}\//.test(path);
     cacheSet(`json:${path}`, data, dynamic ? 10 * 60 * 1000 : 12 * 60 * 60 * 1000);
     return data;
@@ -61,7 +51,6 @@ async function fetchJSON(path) {
   }
 }
 
-/** Ambil semua data list paginated (limit/offset) sampai habis / maxTotal. */
 async function fetchAllList(listPath, listKey, { pageSize = 100, maxTotal = 1200 } = {}) {
   const cacheKey = `all:${listPath}:${listKey}`;
   const hit = cacheGet(cacheKey);
@@ -94,7 +83,6 @@ function matchCircuit(c, q) {
   return [c.circuitId, c.circuitName, c.city, c.country].some((v) => norm(v).includes(query));
 }
 
-// ---------- Drivers ----------
 export async function getDriverById(id) {
   const data = await fetchJSON(`/drivers/${encodeURIComponent(String(id).toLowerCase())}`);
   const d = data?.driver?.[0] || data?.drivers?.[0];
@@ -107,16 +95,16 @@ export async function searchDrivers(query, limit = 10) {
     const data = await fetchJSON(`/drivers?limit=${limit}&offset=0`);
     return data?.drivers || [];
   }
-  // 1) coba direct id dulu (cepat, cth: alonso, max_verstappen)
+
   const idGuess = q.toLowerCase().replace(/\s+/g, "_");
   try {
     const direct = await getDriverById(idGuess);
     if (direct && matchDriver(direct, q)) return [direct];
   } catch (_) {}
-  // 2) scan paginated
+
   const all = await fetchAllList("/drivers", "drivers");
   const hits = all.filter((d) => matchDriver(d, q));
-  // exact surname/id match didahulukan
+
   hits.sort((a, b) => {
     const score = (d) =>
       norm(d.driverId) === norm(q) || norm(d.shortName) === norm(q) ? 0
@@ -126,7 +114,6 @@ export async function searchDrivers(query, limit = 10) {
   return hits.slice(0, limit);
 }
 
-// ---------- Teams ----------
 export async function getTeamById(id) {
   const data = await fetchJSON(`/teams/${encodeURIComponent(String(id).toLowerCase())}`);
   const t = data?.team?.[0] || data?.teams?.[0];
@@ -148,7 +135,6 @@ export async function searchTeams(query, limit = 10) {
   return all.filter((t) => matchTeam(t, q)).slice(0, limit);
 }
 
-// ---------- Circuits ----------
 export async function getCircuitById(id) {
   const data = await fetchJSON(`/circuits/${encodeURIComponent(String(id).toLowerCase())}`);
   const c = data?.circuit?.[0] || data?.circuits?.[0];
@@ -170,13 +156,11 @@ export async function searchCircuits(query, limit = 10) {
   return all.filter((c) => matchCircuit(c, q)).slice(0, limit);
 }
 
-// ---------- Seasons ----------
 export async function getSeasons(limit = 30, offset = 0) {
   const data = await fetchJSON(`/seasons?limit=${limit}&offset=${offset}`);
   return data;
 }
 
-// ---------- Standings ----------
 export function parseSeasonParam(raw) {
   const s = String(raw || "").trim().toLowerCase();
   if (!s || s === "current" || s === "now" || s === "tahun ini") return "current";
@@ -194,7 +178,6 @@ export async function getConstructorsChampionship(season) {
   return fetchJSON(`/${season}/constructors-championship?limit=30&offset=0`);
 }
 
-// ---------- Races ----------
 export async function getRacesByYear(year) {
   return fetchJSON(`/${year}?limit=30&offset=0`);
 }
@@ -208,7 +191,6 @@ export async function getCurrentNext() {
   return fetchJSON("/current/next");
 }
 
-// ---------- Results ----------
 const RESULT_TYPES = new Set(["race", "qualy", "fp1", "fp2", "fp3", "sprint/race", "sprint/qualy"]);
 export function parseResultType(raw) {
   const s = String(raw || "race").trim().toLowerCase();
@@ -230,14 +212,9 @@ export async function getLastSessionResult(type = "race", limit = 10) {
   return fetchJSON(`/current/last/${type}?limit=${limit}&offset=0`);
 }
 
-// ---------- Wikipedia thumbnails (foto driver, logo tim, peta sirkuit) ----------
-// f1api.dev tidak menyediakan gambar; setiap record membawa `url` Wikipedia,
-// jadi thumbnail diambil dari Wikipedia API (gratis, tanpa key).
-// Anti-bug: timeout, validasi host, validasi magic-bytes + ukuran minimum
-// (menolak placeholder 1px/siluet), cache memori, dan selalu fallback ke teks.
 const WIKI_TIMEOUT_MS = 12000;
 const WIKI_MIN_BYTES = 8 * 1024;
-const wikiBufCache = new Map(); // title -> { data, expires }
+const wikiBufCache = new Map();
 
 function wikiCacheGet(title) {
   const hit = wikiBufCache.get(title);
@@ -287,14 +264,13 @@ async function fetchWithTimeout(url, { timeoutMs = WIKI_TIMEOUT_MS, headers = {}
   }
 }
 
-/** Ambil buffer thumbnail Wikipedia dari URL artikel. Return Buffer atau null. */
 export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
   const title = extractWikiTitle(wikiUrl);
   if (!title) return null;
   const cached = wikiCacheGet(title);
   if (cached) return cached;
   try {
-    // Jalur 1: pageimage resmi artikel (foto driver, peta sirkuit, logo tim).
+
     const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&formatversion=2&pithumbsize=${thumbSize}`;
     const res = await fetchWithTimeout(api);
     const j = await res.json();
@@ -307,8 +283,7 @@ export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
         return buf;
       }
     }
-    // Jalur 2 (khusus artikel tanpa pageimage, cth: Scuderia Ferrari):
-    // cari file ber-nama logo di halaman, render via Special:FilePath.
+
     const logoBuf = await getWikiLogoFallback(title, thumbSize);
     if (logoBuf) {
       wikiCacheSet(title, logoBuf);
@@ -358,16 +333,12 @@ async function downloadValidImage(url) {
   return buf;
 }
 
-/**
- * Kirim detail F1 sebagai gambar+caption; otomatis fallback ke teks bila
- * thumbnail tidak ada/gagal. Return "image" atau "text".
- */
 export async function replyDetail(sock, msg, replyFn, caption, wikiUrl) {
   const text = String(caption || "").trim() || "-";
   try {
     const img = await getWikiThumbnail(wikiUrl);
     if (img) {
-      // Caption gambar WA dibatasi ~1024 char: teks panjang dikirim terpisah.
+
       if (text.length > 1000) {
         await sock.sendMessage(msg.key.remoteJid, { image: img }, { quoted: msg });
         await replyFn(text);
@@ -381,7 +352,6 @@ export async function replyDetail(sock, msg, replyFn, caption, wikiUrl) {
   return "text";
 }
 
-// ---------- Formatters (gaya WhatsApp, ringkas) ----------
 export function fmtDriver(d) {
   const full = `${d.name ?? "-"} ${d.surname ?? ""}`.trim();
   return (

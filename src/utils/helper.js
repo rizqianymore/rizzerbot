@@ -18,10 +18,6 @@ export function formatToWhatsAppJid(input) {
   return clean.length >= 7 ? `${clean}@s.whatsapp.net` : "";
 }
 
-// Bandingkan dua JID tanpa peduli format (@s.whatsapp.net vs @lid vs device `:xx`).
-// CATATAN: digit LID ≠ nomor HP (namespace beda). Untuk identitas user yang
-// benar (sadar peta LID→HP), pakai db.sameUser / findGroupParticipant.
-// Fungsi ini dipertahankan untuk kompatibilitas pola digit lama.
 export function samePhoneJid(a, b) {
   if (!a || !b) return false;
   if (a === b) return true;
@@ -30,9 +26,6 @@ export function samePhoneJid(a, b) {
   return Boolean(da && dbb && da === dbb);
 }
 
-// Cari partisipan grup yang cocok dengan JID — sadar LID→HP:
-// cocokkan id + phoneNumber + lid metadata melawan JID target (nomor HP).
-// WAJIB dipakai untuk cek admin grup / bot (jangan find + === / digit mentah).
 export function findGroupParticipant(meta, jid) {
   const parts = meta?.participants || [];
   for (const p of parts) {
@@ -41,7 +34,7 @@ export function findGroupParticipant(meta, jid) {
     for (const c of cands) {
       try {
         if (c && db.sameUser(c, jid)) return p;
-      } catch (_) { /* lanjut kandidat berikut */ }
+      } catch (_) {  }
     }
   }
   return null;
@@ -98,7 +91,7 @@ export async function getCachedGroupMeta(sock, jid) {
 
   try {
     const meta = await sock.groupMetadata(jid);
-    // Pelajari pasangan LID↔HP dari metadata agar database selalu nomor HP.
+
     try { db.learnGroupLidMap(meta); } catch (_) {}
     _groupMetaStore.set(jid, { data: meta, expireAt: now + GROUP_META_TTL_MS });
     return meta;

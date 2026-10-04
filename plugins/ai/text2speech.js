@@ -1,6 +1,3 @@
-// plugins/ai/text2speech.js — perintah "text2speech" (TTS gratis via Google, TANPA API key).
-// Pengganti versi lama yang butuh JereAPI (global.web) yang sudah tidak ada.
-// Catatan: "tts" premium sudah ada di plugins/premium/tts.js, jadi alias "tts" sengaja TIDAK dipakai di sini.
 import { textToSpeech } from "@/src/services/scrape.js";
 
 export default {

@@ -2,7 +2,6 @@ import QRCode from "qrcode";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { db } from "@/src/core/database.js";
 
-/** Map of known EMVCo / QRIS tag IDs to human-readable names */
 const TAG_NAMES = {
   "00": "Payload Format Indicator",
   "01": "Point of Initiation Method",
@@ -55,10 +54,6 @@ const NESTED_TAGS = new Set([
   "62",
 ]);
 
-/**
- * Calculate CRC16-CCITT checksum for QRIS/EMVCo QR codes.
- * Polynomial: 0x1021, Init: 0xFFFF
- */
 export function calculateCRC16(str) {
   let crc = 0xffff;
 
@@ -76,9 +71,6 @@ export function calculateCRC16(str) {
   return (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
 }
 
-/**
- * Parse raw TLV string into array of TLV elements
- */
 export function parseTLV(data) {
   const elements = [];
   let pos = 0;
@@ -107,9 +99,6 @@ export function parseTLV(data) {
   return elements;
 }
 
-/**
- * Parse QRIS string into structured metadata
- */
 export function parseQRIS(qrisString) {
   const raw = parseTLV(qrisString);
   const findTag = (tag) => raw.find((t) => t.tag === tag);
@@ -161,9 +150,6 @@ export function parseQRIS(qrisString) {
   };
 }
 
-/**
- * Validate a QRIS string structure and CRC16
- */
 export function validateQRIS(qrisString) {
   const errors = [];
   if (!qrisString || typeof qrisString !== "string" || !qrisString.trim()) {
@@ -220,10 +206,6 @@ function makeTLV(tag, value, name = "") {
   return { tag, name, length: value.length, value };
 }
 
-/**
- * Convert static QRIS string to dynamic with specified amount and optional fee
- * Follows verssache/qris-dinamis logic
- */
 export function convertQRIS(qrisString, { amount, fee = null } = {}) {
   const elements = parseTLV(qrisString);
   const result = [];
@@ -235,12 +217,11 @@ export function convertQRIS(qrisString, { amount, fee = null } = {}) {
     if (managedTags.has(el.tag)) continue;
 
     if (el.tag === "01") {
-      // Ubah static (11) ke dynamic (12)
+
       result.push(makeTLV("01", "12", "Point of Initiation Method"));
       continue;
     }
 
-    // Sisipkan amount & fee sebelum tag 58 (Country Code)
     if (el.tag === "58" && !amountInserted) {
       const amountStr = Math.round(Number(amount)).toString();
       result.push(makeTLV("54", amountStr, "Transaction Amount"));
@@ -268,9 +249,6 @@ export function convertQRIS(qrisString, { amount, fee = null } = {}) {
   return crcInput + crc;
 }
 
-/**
- * Get active QRIS string from database or fallback to settings
- */
 export function getActiveQrisString() {
   const settings = db.getSettings();
   return (
@@ -279,9 +257,6 @@ export function getActiveQrisString() {
   );
 }
 
-/**
- * Generate clean and pure QR Code image buffer without template/card wrapper
- */
 export async function generatePureQR(qrisPayload, options = {}) {
   return await QRCode.toBuffer(qrisPayload, {
     type: "png",
@@ -296,9 +271,6 @@ export async function generatePureQR(qrisPayload, options = {}) {
   });
 }
 
-/**
- * Generate high-aesthetic QRIS Payment Card (PNG Buffer)
- */
 export async function generateQrisCard({
   qrisPayload,
   amount = 0,
@@ -307,7 +279,7 @@ export async function generateQrisCard({
   fee = 0,
   expiredMinutes = 15,
 }) {
-  // 1. Generate QR Code image buffer with high quality
+
   const qrImageBuffer = await QRCode.toBuffer(qrisPayload, {
     type: "png",
     errorCorrectionLevel: "M",
@@ -321,24 +293,20 @@ export async function generateQrisCard({
 
   const qrImage = await loadImage(qrImageBuffer);
 
-  // 2. Setup Canvas
   const width = 640;
   const height = 900;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Background - Dark Modern FinTech Glassmorphism
   ctx.fillStyle = "#0c1017";
   ctx.fillRect(0, 0, width, height);
 
-  // Radial glowing top background
   const radialGlow = ctx.createRadialGradient(width / 2, 70, 20, width / 2, 70, 320);
   radialGlow.addColorStop(0, "rgba(239, 68, 68, 0.2)");
   radialGlow.addColorStop(1, "rgba(12, 16, 23, 0)");
   ctx.fillStyle = radialGlow;
   ctx.fillRect(0, 0, width, height);
 
-  // Main Card Wrapper
   const cardX = 30;
   const cardY = 30;
   const cardW = width - 60;
@@ -355,7 +323,6 @@ export async function generateQrisCard({
   ctx.stroke();
   ctx.restore();
 
-  // QRIS Standard Header Banner (Red / National Standard Accent)
   const headerH = 76;
   ctx.save();
   ctx.beginPath();
@@ -364,7 +331,6 @@ export async function generateQrisCard({
   ctx.fill();
   ctx.restore();
 
-  // QRIS Logo Text in Header
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 28px sans-serif";
@@ -374,7 +340,6 @@ export async function generateQrisCard({
   ctx.fillStyle = "#fecaca";
   ctx.fillText("QUICK RESPONSE CODE INDONESIAN STANDARD", width / 2, cardY + 63);
 
-  // Merchant Information
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 22px sans-serif";
@@ -384,7 +349,6 @@ export async function generateQrisCard({
   ctx.font = "13px sans-serif";
   ctx.fillText(`NMID / Kota: ${merchantCity}`, width / 2, cardY + 138);
 
-  // QR Box Container (White clean card)
   const qrBoxSize = 340;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrBoxY = cardY + 155;
@@ -400,7 +364,6 @@ export async function generateQrisCard({
   ctx.stroke();
   ctx.restore();
 
-  // Draw QR Inside
   const qrPadding = 16;
   ctx.drawImage(
     qrImage,
@@ -410,7 +373,6 @@ export async function generateQrisCard({
     qrBoxSize - qrPadding * 2
   );
 
-  // Center QRIS Badge Icon in middle of QR
   const centerSize = 46;
   const centerX = (width - centerSize) / 2;
   const centerY = qrBoxY + (qrBoxSize - centerSize) / 2;
@@ -430,7 +392,6 @@ export async function generateQrisCard({
   ctx.fillText("QRIS", width / 2, centerY + 28);
   ctx.restore();
 
-  // Price Container Box
   const priceBoxY = qrBoxY + qrBoxSize + 22;
   const priceBoxH = 82;
   const priceBoxW = cardW - 48;
@@ -467,14 +428,12 @@ export async function generateQrisCard({
     ctx.fillText("QRIS STATIS (Bebas Input)", width / 2, priceBoxY + 60);
   }
 
-  // Supported Banks & E-Wallets badge
   const bankY = priceBoxY + priceBoxH + 28;
   ctx.textAlign = "center";
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "13px sans-serif";
   ctx.fillText("DANA • BCA • MANDIRI • BRI • BNI • OVO • GOPAY • SHOPEEPAY", width / 2, bankY);
 
-  // Footer notes & expiry
   ctx.fillStyle = "#64748b";
   ctx.font = "11px sans-serif";
   const expText =

@@ -1,4 +1,3 @@
-// plugins/owner/chatlogs.js — perintah "chatlogs" (HANYA Bot Utama & SuperOwner)
 import fs from "fs";
 import { getChatLogsList, getChatLogContent } from "@/src/services/chatlogger.js";
 import { formatBytes } from "@/src/services/backup.js";
@@ -11,12 +10,11 @@ export default {
   "ownerOnly": true,
   "category": "Owner",
   "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, logger }) => {
-    // 1. ISOLASI MUTLAK: Hanya Bot Utama (bukan Sub-Bot)
+
     if (isSubBot || sock?.isSubBot) {
       return reply("❌ *Akses Ditolak!*\n\nLog pesan chat hanya dapat dibuka dan diakses melalui *Bot Utama*.");
     }
 
-    // 2. ISOLASI AKSES: Hanya SuperOwner (Owner Bot Utama)
     if (!isPrimarySuperOwner) {
       return reply("❌ Fitur riwayat log pesan hanya dapat diakses oleh *SuperOwner* Bot Utama.");
     }
@@ -24,7 +22,6 @@ export default {
     await sendTyping();
     const subCmd = (args[0] || "").toLowerCase();
 
-    // Mode 1: Kirim file log JSON langsung via WhatsApp dokumen
     if (subCmd === "get" || subCmd === "download" || subCmd === "file") {
       const targetDate = args[1];
       const logs = getChatLogsList();
@@ -50,7 +47,6 @@ export default {
       );
     }
 
-    // Mode 2: Preview pesan terakhir di WhatsApp
     if (subCmd === "read" || subCmd === "view") {
       const targetDate = args[1];
       const logs = getChatLogsList();
@@ -63,7 +59,7 @@ export default {
         return reply(`File log \`${targetDate || ""}\` tidak ditemukan.`);
       }
 
-      const list = target.data.slice(-15); // Ambil 15 pesan terakhir
+      const list = target.data.slice(-15);
       if (list.length === 0) {
         return reply(`File \`${target.file}\` masih kosong.`);
       }
@@ -79,7 +75,6 @@ export default {
       return reply(text);
     }
 
-    // Default: Tampilkan daftar file log yang tersimpan (maks 3 hari)
     const logs = getChatLogsList();
     if (logs.length === 0) {
       return reply("ℹ️ Belum ada catatan pesan WhatsApp yang tersimpan saat ini.");

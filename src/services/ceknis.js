@@ -1,8 +1,3 @@
-// src/services/ceknis.js — lookup data siswa via Google Apps Script (mode=nis).
-// Endpoint: GET <base>/exec?query=<nis>&mode=nis
-// Flow: 302 Found -> Location: https://script.googleusercontent.com/macros/echo?... -> 200 application/json [...]
-// Base URL priority: env SISWA_API_URL > config/settings.js > hardcoded fallback.
-
 import { settings } from "@/config/settings.js";
 
 const FALLBACK_URL =
@@ -20,7 +15,7 @@ export const SISWA_BASE_URL = FALLBACK_URL;
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const NOTFOUND_TTL_MS = 30 * 60 * 1000;
-const cache = new Map(); // key -> { data, expires }
+const cache = new Map();
 
 function cacheGet(key) {
   const hit = cache.get(key);
@@ -46,10 +41,6 @@ function buildUrl(query, mode = "nis") {
   return `${getSiswaBaseUrl()}?query=${encodeURIComponent(q)}&mode=${encodeURIComponent(m)}`;
 }
 
-/**
- * Validasi 1 NIS. Contoh valid: 539241249 (9 digit).
- * Longgar 5-20 digit agar tidak false-negative antar angkatan.
- */
 export function parseNisQuery(rawInput) {
   const raw = String(rawInput ?? "").trim();
   if (!raw) return { valid: false, reason: "input kosong" };
@@ -64,7 +55,6 @@ export function parseNisQuery(rawInput) {
   return { valid: true, query };
 }
 
-/** Parse multi-NIS: ".ceknis 539241249, 539241250 539241251" -> max 5, dedup. */
 export function parseMultiNis(rawInput, max = 5) {
   const tokens = String(rawInput ?? "")
     .split(/[\s,;|]+/)
@@ -88,14 +78,6 @@ export function parseMultiNis(rawInput, max = 5) {
   return { valid, invalid, truncated: tokens.length > valid.length + invalid.length || valid.length === max };
 }
 
-/**
- * Fetch dengan penanganan 302 manual.
- * script.google.com selalu balas 302 + Location ke script.googleusercontent.com
- * dengan body kosong. fetch `follow` default sebenarnya cukup, tapi manual agar:
- *  - timeout per-hop (bukan per chain)
- *  - header browser diteruskan ke hop berikutnya
- *  - tidak hang saat chain panjang / user_content_key expired
- */
 async function fetchWithRedirect(url, { timeoutMs = 10000, maxRedirects = 5 } = {}) {
   let currentUrl = url;
   let redirects = 0;
@@ -174,10 +156,6 @@ function normalizeRows(json) {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * Ambil data siswa by NIS dengan retry transient (429/5xx/timeout).
- * Return array (kosong = tidak ditemukan). Cache hit termasuk empty (TTL lebih panjang).
- */
 export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
   const query = String(nis ?? "").trim();
   const m = String(mode ?? "nis").trim().toLowerCase() || "nis";
@@ -216,7 +194,6 @@ function neat(v) {
   return s || "-";
 }
 
-/** Masking No HP: 6281291477354 -> 6281****7354. Full hanya untuk owner/admin. */
 export function maskPhone(phone) {
   const d = String(phone ?? "").replace(/\D/g, "");
   if (!d) return "-";
@@ -242,10 +219,6 @@ export function formatSiswa(row, { showFullPhone = true } = {}) {
   return lines.join("\n");
 }
 
-/**
- * Satu panggilan untuk plugin single-NIS.
- * @param {object} opts - { showFullPhone, logger }
- */
 export async function getSiswaInfoText(input, mode = "nis", opts = {}) {
   const parsed = parseNisQuery(input);
   if (!parsed.valid) return { error: parsed.reason };
@@ -270,7 +243,6 @@ export async function getSiswaInfoText(input, mode = "nis", opts = {}) {
   }
 }
 
-/** Bulk: fetch paralel max 5 NIS sekaligus (dipakai plugin multi-query). */
 export async function getMultiSiswaInfoText(nisList, opts = {}) {
   const unique = [...new Set(nisList)].slice(0, 5);
   const results = await Promise.all(

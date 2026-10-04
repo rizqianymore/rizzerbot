@@ -1,4 +1,3 @@
-// plugins/tools/cekdosen.js — perintah "cekdosen" (1 file = 1 perintah).
 import { getCekdosenInfoText } from "@/src/services/pddikti.js";
 
 export default {

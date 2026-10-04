@@ -1,16 +1,13 @@
 import path from "path";
 import fs from "fs";
 
-export const subBots = new Map(); // id -> { sock, number, status, startedAt }
+export const subBots = new Map();
 export const baseSessionsDir = path.join(process.cwd(), "assets", "sessions", "sub_bots");
 
 if (!fs.existsSync(baseSessionsDir)) {
   fs.mkdirSync(baseSessionsDir, { recursive: true });
 }
 
-/**
- * Check if a socket instance belongs to a sub-bot
- */
 export function isSubBotSocket(sock) {
   if (!sock) return false;
   if (sock.isSubBot) return true;
@@ -20,9 +17,6 @@ export function isSubBotSocket(sock) {
   return false;
 }
 
-/**
- * Check if a phone number or JID is an active/configured sub-bot
- */
 export function isSubBotNumber(jidOrPhone) {
   if (!jidOrPhone) return false;
   const digits = String(jidOrPhone).replace(/[^0-9]/g, "");
@@ -34,9 +28,6 @@ export function isSubBotNumber(jidOrPhone) {
   return false;
 }
 
-/**
- * Get all active sub bots
- */
 export function getSubBotsList() {
   const list = [];
   for (const [id, entry] of subBots.entries()) {

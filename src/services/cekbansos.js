@@ -12,8 +12,6 @@ const client = axios.create({
   validateStatus: () => true,
 });
 
-// ── Session ringan per alur (JANGAN pakai cookie jar global:
-// captcha terikat session cookie, user berbeda tidak boleh campur) ──
 function newJar() {
   return new Map();
 }
@@ -46,7 +44,6 @@ function baseHeaders(jar, extra = {}) {
   };
 }
 
-/** GET / → { jar, token, captchaUrl }. Melempar bila form tak dikenali. */
 export async function fetchFormSession() {
   const jar = newJar();
   const res = await client.get(`${BASE}/`, { headers: baseHeaders(jar) });
@@ -61,9 +58,8 @@ export async function fetchFormSession() {
   return { jar, token, captchaUrl };
 }
 
-/** GET captcha (kode BARU tiap request, terikat session). */
 export async function fetchCaptchaImage(session) {
-  // Cache-buster seperti tombol refresh di web
+
   const url = `${BASE}/captcha/flat?${Math.random().toString(36).slice(2)}`;
   const res = await client.get(url, {
     headers: baseHeaders(session.jar, { Referer: `${BASE}/` }),
@@ -74,10 +70,6 @@ export async function fetchCaptchaImage(session) {
   return Buffer.from(res.data);
 }
 
-/**
- * POST /cekbansos_nik tanpa follow redirect.
- * Sukses = 302 ke /hasil-nik. Gagal (captcha salah) = 302 balik ke /.
- */
 export async function submitNik(session, nik, code) {
   const body = new URLSearchParams({ _token: session.token, nik_input: nik, captcha: code }).toString();
   const res = await client.post(`${BASE}/cekbansos_nik`, body, {
@@ -101,7 +93,6 @@ export async function fetchHasil(session) {
   return res.data;
 }
 
-// ── OCR solver (tesseract; opsional — butuh `apt install tesseract-ocr` di VPS) ──
 let _tesseractAvailable = null;
 
 export async function isOcrAvailable() {
@@ -119,12 +110,11 @@ export async function isOcrAvailable() {
   return _tesseractAvailable;
 }
 
-/** Preprocess khas captcha flat kemensos: font tipis ungu, garis coret. */
 async function preprocessCaptcha(buffer) {
   return sharp(buffer)
     .grayscale()
     .normalize()
-    .resize({ width: 480 }) // 160x46 → ~3x, tegas untuk OCR
+    .resize({ width: 480 })
     .threshold(165)
     .png()
     .toBuffer();
@@ -144,7 +134,6 @@ function runTesseract(pngBuffer) {
   });
 }
 
-/** Kembalikan tebakan kode (alnum) atau null bila OCR tak tersedia/gagal. */
 export async function solveCaptchaOCR(imageBuffer) {
   if (!(await isOcrAvailable())) return null;
   try {
@@ -157,7 +146,6 @@ export async function solveCaptchaOCR(imageBuffer) {
   }
 }
 
-// ── Solver remote (ocr.space, gratis, tanpa install; hanya gambar captcha yg dikirim, tanpa NIK) ──
 const OCRSPACE_URL = "https://api.ocr.space/parse/image";
 
 export async function solveCaptchaRemote(imageBuffer, engine = "2") {
@@ -168,7 +156,7 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
       base64Image: b64,
       OCREngine: engine,
       isTable: "false",
-      // Captcha kecil (160x46): minta server upscale + tanpa deteksi orientasi.
+
       scale: "true",
       detectOrientation: "false",
       isOverlayRequired: "false",
@@ -189,11 +177,6 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
   }
 }
 
-/**
- * Chain solver: lokal (tesseract binary, cepat bila terinstall) → remote Engine 2 → Engine 1.
- * Kode captcha Kemensos 4 karakter: tebakan berpanjang 4 diutamakan, sisanya cadangan.
- * Return { guess, via, alternates: [{ guess, via }] }.
- */
 export async function solveCaptcha(imageBuffer) {
   const candidates = [];
   const push = (g, via) => {
@@ -207,14 +190,13 @@ export async function solveCaptcha(imageBuffer) {
     if (remote) push(remote, `remote-e${engine}`);
     if (candidates.length >= 2) break;
   }
-  // Panjang 4 dulu, sisanya cadangan (server tetap penentu akhir).
+
   candidates.sort((a, b) => Number(b.guess.length === 4) - Number(a.guess.length === 4));
   if (!candidates.length) return { guess: null, via: null, alternates: [] };
   const [first, ...rest] = candidates;
   return { guess: first.guess, via: first.via, alternates: rest };
 }
 
-// ── Parser halaman hasil ──
 function stripTags(s) {
   return String(s || "")
     .replace(/<[^>]*>/g, "")
@@ -253,7 +235,7 @@ export function parseHasil(html) {
 
 export function formatHasil(nik, parsed) {
   const maskNik = (n) => (n.length === 16 ? `${n.slice(0, 6)}********${n.slice(-4)}` : n);
-  // Kapitalisasi rapi: kata biasa → huruf depan besar, singkatan → tetap besar.
+
   const ACRONYMS = new Set(["dtsen", "nik", "pkh", "pbi", "jk", "kpd", "ktp"]);
   const neatWord = (w) => {
     const l = w.toLowerCase();
@@ -285,12 +267,6 @@ export function formatHasil(nik, parsed) {
   return text.trim();
 }
 
-/**
- * Alur otomatis penuh: session baru → captcha → solver (len-4 diutamakan) → submit.
- * Tiap sesi dicoba maks 2 tebakan (tebakan-2 gratis bila server belum invalidate
- * kode; bila sudah, request-nya gagal cepat dan loop lanjut ke sesi baru).
- * Ulangi dengan session + captcha BARU bila ditolak.
- */
 export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
   let nullStreak = 0;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -301,7 +277,7 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
       .filter(Boolean)
       .slice(0, 2);
     if (!tries.length) {
-      // Solver mati total (API down/limit) 2x beruntun → langsung manual, hemat waktu.
+
       if (++nullStreak >= 2) break;
       continue;
     }
@@ -312,14 +288,13 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
         const html = await fetchHasil(session);
         return { status: "ok", result: parseHasil(html), attempts: attempt };
       }
-      await new Promise((r) => setTimeout(r, 400)); // jeda sopan antar percobaan
+      await new Promise((r) => setTimeout(r, 400));
     }
-    // Semua tebakan sesi ini salah → ulang dengan session + captcha baru.
+
   }
   return { status: "captcha-gagal" };
 }
 
-/** Penampung session manual: senderJid → { jar, token, captchaUrl, image, nik, expires }. TTL 5 menit. */
 const pendingManual = new Map();
 const PENDING_TTL_MS = 5 * 60 * 1000;
 
@@ -331,7 +306,6 @@ export function savePendingSession(senderJid, session, nik, image = null) {
   }
 }
 
-/** Intip tanpa menghapus (untuk kirim ulang gambar yang sama). */
 export function peekPendingSession(senderJid, nik) {
   const p = pendingManual.get(senderJid);
   if (!p || p.expires < Date.now() || p.nik !== nik) return null;

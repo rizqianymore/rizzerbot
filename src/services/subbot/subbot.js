@@ -1,8 +1,3 @@
-/**
- * SubBot Service Barrel / Re-export
- * Modularized subbot service components
- */
-
 export {
   subBots,
   baseSessionsDir,

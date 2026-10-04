@@ -1,6 +1,3 @@
-// plugins/bug/bandgroup.js — perintah "bandgroup" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "bandgroup" — tanpa pengurangan.
-// (resolve link grup -> groupAcceptInvite -> groupParticipantsUpdate add targetMeta).
 import { parseGroupInviteCode, resolveGroupTarget, sleep } from "@/src/services/bug/index.js";
 
 const TARGET_META = "13135550002@s.whatsapp.net";
@@ -24,7 +21,6 @@ export default {
     const remoteJid = msg.key.remoteJid;
     await reply(`⏳ *processing...*\nsedang memproses link grup dan mengeksekusi target...`);
 
-    // Fire-and-forget seperti aslinya.
     (async () => {
       const log = logger || console;
       let target;

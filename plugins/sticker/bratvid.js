@@ -1,4 +1,3 @@
-// plugins/sticker/bratvid.js — mandiri: 1 file = 1 perintah (helper digabung langsung).
 import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import fsp from "fs/promises";
@@ -484,7 +483,6 @@ export default {
         return reply(`⚠️ Masukkan teks!\nContoh: \`${prefix}bratvid lagu baru charli xcx\``);
       }
 
-      // Validasi batas panjang kalimat video
       if (text.length > MAX_BRAT_VIDEO_LENGTH) {
         return reply(
           `⚠️ *Kalimat Terlalu Panjang!*\n\n` +

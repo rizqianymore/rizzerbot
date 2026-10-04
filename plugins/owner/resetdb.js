@@ -1,8 +1,3 @@
-// plugins/owner/resetdb.js — perintah "resetdb" (SuperOwner saja).
-// Mereset database utama (users, transaksi, sewa, chat log, audit) TANPA
-// mengganggu sub-bot yang aktif: database/subbots/* dan seluruh sesi login
-// (assets/sessions/*) TIDAK disentuh. Setting bot (owner, prefix, dsb)
-// dipertahankan. Wajib konfirmasi 2 tahap + restart otomatis agar memori bersih.
 import fs from "fs";
 import path from "path";
 import { db } from "@/src/core/database.js";
@@ -89,18 +84,15 @@ export default {
       };
 
       try {
-        // 1. Users + database utama (ditulis ulang fresh, setting dipertahankan).
-        //    Hapus file dulu agar Store me-load skeleton bersih saat restart.
+
         push("users.json", path.join(DB_DIR, "users.json"));
         push("database.json", path.join(DB_DIR, "database.json"));
         push("transactions.json", path.join(DB_DIR, "transactions.json"));
         push("rentals.json", path.join(DB_DIR, "rentals.json"));
 
-        // 2. Chat log & audit lama dibersihkan (audit baru dicatat di bawah).
         const logs = clearDirKeepFolder(CHATLOGS_DIR);
         wiped.push(`chat_logs (${logs} file)`);
 
-        // 3. Tulis ulang audit fresh berisi jejak reset ini (akuntabilitas).
         try {
           fs.writeFileSync(
             path.join(DB_DIR, "privilege-audit.json"),
@@ -118,7 +110,6 @@ export default {
           failed.push("privilege-audit.json");
         }
 
-        // 4. Pengaman: database sub-bot & sesi WAJIB masih ada sesudah wipe.
         const subAfter = countSubbotDbs();
         if (subAfter !== subCount) {
           logger?.error?.(`[resetdb] KETIDAKCOCOKAN sub-bot: sebelum=${subCount} sesudah=${subAfter}`);

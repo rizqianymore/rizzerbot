@@ -5,8 +5,6 @@ import { execFile } from "node:child_process";
 const ROOT = process.cwd();
 const TMP_DIR = path.join(ROOT, "temp");
 
-// Yang ikut backup: sesi + database inti + sewa. Sengaja TIDAK ikut:
-// node_modules, logs, cache, media, backups harian (hemat ukuran).
 const INCLUDE_PATHS = [
   "assets/sessions",
   "database/database.json",
@@ -14,7 +12,6 @@ const INCLUDE_PATHS = [
   "database/rentals.json",
 ];
 
-/** Buat arsip backup. Kembalikan { file, size }. */
 export async function createBackup() {
   if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
   const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
@@ -30,10 +27,9 @@ export async function createBackup() {
   return { file, size: stat.size };
 }
 
-/** Validasi + ekstrak arsip backup ke ROOT. Kembalikan daftar entry. */
 export async function restoreBackup(tarPath) {
   if (!fs.existsSync(tarPath)) throw new Error("File backup tidak ditemukan");
-  // Tolak symlink / path traversal: tarPath harus file biasa di dalam temp/.
+
   try {
     const stat = fs.lstatSync(tarPath);
     if (!stat.isFile()) throw new Error("Path backup tidak valid");
@@ -46,10 +42,7 @@ export async function restoreBackup(tarPath) {
     );
   });
   const entries = list.split("\n").map((s) => s.trim()).filter(Boolean);
-  // ALLOWLIST ketat: hanya sesi + database inti + sewa. Tolak absolute path,
-  // traversal (..), symlink entry, dan file di luar daftar (mis. plugins/,
-  // package.json, .env) agar arsip jahat tidak bisa overwrite kode / tanam
-  // owner via database/users.json palsu di path lain.
+
   const ALLOWED = [
     /^assets\/sessions\//,
     /^assets\/sessions$/,
@@ -57,7 +50,7 @@ export async function restoreBackup(tarPath) {
     /^database\/users\.json$/,
     /^database\/rentals\.json$/,
   ];
-  // Sub-bot DB diizinkan: database/subbots/<digits>/(database|users).json
+
   const ALLOWED_SUB = /^database\/subbots\/[0-9]{8,16}\/(database|users)\.json$/;
   for (const entry of entries) {
     const e = entry.replace(/^\.\//, "");
@@ -73,7 +66,7 @@ export async function restoreBackup(tarPath) {
   const hasDb = entries.some((e) => e.replace(/^\.\//, "").startsWith("database/"));
   if (!hasSessions && !hasDb) throw new Error("Arsip tidak berisi data sesi/database rizzerbot");
   await new Promise((resolve, reject) => {
-    // --no-same-owner agar tidak ada privilege escalation via ownership tar.
+
     execFile("tar", ["-xzf", tarPath, "-C", ROOT, "--no-same-owner"], { timeout: 120000 }, (err) =>
       err ? reject(new Error(`Restore gagal: ${err.message}`)) : resolve()
     );

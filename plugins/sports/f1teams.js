@@ -1,4 +1,3 @@
-// plugins/sports/f1teams.js — tim/konstruktor F1 (f1api.dev).
 import { searchTeams, getTeamById, fmtTeam, replyDetail } from "@/src/services/f1.js";
 
 export default {

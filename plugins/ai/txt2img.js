@@ -1,6 +1,3 @@
-// plugins/ai/txt2imgv2.js — perintah "txt2img" (generate gambar dari teks, TANPA API key).
-// Backend: Pollinations AI gratis (image.pollinations.ai) — pengganti JereAPI yang sudah tidak ada.
-// Flag --style dipertahankan, diterjemahkan jadi penegas prompt (backend gratis tidak punya param style).
 import { fetchBuffer } from "@/src/services/scrape.js";
 
 const STYLE_PROMPTS = {

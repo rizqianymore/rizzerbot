@@ -1,6 +1,3 @@
-// plugins/owner/cleanusers.js — perintah "cleanusers" (SuperOwner saja).
-// Bersihkan user sampah: tak terdaftar, tanpa hak (owner/admin/premium),
-// dan tidak aktif selama N hari (default 30). 2 tahap: preview -> confirm.
 import { db } from '@/src/core/database.js';
 
 function findJunk(users, inactiveDays) {

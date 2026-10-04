@@ -1,5 +1,3 @@
-// plugins/owner/stats.js — perintah "stats" (owner).
-// Statistik database: user per peran, premium aktif, top command, ukuran file.
 import fs from "fs";
 import path from "path";
 import { db } from '@/src/core/database.js';

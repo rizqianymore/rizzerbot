@@ -1,5 +1,3 @@
-// plugins/bug/forcemaker.js — perintah "forcemaker" (1 file = 1 perintah).
-// Dipecah dari hasil_date.js case "forcemaker" — tanpa pengurangan (35x DelayV1..V5 full combo).
 import { sendForceMaker, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/bug/index.js";
 
 export default {

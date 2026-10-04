@@ -2,7 +2,6 @@ import "./src/utils/log-filter.js";
 import fs from "fs";
 import path from "path";
 
-// Pastikan symlink alias '@' di node_modules tersedia untuk module resolver
 const symlinkPath = path.join(process.cwd(), "node_modules", "@");
 if (!fs.existsSync(symlinkPath)) {
   try {
@@ -10,7 +9,6 @@ if (!fs.existsSync(symlinkPath)) {
   } catch (_) { }
 }
 
-// Auto load .env jika file .env ada
 const envPath = path.join(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
   try {
@@ -33,7 +31,6 @@ if (fs.existsSync(envPath)) {
   } catch (_) { }
 }
 
-// Konfigurasi binary lokal ffmpeg jika tersedia
 const candidateFfmpegPaths = [
   process.env.FFMPEG_PATH,
   path.join(process.cwd(), "bin", "ffmpeg"),
@@ -54,7 +51,6 @@ for (const p of candidateFfmpegPaths) {
 
 import { startBot, logger } from "./src/core/connection.js";
 
-// Inisialisasi bot utama
 startBot()
   .then(async () => {
     try {
@@ -75,7 +71,6 @@ startBot()
     logger?.error?.("Fatal initialization error:", err);
   });
 
-// Graceful Shutdown & Process Crash Traps
 let isShuttingDown = false;
 async function gracefulShutdown(signal) {
   if (isShuttingDown) return;

@@ -1,4 +1,3 @@
-// plugins/sports/f1circuits.js — sirkuit F1 (f1api.dev).
 import { searchCircuits, getCircuitById, fmtCircuit, replyDetail } from "@/src/services/f1.js";
 
 export default {

@@ -3,12 +3,6 @@ import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 
 const KOMPAS_BASE = "https://www.kompas.tv";
 
-
-/**
- * Mengambil daftar berita terkini dari Kompas TV (halaman /news atau kategori tertentu)
- * @param {string} category - "news", "nasional", "regional", "internasional", "ekonomi", "olahraga"
- * @param {number} limit - Jumlah berita yang diambil (default: 5)
- */
 export async function getLatestKompasNews(category = "news", limit = 5) {
   const safeCategory = (category || "news").toLowerCase().trim();
   const url = `${KOMPAS_BASE}/${safeCategory === "news" ? "news" : safeCategory}`;
@@ -39,7 +33,6 @@ export async function getLatestKompasNews(category = "news", limit = 5) {
       const rawTitle = titleMatch[1].replace(/<[^>]+>/g, "").trim();
       const cleanUrl = urlMatch[1].trim();
 
-      // Hindari template JS dan duplikasi
       if (rawTitle && !rawTitle.includes("row.title") && !articles.some((a) => a.url === cleanUrl)) {
         articles.push({
           title: rawTitle,
@@ -54,21 +47,13 @@ export async function getLatestKompasNews(category = "news", limit = 5) {
   return articles;
 }
 
-/**
- * Mencari berita di Kompas TV berdasarkan kata kunci (query)
- * Menggunakan headless browser untuk merender Google CSE di Kompas TV
- * @param {string} query - Kata kunci pencarian (misal: "polres", "gempa", dll)
- * @param {number} limit - Jumlah hasil pencarian (default: 5)
- */
 export async function searchKompasNews(query, limit = 5) {
   const cleanQuery = query.trim();
   if (!cleanQuery) throw new Error("Kata kunci pencarian tidak boleh kosong.");
 
-  // 1. Coba pencarian cepat dari kategori portal Kompas TV langsung
   const localResults = await searchKompasNewsFallback(cleanQuery, limit);
   if (localResults && localResults.length > 0) return localResults;
 
-  // 2. Pencarian berbasis Google News RSS untuk topik yang lebih luas (100% cepat & tanpa browser)
   try {
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(`site:kompas.tv ${cleanQuery}`)}&hl=id&gl=ID&ceid=ID:id`;
     const res = await axios.get(rssUrl, { timeout: 8000 });
@@ -97,9 +82,6 @@ export async function searchKompasNews(query, limit = 5) {
   throw new Error(`Pencarian untuk "${cleanQuery}" tidak menemukan berita yang cocok di Kompas TV.`);
 }
 
-/**
- * Pencarian cepat berbasis HTTP tanpa browser di seluruh kanal Kompas TV
- */
 async function searchKompasNewsFallback(query, limit = 5) {
   const categories = ["news", "nasional", "regional", "internasional", "ekonomi", "olahraga"];
   const queryWords = query
@@ -126,10 +108,6 @@ async function searchKompasNewsFallback(query, limit = 5) {
   return matched;
 }
 
-/**
- * Membaca detail isi berita Kompas TV berdasarkan tautan artikel
- * @param {string} articleUrl - Tautan lengkap artikel berita Kompas TV
- */
 export async function getKompasArticleDetail(articleUrl) {
   if (!articleUrl.startsWith(KOMPAS_BASE)) {
     throw new Error("Tautan harus berasal dari situs kompas.tv!");

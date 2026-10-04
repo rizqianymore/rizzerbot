@@ -1,4 +1,3 @@
-// plugins/tools/safelink.js — Solver dan pemecah tautan Safelink / URL Shortener
 import { solveSafelink, mediafireDownload } from "@/src/services/mediafire.js";
 import { fetchBuffer } from "@/src/services/scrape.js";
 
@@ -35,7 +34,6 @@ export default {
         `🎯 *Target Link:* ${targetUrl}\n` +
         `🏷️ *Tipe:* ${type.toUpperCase()}\n`;
 
-      // Jika target URL adalah MediaFire, tawarkan/langsung ambil detailnya
       if (/mediafire\.com/i.test(targetUrl)) {
         responseText += `\n⏳ Terdeteksi MediaFire, sedang mengambil link unduhan langsung...`;
         await reply(responseText);

@@ -1,21 +1,10 @@
-/**
- * Filter komprehensif kata-kata jorok, kata kasar eksplisit, konten pornografi / 18+
- * Berlaku secara global untuk SEMUA plugins & commands di bot.
- */
-
 export const BANNED_PATTERNS = [
-  // 1. Pornografi, Seksual Eksplisit & Slang 18+ Berat (Indonesia, English, Japanese slang)
+
   /\b(?:bokep|porn|porno|pornografi|hentai|ecchi|sex|seks|ngentot|ngewe|kontol|memek|pepek|itil|jembut|tetek|toket|coli|colmek|crot|vagina|penis|bugil|telanjang|lonte|perek|open\s*bo|bispak|jav|masturbasi|cum|creampie|blowjob|deepthroat|dildo|sange|horny|bokepjepang|bokepindo|pornhub|xnxx|xvideos|nude|nudes|boobs|tits|pussy|dick|cock|milf|hentaihaven|rule34)\b/i,
 
-  // 2. Makian Jorok Ekstrem / Pelecehan
   /\b(?:pantek|puki|pukimak|pecun|jablay)\b/i,
 ];
 
-/**
- * Memeriksa apakah teks atau array teks mengandung kata jorok / 18+
- * @param {string|string[]} textOrArray
- * @returns {{ isViolation: boolean, matchedWord?: string }}
- */
 export function checkProfanity(textOrArray) {
   if (!textOrArray) return { isViolation: false };
 
@@ -28,7 +17,6 @@ export function checkProfanity(textOrArray) {
     return { isViolation: false };
   }
 
-  // Normalisasi teks (bersihkan simbol, angka pengganti huruf seperti k0nt0l / b0k3p)
   let normalized = text
     .toLowerCase()
     .replace(/0/g, "o")

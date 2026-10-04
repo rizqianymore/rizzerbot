@@ -64,14 +64,10 @@ export function solvePow(challenge) {
   ).toString("base64");
 }
 
-/**
- * DeepSeek Web Executor with Automatic Session & Token Refresh.
- * Derived from OmniRoute v3.8.51 (open-sse/executors/deepseek-web-with-auto-refresh.ts).
- */
 export class DeepSeekWebWithAutoRefresh {
   constructor(config = {}) {
     this.refreshConfig = {
-      sessionRefreshInterval: 50 * 60 * 1000, // 50 menit
+      sessionRefreshInterval: 50 * 60 * 1000,
       maxRefreshRetries: 3,
       autoRefresh: true,
       ...config,
@@ -219,9 +215,6 @@ export class DeepSeekWebWithAutoRefresh {
     return bizData.challenge;
   }
 
-  /**
-   * Send a chat completion request to DeepSeek Web.
-   */
   async chat(prompt, { thinking = false, search = false, userToken = null } = {}) {
     const token = extractUserToken(
       userToken ||
@@ -281,7 +274,6 @@ export class DeepSeekWebWithAutoRefresh {
         throw new Error(`DeepSeek API error (HTTP ${resp.status})`);
       }
 
-      // Read SSE stream
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -342,7 +334,7 @@ export class DeepSeekWebWithAutoRefresh {
         source: "deepseek-web",
       };
     } finally {
-      // Best-effort cleanup session
+
       this.deleteSession(accessToken, sessionId).catch(() => { });
     }
   }
@@ -357,13 +349,6 @@ export class DeepSeekWebWithAutoRefresh {
 
 export const deepseekWebExecutor = new DeepSeekWebWithAutoRefresh();
 
-/**
- * Main AI Gateway function for DeepSeek.
- * Automatically tries:
- * 1. DeepSeek Web (with auto-refresh and PoW solver) if DEEPSEEK_COOKIE_TOKEN is available
- * 2. Official DeepSeek API (api.deepseek.com) if DEEPSEEK_API_KEY is available
- * 3. Public AI Gateway fallback (Pollinations AI) if no token is configured
- */
 export async function askDeepSeek(prompt, { thinking = false, search = false, userToken = null } = {}) {
   const token = extractUserToken(
     userToken ||
@@ -373,7 +358,6 @@ export async function askDeepSeek(prompt, { thinking = false, search = false, us
   );
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
-  // 1. DeepSeek Web via OmniRoute logic
   if (token) {
     try {
       return await deepseekWebExecutor.chat(prompt, { thinking, search, userToken: token });
@@ -383,7 +367,6 @@ export async function askDeepSeek(prompt, { thinking = false, search = false, us
     }
   }
 
-  // 2. Official DeepSeek API if API key provided
   if (apiKey) {
     try {
       const model = thinking ? "deepseek-reasoner" : "deepseek-chat";
@@ -415,7 +398,6 @@ export async function askDeepSeek(prompt, { thinking = false, search = false, us
     }
   }
 
-  // 3. Zero-Config Public AI Gateway Fallback (Pollinations AI)
   try {
     const { data } = await axios.post(
       "https://text.pollinations.ai/openai",
