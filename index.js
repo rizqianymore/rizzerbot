@@ -3,11 +3,21 @@ import fs from "fs";
 import path from "path";
 
 const symlinkPath = path.join(process.cwd(), "node_modules", "@");
-if (!fs.existsSync(symlinkPath)) {
-  try {
+try {
+  const resolves = (() => {
+    try {
+      return fs.existsSync(path.join(symlinkPath, "package.json"));
+    } catch {
+      return false;
+    }
+  })();
+  if (!resolves) {
+    try {
+      fs.rmSync(symlinkPath, { recursive: true, force: true });
+    } catch (_) {}
     fs.symlinkSync(process.cwd(), symlinkPath, "junction");
-  } catch (_) { }
-}
+  }
+} catch (_) {}
 
 const envPath = path.join(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
@@ -49,7 +59,7 @@ for (const p of candidateFfmpegPaths) {
   }
 }
 
-import { startBot, logger } from "./src/core/connection.js";
+const { startBot, logger } = await import("./src/core/connection.js");
 
 startBot()
   .then(async () => {
