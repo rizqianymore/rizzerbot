@@ -11,6 +11,9 @@ const SUBCOMMANDS = {
   bansos: "cekbansos",
   plat: "cekplat",
   nopol: "cekplat",
+  operator: "cekoperator",
+  hlr: "cekoperator",
+  op: "cekoperator",
   kodepos: "cekkodepos",
   pos: "cekkodepos",
   trx: "cektrx",
@@ -20,7 +23,7 @@ const SUBCOMMANDS = {
 export default {
   name: "cek",
   aliases: [],
-  description: "Pintasan: cek nim/dosen/nis/bansos/plat/trx",
+  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/trx",
   usage: "<sub> <query>, cth: cek nim 201311413",
   premiumOnly: true,
   category: "OSINT",
