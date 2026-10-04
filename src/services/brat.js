@@ -63,11 +63,11 @@ const TEXT_STYLE = {
   fontFamily: "Arial Narrow",
   maxFontSize: 90,
   growMaxFontSize: 200,
-  minFontSize: 22,
+  minFontSize: 14,
   lineHeight: 1.18,
   color: "#111111",
   strokeColor: "rgba(255, 255, 255, 0.9)",
-  align: "center",
+  align: "justify",
 };
 
 const VIDEO_CONFIG = {
@@ -372,6 +372,33 @@ function fitText(ctx, text, rect) {
   };
 }
 
+function strokeLine(ctx, line, x, y, size) {
+  ctx.save();
+  ctx.strokeStyle = TEXT_STYLE.strokeColor;
+  ctx.lineWidth = Math.max(2, Math.round(size / 14));
+  ctx.lineJoin = "round";
+  ctx.strokeText(line, x, y);
+  ctx.restore();
+}
+
+function drawJustifiedLine(ctx, line, x, y, maxWidth, useStroke, size) {
+  const words = line.split(" ").filter(Boolean);
+  if (words.length <= 1) {
+    if (useStroke) strokeLine(ctx, line, x, y, size);
+    ctx.fillText(line, x, y);
+    return;
+  }
+  const widths = words.map((w) => ctx.measureText(w).width);
+  const wordsWidth = widths.reduce((a, b) => a + b, 0);
+  const gap = (maxWidth - wordsWidth) / (words.length - 1);
+  let cx = x;
+  for (let i = 0; i < words.length; i++) {
+    if (useStroke) strokeLine(ctx, words[i], cx, y, size);
+    ctx.fillText(words[i], cx, y);
+    cx += widths[i] + gap;
+  }
+}
+
 function drawCenteredText(ctx, text, zone, options = {}) {
   const rect = getSafeRect(zone);
   const fitted = fitText(ctx, text, rect);
@@ -384,22 +411,22 @@ function drawCenteredText(ctx, text, zone, options = {}) {
 
   setFont(ctx, fitted.size);
   ctx.fillStyle = options.color || TEXT_STYLE.color;
-  ctx.textAlign = options.align || TEXT_STYLE.align;
   ctx.textBaseline = "top";
 
+  const align = options.align || TEXT_STYLE.align;
   const useStroke = options.stroke ?? zone.stroke ?? false;
 
   fitted.lines.forEach((line, index) => {
     const y = startY + index * fitted.lineHeight;
-    if (useStroke) {
-      ctx.save();
-      ctx.strokeStyle = TEXT_STYLE.strokeColor;
-      ctx.lineWidth = Math.max(2, Math.round(fitted.size / 14));
-      ctx.lineJoin = "round";
-      ctx.strokeText(line, rect.centerX, y);
-      ctx.restore();
+    const isLastLine = index === fitted.lines.length - 1;
+    if (align === "justify" && !isLastLine) {
+      ctx.textAlign = "left";
+      drawJustifiedLine(ctx, line, rect.x, y, rect.w, useStroke, fitted.size);
+      return;
     }
-    ctx.fillText(line, rect.centerX, y);
+    ctx.textAlign = align === "justify" ? "left" : align;
+    if (useStroke) strokeLine(ctx, line, align === "justify" ? rect.x : rect.centerX, y, fitted.size);
+    ctx.fillText(line, align === "justify" ? rect.x : rect.centerX, y);
   });
 
   ctx.restore();
