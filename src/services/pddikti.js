@@ -34,7 +34,7 @@ async function getBrowser() {
     browserPromise = puppeteer
       .launch({
         headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled", "--lang=id-ID"],
       })
       .catch((err) => {
         browserPromise = null;
@@ -59,8 +59,15 @@ async function getTokenPage() {
         .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
           timeout: 15000,
         })
-        .catch(() => {
-          throw new Error("grecaptcha tidak termuat (Cloudflare / jaringan bermasalah)");
+        .catch(async () => {
+          await page.reload({ waitUntil: "networkidle2", timeout: TOKEN_TIMEOUT_MS }).catch(() => {});
+          await page
+            .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
+              timeout: 20000,
+            })
+            .catch(() => {
+              throw new Error("grecaptcha tidak termuat (Cloudflare / jaringan bermasalah)");
+            });
         });
       return page;
     })().catch((err) => {
