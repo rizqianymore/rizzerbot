@@ -121,7 +121,22 @@ export default {
         }
       } catch (err) {
         console.error("[ThreadsDL Error]:", err.message);
-        reply(`❌ Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
+        try {
+          const { downloadMedia, probe } = await import("@/src/services/ytdlp.js");
+          const pInfo = await probe(url).catch(() => null);
+          const dl = await downloadMedia(url, { mode: "video" });
+          const remoteJid = msg.key.remoteJid;
+          const caption = `🧵 *THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
+          await sock.sendMessage(
+            remoteJid,
+            { video: dl.buffer, caption, mimetype: "video/mp4" },
+            { quoted: msg }
+          );
+          await sock.sendMessage(remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
+        } catch (ytdlpErr) {
+          await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
+          reply(`❌ Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
+        }
       }
     },
 };

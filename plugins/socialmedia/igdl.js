@@ -238,6 +238,25 @@ export default {
           }
         }
 
+        // Fallback terakhir: gunakan yt-dlp engine (Yoinks logic) jika API/scraper web gagal
+        if (!res || !res.media?.length) {
+          try {
+            const { downloadMedia, probe } = await import("@/src/services/ytdlp.js");
+            const info = await probe(input).catch(() => null);
+            const dl = await downloadMedia(input, { mode: "video" });
+            if (dl?.buffer) {
+              res = {
+                username: info?.uploader || "",
+                likes: 0,
+                title: info?.title || "",
+                media: [{ type: "mp4", buffer: dl.buffer }],
+              };
+            }
+          } catch (ytdlpErr) {
+            logger?.warn?.(`[igdl ytdlp fallback] ${ytdlpErr?.message || ytdlpErr}`);
+          }
+        }
+
         if (!res || !res.media?.length) {
           throw new Error("Media tidak ditemukan atau akun di-private.");
         }
