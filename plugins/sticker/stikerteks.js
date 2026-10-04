@@ -11,8 +11,8 @@ import { db } from "@/src/core/database.js";
 export default {
   "name": "stikerteks",
   "aliases": ["stikermeme","smeme","stkteks"],
-  "description": "Buat stiker dari gambar dengan teks atas/bawah gaya meme",
-  "usage": "[teks atas | bawah] (kirim/reply gambar)",
+  "description": "Buat stiker dari gambar atau video dengan teks atas/bawah gaya meme",
+  "usage": "[teks atas | bawah] (kirim/reply gambar atau video)",
   "premiumOnly": true,
   "category": "Sticker",
   "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
@@ -23,7 +23,7 @@ export default {
       if (!targetMsg) {
         return reply(
           `📌 *Cara Penggunaan ${prefix}stikerteks:*\n\n` +
-          `Kirim/balas gambar dengan caption:\n` +
+          `Kirim/balas gambar atau video dengan caption:\n` +
           `• *${prefix}stikerteks Teks Bawah*\n` +
           `• *${prefix}stikerteks Teks Atas | Teks Bawah*\n\n` +
           `💡 Gunakan tanda *|* untuk memisahkan teks atas dan bawah.\n` +

@@ -14,15 +14,15 @@ import {
 
 export default {
   "name": "stickernowm",
-  "description": "Create sticker without watermark",
-  "usage": "[teks atas | bawah] (reply gambar)",
+  "description": "Create sticker without watermark (support gambar & video)",
+  "usage": "[teks atas | bawah] (reply gambar/video)",
   "premiumOnly": true,
   "category": "Premium",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const targetMsg = findDownloadableTarget(msg);
       const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
-      if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.stickernowm*");
+      if (!buffer) return reply("❌ Balas gambar atau video dengan caption *\\.stickernowm*");
 
       let topText = "";
       let bottomText = "";

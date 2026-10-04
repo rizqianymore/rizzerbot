@@ -3,19 +3,14 @@ import {
   getMediaBuffer,
   createSticker,
   webpToImage,
+  webpToVideo,
   findDownloadableTarget,
 } from '@/src/services/media.js';
-import {
-  fetchLyrics,
-  translateText,
-} from '@/src/services/scrape.js';
-
-import { getUptimeString } from '@/src/utils/helper.js';
 
 export default {
   "name": "toimg",
-  "aliases": ["toimage"],
-  "description": "Convert sticker to image",
+  "aliases": ["toimage", "tovid", "tovideo"],
+  "description": "Convert sticker to image or video",
   "usage": "(reply stiker)",
   "premiumOnly": true,
   "category": "User",
@@ -30,8 +25,19 @@ export default {
           return reply(`❌ ${err?.message || "Gagal membaca media."}`);
         }
       }
-      if (!buffer) return reply("❌ Balas stiker dengan caption *\\.toimg*");
+      if (!buffer) return reply("❌ Balas stiker dengan perintah *.toimg* atau *.tovid*");
+
       try {
+        const vidBuffer = await webpToVideo(buffer);
+        if (vidBuffer) {
+          await sock.sendMessage(
+            msg.key.remoteJid,
+            { video: vidBuffer, caption: "🎥 *HASIL KONVERSI STIKER KE VIDEO*" },
+            { quoted: msg }
+          );
+          return;
+        }
+
         const png = await webpToImage(buffer);
         await sock.sendMessage(
           msg.key.remoteJid,

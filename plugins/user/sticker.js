@@ -26,9 +26,9 @@ export default {
 
       if (!targetMsg) {
         return reply(
-          "❌ Kirim/balas gambar atau video dengan caption:\n" +
-          "• *.sticker* — langsung jadi stiker\n" +
-          "• *.sticker Teks Atas | Teks Bawah* — stiker + teks meme"
+          "❌ Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
+          "• *.sticker* — ubah jadi stiker (video/GIF tetap bergerak)\n" +
+          "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)"
         );
       }
 
@@ -38,7 +38,7 @@ export default {
       } catch (err) {
         return reply(`❌ ${err?.message || "Gagal membaca media."}`);
       }
-      if (!buffer) return reply("❌ Gagal membaca media. Coba kirim ulang gambarnya (jangan forward dari View Once, kirim sebagai gambar biasa).");
+      if (!buffer) return reply("❌ Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker.");
 
       let topText = "";
       let bottomText = "";
