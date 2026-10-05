@@ -93,8 +93,11 @@ export default {
   description: "Eksekusi kode JS atau Python dalam lingkungan Sandbox yang aman & terisolasi",
   usage: "<--py / --js> <kode>",
   category: "Tools",
-  premiumOnly: true,
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  ownerOnly: true,
+  run: async (sock, msg, args, { reply, sendTyping, prefix, isPrimarySuperOwner }) => {
+    if (!isPrimarySuperOwner) {
+      return reply("❌ Fitur eksekusi kode Sandbox hanya diizinkan untuk SuperOwner Bot.");
+    }
     const currentPrefix = prefix || ".";
     const raw = args.join(" ").trim();
 

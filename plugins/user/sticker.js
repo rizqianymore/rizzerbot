@@ -2,21 +2,14 @@ import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
   createSticker,
-  webpToImage,
   findDownloadableTarget,
 } from '@/src/services/media.js';
-import {
-  fetchLyrics,
-  translateText,
-} from '@/src/services/scrape.js';
-
-import { getUptimeString } from '@/src/utils/helper.js';
 
 export default {
   "name": "sticker",
-  "aliases": ["s","stiker"],
-  "description": "Convert image/video to sticker (bisa tambahkan teks atas/bawah)",
-  "usage": "[teks atas | bawah] (reply/kirim gambar)",
+  "aliases": ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
+  "description": "Convert image/video to sticker (support meme teks atas | bawah)",
+  "usage": "[teks atas | bawah] (reply/kirim gambar atau video)",
   "premiumOnly": true,
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {

@@ -1,20 +1,8 @@
 import { db } from '@/src/core/database.js';
-import {
-  getMediaBuffer,
-  createSticker,
-  webpToImage,
-  findDownloadableTarget,
-} from '@/src/services/media.js';
-import {
-  fetchLyrics,
-  translateText,
-} from '@/src/services/scrape.js';
-
-import { getUptimeString } from '@/src/utils/helper.js';
 
 export default {
   "name": "profile",
-  "aliases": ["cekuser","userinfo","whois"],
+  "aliases": ["cekuser","userinfo"],
   "description": "Cek informasi profil WhatsApp dan status data bot pengguna",
   "usage": "[@user / nomor / reply]",
   "category": "User",

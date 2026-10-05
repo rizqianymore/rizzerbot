@@ -38,17 +38,32 @@ export async function searchCNNNews(query, options = {}) {
     "Sec-Fetch-Dest": "empty",
   });
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers,
-    signal: AbortSignal.timeout(15000),
-  });
-
-  if (!res.ok) {
-    throw new Error(`CNN Search API HTTP ${res.status}`);
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (netErr) {
+    res = null;
   }
 
-  const data = await res.json();
+  let data;
+  if (res && res.ok) {
+    data = await res.json();
+  } else {
+    // Fallback ke Bright Data Web Unlocker jika IP VPS diblokir / timeout
+    const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+    if (getBrightDataConfig().apiKey) {
+      data = await brightDataRequest(url, {
+        format: "json",
+        timeout: 25000,
+      });
+    } else {
+      throw new Error(`CNN Search API HTTP ${res?.status || "Network Error"}`);
+    }
+  }
   const total = data.meta?.of || data.meta?.total || 0;
   const rawResults = Array.isArray(data.result) ? data.result : [];
 

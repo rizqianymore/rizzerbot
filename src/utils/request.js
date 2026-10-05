@@ -2,6 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { brightDataRequest, getBrightDataConfig } from "@/src/services/brightdata.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -465,7 +466,22 @@ export async function smartRequest(url, options = {}) {
     ...(options.headers || {}),
   };
 
+  const hasBrightData = Boolean(getBrightDataConfig().apiKey);
+
   if (bypassCloudflare === true) {
+    if (hasBrightData) {
+      try {
+        const bdData = await brightDataRequest(url, {
+          format: responseType === "json" ? "json" : "raw",
+          timeout,
+        });
+        if (responseType === "buffer") return Buffer.from(bdData);
+        return bdData;
+      } catch (bdErr) {
+        // Jika Bright Data error, fallback ke stealth browser
+      }
+    }
+
     if (responseType === "json") {
       return await stealthBrowser.inPageFetch(url, {
         method,
@@ -514,6 +530,22 @@ export async function smartRequest(url, options = {}) {
           throw new Error(`Cloudflare challenge detected (HTTP ${res.status}) and bypass is disabled.`);
         }
 
+        // 1. Coba gunakan Bright Data Web Unlocker jika API key tersedia (tanpa makan RAM browser)
+        if (hasBrightData) {
+          try {
+            const bdResult = await brightDataRequest(url, {
+              format: responseType === "json" ? "json" : "raw",
+              timeout,
+            });
+            if (responseType === "buffer") {
+              return Buffer.from(bdResult);
+            }
+            return bdResult;
+          } catch (_) {
+            // Bright Data gagal, fallback ke Puppeteer
+          }
+        }
+
         const solved = await stealthBrowser.solveChallenge(url, {
           timeoutMs: timeout,
           preferredDevice,
@@ -528,7 +560,6 @@ export async function smartRequest(url, options = {}) {
 
         if (responseType === "json") {
           try {
-
             return await stealthBrowser.inPageFetch(url, {
               method,
               headers: options.headers,

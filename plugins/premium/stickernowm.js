@@ -1,16 +1,8 @@
-import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
-  upscaleImage,
   createSticker,
   findDownloadableTarget,
 } from '@/src/services/media.js';
-import {
-  textToSpeech,
-  searchAnime,
-  webSearch,
-  aiChat,
-} from '@/src/services/scrape.js';
 
 export default {
   "name": "stickernowm",

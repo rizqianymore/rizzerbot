@@ -24,9 +24,19 @@ export default {
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
       try {
-        const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
-        const res = await axios.get(apiUrl, { timeout: 45000 });
-        const data = res.data;
+        let data = null;
+        try {
+          const res = await axios.get(apiUrl, { timeout: 25000 });
+          data = res.data;
+        } catch (_) {
+          // Fallback via Bright Data Web Unlocker
+          try {
+            const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+            if (getBrightDataConfig().apiKey) {
+              data = await brightDataRequest(apiUrl, { format: "json", timeout: 35000 });
+            }
+          } catch (_) {}
+        }
 
         if (!data || !data.status || !data.result || !data.result.url) {
           return reply("⚠️ Gagal mengambil lagu. Server penyedia tidak memberikan tautan unduhan yang valid.");

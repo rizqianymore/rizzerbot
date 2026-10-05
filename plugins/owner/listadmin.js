@@ -1,8 +1,8 @@
 import { db } from '@/src/core/database.js';
 
 export default {
-  "name": "listadmin",
-  "aliases": ["admins","botadmins"],
+  "name": "listadminbot",
+  "aliases": ["admins", "botadmins", "listbotadmin"],
   "description": "Lihat daftar semua Admin bot",
   "usage": "",
   "ownerOnly": true,

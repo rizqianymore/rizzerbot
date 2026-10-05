@@ -525,10 +525,8 @@ async function dispatchInner(sock, msg, logger) {
 
   const isSenderOwner =
     isFromMe ||
-    db.isBotOwner(botJid, senderJid) ||
-    (normalizedRawSender && db.isBotOwner(botJid, normalizedRawSender)) ||
-    (rawSender && db.isBotOwner(botJid, rawSender)) ||
-    (remoteNormalized && !isGroupJid(remoteJid) && db.isBotOwner(botJid, remoteNormalized));
+    db.isOwner(senderJid) ||
+    db.isBotOwner(botJid, senderJid);
 
   let access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);

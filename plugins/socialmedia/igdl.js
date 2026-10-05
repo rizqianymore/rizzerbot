@@ -175,6 +175,34 @@ export default {
 
         if (!res) {
           try {
+            const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+            if (getBrightDataConfig().apiKey) {
+              const bdRes = await brightDataRequest("https://fastdl.app/c/", {
+                format: "json",
+                method: "POST",
+                headers: { "content-type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                data: `url=${encodeURIComponent(input)}`,
+              });
+              if (bdRes && (Array.isArray(bdRes) || bdRes.url)) {
+                const items = Array.isArray(bdRes) ? bdRes : [bdRes];
+                res = {
+                  username: "",
+                  likes: 0,
+                  title: "",
+                  media: items.map(it => ({
+                    type: it.type === "mp4" ? "mp4" : "image",
+                    url: it.url?.[0]?.url || it.url,
+                  })).filter(m => m.url),
+                };
+              }
+            }
+          } catch (bdErr) {
+            logger?.warn?.(`[igdl brightdata] ${bdErr?.message || bdErr}`);
+          }
+        }
+
+        if (!res) {
+          try {
             const { stealthBrowser } = await import("@/src/utils/request.js");
             const browser = await stealthBrowser.getBrowser();
             const page = await browser.newPage();

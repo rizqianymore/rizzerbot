@@ -1280,19 +1280,17 @@ function updateBotSettings(botJid, updates = {}) {
 
 function isBotOwner(botJid, userJid) {
   const normalizedBot = normalizeJid(botJid);
-
   const normalizedUser = resolvePhoneJid(userJid);
   if (!normalizedUser) return false;
 
   const samePhone = samePhoneJidStrict;
 
+  // Primary owner of the ecosystem is always an owner everywhere
+  if (isPrimaryOwnerJid(normalizedUser)) return true;
+  if (mainStore.isOwner(normalizedUser)) return true;
+
   const botIsMain = !normalizedBot || isMainBotJid(normalizedBot);
-
   if (botIsMain) {
-
-    if (isPrimaryOwnerJid(normalizedUser)) return true;
-    if (mainStore.isOwner(normalizedUser)) return true;
-
     if (normalizedUser.endsWith('@s.whatsapp.net')) {
       const userPhone = phoneDigitsOfPhoneJid(normalizedUser);
       if (userPhone) {
@@ -1300,23 +1298,19 @@ function isBotOwner(botJid, userJid) {
         if (isPrimaryOwnerJid(phoneJid) || mainStore.isOwner(phoneJid)) return true;
       }
     }
-    if (normalizedBot && samePhone(normalizedUser, normalizedBot)) return true;
     return false;
   }
 
   const key = phoneDigitsOfPhoneJid(normalizedBot);
   const store = key ? peekSubStoreByKey(key) : null;
-  const botOwner = store ? normalizeJid(store.data.settings.ownerNumber) : '';
-  const botOwnersList = store && Array.isArray(store.data.settings.ownerNumbers)
+  const botOwner = store ? normalizeJid(store.data.settings?.ownerNumber) : '';
+  const botOwnersList = store && Array.isArray(store.data.settings?.ownerNumbers)
     ? store.data.settings.ownerNumbers.map(normalizeJid)
     : [];
-  const fallbackOwner = !store && normalizedBot;
 
   if (botOwner && samePhone(normalizedUser, botOwner)) return true;
   if (botOwnersList.some((o) => samePhone(normalizedUser, o))) return true;
-  if (fallbackOwner && samePhone(normalizedUser, fallbackOwner)) return true;
-  if (samePhone(normalizedUser, normalizedBot)) return true;
-  if (isPrimaryOwnerJid(normalizedUser)) return true;
+
   return false;
 }
 

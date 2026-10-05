@@ -185,6 +185,36 @@ export async function tiktokDownload(url) {
     }
   }
 
+  // Fallback Bright Data Web Unlocker untuk TikTok jika request direct gagal/terblokir
+  try {
+    const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+    if (getBrightDataConfig().apiKey) {
+      const bdRes = await brightDataRequest("https://snaptik.fi/api/tiktok", {
+        format: "json",
+        method: "POST",
+        headers,
+        data: { url: url.trim() },
+        timeout: 30000,
+      });
+
+      if (bdRes?.download_link) {
+        const author = bdRes.author || {};
+        return {
+          title: bdRes.title || bdRes.description || "",
+          author: author.nickname || author.uniqueId || "",
+          uniqueId: author.uniqueId || "",
+          playCount: bdRes.statistics?.play_count || 0,
+          diggCount: bdRes.statistics?.digg_count || 0,
+          duration: bdRes.duration || 0,
+          cover: bdRes.cover || "",
+          mp3: bdRes.download_link.mp3 || "",
+          noWatermark: bdRes.download_link.no_watermark || "",
+          watermark: bdRes.download_link.watermark || "",
+        };
+      }
+    }
+  } catch (_) {}
+
   throw new Error(lastError?.response?.data?.error || lastError?.message || "Gagal mengambil data TikTok");
 }
 
