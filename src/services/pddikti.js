@@ -1,3 +1,6 @@
+import { stealthBrowser } from "@/src/utils/request.js";
+import { brightDataRequest, getBrightDataConfig } from "@/src/services/brightdata.js";
+
 const BASE = "https://pddikti.kemdiktisaintek.go.id";
 const SITEKEY = "6LdqjDstAAAAAMW1whjCNKyvqmPBOIssWETjbLbh";
 
@@ -24,47 +27,67 @@ function cacheSet(map, key, data, ttl) {
   if (map.size > 300) map.delete(map.keys().next().value);
 }
 
-let browserPromise = null;
 let tokenPagePromise = null;
 let tokenLock = Promise.resolve();
 
-async function getBrowser() {
-  if (!browserPromise) {
-    const { default: puppeteer } = await import("puppeteer");
-    browserPromise = puppeteer
-      .launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled", "--lang=id-ID"],
-      })
-      .catch((err) => {
-        browserPromise = null;
-        throw new Error(`Gagal launch browser (puppeteer): ${err.message}`);
-      });
+async function solveTurnstileIfPresent(page, timeoutMs = 8000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    const title = (await page.title().catch(() => "")) || "";
+    const content = (await page.content().catch(() => "")) || "";
+
+    const hasChallenge =
+      title.includes("Just a moment") ||
+      title.includes("Attention Required! | Cloudflare") ||
+      title.includes("Please Wait... | Cloudflare") ||
+      content.includes("cf-turnstile") ||
+      content.includes("challenges.cloudflare.com") ||
+      content.includes("cf-browser-verification");
+
+    if (!hasChallenge) break;
+
+    try {
+      const frames = page.frames();
+      for (const frame of frames) {
+        const checkbox = await frame.$(
+          "input[type=checkbox], .cf-turnstile-wrapper, #challenge-stage"
+        ).catch(() => null);
+        if (checkbox) {
+          await checkbox.click().catch(() => {});
+        }
+      }
+    } catch (_) {}
+
+    await new Promise((r) => setTimeout(r, 600));
   }
-  return browserPromise;
 }
 
 async function getTokenPage() {
   if (!tokenPagePromise) {
     tokenPagePromise = (async () => {
-      const browser = await getBrowser();
+      const browser = await stealthBrowser.getBrowser();
       const page = await browser.newPage();
       await page.setUserAgent(UA);
       await page.goto(`${BASE}/search/Raka`, {
-        waitUntil: "networkidle2",
+        waitUntil: "domcontentloaded",
         timeout: TOKEN_TIMEOUT_MS,
       });
 
+      await solveTurnstileIfPresent(page);
+
       await page
-        .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
-          timeout: 15000,
-        })
+        .waitForFunction(
+          () => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function",
+          { timeout: 15000 }
+        )
         .catch(async () => {
-          await page.reload({ waitUntil: "networkidle2", timeout: TOKEN_TIMEOUT_MS }).catch(() => {});
+          await page.reload({ waitUntil: "domcontentloaded", timeout: TOKEN_TIMEOUT_MS }).catch(() => {});
+          await solveTurnstileIfPresent(page);
           await page
-            .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
-              timeout: 20000,
-            })
+            .waitForFunction(
+              () => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function",
+              { timeout: 20000 }
+            )
             .catch(() => {
               throw new Error("grecaptcha tidak termuat (Cloudflare / jaringan bermasalah)");
             });
@@ -92,7 +115,10 @@ export async function getRecaptchaToken() {
         (sitekey) =>
           new Promise((resolve, reject) => {
             try {
-              const timer = setTimeout(() => reject(new Error("timeout grecaptcha.execute (15 dtk)")), 15000);
+              const timer = setTimeout(
+                () => reject(new Error("timeout grecaptcha.execute (15 dtk)")),
+                15000
+              );
               grecaptcha.ready(() => {
                 grecaptcha
                   .execute(sitekey, { action: "search" })
@@ -114,7 +140,6 @@ export async function getRecaptchaToken() {
       if (!token || token.length < 100) throw new Error("token reCAPTCHA kosong/pendek");
       return token;
     } catch (err) {
-
       try {
         await page.close().catch(() => {});
       } catch (_) {}
@@ -126,13 +151,12 @@ export async function getRecaptchaToken() {
 
 export async function closePddiktiBrowser() {
   try {
-    tokenPagePromise = null;
-    if (browserPromise) {
-      const b = await browserPromise.catch(() => null);
-      await b?.close().catch(() => {});
+    if (tokenPagePromise) {
+      const p = await tokenPagePromise.catch(() => null);
+      await p?.close().catch(() => {});
     }
   } catch (_) {}
-  browserPromise = null;
+  tokenPagePromise = null;
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT_MS) {
@@ -161,32 +185,89 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
   const cached = cacheGet(searchCache, kw.toLowerCase());
   if (cached) return cached;
 
+  const { apiKey } = getBrightDataConfig();
+  const searchUrl = `${BASE}/api/pencarian/enc/all/${encodeURIComponent(kw)}`;
+
   let lastErr = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const token = await getRecaptchaToken();
-      const res = await fetchWithTimeout(`${BASE}/api/pencarian/enc/all/${encodeURIComponent(kw)}`, {
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-          Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-          "User-Agent": UA,
-          "x-recaptcha-token": token,
-        },
-      });
-      if (!res.ok) {
-        const snippet = (await res.text().catch(() => "")).slice(0, 300);
-        throw new Error(mapApiError(res.status, snippet));
+
+      // 1. Direct fetch dengan token
+      let data = null;
+      try {
+        const res = await fetchWithTimeout(searchUrl, {
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
+            "User-Agent": UA,
+            "x-recaptcha-token": token,
+          },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.status === "success") {
+            data = json.data || {};
+          }
+        }
+      } catch (fetchErr) {
+        lastErr = fetchErr;
       }
-      const json = await res.json();
-      if (json?.status !== "success") throw new Error(json?.message || "PDDikti mengembalikan status error");
-      const data = json.data || {};
-      cacheSet(searchCache, kw.toLowerCase(), data, SEARCH_TTL_MS);
-      return data;
+
+      // 2. Jika direct fetch gagal atau 403, coba via Bright Data Web Unlocker (jika ada key)
+      if (!data && apiKey) {
+        try {
+          const bdRes = await brightDataRequest(searchUrl, {
+            format: "json",
+            method: "GET",
+            headers: {
+              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
+              "x-recaptcha-token": token,
+            },
+            timeout: 25000,
+          });
+          if (bdRes?.status === "success") {
+            data = bdRes.data || {};
+          }
+        } catch (_) {}
+      }
+
+      // 3. Fallback via inPageFetch di browser (karena browser sudah lolos WAF & Cloudflare)
+      if (!data) {
+        try {
+          const inPageRes = await stealthBrowser.inPageFetch(searchUrl, {
+            method: "GET",
+            headers: {
+              Accept: "application/json, text/plain, */*",
+              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
+              "x-recaptcha-token": token,
+            },
+          });
+          if (inPageRes?.status === "success") {
+            data = inPageRes.data || {};
+          }
+        } catch (inPageErr) {
+          lastErr = inPageErr;
+        }
+      }
+
+      if (data) {
+        cacheSet(searchCache, kw.toLowerCase(), data, SEARCH_TTL_MS);
+        return data;
+      }
+
+      throw lastErr || new Error("Gagal mengambil respon pencarian PDDikti");
     } catch (err) {
       lastErr = err;
       if (/403|token|recaptcha/i.test(err.message) && attempt < retries) continue;
-      if ((err?.name === "AbortError" || /timeout|fetch failed|ECONN|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|socket hang up|net::|ERR_|NETWORK|Failed to fetch/i.test(err.message)) && attempt < retries) {
+      if (
+        (err?.name === "AbortError" ||
+          /timeout|fetch failed|ECONN|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|socket hang up|net::|ERR_|NETWORK/i.test(
+            err.message
+          )) &&
+        attempt < retries
+      ) {
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         continue;
       }
@@ -196,33 +277,114 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
   throw lastErr;
 }
 
-export async function detailMahasiswa(encId, { timeoutMs = 60000 } = {}) {
+export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
   const id = String(encId ?? "").trim();
   if (!id) throw new Error("id mahasiswa wajib diisi");
 
   const cached = cacheGet(detailCache, id);
   if (cached) return cached;
 
-  const browser = await getBrowser();
+  // 1. FAST PATH: API POST /api/detail/mhs dengan reCAPTCHA token (~200ms)
+  try {
+    const token = await getRecaptchaToken();
+    const apiUrl = `${BASE}/api/detail/mhs`;
+    const res = await fetchWithTimeout(
+      apiUrl,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          "x-recaptcha-token": token,
+          Referer: `${BASE}/detail-mahasiswa/${encodeURIComponent(id)}`,
+          Origin: BASE,
+          "User-Agent": UA,
+        },
+        body: JSON.stringify({ id }),
+      },
+      12000
+    );
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.status === "success" && json?.data) {
+        const d = json.data;
+        const [jenjang = "", prodi = ""] = String(d.prodi || "").includes("-")
+          ? String(d.prodi).split("-").map((s) => s.trim())
+          : [d.jenjang || "-", d.prodi || "-"];
+        const jkRaw = String(d.jenis_kelamin || "").toLowerCase();
+        const data = {
+          nama: neat(d.nama),
+          nim: neat(d.nim),
+          nama_pt: neat(d.nama_pt),
+          jenjang: neat(d.jenjang || jenjang),
+          prodi: neat(d.prodi || prodi),
+          jenis_kelamin: /perempuan/i.test(jkRaw) ? "P" : /laki/i.test(jkRaw) ? "L" : neat(d.jenis_kelamin),
+          tanggal_masuk: neat(d.tanggal_masuk),
+          jenis_daftar: neat(d.jenis_daftar),
+          status_saat_ini: neat(d.status_saat_ini),
+        };
+        cacheSet(detailCache, id, data, DETAIL_TTL_MS);
+        return data;
+      }
+    }
+  } catch (_) {
+    // Lanjut ke fallback
+  }
+
+  // 2. Fallback via inPageFetch
+  try {
+    const token = await getRecaptchaToken();
+    const inPageRes = await stealthBrowser.inPageFetch(`${BASE}/api/detail/mhs`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-recaptcha-token": token,
+        Referer: `${BASE}/detail-mahasiswa/${encodeURIComponent(id)}`,
+        Origin: BASE,
+      },
+      body: { id },
+    });
+    if (inPageRes?.status === "success" && inPageRes?.data) {
+      const d = inPageRes.data;
+      const data = {
+        nama: neat(d.nama),
+        nim: neat(d.nim),
+        nama_pt: neat(d.nama_pt),
+        jenjang: neat(d.jenjang),
+        prodi: neat(d.prodi),
+        jenis_kelamin: neat(d.jenis_kelamin),
+        tanggal_masuk: neat(d.tanggal_masuk),
+        jenis_daftar: neat(d.jenis_daftar),
+        status_saat_ini: neat(d.status_saat_ini),
+      };
+      cacheSet(detailCache, id, data, DETAIL_TTL_MS);
+      return data;
+    }
+  } catch (_) {}
+
+  // 3. Fallback via stealth browser DOM rendering
+  const browser = await stealthBrowser.getBrowser();
   const page = await browser.newPage();
   try {
     await page.setUserAgent(UA);
     await page.goto(`${BASE}/detail-mahasiswa/${encodeURIComponent(id)}`, {
-      waitUntil: "networkidle2",
+      waitUntil: "domcontentloaded",
       timeout: timeoutMs,
     });
+
+    await solveTurnstileIfPresent(page, 10000);
 
     await page
       .waitForFunction(
         () => /Biodata Mahasiswa|Tidak ada hasil|notFound/i.test(document.body.innerText),
-        { timeout: 25000 }
+        { timeout: 20000 }
       )
       .catch(() => {});
-    await new Promise((r) => setTimeout(r, 2500));
+    await new Promise((r) => setTimeout(r, 2000));
 
     const raw = await page.evaluate(() => {
       const text = document.body.innerText || "";
-
       const get = (label) => {
         const re = new RegExp(label + "\\s*\\n+\\s*([^\\n]+)", "i");
         const m = text.match(re);
@@ -335,7 +497,6 @@ export async function getCeknimInfoText(input, opts = {}) {
         return { text: formatMhsDetail(detail || exact) };
       } catch (err) {
         opts?.logger?.warn?.(`[ceknim] detail gagal nim=${exact.nim}: ${err.message}`);
-
         const lines = [
           `*DATA MAHASISWA (PDDikti)*`,
           `Nama: ${neat(exact.nama)}`,
@@ -353,9 +514,7 @@ export async function getCeknimInfoText(input, opts = {}) {
       try {
         const detail = await detailMahasiswa(mhs[0].id);
         return { text: formatMhsDetail(detail || mhs[0]) };
-      } catch (_) {
-
-      }
+      } catch (_) {}
     }
 
     return { text: formatMhsList(mhs, mhs.length) };
@@ -366,7 +525,7 @@ export async function getCeknimInfoText(input, opts = {}) {
   }
 }
 
-export async function detailDosen(encId, { timeoutMs = 60000 } = {}) {
+export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
   const id = String(encId ?? "").trim();
   if (!id) throw new Error("id dosen wajib diisi");
 
@@ -374,21 +533,24 @@ export async function detailDosen(encId, { timeoutMs = 60000 } = {}) {
   const cached = cacheGet(detailCache, cacheKey);
   if (cached) return cached;
 
-  const browser = await getBrowser();
+  const browser = await stealthBrowser.getBrowser();
   const page = await browser.newPage();
   try {
     await page.setUserAgent(UA);
     await page.goto(`${BASE}/detail-dosen/${encodeURIComponent(id)}`, {
-      waitUntil: "networkidle2",
+      waitUntil: "domcontentloaded",
       timeout: timeoutMs,
     });
+
+    await solveTurnstileIfPresent(page, 10000);
+
     await page
       .waitForFunction(
         () => /Biodata Dosen|Tidak ada hasil|notFound/i.test(document.body.innerText),
-        { timeout: 25000 }
+        { timeout: 20000 }
       )
       .catch(() => {});
-    await new Promise((r) => setTimeout(r, 2500));
+    await new Promise((r) => setTimeout(r, 2000));
 
     const raw = await page.evaluate(() => {
       const text = document.body.innerText || "";
@@ -487,9 +649,7 @@ export async function getCekdosenInfoText(input, opts = {}) {
       try {
         const detail = await detailDosen(dosen[0].id);
         return { text: formatDosenDetail(detail || dosen[0], dosen[0].nidn) };
-      } catch (_) {
-
-      }
+      } catch (_) {}
     }
 
     return { text: formatDosenList(dosen, dosen.length) };

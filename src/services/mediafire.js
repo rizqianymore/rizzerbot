@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 
 export async function mediafireDownload(url) {
   let host = "";
@@ -12,16 +12,10 @@ export async function mediafireDownload(url) {
   }
 
   const cleanUrl = url.trim();
-  const response = await axios.get(cleanUrl, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
-    },
+  const html = await request.text(cleanUrl, {
+    bypassCloudflare: "auto",
     timeout: 30000,
   });
-
-  const html = response.data;
   if (typeof html !== "string") {
     throw new Error("Gagal mengambil halaman MediaFire.");
   }
@@ -104,35 +98,26 @@ export async function solveSafelink(url) {
 
   if (!targetUrl) {
     try {
-      const res = await axios.get(rawUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-        maxRedirects: 5,
+      const data = await request.text(rawUrl, {
+        bypassCloudflare: "auto",
         timeout: 20000,
-        validateStatus: () => true,
       });
 
-      if (res.request?.res?.responseUrl && res.request.res.responseUrl !== rawUrl) {
-        targetUrl = res.request.res.responseUrl;
-      }
-
-      if (!targetUrl && typeof res.data === "string") {
-        const metaMatch = res.data.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^"']*url=([^"']+)["']/i);
+      if (!targetUrl && typeof data === "string") {
+        const metaMatch = data.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^"']*url=([^"']+)["']/i);
         if (metaMatch && metaMatch[1]) {
           targetUrl = metaMatch[1].trim();
         }
 
         if (!targetUrl) {
-          const jsMatch = res.data.match(/window\.location(?:\.href)?\s*=\s*["'](https?:\/\/[^"']+)["']/i);
+          const jsMatch = data.match(/window\.location(?:\.href)?\s*=\s*["'](https?:\/\/[^"']+)["']/i);
           if (jsMatch && jsMatch[1]) {
             targetUrl = jsMatch[1].trim();
           }
         }
 
         if (!targetUrl) {
-          const hostMatch = res.data.match(/href=["'](https?:\/\/(?:www\.)?(?:mediafire\.com|drive\.google\.com|mega\.nz|sfile\.mobi)[^"']+)["']/i);
+          const hostMatch = data.match(/href=["'](https?:\/\/(?:www\.)?(?:mediafire\.com|drive\.google\.com|mega\.nz|sfile\.mobi)[^"']+)["']/i);
           if (hostMatch && hostMatch[1]) {
             targetUrl = hostMatch[1].trim();
           }

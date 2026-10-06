@@ -66,7 +66,16 @@ export default {
           },
         });
 
-        const data = res.data || {};
+        let data = res.data || {};
+        if ((res.status >= 300 || data.success !== true) && (await import("@/src/services/brightdata.js")).getBrightDataConfig().apiKey) {
+          try {
+            const { brightDataRequest } = await import("@/src/services/brightdata.js");
+            data = await brightDataRequest(`${BASE_URL}?url=${encodeURIComponent(url)}&action=info`, {
+              format: "json",
+              timeout: 35000,
+            });
+          } catch (_) {}
+        }
         const info = data.data || {};
 
         const videoQualities = uniqueByUrl(info.video?.qualities || []);

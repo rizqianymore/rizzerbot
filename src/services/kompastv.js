@@ -1,5 +1,5 @@
-import axios from "axios";
 import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
+import { request } from "@/src/utils/request.js";
 
 const KOMPAS_BASE = "https://www.kompas.tv";
 
@@ -12,12 +12,11 @@ export async function getLatestKompasNews(category = "news", limit = 5) {
     Referer: KOMPAS_BASE,
   });
 
-  const res = await axios.get(url, {
+  const html = await request.text(url, {
     headers,
     timeout: 15000,
+    bypassCloudflare: "auto",
   });
-
-  const html = res.data;
   const blocks = html.split("<div class=\"opininews2\">").slice(1);
   const articles = [];
 
@@ -118,12 +117,11 @@ export async function getKompasArticleDetail(articleUrl) {
     Referer: KOMPAS_BASE,
   });
 
-  const res = await axios.get(articleUrl, {
+  const html = await request.text(articleUrl, {
     headers,
     timeout: 15000,
+    bypassCloudflare: "auto",
   });
-
-  const html = res.data;
   const title = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, "").trim() || "Berita Kompas TV";
   const image = html.match(/<meta property="og:image" content="([^"]+)"/i)?.[1] || null;
 

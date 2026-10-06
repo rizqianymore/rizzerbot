@@ -58,6 +58,7 @@ build/
 tmp/
 temp/
 .comment-clean-backup/
+*.traineddata
 *.tmp
 *.tmp.*
 .cache/

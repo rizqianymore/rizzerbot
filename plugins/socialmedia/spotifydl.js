@@ -24,6 +24,7 @@ export default {
       await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
       try {
+        const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
         let data = null;
         try {
           const res = await axios.get(apiUrl, { timeout: 25000 });

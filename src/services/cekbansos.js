@@ -1,6 +1,8 @@
 import axios from "axios";
 import sharp from "sharp";
 import { execFile } from "node:child_process";
+import { stealthBrowser } from "@/src/utils/request.js";
+import { brightDataRequest, getBrightDataConfig } from "@/src/services/brightdata.js";
 
 const BASE = "https://cekbansos.kemensos.go.id";
 const UA =
@@ -45,29 +47,97 @@ function baseHeaders(jar, extra = {}) {
 }
 
 export async function fetchFormSession() {
+  const { apiKey } = getBrightDataConfig();
+  if (apiKey) {
+    try {
+      const html = await brightDataRequest(BASE, { format: "raw", timeout: 25000 });
+      const token = html.match(/name="_token"\s+value="([^"]+)"/)?.[1] || "";
+      const captchaPath = html.match(/<img\s+src="([^"]*captcha[^"]*)"/)?.[1] || "";
+      if (token && captchaPath) {
+        const captchaUrl = captchaPath.startsWith("http")
+          ? captchaPath
+          : `${BASE}${captchaPath.startsWith("/") ? "" : "/"}${captchaPath}`;
+        return { jar: newJar(), token, captchaUrl, via: "brightdata" };
+      }
+    } catch (_) {}
+  }
+
   const jar = newJar();
-  const res = await client.get(`${BASE}/`, { headers: baseHeaders(jar) });
-  storeCookies(jar, res.headers["set-cookie"]);
-  const html = typeof res.data === "string" ? res.data : "";
-  const token = html.match(/name="_token"\s+value="([^"]+)"/)?.[1] || "";
-  const captchaPath = html.match(/<img\s+src="([^"]*captcha[^"]*)"/)?.[1] || "";
-  if (!token || !captchaPath) throw new Error("Gagal membaca form cekbansos (struktur berubah?)");
-  const captchaUrl = captchaPath.startsWith("http")
-    ? captchaPath
-    : `${BASE}${captchaPath.startsWith("/") ? "" : "/"}${captchaPath}`;
-  return { jar, token, captchaUrl };
+  try {
+    const res = await client.get(`${BASE}/`, { headers: baseHeaders(jar) });
+    storeCookies(jar, res.headers["set-cookie"]);
+    const html = typeof res.data === "string" ? res.data : "";
+    const token = html.match(/name="_token"\s+value="([^"]+)"/)?.[1] || "";
+    const captchaPath = html.match(/<img\s+src="([^"]*captcha[^"]*)"/)?.[1] || "";
+    if (token && captchaPath) {
+      const captchaUrl = captchaPath.startsWith("http")
+        ? captchaPath
+        : `${BASE}${captchaPath.startsWith("/") ? "" : "/"}${captchaPath}`;
+      return { jar, token, captchaUrl, via: "direct" };
+    }
+  } catch (_) {}
+
+  // Fallback via stealth browser
+  const browser = await stealthBrowser.getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    const info = await page.evaluate(() => {
+      const token = document.querySelector('input[name="_token"]')?.value || "";
+      const img = document.querySelector('img[src*="captcha"]')?.src || "";
+      return { token, img };
+    });
+    if (info.token && info.img) {
+      return { jar, token: info.token, captchaUrl: info.img, via: "browser" };
+    }
+    throw new Error("Gagal membaca token bansos dari browser");
+  } finally {
+    await page.close().catch(() => {});
+  }
 }
 
 export async function fetchCaptchaImage(session) {
+  if (session?.via === "brightdata") {
+    try {
+      const buf = await brightDataRequest(session.captchaUrl, { format: "raw", timeout: 20000 });
+      return Buffer.from(buf);
+    } catch (_) {}
+  }
 
-  const url = `${BASE}/captcha/flat?${Math.random().toString(36).slice(2)}`;
-  const res = await client.get(url, {
-    headers: baseHeaders(session.jar, { Referer: `${BASE}/` }),
-    responseType: "arraybuffer",
-  });
-  storeCookies(session.jar, res.headers["set-cookie"]);
-  if (res.status !== 200 || !res.data?.length) throw new Error("Gagal mengunduh gambar captcha");
-  return Buffer.from(res.data);
+  try {
+    const url = session.captchaUrl || `${BASE}/captcha/flat?${Math.random().toString(36).slice(2)}`;
+    const res = await client.get(url, {
+      headers: baseHeaders(session.jar, { Referer: `${BASE}/` }),
+      responseType: "arraybuffer",
+      timeout: 10000,
+    });
+    storeCookies(session.jar, res.headers["set-cookie"]);
+    if (res.status === 200 && res.data?.length) {
+      return Buffer.from(res.data);
+    }
+  } catch (_) {}
+
+  // Fallback via stealthBrowser
+  const browser = await stealthBrowser.getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForSelector('img[src*="captcha"]', { timeout: 8000 });
+    const b64 = await page.evaluate(async () => {
+      const img = document.querySelector('img[src*="captcha"]');
+      if (!img) return null;
+      const res = await fetch(img.src);
+      const buffer = await res.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    });
+    if (b64) return Buffer.from(b64, "base64");
+    throw new Error("Gagal mengunduh gambar captcha via browser");
+  } finally {
+    await page.close().catch(() => {});
+  }
 }
 
 export async function submitNik(session, nik, code) {
@@ -93,23 +163,6 @@ export async function fetchHasil(session) {
   return res.data;
 }
 
-let _tesseractAvailable = null;
-
-export async function isOcrAvailable() {
-  if (_tesseractAvailable !== null) return _tesseractAvailable;
-  try {
-    await new Promise((resolve, reject) => {
-      execFile("tesseract", ["--version"], { timeout: 8000 }, (err) =>
-        err ? reject(err) : resolve()
-      );
-    });
-    _tesseractAvailable = true;
-  } catch {
-    _tesseractAvailable = false;
-  }
-  return _tesseractAvailable;
-}
-
 async function preprocessCaptcha(buffer) {
   return sharp(buffer)
     .grayscale()
@@ -120,30 +173,58 @@ async function preprocessCaptcha(buffer) {
     .toBuffer();
 }
 
-function runTesseract(pngBuffer) {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      "tesseract",
-      ["stdin", "stdout", "--psm", "8", "-c", "tessedit_char_whitelist=abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"],
-      { timeout: 15000, maxBuffer: 256 * 1024 },
-      (err, stdout) => (err ? reject(err) : resolve(String(stdout || "")))
+export async function solveCaptchaGemini(imageBuffer) {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (!geminiKey) return null;
+  try {
+    const b64 = Buffer.isBuffer(imageBuffer) ? imageBuffer.toString("base64") : String(imageBuffer);
+    const { data } = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: "Analyze this image containing a distorted 4-character CAPTCHA text. Output ONLY the 4 characters, in exact order, with no spaces, punctuation, or explanations."
+              },
+              {
+                inline_data: {
+                  mime_type: "image/png",
+                  data: b64,
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 10,
+        }
+      },
+      { timeout: 8000 }
     );
-    child.stdin.on("error", () => {});
-    child.stdin.write(pngBuffer);
-    child.stdin.end();
-  });
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/[^a-zA-Z0-9]/g, "");
+    if (text && text.length === 4) return text;
+  } catch (_) {}
+  return null;
 }
 
-export async function solveCaptchaOCR(imageBuffer) {
-  if (!(await isOcrAvailable())) return null;
+export async function solveCaptchaTesseractJs(imageBuffer) {
   try {
+    const { createWorker } = await import("tesseract.js");
     const pre = await preprocessCaptcha(imageBuffer);
-    const raw = await runTesseract(pre);
-    const clean = raw.replace(/[^A-Za-z0-9]/g, "");
+    const worker = await createWorker("eng");
+    const ret = await worker.recognize(pre);
+    await worker.terminate();
+    const clean = ret?.data?.text?.trim()?.replace(/[^A-Za-z0-9]/g, "");
     return clean || null;
-  } catch {
+  } catch (_) {
     return null;
   }
+}
+
+export async function isOcrAvailable() {
+  return true;
 }
 
 const OCRSPACE_URL = "https://api.ocr.space/parse/image";
@@ -156,7 +237,6 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
       base64Image: b64,
       OCREngine: engine,
       isTable: "false",
-
       scale: "true",
       detectOrientation: "false",
       isOverlayRequired: "false",
@@ -183,8 +263,16 @@ export async function solveCaptcha(imageBuffer) {
     const clean = String(g || "").replace(/[^A-Za-z0-9]/g, "");
     if (clean && !candidates.some((c) => c.guess === clean)) candidates.push({ guess: clean, via });
   };
-  const local = await solveCaptchaOCR(imageBuffer);
-  if (local) push(local, "lokal");
+
+  // 1. Gemini Vision AI (highest accuracy)
+  const gemini = await solveCaptchaGemini(imageBuffer);
+  if (gemini) push(gemini, "gemini-ai");
+
+  // 2. Pure JS / WASM Tesseract.js (runs locally everywhere)
+  const tesseract = await solveCaptchaTesseractJs(imageBuffer);
+  if (tesseract) push(tesseract, "tesseract.js");
+
+  // 3. Remote OCR.space fallback
   for (const engine of ["2", "1"]) {
     const remote = await solveCaptchaRemote(imageBuffer, engine);
     if (remote) push(remote, `remote-e${engine}`);
@@ -267,32 +355,79 @@ export function formatHasil(nik, parsed) {
   return text.trim();
 }
 
-export async function cekBansosOtomatis(nik, { maxAttempts = 4 } = {}) {
-  let nullStreak = 0;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const session = await fetchFormSession();
-    const image = await fetchCaptchaImage(session);
-    const { guess, alternates } = await solveCaptcha(image);
-    const tries = [guess, ...(alternates || []).map((a) => a.guess)]
-      .filter(Boolean)
-      .slice(0, 2);
-    if (!tries.length) {
+export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
+  const browser = await stealthBrowser.getBrowser();
+  const page = await browser.newPage();
 
-      if (++nullStreak >= 2) break;
-      continue;
-    }
-    nullStreak = 0;
-    for (const code of tries) {
-      const { success } = await submitNik(session, nik, code);
-      if (success) {
-        const html = await fetchHasil(session);
-        return { status: "ok", result: parseHasil(html), attempts: attempt };
+  try {
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      await page.waitForSelector('img[src*="captcha"]', { timeout: 10000 }).catch(() => {});
+
+      const captchaB64 = await page.evaluate(async () => {
+        const img = document.querySelector('img[src*="captcha"]');
+        if (!img) return null;
+        const res = await fetch(img.src);
+        const buffer = await res.arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary);
+      });
+
+      if (!captchaB64) break;
+
+      const imgBuffer = Buffer.from(captchaB64, "base64");
+      const { guess, alternates } = await solveCaptcha(imgBuffer);
+      const codeTries = [guess, ...(alternates || []).map((a) => a.guess)].filter(Boolean).slice(0, 2);
+
+      if (!codeTries.length) continue;
+
+      for (const code of codeTries) {
+        // Clear & type inputs
+        await page.evaluate(() => {
+          const nikInput = document.querySelector("#cek_peserta_nik");
+          const captchaInput = document.querySelector("#captcha");
+          if (nikInput) nikInput.value = "";
+          if (captchaInput) captchaInput.value = "";
+        });
+
+        await page.type("#cek_peserta_nik", nik);
+        await page.type("#captcha", code);
+        await page.click("#btnCekNik").catch(() => {});
+
+        await new Promise((r) => setTimeout(r, 2500));
+
+        const pageContent = await page.content();
+        const bodyText = await page.evaluate(() => document.body.innerText || "");
+
+        if (/Kode Captcha salah/i.test(bodyText)) {
+          // Captcha salah, lanjut ke percobaan berikutnya
+          continue;
+        }
+
+        if (pageContent.includes("<tbody>") || /HASIL PENCARIAN|DTSEN|Penerima Manfaat/i.test(bodyText)) {
+          return { status: "ok", result: parseHasil(pageContent), attempts: attempt };
+        }
+
+        if (/Data tidak ditemukan|tidak terdaftar/i.test(bodyText)) {
+          return { status: "ok", result: { badge: "", rows: [] }, attempts: attempt };
+        }
       }
-      await new Promise((r) => setTimeout(r, 400));
+
+      // Reload captcha jika gagal
+      await page.evaluate(() => {
+        const reloadBtn = document.querySelector('button[onclick*="reload"], .btn-refresh, a[href*="reload"]');
+        if (reloadBtn) reloadBtn.click();
+      }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 1000));
     }
 
+    return { status: "captcha-gagal" };
+  } finally {
+    await page.close().catch(() => {});
   }
-  return { status: "captcha-gagal" };
 }
 
 const pendingManual = new Map();

@@ -1,4 +1,5 @@
 import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
+import { request } from "@/src/utils/request.js";
 
 const INEWS_SEARCH_URL = "https://www.inews.id/find";
 
@@ -16,13 +17,7 @@ export async function searchInews(query, limit = 5) {
   });
 
   const url = `${INEWS_SEARCH_URL}?q=${encodeURIComponent(cleanQuery)}`;
-  const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
-
-  if (!res.ok) {
-    throw new Error(`iNews HTTP ${res.status}`);
-  }
-
-  const html = await res.text();
+  const html = await request.text(url, { headers, timeout: 15000, bypassCloudflare: "auto" });
   const articleBlocks = [...html.matchAll(/<article[^>]*>([\s\S]*?)<\/article>/gi)];
 
   if (articleBlocks.length === 0) {
@@ -85,10 +80,7 @@ export async function getInewsArticle(articleUrl) {
     Origin: "https://www.inews.id",
   });
 
-  const res = await fetch(articleUrl, { headers, signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`iNews HTTP ${res.status}`);
-
-  const html = await res.text();
+  const html = await request.text(articleUrl, { headers, timeout: 15000, bypassCloudflare: "auto" });
 
   const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : "Berita iNews";

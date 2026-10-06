@@ -186,6 +186,18 @@ export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
       break;
     }
   }
+
+  // Fallback Bright Data Web Unlocker jika GAS diblokir IP atau rate-limited
+  try {
+    const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+    if (getBrightDataConfig().apiKey) {
+      const bdRes = await brightDataRequest(url, { format: "json", timeout: 30000 });
+      const rows = normalizeRows(bdRes);
+      cacheSet(cacheKey, rows, rows.length === 0 ? NOTFOUND_TTL_MS : CACHE_TTL_MS);
+      return rows;
+    }
+  } catch (_) {}
+
   throw lastErr;
 }
 
