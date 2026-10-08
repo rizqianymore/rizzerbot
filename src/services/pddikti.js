@@ -63,10 +63,19 @@ async function solveTurnstileIfPresent(page, timeoutMs = 8000) {
 }
 
 async function getTokenPage() {
-  if (!tokenPagePromise) {
-    tokenPagePromise = (async () => {
-      const browser = await stealthBrowser.getBrowser();
-      const page = await browser.newPage();
+  if (tokenPagePromise) {
+    try {
+      const existingPage = await tokenPagePromise;
+      if (existingPage && !existingPage.isClosed?.() && existingPage.browser?.()?.connected) {
+        return existingPage;
+      }
+    } catch (_) {}
+    tokenPagePromise = null;
+  }
+
+  tokenPagePromise = (async () => {
+    const page = await stealthBrowser.newPage();
+    try {
       await page.setUserAgent(UA);
       await page.goto(`${BASE}/search/Raka`, {
         waitUntil: "domcontentloaded",
@@ -93,11 +102,16 @@ async function getTokenPage() {
             });
         });
       return page;
-    })().catch((err) => {
+    } catch (err) {
+      await stealthBrowser.closePage(page);
       tokenPagePromise = null;
       throw err;
-    });
-  }
+    }
+  })().catch((err) => {
+    tokenPagePromise = null;
+    throw err;
+  });
+
   return tokenPagePromise;
 }
 
@@ -140,9 +154,7 @@ export async function getRecaptchaToken() {
       if (!token || token.length < 100) throw new Error("token reCAPTCHA kosong/pendek");
       return token;
     } catch (err) {
-      try {
-        await page.close().catch(() => {});
-      } catch (_) {}
+      await stealthBrowser.closePage(page);
       tokenPagePromise = null;
       throw new Error(`Gagal membuat token reCAPTCHA: ${err.message}`);
     }
@@ -153,7 +165,7 @@ export async function closePddiktiBrowser() {
   try {
     if (tokenPagePromise) {
       const p = await tokenPagePromise.catch(() => null);
-      await p?.close().catch(() => {});
+      await stealthBrowser.closePage(p);
     }
   } catch (_) {}
   tokenPagePromise = null;
@@ -364,8 +376,7 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
   } catch (_) {}
 
   // 3. Fallback via stealth browser DOM rendering
-  const browser = await stealthBrowser.getBrowser();
-  const page = await browser.newPage();
+  const page = await stealthBrowser.newPage();
   try {
     await page.setUserAgent(UA);
     await page.goto(`${BASE}/detail-mahasiswa/${encodeURIComponent(id)}`, {
@@ -422,7 +433,7 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
     cacheSet(detailCache, id, data, DETAIL_TTL_MS);
     return data;
   } finally {
-    await page.close().catch(() => {});
+    await stealthBrowser.closePage(page);
   }
 }
 
