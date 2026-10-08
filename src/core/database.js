@@ -293,7 +293,8 @@ function normalizeSettings(storedSettings = {}) {
     premiumNumbers: ['premiumUsers'],
   };
   for (const key of Object.keys(roleAliases)) {
-    const rawVal = storedSettings[key] ?? roleAliases[key].find(k => storedSettings[k] !== undefined);
+    const aliasKey = roleAliases[key].find((k) => storedSettings[k] !== undefined);
+    const rawVal = storedSettings[key] ?? (aliasKey !== undefined ? storedSettings[aliasKey] : undefined);
     const sourceVal = rawVal !== undefined ? rawVal : configDefaults[key];
 
     result[key] = [...new Set(toJidList(sourceVal))].filter((j) => j.endsWith('@s.whatsapp.net'));

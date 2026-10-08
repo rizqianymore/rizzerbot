@@ -198,12 +198,14 @@ export async function getMediaBuffer(sock, msg, opts = {}) {
     target = { key: {}, message: target };
   }
   try {
+    const { default: pino } = await import("pino");
+    const safeLogger = sock?.logger || pino({ level: "silent" });
     const buf = await downloadMediaMessage(
       target,
       "buffer",
       {},
       {
-        logger: sock?.logger || console,
+        logger: safeLogger,
         reuploadRequest: sock?.updateMediaMessage?.bind(sock),
       }
     );

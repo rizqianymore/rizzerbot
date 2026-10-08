@@ -83,7 +83,9 @@ const GROUP_META_TTL_MS = 30_000;
 const _groupMetaStore = new Map();
 export async function getCachedGroupMeta(sock, jid) {
   const now = Date.now();
-  const entry = _groupMetaStore.get(jid);
+  const sockId = sock?.user?.id || sock?.user?.lid || "default";
+  const cacheKey = `${sockId}::${jid}`;
+  const entry = _groupMetaStore.get(cacheKey);
 
   if (entry && now < entry.expireAt) {
     return entry.data;
@@ -93,14 +95,21 @@ export async function getCachedGroupMeta(sock, jid) {
     const meta = await sock.groupMetadata(jid);
 
     try { db.learnGroupLidMap(meta); } catch (_) {}
-    _groupMetaStore.set(jid, { data: meta, expireAt: now + GROUP_META_TTL_MS });
+    _groupMetaStore.set(cacheKey, { data: meta, expireAt: now + GROUP_META_TTL_MS });
     return meta;
   } catch (_) {
     return null;
   }
 }
-export function invalidateGroupMeta(jid) {
-  _groupMetaStore.delete(jid);
+export function invalidateGroupMeta(jid, sock) {
+  if (sock) {
+    const sockId = sock?.user?.id || sock?.user?.lid || "default";
+    _groupMetaStore.delete(`${sockId}::${jid}`);
+    return;
+  }
+  for (const key of [..._groupMetaStore.keys()]) {
+    if (key === jid || key.endsWith(`::${jid}`)) _groupMetaStore.delete(key);
+  }
 }
 
 export const broadcastLock = new Map();

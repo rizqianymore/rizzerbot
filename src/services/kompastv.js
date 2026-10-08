@@ -1,3 +1,4 @@
+import axios from "axios";
 import { getRandomDevice, buildScraperHeaders } from "@/src/services/scrape.js";
 import { request } from "@/src/utils/request.js";
 

@@ -127,13 +127,18 @@ export function getStatusBadge(status) {
 export function getTransaction(id) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
-  return list.find((t) => t.id === q || t.id.includes(q)) || null;
+  if (!q) return null;
+  const exact = list.find((t) => t.id === q);
+  if (exact) return exact;
+  const prefixed = list.filter((t) => t.id.startsWith(q));
+  if (prefixed.length === 1) return prefixed[0];
+  return null;
 }
 
 export function updateTransaction(id, updates = {}) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
-  const idx = list.findIndex((t) => t.id === q || t.id.includes(q));
+  const idx = list.findIndex((t) => t.id === q);
   if (idx === -1) return null;
 
   if (updates.status) {
@@ -156,7 +161,7 @@ export function listTransactions({ limit = 10, groupJid = null } = {}) {
 export function deleteTransaction(id) {
   const list = getTransactionsDb();
   const q = String(id || "").trim().toUpperCase();
-  const idx = list.findIndex((t) => t.id === q || t.id.includes(q));
+  const idx = list.findIndex((t) => t.id === q);
   if (idx === -1) return false;
   list.splice(idx, 1);
   saveTransactionsDb(list);

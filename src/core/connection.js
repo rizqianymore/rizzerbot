@@ -131,7 +131,6 @@ export async function startBot() {
     });
 
     primarySock = sock;
-    isStarting = false;
 
     sock.ev.on("creds.update", saveCreds);
     let pairingTimeout = null;
@@ -280,6 +279,7 @@ export async function startBot() {
     }
   });
 
+    isStarting = false;
     return sock;
   } catch (error) {
     isStarting = false;

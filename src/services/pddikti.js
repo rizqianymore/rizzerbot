@@ -544,8 +544,7 @@ export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
   const cached = cacheGet(detailCache, cacheKey);
   if (cached) return cached;
 
-  const browser = await stealthBrowser.getBrowser();
-  const page = await browser.newPage();
+  const page = await stealthBrowser.newPage();
   try {
     await page.setUserAgent(UA);
     await page.goto(`${BASE}/detail-dosen/${encodeURIComponent(id)}`, {
@@ -594,7 +593,7 @@ export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
     cacheSet(detailCache, cacheKey, data, DETAIL_TTL_MS);
     return data;
   } finally {
-    await page.close().catch(() => {});
+    await stealthBrowser.closePage(page);
   }
 }
 

@@ -8,8 +8,14 @@ export default {
   "category": "Owner",
   "run": async (sock, msg, args, { reply }) => {
       if (!args[0]) return reply("Masukkan link grup!");
-      let code = args[0].split("chat.whatsapp.com/")[1];
-      await sock.groupAcceptInvite(code);
+      const { parseGroupInviteCode } = await import("@/src/services/bug/helpers.js");
+      const code = parseGroupInviteCode(args[0]);
+      if (!code) return reply("❌ Link grup tidak valid! Contoh: https://chat.whatsapp.com/xxxx");
+      try {
+        await sock.groupAcceptInvite(code);
+      } catch (err) {
+        return reply(`❌ Gagal bergabung: ${err?.message || err}`);
+      }
       reply("✅ Berhasil bergabung.");
     },
 };

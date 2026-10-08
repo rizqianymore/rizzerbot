@@ -19,7 +19,9 @@ export default {
 
       try {
         const results = await scrapeWebImages(query, 10);
+        if (!results?.length) return reply("❌ Gambar tidak ditemukan untuk kata kunci tersebut.");
         const randomItem = results[Math.floor(Math.random() * results.length)];
+        if (!randomItem?.url) return reply("❌ Gambar tidak ditemukan untuk kata kunci tersebut.");
 
         const imgBuffer = await fetchBuffer(randomItem.url, { redirect: "follow" });
         const caption =

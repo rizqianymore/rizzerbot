@@ -43,46 +43,54 @@ async function fetchFromBloomberg(tickerId, cookie = "") {
 }
 
 async function fetchFromYahooFinance(ticker) {
-  let mapped = COMMODITY_TICKER_MAP[ticker.toUpperCase()] || ticker;
-
-  if (/^[A-Z]{4}$/.test(mapped)) {
-    mapped = `${mapped}.JK`;
+  const upper = ticker.toUpperCase();
+  const candidates = [COMMODITY_TICKER_MAP[upper] || ticker];
+  if (!COMMODITY_TICKER_MAP[upper] && /^[A-Z]{4}$/.test(upper)) {
+    candidates.push(`${ticker}.JK`);
   }
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(mapped)}`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Accept: "application/json",
-    },
-  });
+  const urlFor = (mapped) => `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(mapped)}`;
+  let lastErr = null;
+  for (const mapped of candidates) {
+    const res = await fetch(urlFor(mapped), {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "application/json",
+      },
+    });
 
-  if (!res.ok) throw new Error(`Finance Market HTTP ${res.status}`);
-  const data = await res.json();
-  const meta = data.chart?.result?.[0]?.meta;
-  if (!meta || meta.regularMarketPrice === undefined) {
-    throw new Error(`Data ticker "${ticker}" tidak ditemukan.`);
+    if (!res.ok) {
+      lastErr = new Error(`Finance Market HTTP ${res.status}`);
+      continue;
+    }
+    const data = await res.json();
+    const meta = data.chart?.result?.[0]?.meta;
+    if (!meta || meta.regularMarketPrice === undefined) {
+      lastErr = new Error(`Data ticker "${ticker}" tidak ditemukan.`);
+      continue;
+    }
+
+    const currentPrice = meta.regularMarketPrice;
+    const prevClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
+    const priceChange = currentPrice - prevClose;
+    const percentChange = prevClose ? (priceChange / prevClose) * 100 : 0;
+
+    return {
+      source: "Yahoo Finance",
+      id: ticker.toUpperCase(),
+      symbol: meta.symbol,
+      name: meta.shortName || meta.longName || meta.symbol,
+      type: meta.instrumentType || "Equity/Commodity",
+      price: currentPrice,
+      priceChange,
+      percentChange,
+      currency: meta.currency || "USD",
+      exchange: meta.exchangeName || meta.fullExchangeName || "",
+      marketState: meta.tradingPeriods ? "Active" : "Normal",
+    };
   }
-
-  const currentPrice = meta.regularMarketPrice;
-  const prevClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
-  const priceChange = currentPrice - prevClose;
-  const percentChange = prevClose ? (priceChange / prevClose) * 100 : 0;
-
-  return {
-    source: "Bloomberg Market Data",
-    id: ticker.toUpperCase(),
-    symbol: meta.symbol,
-    name: meta.shortName || meta.longName || meta.symbol,
-    type: meta.instrumentType || "Equity/Commodity",
-    price: currentPrice,
-    priceChange,
-    percentChange,
-    currency: meta.currency || "USD",
-    exchange: meta.exchangeName || meta.fullExchangeName || "",
-    marketState: meta.tradingPeriods ? "Active" : "Normal",
-  };
+  throw lastErr || new Error(`Data ticker "${ticker}" tidak ditemukan.`);
 }
 
 export async function getStockTicker(ticker, userCookie = "") {

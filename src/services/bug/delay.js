@@ -4,7 +4,7 @@ import { sleep } from "./helpers.js";
 export async function DelayV5(sock, target) {
   for (let i = 0; i < 2; i++) {
     await sleep(500);
-    const msg = generateWAMessageFromContent(
+    const msg = await generateWAMessageFromContent(
       target,
       {
         groupStatusMessageV2: {
@@ -99,7 +99,7 @@ export async function DelayV2(sock, target) {
         },
       },
     },
-    { participant: true },
+    { participant: { jid: target } },
   );
 }
 

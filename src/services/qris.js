@@ -207,11 +207,32 @@ function makeTLV(tag, value, name = "") {
 }
 
 export function convertQRIS(qrisString, { amount, fee = null } = {}) {
+  const numAmount = Number(amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0) {
+    throw new Error("Nominal amount tidak valid (harus angka > 0)");
+  }
   const elements = parseTLV(qrisString);
   const result = [];
   let amountInserted = false;
 
   const managedTags = new Set(["54", "55", "56", "57", "63"]);
+
+  const buildAmountTags = () => {
+    const tags = [];
+    const amountStr = Math.round(numAmount).toString();
+    tags.push(makeTLV("54", amountStr, "Transaction Amount"));
+
+    if (fee && Number(fee.value) > 0) {
+      if (fee.type === "fixed") {
+        tags.push(makeTLV("55", "02", "Tip or Convenience Indicator"));
+        tags.push(makeTLV("56", Math.round(Number(fee.value)).toString(), "Value of Convenience Fee (Fixed)"));
+      } else {
+        tags.push(makeTLV("55", "03", "Tip or Convenience Indicator"));
+        tags.push(makeTLV("57", String(fee.value), "Value of Convenience Fee (%)"));
+      }
+    }
+    return tags;
+  };
 
   for (const el of elements) {
     if (managedTags.has(el.tag)) continue;
@@ -223,23 +244,22 @@ export function convertQRIS(qrisString, { amount, fee = null } = {}) {
     }
 
     if (el.tag === "58" && !amountInserted) {
-      const amountStr = Math.round(Number(amount)).toString();
-      result.push(makeTLV("54", amountStr, "Transaction Amount"));
-
-      if (fee && fee.value > 0) {
-        if (fee.type === "fixed") {
-          result.push(makeTLV("55", "02", "Tip or Convenience Indicator"));
-          result.push(makeTLV("56", Math.round(fee.value).toString(), "Value of Convenience Fee (Fixed)"));
-        } else {
-          result.push(makeTLV("55", "03", "Tip or Convenience Indicator"));
-          result.push(makeTLV("57", fee.value.toString(), "Value of Convenience Fee (%)"));
-        }
-      }
+      result.push(...buildAmountTags());
 
       amountInserted = true;
     }
 
     result.push(el);
+  }
+
+  if (!amountInserted) {
+    const idx63 = result.findIndex((el) => el.tag === "63");
+    const amountTags = buildAmountTags();
+    if (idx63 === -1) {
+      result.push(...amountTags);
+    } else {
+      result.splice(idx63, 0, ...amountTags);
+    }
   }
 
   const withoutCRC = buildTLVString(result);

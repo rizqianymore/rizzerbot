@@ -14,7 +14,7 @@ async function resolveGroupJid(sock, input) {
     return null;
   }
   const digits = t.replace(/[^0-9]/g, "");
-  if (digits.length >= 10) return `${digits}@g.us`;
+  if (digits.length >= 10) return null;
   return null;
 }
 

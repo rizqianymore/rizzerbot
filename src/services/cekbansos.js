@@ -78,8 +78,7 @@ export async function fetchFormSession() {
   } catch (_) {}
 
   // Fallback via stealth browser
-  const browser = await stealthBrowser.getBrowser();
-  const page = await browser.newPage();
+  const page = await stealthBrowser.newPage();
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
     const info = await page.evaluate(() => {
@@ -92,7 +91,7 @@ export async function fetchFormSession() {
     }
     throw new Error("Gagal membaca token bansos dari browser");
   } finally {
-    await page.close().catch(() => {});
+    await stealthBrowser.closePage(page);
   }
 }
 
@@ -118,8 +117,7 @@ export async function fetchCaptchaImage(session) {
   } catch (_) {}
 
   // Fallback via stealthBrowser
-  const browser = await stealthBrowser.getBrowser();
-  const page = await browser.newPage();
+  const page = await stealthBrowser.newPage();
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
     await page.waitForSelector('img[src*="captcha"]', { timeout: 8000 });
@@ -136,7 +134,7 @@ export async function fetchCaptchaImage(session) {
     if (b64) return Buffer.from(b64, "base64");
     throw new Error("Gagal mengunduh gambar captcha via browser");
   } finally {
-    await page.close().catch(() => {});
+    await stealthBrowser.closePage(page);
   }
 }
 
@@ -356,8 +354,7 @@ export function formatHasil(nik, parsed) {
 }
 
 export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
-  const browser = await stealthBrowser.getBrowser();
-  const page = await browser.newPage();
+  const page = await stealthBrowser.newPage();
 
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
@@ -426,7 +423,7 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
 
     return { status: "captcha-gagal" };
   } finally {
-    await page.close().catch(() => {});
+    await stealthBrowser.closePage(page);
   }
 }
 

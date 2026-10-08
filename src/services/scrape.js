@@ -39,8 +39,8 @@ export async function fetchLyrics(artist, title) {
       cleanTitle
     )}`
   );
-  if (!data?.lyrics?.trim) throw new Error("Lirik tidak ditemukan");
-  return data.lyrics.trim();
+  if (!data?.lyrics?.trim?.()) throw new Error("Lirik tidak ditemukan");
+  return String(data.lyrics).trim();
 }
 
 export async function translateText(text, lang = "id") {

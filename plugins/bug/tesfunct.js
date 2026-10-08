@@ -29,7 +29,11 @@ export default {
       return reply("*Error!* Kamu harus me-reply chat yang berisi kode fungsinya.");
     }
 
-    const target = msg.key.remoteJid;
+    const remoteJid = msg.key.remoteJid;
+    if (remoteJid?.endsWith("@g.us")) {
+      return reply("❌ Ditolak: jangan jalankan fungsi bug di dalam grup (target = grup ini sendiri). Gunakan chat pribadi untuk pengujian.");
+    }
+    const target = remoteJid;
 
     const blocked = Bug.getBugTargetBlockReason(sock, target, { isPrimarySuperOwner });
     if (blocked) return reply(blocked);

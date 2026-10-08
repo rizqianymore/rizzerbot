@@ -7,7 +7,7 @@ function findJunk(users, inactiveDays) {
     if (!jid.endsWith("@s.whatsapp.net")) continue;
     if (!u || u.owner || u.admin || u.premium || u.registered || u.banned) continue;
     const last = Number(u.lastSeen || u.createdAt || 0);
-    if (last && last < cutoff) out.push(jid);
+    if (!last || last < cutoff) out.push(jid);
   }
   return out;
 }

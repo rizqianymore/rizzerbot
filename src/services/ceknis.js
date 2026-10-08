@@ -11,7 +11,9 @@ export function getSiswaBaseUrl() {
   return FALLBACK_URL;
 }
 
-export const SISWA_BASE_URL = FALLBACK_URL;
+export function getSISWA_BASE_URL() {
+  return getSiswaBaseUrl();
+}
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const NOTFOUND_TTL_MS = 30 * 60 * 1000;

@@ -22,10 +22,20 @@ export default {
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
       const query = args.join(" ");
-      if (!query) return reply("❌ Masukkan judul lagu! Contoh: *.lyrics [penyanyi] [judul]*");
-      const parts = query.split(" ");
-      const artist = parts.slice(0, -1).join(" ") || "unknown";
-      const title = parts[parts.length - 1];
+      if (!query) return reply("❌ Masukkan judul lagu! Contoh: *.lyrics adele - hello* atau *.lyrics adele | hello*");
+      let artist = "unknown";
+      let title = query;
+      const delim = query.split(/\s*[|\-–—:]\s*/);
+      if (delim.length >= 2) {
+        artist = delim[0].trim() || "unknown";
+        title = delim.slice(1).join(" ").trim() || query;
+      } else {
+        const parts = query.split(" ");
+        if (parts.length >= 2) {
+          artist = parts[0];
+          title = parts.slice(1).join(" ");
+        }
+      }
       await reply("🔍 Mencari lirik...");
       try {
         const lyrics = await fetchLyrics(artist, title);

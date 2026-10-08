@@ -520,13 +520,12 @@ export async function smartRequest(url, options = {}) {
   const hasBrightData = Boolean(getBrightDataConfig().apiKey);
 
   if (bypassCloudflare === true) {
-    if (hasBrightData) {
+    if (hasBrightData && responseType !== "buffer") {
       try {
         const bdData = await brightDataRequest(url, {
           format: responseType === "json" ? "json" : "raw",
           timeout,
         });
-        if (responseType === "buffer") return Buffer.from(bdData);
         return bdData;
       } catch (bdErr) {
         // Jika Bright Data error, fallback ke stealth browser
@@ -539,6 +538,25 @@ export async function smartRequest(url, options = {}) {
         headers: options.headers,
         body: options.data,
       });
+    }
+    if (responseType === "buffer") {
+      await stealthBrowser.solveChallenge(url, {
+        timeoutMs: timeout,
+        preferredDevice,
+      });
+      const res = await axios({
+        url,
+        method,
+        headers,
+        timeout,
+        responseType: "arraybuffer",
+        validateStatus: () => true,
+      });
+      if (res.headers?.["set-cookie"]) {
+        cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
+      }
+      if (res.status >= 200 && res.status < 300) return Buffer.from(res.data);
+      throw new Error(`HTTP ${res.status} saat mengunduh buffer ${url}`);
     }
     const solved = await stealthBrowser.solveChallenge(url, {
       timeoutMs: timeout,

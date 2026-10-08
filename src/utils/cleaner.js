@@ -36,8 +36,6 @@ export function cleanRootJunkFiles() {
 
 export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   const pathsToClean = [
-    path.join(__dirname, "..", "..", "assets", "sessions", "primary_bot"),
-    path.join(__dirname, "..", "..", "assets", "sessions"),
     path.join(__dirname, "..", "..", "assets", "media"),
     path.join(__dirname, "..", "..", "assets", "cache"),
     path.join(__dirname, "..", "..", "temp"),
@@ -53,13 +51,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   freedBytes += rootClean.bytes;
 
   const isTempSessionFile = (name) => {
-    return (
-      name.endsWith(".json") &&
-      (name.startsWith("pre-key-") ||
-        name.startsWith("app-state-sync-key-") ||
-        name.startsWith("sender-key-") ||
-        name.startsWith("session-"))
-    );
+    return false;
   };
 
   const isTrashFile = (name) => {
@@ -124,7 +116,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
 
 export function clearAllCache({ logger } = {}) {
   cleanOrphanChromeProcesses(logger);
-  const result = cleanTempFiles({ maxAgeMs: 0 });
+  const result = cleanTempFiles();
   if (logger) {
     const mb = (result.freedBytes / (1024 * 1024)).toFixed(2);
     logger.info(`[System Cache Clean] Total ${result.deletedCount} cache/junk files purged (${mb} MB freed).`);

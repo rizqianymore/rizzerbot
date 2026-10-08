@@ -21,10 +21,16 @@ export default {
   "category": "User",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
-      const text = args.join(" ");
+      if (!args.length) return reply("❌ Masukkan teks! Contoh: *.translate hello world* atau *.translate en halo dunia*");
+      let lang = "id";
+      let text = args.join(" ");
+      if (args.length >= 2 && /^[a-z]{2}([-_][A-Za-z]{2})?$/.test(args[0])) {
+        lang = args[0].toLowerCase().replace("_", "-");
+        text = args.slice(1).join(" ");
+      }
       if (!text) return reply("❌ Masukkan teks! Contoh: *.translate hello world*");
       try {
-        const result = await translateText(text, "id");
+        const result = await translateText(text, lang);
         await reply(`✅ *TERJEMAHAN:*\n\n${result.translated}`);
       } catch (err) {
         await reply(`❌ Terjemahan gagal: ${err.message}`);

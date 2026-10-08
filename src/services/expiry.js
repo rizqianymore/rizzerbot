@@ -96,9 +96,8 @@ export async function checkRentals(logger) {
     if (!r) continue;
     try {
       if (r.until <= Date.now()) {
-        if (sock) {
-          try { await sock.groupLeave(gid); } catch (_) {}
-        }
+        if (!sock) continue;
+        try { await sock.groupLeave(gid); } catch (_) {}
         delete data.groups[gid];
         left++;
         try { await notify?.(`Sewa grup ${gid} habis, bot keluar otomatis.`); } catch (_) {}

