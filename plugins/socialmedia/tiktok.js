@@ -20,26 +20,41 @@ export default {
         let duration = "";
 
         try {
-          const { tiktokDownload, fetchBuffer } = await import("@/src/services/network/scrape.js");
-          const info = await tiktokDownload(url);
-          const dlUrl = isAudio ? info.mp3 : info.noWatermark;
-          if (!dlUrl) throw new Error("Gagal menemukan link download media TikTok.");
+          const { downloadTiktok } = await import("@/src/services/fetch/kolid.js");
+          const { fetchBuffer } = await import("@/src/services/network/scrape.js");
+          const info = await downloadTiktok(url);
+          const dlUrl = isAudio ? info?.mp3 : info?.noWatermark || info?.watermark;
+          if (!dlUrl) throw new Error("kol.id tidak mengembalikan link media.");
           buffer = await fetchBuffer(dlUrl, {
             "User-Agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-            "Referer": "https://snaptik.fi/",
+            "Referer": "https://kol.id/",
           });
           title = info.title || "";
           author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
           duration = info.duration ? `${info.duration}s` : "";
-        } catch (scrapeErr) {
-          // Fallback ke engine yt-dlp
-          const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-          const pInfo = await probe(url).catch(() => null);
-          const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
-          buffer = dl.buffer;
-          title = pInfo?.title || "";
-          author = pInfo?.uploader || "";
-          if (pInfo?.duration) duration = `${pInfo.duration}s`;
+        } catch (kolErr) {
+          try {
+            const { tiktokDownload, fetchBuffer } = await import("@/src/services/network/scrape.js");
+            const info = await tiktokDownload(url);
+            const dlUrl = isAudio ? info.mp3 : info.noWatermark;
+            if (!dlUrl) throw new Error("Gagal menemukan link download media TikTok.");
+            buffer = await fetchBuffer(dlUrl, {
+              "User-Agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+              "Referer": "https://snaptik.fi/",
+            });
+            title = info.title || "";
+            author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
+            duration = info.duration ? `${info.duration}s` : "";
+          } catch (scrapeErr) {
+            // Fallback ke engine yt-dlp
+            const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
+            const pInfo = await probe(url).catch(() => null);
+            const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
+            buffer = dl.buffer;
+            title = pInfo?.title || "";
+            author = pInfo?.uploader || "";
+            if (pInfo?.duration) duration = `${pInfo.duration}s`;
+          }
         }
 
         const lines = ["*TIKTOK DOWNLOADER*"];

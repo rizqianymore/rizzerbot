@@ -27,7 +27,7 @@ export default {
     const result = await checkUsernameOn(platform, username);
 
     if (result.exists) {
-      return reply(`✅ Username *${username}* ditemukan di *${result.name}*!\n🔗 ${result.url}`);
+      return reply(`✅ Username *${username}* ditemukan di *${result.name}*!\n🔗 ${result.url}\n🎯 Akurasi: ${result.confidence}`);
     }
     return reply(`❌ Username *${username}* tidak ditemukan di *${result.name}*.`);
   },
