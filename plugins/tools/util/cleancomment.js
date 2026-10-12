@@ -1,7 +1,7 @@
 function stripCodeComments(sourceCode) {
   let inString = false;
   let stringChar = "";
-  let inRegex = false;
+  const inRegex = false;
   let inSingleComment = false;
   let inMultiComment = false;
   let output = "";

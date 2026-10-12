@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { db } from "@/src/core/database.js";
 
 const DB_DIR = path.join(process.cwd(), "database");
 const SUBBOTS_DIR = path.join(DB_DIR, "subbots");

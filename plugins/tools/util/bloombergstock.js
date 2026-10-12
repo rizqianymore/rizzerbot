@@ -1,4 +1,4 @@
-import { downloadContentFromMessage } from "baileys";
+
 import { getStockTicker } from "@/src/services/finance/stock.js";
 
 export default {

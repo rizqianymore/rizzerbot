@@ -1,6 +1,6 @@
-import { clean, cleanText } from "./igdl/utils.js";
-import { downloadFromKolId } from "./igdl/providers.js";
-import { sendImage, sendVideo } from "./igdl/sender.js";
+import { clean, cleanText } from "@/src/services/fetch/igdl/utils.js";
+import { downloadFromKolId } from "@/src/services/fetch/igdl/providers.js";
+import { sendImage, sendVideo } from "@/src/services/fetch/igdl/sender.js";
 
 export default {
   "name": "igdl",

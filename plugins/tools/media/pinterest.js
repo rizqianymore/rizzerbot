@@ -1,4 +1,4 @@
-import { searchPinterest, scrapeWebImages } from "@/src/services/fetch/images.js";
+import { searchPinterest } from "@/src/services/fetch/images.js";
 import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 export default {

@@ -1,12 +1,4 @@
-import {
-  getJkt48Members,
-  getJkt48MemberDetail,
-  getJkt48News,
-  getJkt48Schedules,
-  getJkt48ScheduleDetail,
-  getShowroomLeaderboard,
-  getShowroomSchedules,
-} from "@/src/services/hiburan/jkt48.js";
+import { getShowroomSchedules } from "@/src/services/hiburan/jkt48.js";
 import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 const JKT48_BASE = "https://jkt48.com";
@@ -106,7 +98,7 @@ function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  match = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  match = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
   if (match) {
     const d = parseInt(match[1], 10);
     const m = parseInt(match[2], 10);

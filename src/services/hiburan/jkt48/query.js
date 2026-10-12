@@ -69,7 +69,7 @@ export function parseUserQuery(args, now = new Date()) {
     };
   }
 
-  match = raw.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  match = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
   if (match) {
     const d = parseInt(match[1], 10);
     const m = parseInt(match[2], 10);

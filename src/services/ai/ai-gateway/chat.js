@@ -17,7 +17,7 @@ export class DeepSeekWebWithAutoRefresh extends DeepSeekWebSession {
     }
     this.setCurrentUserToken(token);
 
-    let accessToken = await this.acquireAccessToken(token);
+    const accessToken = await this.acquireAccessToken(token);
     const sessionId = await this.createSession(accessToken);
 
     try {

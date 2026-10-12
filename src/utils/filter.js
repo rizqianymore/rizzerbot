@@ -17,7 +17,7 @@ export function checkProfanity(textOrArray) {
     return { isViolation: false };
   }
 
-  let normalized = text
+  const normalized = text
     .toLowerCase()
     .replace(/0/g, "o")
     .replace(/1/g, "i")

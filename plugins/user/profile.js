@@ -39,7 +39,7 @@ export default {
 
       const phoneNum = targetJid.split("@")[0];
 
-      let displayName = targetUser.name || (isSelf ? (msg.pushName || "Pengguna") : "Pengguna");
+      const displayName = targetUser.name || (isSelf ? (msg.pushName || "Pengguna") : "Pengguna");
 
       const regDate = targetUser.createdAt
         ? new Date(targetUser.createdAt).toLocaleDateString("id-ID", {

@@ -1,5 +1,5 @@
 import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
+import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;

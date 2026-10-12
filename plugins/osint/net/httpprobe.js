@@ -42,8 +42,8 @@ export default {
       const latency = Date.now() - start;
       const headers = Object.fromEntries(res.headers.entries());
 
-      let server = headers["server"] || "-";
-      let wafCdn = [];
+      const server = headers["server"] || "-";
+      const wafCdn = [];
       if (headers["cf-ray"] || /cloudflare/i.test(server)) wafCdn.push("Cloudflare");
       if (headers["x-akamai-transformed"] || /akamai/i.test(server)) wafCdn.push("Akamai");
       if (headers["x-amz-cf-id"] || /cloudfront/i.test(server)) wafCdn.push("AWS CloudFront");

@@ -16,7 +16,11 @@
     "security:fix": "npm audit fix",
     "security:check": "npm audit --audit-level=moderate && npm outdated",
     "clean:comments": "node scripts/clean-comments.js",
-    "clean:comments:dry": "node scripts/clean-comments.js --dry-run"
+    "clean:comments:dry": "node scripts/clean-comments.js --dry-run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=20",
@@ -41,5 +45,10 @@
     "axios": "^1.19.0",
     "sharp": "^0.35.4",
     "image-size": "^2.0.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10"
   }
 }

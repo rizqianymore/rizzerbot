@@ -1,0 +1,11 @@
+node_modules/
+database/
+temp/
+tmp/
+assets/
+bin/
+logs/
+dist/
+build/
+package-lock.json
+bun.lock

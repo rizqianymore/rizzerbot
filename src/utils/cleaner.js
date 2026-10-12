@@ -140,6 +140,39 @@ export function autoCleanSessionCache(logger) {
   }
 }
 
+// File database kritis yang wajib disnapshot otomatis tiap jadwal.
+const SNAPSHOT_TARGETS = [
+  { file: "users.json", prefix: "daily-snapshot" },
+  { file: "database.json", prefix: "db-snapshot" },
+  { file: "transactions.json", prefix: "trx-snapshot" },
+  { file: "privilege-audit.json", prefix: "audit-snapshot" },
+  { file: "rentals.json", prefix: "rental-snapshot" },
+];
+
+// Berapa hari snapshot dipertahankan sebelum dibuang (rotasi).
+const SNAPSHOT_RETENTION_DAYS = 7;
+
+function pruneOldSnapshots(backupDir, logger) {
+  const cutoff = Date.now() - SNAPSHOT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  let pruned = 0;
+  try {
+    for (const entry of fs.readdirSync(backupDir)) {
+      if (!entry.endsWith(".json")) continue;
+      const full = path.join(backupDir, entry);
+      try {
+        const stat = fs.statSync(full);
+        if (stat.isFile() && stat.mtimeMs < cutoff) {
+          fs.unlinkSync(full);
+          pruned++;
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+  if (pruned > 0 && logger) {
+    logger.info(`[Auto Backup] Rotasi: membuang ${pruned} snapshot lama (>${SNAPSHOT_RETENTION_DAYS} hari).`);
+  }
+}
+
 export function periodicDatabaseSnapshot(logger) {
   try {
     const dbDir = path.join(__dirname, "..", "..", "database");
@@ -160,7 +193,9 @@ export function periodicDatabaseSnapshot(logger) {
       }
     };
 
-    snap(path.join(dbDir, "users.json"), "daily-snapshot");
+    for (const t of SNAPSHOT_TARGETS) {
+      snap(path.join(dbDir, t.file), t.prefix);
+    }
 
     try {
       const subDir = path.join(dbDir, "subbots");
@@ -172,6 +207,8 @@ export function periodicDatabaseSnapshot(logger) {
         }
       }
     } catch (_) {}
+
+    pruneOldSnapshots(backupDir, logger);
   } catch (err) {
     if (logger) logger.error("[Auto Backup Error]", err.message);
   }

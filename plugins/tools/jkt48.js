@@ -1,12 +1,4 @@
-import {
-  getJkt48Members,
-  getJkt48MemberDetail,
-  getJkt48News,
-  getJkt48Schedules,
-  getJkt48ScheduleDetail,
-  getShowroomLeaderboard,
-  getShowroomSchedules,
-} from "@/src/services/hiburan/jkt48.js";
+import { getJkt48Members, getJkt48MemberDetail } from "@/src/services/hiburan/jkt48.js";
 import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 const JKT48_BASE = "https://jkt48.com";

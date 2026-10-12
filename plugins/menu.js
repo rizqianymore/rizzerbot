@@ -1,5 +1,7 @@
 import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
+import { sortCategoryKeys, resolveCategoryAlias } from "@/src/core/categories.js";
+import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 
 export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
@@ -49,47 +51,8 @@ export default {
     let rawArg = args.join(" ").trim().toLowerCase();
     if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length).trim();
 
-    const categoryAliases = {
-      bug: "Bug",
-      bugs: "Bug",
-      exploit: "Bug",
-      news: "News",
-      berita: "News",
-      "social media": "Social Media",
-      socialmedia: "Social Media",
-      socmed: "Social Media",
-      sosmed: "Social Media",
-      ai: "AI",
-      sticker: "Sticker",
-      stiker: "Sticker",
-      tools: "Tools",
-      tool: "Tools",
-      alat: "Tools",
-      group: "Group",
-      grup: "Group",
-      grub: "Group",
-      gc: "Group",
-      user: "User",
-      usr: "User",
-      pengguna: "User",
-      premium: "Premium",
-      prem: "Premium",
-      pro: "Premium",
-      owner: "Owner",
-      own: "Owner",
-      creator: "Owner",
-      general: "General",
-      sports: "Sports",
-      sport: "Sports",
-      stalker: "Stalker",
-      stalk: "Stalker",
-      osint: "OSINT",
-      recon: "OSINT",
-      intel: "OSINT",
-    };
-
     const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
-    const targetCategory = rawArg && !showAll ? categoryAliases[rawArg] : null;
+    const targetCategory = rawArg && !showAll ? resolveCategoryAlias(rawArg) : null;
 
     if (rawArg && !targetCategory) {
       const targetCmd = commands.get(rawArg);
@@ -145,27 +108,7 @@ export default {
       return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
-    const order = [
-      "Bug",
-      "News",
-      "Social Media",
-      "AI",
-      "Sticker",
-      "Tools",
-      "Group",
-      "User",
-      "Premium",
-      "Owner",
-      "General",
-      "Sports",
-      "Stalker",
-      "OSINT",
-    ];
-    const catKeys = Object.keys(categories).sort((a, b) => {
-      const ia = order.indexOf(a) === -1 ? 99 : order.indexOf(a);
-      const ib = order.indexOf(b) === -1 ? 99 : order.indexOf(b);
-      return ia - ib;
-    });
+    const catKeys = sortCategoryKeys(Object.keys(categories));
 
     const role = isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User";
     const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
@@ -179,53 +122,7 @@ export default {
       targetCategory,
     }).trim();
 
-    try {
-      let imagePayload = null;
-      const { existsSync, readFileSync } = await import("fs");
-      const { resolve } = await import("path");
-
-      if (activeSettings.image) {
-        if (typeof activeSettings.image === "string" && (activeSettings.image.startsWith("http://") || activeSettings.image.startsWith("https://"))) {
-          imagePayload = { url: activeSettings.image };
-        } else {
-          const localPath = resolve(process.cwd(), activeSettings.image);
-          if (existsSync(localPath)) {
-            imagePayload = readFileSync(localPath);
-          }
-        }
-      }
-
-      if (!imagePayload) {
-        const defaultBannerPaths = [
-          resolve(process.cwd(), "assets/image/banner.webp"),
-          resolve(process.cwd(), "assets/image/banner.jpg"),
-          resolve(process.cwd(), "assets/image/banner.jpeg"),
-          resolve(process.cwd(), "assets/image/banner.png"),
-        ];
-        for (const p of defaultBannerPaths) {
-          if (existsSync(p)) {
-            imagePayload = readFileSync(p);
-            break;
-          }
-        }
-      }
-
-      if (imagePayload) {
-        return await sock.sendMessage(
-          msg.key.remoteJid,
-          {
-            image: imagePayload,
-            caption: finalCaption,
-          },
-          { quoted: msg }
-        );
-      }
-    } catch (_) { }
-
-    await sock.sendMessage(
-      msg.key.remoteJid,
-      { text: finalCaption },
-      { quoted: msg }
-    );
+    const imagePayload = await resolveImagePayload(activeSettings);
+    await sendWithImage(sock, msg.key.remoteJid, imagePayload, finalCaption, msg);
   },
 };

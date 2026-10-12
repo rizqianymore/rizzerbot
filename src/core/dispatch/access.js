@@ -24,7 +24,7 @@ export async function resolveCommandAccess(sock, msg, { botJidEarly, botJid, isF
     db.isOwner(senderJid) ||
     db.isBotOwner(botJid, senderJid);
 
-  let access = db.getAccess(senderJid);
+  const access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
   const isAdmin = Boolean(isOwner || access.admin);
   const isPremium = Boolean(isOwner || isAdmin || access.premium);
@@ -54,7 +54,7 @@ export async function resolveCommandAccess(sock, msg, { botJidEarly, botJid, isF
     if (!isPublicCommand) return { drop: true };
   }
 
-  let user = access.user || {
+  const user = access.user || {
     name: msg.pushName || "",
     owner: false,
     admin: false,

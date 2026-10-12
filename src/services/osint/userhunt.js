@@ -171,7 +171,7 @@ export const USERHUNT_PLATFORMS = [
 ];
 
 export function isValidUsername(username) {
-  return /^[a-zA-Z0-9_\-\.]{3,30}$/.test(username || "");
+  return /^[a-zA-Z0-9_.-]{3,30}$/.test(username || "");
 }
 
 export async function checkUsernameOn(platform, username) {

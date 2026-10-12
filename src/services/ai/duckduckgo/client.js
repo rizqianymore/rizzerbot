@@ -3,13 +3,7 @@ import {
   solveDuckDuckGoChallenge,
   makeDuckDuckGoFeSignals,
 } from "./challenge.js";
-import {
-  DUCKDUCKGO_DEFAULT_MODEL,
-  normalizeDuckDuckGoModel,
-  pickDuckDuckGoModel,
-  extractFreeDuckDuckGoModelIds,
-  FE_VERSION_PATTERN,
-} from "./models.js";
+import { DUCKDUCKGO_DEFAULT_MODEL, normalizeDuckDuckGoModel, pickDuckDuckGoModel, extractFreeDuckDuckGoModelIds } from "./models.js";
 
 const DUCKDUCKGO_BASE = "https://duck.ai";
 const STATUS_URL = `${DUCKDUCKGO_BASE}/duckchat/v1/status`;

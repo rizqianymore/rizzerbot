@@ -1,4 +1,4 @@
-import { normalizeJid, normalizePhone, samePhoneJidStrict } from './utils.js';
+import { normalizeJid, samePhoneJidStrict } from './utils.js';
 
 export const lidToPnMemory = new Map();
 export const LID_MAP_MAX = 5000;

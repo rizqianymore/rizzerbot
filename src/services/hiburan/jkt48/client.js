@@ -93,7 +93,7 @@ export async function getJkt48Schedules(month, year) {
 }
 
 export async function getJkt48ScheduleDetail(codeOrSlug) {
-  let targetSlug = codeOrSlug.trim();
+  const targetSlug = codeOrSlug.trim();
 
   try {
     const { schedules } = await getJkt48Schedules();

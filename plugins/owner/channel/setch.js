@@ -38,7 +38,7 @@ export default {
       let channelJid = input;
 
       if (input.includes("whatsapp.com/channel/")) {
-        const code = input.split("whatsapp.com/channel/")[1]?.split(/[\/\?\s]/)[0];
+        const code = input.split("whatsapp.com/channel/")[1]?.split(/[/?\s]/)[0];
         if (code && sock.newsletterMetadata) {
           try {
             const meta = await sock.newsletterMetadata("invite", code);

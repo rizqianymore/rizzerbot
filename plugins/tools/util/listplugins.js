@@ -1,8 +1,8 @@
 import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
+import { sortCategoryKeys } from "@/src/core/categories.js";
+import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 import path from "path";
-
-const categoryOrder = ["News", "Social Media", "AI", "Sticker", "Tools", "Group", "User", "Premium", "Owner", "General"];
 
 export default {
   name: "listplugins",
@@ -60,11 +60,7 @@ export default {
     text += `• Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
     text += `• Total  : *${pluginsData.length} Plugin*\n\n`;
 
-    const catKeys = Object.keys(categories).sort((a, b) => {
-      const ia = categoryOrder.indexOf(a) === -1 ? 99 : categoryOrder.indexOf(a);
-      const ib = categoryOrder.indexOf(b) === -1 ? 99 : categoryOrder.indexOf(b);
-      return ia - ib;
-    });
+    const catKeys = sortCategoryKeys(Object.keys(categories));
 
     for (const cat of catKeys) {
       text += `┌───「 *${cat}* (${categories[cat].length}) 」\n`;
@@ -89,30 +85,7 @@ export default {
 
     text += `💡 _Gunakan \`${prefix}help <command>\` untuk info detail._`;
 
-    try {
-      let imagePayload = null;
-      if (activeSettings.image) {
-        if (typeof activeSettings.image === "string" && (activeSettings.image.startsWith("http://") || activeSettings.image.startsWith("https://"))) {
-          imagePayload = { url: activeSettings.image };
-        } else {
-          const { existsSync, readFileSync } = await import("fs");
-          const { resolve } = await import("path");
-          const localPath = resolve(process.cwd(), activeSettings.image);
-          if (existsSync(localPath)) {
-            imagePayload = readFileSync(localPath);
-          }
-        }
-      }
-
-      if (imagePayload) {
-        return await sock.sendMessage(
-          msg.key.remoteJid,
-          { image: imagePayload, caption: text },
-          { quoted: msg }
-        );
-      }
-    } catch (_) {}
-
-    await sock.sendMessage(msg.key.remoteJid, { text }, { quoted: msg });
+    const imagePayload = await resolveImagePayload(activeSettings);
+    await sendWithImage(sock, msg.key.remoteJid, imagePayload, text, msg);
   },
 };

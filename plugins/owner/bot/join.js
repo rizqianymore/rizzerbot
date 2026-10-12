@@ -1,4 +1,4 @@
-import { db } from '@/src/core/database.js';
+
 
 export default {
   "name": "join",

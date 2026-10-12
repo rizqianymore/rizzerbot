@@ -12,9 +12,9 @@ import { resolvePhoneJid } from './lidmap.js';
 export const MAIN_KEY = '';
 export const SUBBOTS_DIR = path.join(process.cwd(), 'database', 'subbots');
 
-let activeBotJids = new Set();
+const activeBotJids = new Set();
 let mainBotJidMemory = '';
-let _providers = { getMainStore: null, getStores: null };
+const _providers = { getMainStore: null, getStores: null };
 
 export function bindBotIdProviders(providers = {}) {
   if (typeof providers.getMainStore === 'function') _providers.getMainStore = providers.getMainStore;

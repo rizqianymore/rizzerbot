@@ -28,7 +28,7 @@ export function parsePlat(rawInput) {
 
   let m = norm.match(/^(CD|CC)\s*(\d{1,3})(?:\s*P)?\s*(\d{1,4})$/);
   if (m) {
-    let korps = m[1];
+    const korps = m[1];
     let negaraStr = m[2];
     let regStr = m[3];
 

@@ -1,9 +1,4 @@
-import {
-  getDnsRecords,
-  getWhois,
-  getSubdomains,
-  getIpGeo,
-} from "@/src/services/network/network.js";
+import { getSubdomains } from "@/src/services/network/network.js";
 
 export default {
   "name": "subdomainlookup",
