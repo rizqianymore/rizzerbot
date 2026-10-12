@@ -1,4 +1,4 @@
-import { searchTeams, getTeamById, fmtTeam, replyDetail } from "@/src/services/f1.js";
+import { searchTeams, getTeamById, fmtTeam, replyDetail } from "@/src/services/sports/f1.js";
 
 export default {
   name: "f1teams",

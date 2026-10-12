@@ -1,0 +1,27 @@
+import { db } from '@/src/core/database.js';
+
+export default {
+  "name": "listadminbot",
+  "aliases": ["botadmins", "listbotadmin"],
+  "description": "Lihat daftar semua Admin bot",
+  "usage": "",
+  "ownerOnly": true,
+  "category": "Owner",
+  "run": async (sock, msg, args, { reply }) => {
+      const settings = db.getSettings();
+      const adminList = Array.isArray(settings.adminNumbers) ? settings.adminNumbers : [];
+      const uniqueAdmins = [...new Set(adminList.map(j => db.normalizeJid(j)))].filter(j => !db.isOwner(j));
+
+      if (uniqueAdmins.length === 0) {
+        return reply("ℹ️ Belum ada Admin Bot tambahan yang terdaftar.");
+      }
+
+      let text = `🛡️ *DAFTAR ADMIN*\n\n`;
+      uniqueAdmins.forEach((j, i) => {
+        const num = j.split("@")[0];
+        text += `${i + 1}. +${num}\n`;
+      });
+      text += `\nTotal: ${uniqueAdmins.length} admin`;
+      reply(text);
+    },
+};

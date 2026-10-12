@@ -1,4 +1,4 @@
-import { textToSpeech } from '@/src/services/scrape.js';
+import { textToSpeech } from '@/src/services/network/scrape.js';
 
 export default {
   "name": "tts",

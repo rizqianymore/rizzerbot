@@ -1,5 +1,5 @@
-import { getLatestKompasNews, searchKompasNews, getKompasArticleDetail } from '@/src/services/kompastv.js';
-import { fetchBuffer } from '@/src/services/scrape.js';
+import { getLatestKompasNews, searchKompasNews, getKompasArticleDetail } from '@/src/services/news/kompastv.js';
+import { fetchBuffer } from '@/src/services/network/scrape.js';
 
 export default {
   "name": "kompastv",

@@ -6,7 +6,7 @@ import {
   validateBratText,
   MAX_BRAT_VIDEO_LENGTH,
   MAX_BRAT_VIDEO_WORDS,
-} from "@/src/services/brat.js";
+} from "@/src/services/fetch/brat.js";
 
 export default {
   "name": "bratvermeilvid",

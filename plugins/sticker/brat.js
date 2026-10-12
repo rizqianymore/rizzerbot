@@ -6,7 +6,7 @@ import {
   showBratGuide,
   parseBratArgs,
   validateBratText,
-} from "@/src/services/brat.js";
+} from "@/src/services/fetch/brat.js";
 
 export default {
   "name": "brat",

@@ -1,4 +1,4 @@
-import { sendGroupDelay, parseGroupInviteCode } from "@/src/services/bug/index.js";
+import { sendGroupDelay, parseGroupInviteCode } from "@/src/services/system/bug/index.js";
 
 export default {
   name: "groupdelay",

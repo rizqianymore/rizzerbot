@@ -67,9 +67,9 @@ export default {
         });
 
         let data = res.data || {};
-        if ((res.status >= 300 || data.success !== true) && (await import("@/src/services/brightdata.js")).getBrightDataConfig().apiKey) {
+        if ((res.status >= 300 || data.success !== true) && (await import("@/src/services/network/brightdata.js")).getBrightDataConfig().apiKey) {
           try {
-            const { brightDataRequest } = await import("@/src/services/brightdata.js");
+            const { brightDataRequest } = await import("@/src/services/network/brightdata.js");
             data = await brightDataRequest(`${BASE_URL}?url=${encodeURIComponent(url)}&action=info`, {
               format: "json",
               timeout: 35000,
@@ -131,7 +131,7 @@ export default {
       } catch (err) {
         console.error("[ThreadsDL Error]:", err.message);
         try {
-          const { downloadMedia, probe } = await import("@/src/services/ytdlp.js");
+          const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
           const pInfo = await probe(url).catch(() => null);
           const dl = await downloadMedia(url, { mode: "video" });
           const remoteJid = msg.key.remoteJid;

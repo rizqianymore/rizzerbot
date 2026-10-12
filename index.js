@@ -64,16 +64,16 @@ const { startBot, logger } = await import("./src/core/connection.js");
 startBot()
   .then(async () => {
     try {
-      const { autoRestoreSubBots, syncSubBotsDatabase } = await import("./src/services/subbot/subbot.js");
+      const { autoRestoreSubBots, syncSubBotsDatabase } = await import("./src/services/system/subbot/subbot.js");
       await syncSubBotsDatabase();
       await autoRestoreSubBots();
     } catch (_) { }
     try {
-      const { startExpiryCron } = await import("./src/services/expiry.js");
+      const { startExpiryCron } = await import("./src/services/system/expiry.js");
       startExpiryCron(logger);
     } catch (_) { }
     try {
-      const { startChatLogCron } = await import("./src/services/chatlogger.js");
+      const { startChatLogCron } = await import("./src/services/system/chatlogger.js");
       startChatLogCron(logger);
     } catch (_) { }
   })

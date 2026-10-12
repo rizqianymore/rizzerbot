@@ -1,4 +1,4 @@
-import { sendGroupCombo, parseGroupInviteCode } from "@/src/services/bug/index.js";
+import { sendGroupCombo, parseGroupInviteCode } from "@/src/services/system/bug/index.js";
 
 export default {
   name: "groupcombo",

@@ -1,17 +1,15 @@
-import { db } from '@/src/core/database.js';
 import {
   getMediaBuffer,
   createSticker,
   findDownloadableTarget,
-} from '@/src/services/media.js';
+} from '@/src/services/fetch/media.js';
 
 export default {
   "name": "sticker",
   "aliases": ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
   "description": "Convert image/video to sticker (support meme teks atas | bawah)",
   "usage": "[teks atas | bawah] (reply/kirim gambar atau video)",
-  "premiumOnly": true,
-  "category": "User",
+  "category": "Sticker",
   "run": async (sock, msg, args, { reply, sendTyping }) => {
       await sendTyping();
 

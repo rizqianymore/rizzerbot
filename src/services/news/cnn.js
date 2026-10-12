@@ -1,0 +1,101 @@
+import { randomUUID } from "node:crypto";
+import { getRandomDevice, buildScraperHeaders } from "@/src/services/network/scrape.js";
+
+const CNN_SEARCH_BASE = "https://search.prod.di.api.cnn.io/search/query";
+
+export async function searchCNNNews(query, options = {}) {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return { total: 0, items: [] };
+
+  const size = Math.min(Math.max(options.size || 5, 1), 20);
+  const page = Math.max(options.page || 1, 1);
+  const from = (page - 1) * size;
+  const sort = options.sort || "relevance";
+  const reqId = `stellar-search-${randomUUID()}`;
+
+  const params = new URLSearchParams({
+    q: cleanQuery,
+    size: String(size),
+    from: String(from),
+    page: String(page),
+    sort,
+    tenant: "cnn-all-access",
+    country: "ID",
+    request_id: reqId,
+    site: "cnn",
+    zaid: "",
+  });
+
+  const url = `${CNN_SEARCH_BASE}?${params.toString()}`;
+
+  const device = getRandomDevice();
+  const headers = buildScraperHeaders(device, {
+    Accept: "*/*",
+    Origin: "https://edition.cnn.com",
+    Referer: "https://edition.cnn.com/",
+    "Sec-Fetch-Site": "cross-site",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+  });
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (netErr) {
+    res = null;
+  }
+
+  let data;
+  if (res && res.ok) {
+    data = await res.json();
+  } else {
+    // Fallback ke Bright Data Web Unlocker jika IP VPS diblokir / timeout
+    const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
+    if (getBrightDataConfig().apiKey) {
+      data = await brightDataRequest(url, {
+        format: "json",
+        timeout: 25000,
+      });
+    } else {
+      throw new Error(`CNN Search API HTTP ${res?.status || "Network Error"}`);
+    }
+  }
+  const total = data.meta?.of || data.meta?.total || 0;
+  const rawResults = Array.isArray(data.result) ? data.result : [];
+
+  const items = rawResults.map((item) => {
+    let publishedDate = "";
+    if (item.lastModifiedDate) {
+      try {
+        const d = new Date(item.lastModifiedDate);
+        if (!isNaN(d.getTime())) {
+          publishedDate = d.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+      } catch (_) {}
+    }
+
+    return {
+      title: item.headline || "Tanpa Judul",
+      snippet: (item.body || "").trim(),
+      url: item.url || item.path || "",
+      thumbnail: item.thumbnail || null,
+      type: item.type || "NewsArticle",
+      date: publishedDate,
+    };
+  });
+
+  return {
+    total,
+    items,
+  };
+}

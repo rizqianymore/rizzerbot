@@ -1,4 +1,4 @@
-import { fetchBuffer } from "@/src/services/scrape.js";
+import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 const STYLE_PROMPTS = {
   cinematic: "cinematic lighting, dramatic, film still, highly detailed",

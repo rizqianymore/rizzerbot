@@ -4,7 +4,7 @@ import {
   getConstructorsChampionship,
   fmtDriversStandings,
   fmtConstructorsStandings,
-} from "@/src/services/f1.js";
+} from "@/src/services/sports/f1.js";
 
 export default {
   name: "f1standings",

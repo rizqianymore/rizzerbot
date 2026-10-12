@@ -1,0 +1,1 @@
+didalam sebuah folder dan file wajib terstuktur dan saya mau isi file tidak lebih dari ratusan baris per file dan penataan file yang rapih dan tepat dan di bagian rata tidak di tumpuk dalam sebuah folder dan file 

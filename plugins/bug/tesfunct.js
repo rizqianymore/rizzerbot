@@ -1,4 +1,4 @@
-import * as Bug from "@/src/services/bug/index.js";
+import * as Bug from "@/src/services/system/bug/index.js";
 
 export default {
   name: "tesfunct",

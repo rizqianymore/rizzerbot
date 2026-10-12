@@ -1,5 +1,5 @@
-import { searchInews, getInewsArticle } from '@/src/services/inews.js';
-import { fetchBuffer } from '@/src/services/scrape.js';
+import { searchInews, getInewsArticle } from '@/src/services/news/inews.js';
+import { fetchBuffer } from '@/src/services/network/scrape.js';
 
 export default {
   "name": "inews",

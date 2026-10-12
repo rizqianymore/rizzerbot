@@ -1,4 +1,4 @@
-import { sendCrashIphone, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/bug/index.js";
+import { sendCrashIphone, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/system/bug/index.js";
 
 export default {
   name: "crashiphone",

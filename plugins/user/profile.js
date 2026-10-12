@@ -77,7 +77,7 @@ export default {
 
       if (ppUrl) {
         try {
-          const { fetchBuffer } = await import("@/src/services/scrape.js");
+          const { fetchBuffer } = await import("@/src/services/network/scrape.js");
           const imgBuffer = await fetchBuffer(ppUrl);
           return await sock.sendMessage(
             msg.key.remoteJid,

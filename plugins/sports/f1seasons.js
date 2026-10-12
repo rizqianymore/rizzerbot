@@ -1,4 +1,4 @@
-import { getSeasons } from "@/src/services/f1.js";
+import { getSeasons } from "@/src/services/sports/f1.js";
 
 export default {
   name: "f1seasons",

@@ -1,4 +1,4 @@
-import { askDuckDuckGo, getLiveFreeModels } from '@/src/services/duckduckgo/client.js';
+import { askDuckDuckGo, getLiveFreeModels } from '@/src/services/ai/duckduckgo/client.js';
 
 export default {
   "name": "duckduckgo",

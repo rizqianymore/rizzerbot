@@ -1,4 +1,4 @@
-import { ClaudeHaiku } from "@/src/services/overchat.js";
+import { ClaudeHaiku } from "@/src/services/ai/overchat.js";
 
 export default {
   "name": "claudehaiku",

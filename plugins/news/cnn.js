@@ -1,5 +1,5 @@
-import { searchCNNNews } from '@/src/services/cnn.js';
-import { fetchBuffer } from '@/src/services/scrape.js';
+import { searchCNNNews } from '@/src/services/news/cnn.js';
+import { fetchBuffer } from '@/src/services/network/scrape.js';
 
 export default {
   "name": "cnn",

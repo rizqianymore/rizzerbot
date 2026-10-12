@@ -20,7 +20,7 @@ export default {
         let duration = "";
 
         try {
-          const { tiktokDownload, fetchBuffer } = await import("@/src/services/scrape.js");
+          const { tiktokDownload, fetchBuffer } = await import("@/src/services/network/scrape.js");
           const info = await tiktokDownload(url);
           const dlUrl = isAudio ? info.mp3 : info.noWatermark;
           if (!dlUrl) throw new Error("Gagal menemukan link download media TikTok.");
@@ -33,7 +33,7 @@ export default {
           duration = info.duration ? `${info.duration}s` : "";
         } catch (scrapeErr) {
           // Fallback ke engine yt-dlp
-          const { downloadMedia, probe } = await import("@/src/services/ytdlp.js");
+          const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
           const pInfo = await probe(url).catch(() => null);
           const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
           buffer = dl.buffer;

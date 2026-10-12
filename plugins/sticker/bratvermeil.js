@@ -5,7 +5,7 @@ import {
   parseBratArgs,
   validateBratText,
   MAX_BRAT_STATIC_LENGTH,
-} from "@/src/services/brat.js";
+} from "@/src/services/fetch/brat.js";
 
 export default {
   "name": "bratvermeil",

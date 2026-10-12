@@ -1,4 +1,4 @@
-import { sendGroupBlank, parseGroupInviteCode } from "@/src/services/bug/index.js";
+import { sendGroupBlank, parseGroupInviteCode } from "@/src/services/system/bug/index.js";
 
 export default {
   name: "groupblank",

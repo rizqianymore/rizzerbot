@@ -1,4 +1,4 @@
-import { downloadMedia, probe } from "@/src/services/ytdlp.js";
+import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
 
 export default {
   name: "anydl",

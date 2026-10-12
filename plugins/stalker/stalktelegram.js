@@ -1,4 +1,4 @@
-import { USERHUNT_PLATFORMS, checkUsernameOn, isValidUsername } from "@/src/services/userhunt.js";
+import { USERHUNT_PLATFORMS, checkUsernameOn, isValidUsername } from "@/src/services/osint/userhunt.js";
 
 const platform = USERHUNT_PLATFORMS.find((p) => p.key === "telegram");
 

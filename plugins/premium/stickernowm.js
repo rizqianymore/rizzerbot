@@ -2,7 +2,7 @@ import {
   getMediaBuffer,
   createSticker,
   findDownloadableTarget,
-} from '@/src/services/media.js';
+} from '@/src/services/fetch/media.js';
 
 export default {
   "name": "stickernowm",

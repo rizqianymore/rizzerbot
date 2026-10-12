@@ -1,4 +1,4 @@
-import { searchDrivers, getDriverById, fmtDriver, replyDetail } from "@/src/services/f1.js";
+import { searchDrivers, getDriverById, fmtDriver, replyDetail } from "@/src/services/sports/f1.js";
 
 export default {
   name: "f1drivers",

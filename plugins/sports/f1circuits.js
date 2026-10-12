@@ -1,4 +1,4 @@
-import { searchCircuits, getCircuitById, fmtCircuit, replyDetail } from "@/src/services/f1.js";
+import { searchCircuits, getCircuitById, fmtCircuit, replyDetail } from "@/src/services/sports/f1.js";
 
 export default {
   name: "f1circuits",

@@ -1,4 +1,4 @@
-import { askDeepSeek } from '@/src/services/ai-gateway.js';
+import { askDeepSeek } from '@/src/services/ai/ai-gateway.js';
 
 export default {
   "name": "deepseek",

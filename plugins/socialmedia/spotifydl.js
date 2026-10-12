@@ -32,7 +32,7 @@ export default {
         } catch (_) {
           // Fallback via Bright Data Web Unlocker
           try {
-            const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/brightdata.js");
+            const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
             if (getBrightDataConfig().apiKey) {
               data = await brightDataRequest(apiUrl, { format: "json", timeout: 35000 });
             }

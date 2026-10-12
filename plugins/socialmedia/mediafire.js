@@ -1,5 +1,5 @@
-import { mediafireDownload } from "@/src/services/mediafire.js";
-import { fetchBuffer } from "@/src/services/scrape.js";
+import { mediafireDownload } from "@/src/services/fetch/mediafire.js";
+import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 export default {
   name: "mediafire",

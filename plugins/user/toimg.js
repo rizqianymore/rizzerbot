@@ -5,7 +5,7 @@ import {
   webpToImage,
   webpToVideo,
   findDownloadableTarget,
-} from '@/src/services/media.js';
+} from '@/src/services/fetch/media.js';
 
 export default {
   "name": "toimg",
