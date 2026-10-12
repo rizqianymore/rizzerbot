@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Pantau dependensi npm (termasuk transitive) mingguan.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    # Fokus ke pembaruan keamanan & minor; major ditahan agar tidak
+    # menarik perubahan besar yang bisa merusak bot.
+    update-types:
+      - patch
+      - minor
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+
+  # Pantau versi GitHub Actions yang dipakai di workflow.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(ci)

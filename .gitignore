@@ -76,3 +76,6 @@ assets/cache/*
 # Cloudflare Worker / Temporary Mockups
 worker.js
 OmniRoute/
+
+# OpenCode local config (path lokal + MCP pribadi)
+opencode.json
