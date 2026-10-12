@@ -1,0 +1,349 @@
+import axios from "axios";
+
+const BASE = "https://kki.go.id";
+const SEARCH_URL = `${BASE}/cek_dokter/search`;
+const DETAIL_DOKTER_URL = `${BASE}/cek_dokter/detail_dokter`;
+const DETAIL_NAKES_URL = `${BASE}/cek_dokter/detail_nakes`;
+const PROFESI_URL = `${BASE}/ceknamednakes/get_profesi`;
+
+const UA =
+  "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36";
+
+const client = axios.create({
+  timeout: 50000,
+  maxRedirects: 5,
+  validateStatus: () => true,
+});
+
+let cachedCookies = "";
+let cookieExpiry = 0;
+
+// jenis: "1" = Tenaga Medis (named), "2" = Tenaga Kesehatan (nakes)
+const JENIS = { medis: "1", nakes: "2" };
+
+function stripHtml(html) {
+  if (!html) return "";
+  return String(html)
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function ensureCookies(force = false) {
+  const now = Date.now();
+  if (!force && cachedCookies && now < cookieExpiry) return;
+
+  const res = await client.get(`${BASE}/`, {
+    headers: { "User-Agent": UA, Accept: "text/html,*/*" },
+    timeout: 30000,
+  });
+  const cookies = res.headers["set-cookie"];
+  if (cookies && cookies.length) {
+    cachedCookies = cookies.map((c) => c.split(";")[0]).join("; ");
+    cookieExpiry = now + 50 * 60 * 1000; // 50 min
+  }
+}
+
+function buildSearchParams(query, { jenis, tipe, profesi, start, length }) {
+  const p = new URLSearchParams();
+  p.append("draw", "1");
+  p.append("start", String(start || 0));
+  p.append("length", String(length || 10));
+  p.append("search[value]", "");
+  p.append("search[regex]", "false");
+  p.append("order[0][column]", "0");
+  p.append("order[0][dir]", "asc");
+  // Server expects 3 columns (#, Nama, Aksi)
+  for (let i = 0; i < 3; i++) {
+    p.append(`columns[${i}][data]`, String(i));
+    p.append(`columns[${i}][name]`, "");
+    p.append(`columns[${i}][searchable]`, "true");
+    p.append(`columns[${i}][orderable]`, "true");
+    p.append(`columns[${i}][search][value]`, "");
+    p.append(`columns[${i}][search][regex]`, "false");
+  }
+  p.append("nama", query);
+  p.append("jenis", jenis);
+  p.append("tipe", tipe || "nama");
+  p.append("profesi", profesi || "");
+  return p;
+}
+
+function parseSearchRows(json) {
+  if (!json?.data || !Array.isArray(json.data)) return [];
+  return json.data.map((row) => {
+    const nama = stripHtml(row[1]);
+    const buttonHtml = String(row[2] || "");
+    const idMatch = buttonHtml.match(/detail_(?:dokter|nakes)\('([^']+)'\)/);
+    return {
+      no: row[0],
+      nama,
+      id: idMatch ? idMatch[1] : null,
+    };
+  });
+}
+
+export async function searchNakes(
+  query,
+  { jenis = JENIS.nakes, tipe = "nama", profesi = "", start = 0, length = 10 } = {}
+) {
+  if (!query || query.trim().length < 1) {
+    throw new Error("Query kosong");
+  }
+
+  await ensureCookies();
+  if (!cachedCookies) throw new Error("Gagal mendapatkan session dari KKI");
+
+  const params = buildSearchParams(query.trim(), { jenis, tipe, profesi, start, length });
+  const headers = {
+    "User-Agent": UA,
+    Accept: "application/json,*/*",
+    "X-Requested-With": "XMLHttpRequest",
+    "Content-Type": "application/x-www-form-urlencoded",
+    Cookie: cachedCookies,
+    Referer: `${BASE}/ceknamednakes/form`,
+  };
+
+  let res;
+  try {
+    res = await client.post(SEARCH_URL, params, { headers });
+  } catch (err) {
+    if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
+      // one retry on timeout
+      await new Promise((r) => setTimeout(r, 1500));
+      await ensureCookies(true);
+      res = await client.post(SEARCH_URL, buildSearchParams(query.trim(), { jenis, tipe, profesi, start, length }), {
+        headers: { ...headers, Cookie: cachedCookies },
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  if (res.status !== 200) {
+    if (res.status === 419 || res.status === 401) {
+      await ensureCookies(true);
+      return searchNakes(query, { jenis, tipe, profesi, start, length });
+    }
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+
+  const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+  const rows = parseSearchRows(json);
+
+  return {
+    data: rows,
+    total: json.recordsTotal || 0,
+    filtered: json.recordsFiltered || 0,
+  };
+}
+
+export async function getDetail(id, jenis = JENIS.nakes) {
+  if (!id) throw new Error("ID kosong");
+
+  await ensureCookies();
+  const url = jenis === JENIS.medis ? DETAIL_DOKTER_URL : DETAIL_NAKES_URL;
+  const headers = {
+    "User-Agent": UA,
+    Accept: "text/html,*/*",
+    "X-Requested-With": "XMLHttpRequest",
+    "Content-Type": "application/x-www-form-urlencoded",
+    Cookie: cachedCookies,
+    Referer: `${BASE}/ceknamednakes/form`,
+  };
+
+  let res;
+  try {
+    res = await client.post(url, new URLSearchParams({ id }), { headers });
+  } catch (err) {
+    if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
+      await new Promise((r) => setTimeout(r, 1500));
+      await ensureCookies(true);
+      res = await client.post(url, new URLSearchParams({ id }), {
+        headers: { ...headers, Cookie: cachedCookies },
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  const html = typeof res.data === "string" ? res.data : String(res.data);
+  return parseDetailHtml(html, jenis);
+}
+
+export function parseDetailHtml(html, jenis) {
+  const out = {
+    nama: "-",
+    kualifikasi: "-",
+    nomorStr: "-",
+    masaBerlaku: "-",
+    status: "-",
+    sdmkUrl: "-",
+  };
+  if (!html) return out;
+
+  const nameMatch = html.match(/class="sdmk-name"[^>]*>([\s\S]*?)<\/h5>/);
+  if (nameMatch) out.nama = stripHtml(nameMatch[1]);
+
+  const urlMatch = html.match(/href="(https:\/\/satusehat\.kemkes\.go\.id\/sdmk\/[^"]+)"/);
+  if (urlMatch) out.sdmkUrl = urlMatch[1];
+
+  // Split info rows and extract label -> value
+  const rows = html.split(/class="sdmk-info-row"/).slice(1);
+  for (const row of rows) {
+    const labelMatch = row.match(/sdmk-label"[^>]*>[\s\S]*?<\/i>\s*([^<]+)<\/div>/);
+    const valueMatch = row.match(/sdmk-value"[^>]*>([\s\S]*?)<\/div>/);
+    if (!labelMatch || !valueMatch) continue;
+    const label = stripHtml(labelMatch[1]).toLowerCase();
+    const value = stripHtml(valueMatch[1]);
+    if (label.includes("kualifikasi")) out.kualifikasi = value || "-";
+    else if (label.includes("nomor str") || label.includes("no str")) out.nomorStr = value || "-";
+    else if (label.includes("masa berlaku")) out.masaBerlaku = value || "-";
+    else if (label.includes("status")) out.status = value || "-";
+  }
+
+  // Determine STR status color from badge class
+  const badgeMatch = html.match(/badge\s+(bg-\w+|badge-\w+)"[^>]*>([^<]+)<\/span>/);
+  if (badgeMatch && out.status) {
+    out.statusClass = badgeMatch[1];
+  }
+
+  return out;
+}
+
+// ---- Profesi helpers ----
+
+const profesiCache = { "1": null, "2": null };
+let profesiExpiry = 0;
+
+export async function getProfesi(jenis = JENIS.nakes) {
+  const now = Date.now();
+  if (profesiCache[jenis] && now < profesiExpiry) return profesiCache[jenis];
+
+  await ensureCookies();
+  const res = await client.post(
+    PROFESI_URL,
+    new URLSearchParams({ jenis }),
+    {
+      headers: {
+        "User-Agent": UA,
+        Accept: "application/json,*/*",
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded",
+        Cookie: cachedCookies,
+        Referer: `${BASE}/ceknamednakes/form`,
+      },
+    }
+  );
+
+  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+  const list = json.data || [];
+  profesiCache[jenis] = list;
+  profesiExpiry = now + 60 * 60 * 1000; // 1 hour
+  return list;
+}
+
+// Resolve a profesi term (code or name) to a profesi code for given jenis.
+export async function resolveProfesi(jenis, term) {
+  if (!term) return "";
+  const list = await getProfesi(jenis);
+  const t = String(term).trim().toLowerCase();
+
+  // direct code match
+  const byCode = list.find((p) => String(p.kode) === t);
+  if (byCode) return String(byCode.kode);
+
+  // exact name match
+  const byName = list.find((p) => p.profesi.toLowerCase() === t);
+  if (byName) return String(byName.kode);
+
+  // partial name match
+  const byPartial = list.find((p) => p.profesi.toLowerCase().includes(t));
+  if (byPartial) return String(byPartial.kode);
+
+  return null; // not found
+}
+
+// ---- Formatting ----
+
+function statusEmoji(status) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("aktif") && !s.includes("tidak")) return "✅";
+  if (s.includes("tidak") || s.includes("non")) return "❌";
+  return "ℹ️";
+}
+
+export function formatProfesiList(list, jenis) {
+  const title = jenis === JENIS.medis ? "Tenaga Medis" : "Tenaga Kesehatan (Nakes)";
+  let text = `🩺 *DAFTAR PROFESI ${title.toUpperCase()}*\n\n`;
+  list.forEach((p) => {
+    text += `• \`${p.kode}\` — ${p.profesi}\n`;
+  });
+  text += `\n_Untuk filter, gunakan kode atau nama profesi._`;
+  return text;
+}
+
+export function formatResults(query, result, details, opts = {}) {
+  const { jenis, tipe } = opts;
+  const { data, filtered, total } = result;
+  const jenisLabel = jenis === JENIS.medis ? "Tenaga Medis" : "Tenaga Kesehatan";
+  const tipeLabel = tipe === "str" ? "No. STR" : "Nama";
+
+  let text = `🩺 *CEK NAKES — KONSIL KESEHATAN INDONESIA*\n\n`;
+  text += `🔍 Pencarian: \`${query}\` (${tipeLabel})\n`;
+  text += `👥 Jenis: ${jenisLabel}\n`;
+  text += `📊 Ditemukan: *${filtered.toLocaleString("id-ID")}* data\n\n`;
+
+  if (data.length === 0) {
+    text += `❌ *Tidak ditemukan data.*\n\n`;
+    if (tipe === "nama" && jenis === JENIS.nakes) {
+      text += `_Pencarian nama nakes bersifat *persis* (exact). Pastikan ejaan nama sesuai yang terdaftar, atau gunakan pencarian No. STR._\n\n`;
+    } else if (jenis === JENIS.medis) {
+      text += `_Pencarian tenaga medis bersifat *sebagian* (partial), tapi wajib menyertakan profesi. Tambahkan kode/nama profesi._\n\n`;
+    }
+    text += `_Sumber: kki.go.id (Konsil Kesehatan Indonesia)_`;
+    return text;
+  }
+
+  // Show details for first N, list the rest
+  const detailed = details || [];
+  detailed.forEach((d, i) => {
+    const se = statusEmoji(d.status);
+    text += `*${i + 1}. ${d.nama || data[i]?.nama || "-"}*\n`;
+    text += `   🎓 Kualifikasi: ${d.kualifikasi}\n`;
+    text += `   🪪 No. STR: ${d.nomorStr}\n`;
+    text += `   📅 Masa Berlaku: ${d.masaBerlaku}\n`;
+    text += `   ${se} Status STR: ${d.status}\n`;
+    if (d.sdmkUrl && d.sdmkUrl !== "-") {
+      text += `   🔗 Profil SDMK: ${d.sdmkUrl}\n`;
+    }
+    text += `\n`;
+  });
+
+  // Remaining names (no detail)
+  if (data.length > detailed.length) {
+    const rest = data.slice(detailed.length, 10);
+    if (rest.length) {
+      text += `📋 *Hasil lainnya:*\n`;
+      rest.forEach((r, i) => {
+        text += `   ${detailed.length + i + 1}. ${r.nama}\n`;
+      });
+      if (filtered > 10) {
+        text += `   _...dan ${filtered.toLocaleString("id-ID") - 10} lainnya._\n`;
+      }
+      text += `\n`;
+    }
+  }
+
+  text += `_Sumber: kki.go.id (Konsil Kesehatan Indonesia)_`;
+  return text;
+}
