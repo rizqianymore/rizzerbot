@@ -65,10 +65,13 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         ...(createdOverlay ? ["-i", overlayPng] : []),
         ...(createdOverlay ? ["-filter_complex", filters, "-map", "[outv]"] : ["-vf", filters]),
         "-loop", "0",
-        "-preset", "default",
+        "-preset", "picture",
         "-an",
         "-fps_mode", "passthrough",
         "-s", "512:512",
+        // Kualitas encoding WebP (libwebp). Default ffmpeg hanya 75 -> buram.
+        "-quality", "90",
+        "-compression_level", "6",
         outWebp,
       ];
 
@@ -95,8 +98,13 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         .resize(512, 512, {
           fit: "contain",
           background: { r: 0, g: 0, b: 0, alpha: 0 },
+          kernel: sharp.kernel.lanczos3,
         })
-        .webp({ quality: 75 })
+        .webp({
+          quality: 85,
+          smartSubsample: true,
+          effort: 5,
+        })
         .toBuffer();
     } catch (animErr) {
       console.warn("[createSticker] animated webp processing warning:", animErr?.message || animErr);
@@ -118,8 +126,13 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         .resize(512, 512, {
           fit: "contain",
           background: { r: 0, g: 0, b: 0, alpha: 0 },
+          kernel: sharp.kernel.lanczos3,
         })
-        .webp({ quality: 80 })
+        .webp({
+          quality: 95,
+          smartSubsample: true,
+          effort: 6,
+        })
         .toBuffer();
     } catch (_) {
       webpBuffer = processedBuffer;
@@ -148,7 +161,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
     img.exif = exif;
     return await img.save(null);
-  } catch (err) {
+  } catch (_) {
     return webpBuffer;
   }
 }
