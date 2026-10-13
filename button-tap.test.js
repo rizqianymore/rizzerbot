@@ -110,11 +110,11 @@ await ok("P2 buronlist ketik manual → 1 kirim (tanpa spam)", async () => {
   await buron.default.run(sock, plainMsg, ["andi"], ctx());
   assert.equal(n, 1);
 });
-await ok("P3 buronlist tap tanpa filter → 1 kirim", async () => {
+await ok("P3 buronlist tap tanpa filter → 2 kirim (list + menu fresh)", async () => {
   let n = 0;
   const sock = { sendList: async () => void n++ };
   await buron.default.run(sock, tapMsg(".buronlist"), [], ctx());
-  assert.equal(n, 1);
+  assert.equal(n, 2);
 });
 await ok("P4 testbutton tap → 1 kirim fresh (langsung reusable)", async () => {
   let sent = null;

@@ -94,9 +94,9 @@ export default {
     if (q && data.length === 0) return context.reply(`Buron *${q}* tidak ditemukan.`);
     const jid = msg.key.remoteJid;
     await sendBuronList(sock, jid, data, msg, prefix);
-    if (tap && q) {
-      // tap menonaktifkan buton lama + hasil filter tak ada buton:
-      // kirim menu full fresh biar tetap bisa klik berkali-kali
+    if (tap) {
+      // tap menonaktifkan buton pesan lama: kirim menu full fresh
+      // biar tetap bisa klik berkali-kali (tiap tap = pesan baru)
       await sendBuronList(sock, jid, BURON_DUMMY, msg, prefix).catch(() => {});
     }
   },
