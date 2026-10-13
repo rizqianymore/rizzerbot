@@ -98,11 +98,17 @@ function tapMsg(id) {
 const plainMsg = { key: { remoteJid: "1@s.whatsapp.net", id: "P" }, message: { conversation: ".x" } };
 const ctx = () => ({ prefix: ".", sendTyping: async () => {}, reply: async () => {} });
 
-await ok("P1 buronlist tap filter → 2 kirim (hasil + menu fresh)", async () => {
-  let n = 0;
-  const sock = { sendList: async () => void n++ };
+await ok("P1 buronlist tap filter → TEPAT 1 kirim (hasil+buton 1 pesan)", async () => {
+  const sends = [];
+  const sock = { sendMessage: async (jid, c) => sends.push(c) };
   await buron.default.run(sock, tapMsg(".buron Andi"), ["andi"], ctx());
-  assert.equal(n, 2);
+  assert.equal(sends.length, 1);
+  const im = sends[0].interactiveMessage;
+  assert.ok(im.header.includes("Andi"));
+  assert.deepEqual(
+    im.buttons.map((b) => b.name),
+    ["quick_reply", "single_select"]
+  );
 });
 await ok("P2 buronlist ketik manual → 1 kirim (tanpa spam)", async () => {
   let n = 0;
@@ -110,11 +116,19 @@ await ok("P2 buronlist ketik manual → 1 kirim (tanpa spam)", async () => {
   await buron.default.run(sock, plainMsg, ["andi"], ctx());
   assert.equal(n, 1);
 });
-await ok("P3 buronlist tap tanpa filter → 2 kirim (list + menu fresh)", async () => {
-  let n = 0;
-  const sock = { sendList: async () => void n++ };
+await ok("P3 buronlist tap tanpa filter → TEPAT 1 kirim", async () => {
+  const sends = [];
+  const sock = { sendMessage: async (jid, c) => sends.push(c) };
   await buron.default.run(sock, tapMsg(".buronlist"), [], ctx());
-  assert.equal(n, 2);
+  assert.equal(sends.length, 1);
+  assert.ok(sends[0].interactiveMessage);
+});
+await ok("P5 rows menu tap = data full (tetap bisa klik nama lain)", async () => {
+  const sends = [];
+  const sock = { sendMessage: async (jid, c) => sends.push(c) };
+  await buron.default.run(sock, tapMsg(".buron Andi"), ["andi"], ctx());
+  const sel = sends[0].interactiveMessage.buttons.find((b) => b.name === "single_select");
+  assert.equal(JSON.parse(sel.buttonParamsJson).sections[0].rows.length, 3);
 });
 await ok("P4 testbutton tap → 1 kirim fresh (langsung reusable)", async () => {
   let sent = null;

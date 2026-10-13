@@ -60,6 +60,34 @@ export function buildBuronInteractive(buron, prefix = ".") {
   };
 }
 
+export function buildBuronResultContent(buron, full, prefix = ".") {
+  const rows = (full.length ? full : buron).map((b) => ({
+    title: b.nama,
+    description: `${b.kasus} [${b.status}]`,
+    id: `${prefix}buron ${b.nama}`,
+  }));
+  const body =
+    `🚨 *DAFTAR BURON* (${buron.length})\n\n` +
+    buron.map((b, i) => `${i + 1}. *${b.nama}* — ${b.kasus} [${b.status}]`).join("\n");
+  return {
+    interactiveMessage: {
+      title: "🚨 Daftar Buron Aktif",
+      footer: `Total: ${buron.length} • RizzerBot`,
+      header: body,
+      buttons: [
+        {
+          name: "quick_reply",
+          buttonParamsJson: JSON.stringify({ display_text: "Semua Buron", id: `${prefix}buronlist` }),
+        },
+        {
+          name: "single_select",
+          buttonParamsJson: JSON.stringify({ title: "Lihat Buron", sections: [{ title: "Buron", rows }] }),
+        },
+      ],
+    },
+  };
+}
+
 export async function sendBuronList(sock, jid, buron, quoted, prefix = ".") {
   // 1. ourin rich list (prioritas)
   if (typeof sock.sendList === "function") {
@@ -93,11 +121,15 @@ export default {
     const data = q ? BURON_DUMMY.filter((b) => b.nama.toLowerCase().includes(q)) : BURON_DUMMY;
     if (q && data.length === 0) return context.reply(`Buron *${q}* tidak ditemukan.`);
     const jid = msg.key.remoteJid;
-    await sendBuronList(sock, jid, data, msg, prefix);
     if (tap) {
-      // tap menonaktifkan buton pesan lama: kirim menu full fresh
-      // biar tetap bisa klik berkali-kali (tiap tap = pesan baru)
-      await sendBuronList(sock, jid, BURON_DUMMY, msg, prefix).catch(() => {});
+      // 1 tap = 1 pesan: hasil + buton fresh dalam SATU pesan (ga dobel).
+      // Buton pesan lama mati (aturan WA), pesan baru ini yang bisa diklik lagi.
+      try {
+        return await sock.sendMessage(jid, buildBuronResultContent(data, BURON_DUMMY, prefix), { quoted: msg });
+      } catch (_) {
+        return sock.sendMessage(jid, { text: buildBuronText(data) }, { quoted: msg });
+      }
     }
+    await sendBuronList(sock, jid, data, msg, prefix);
   },
 };
