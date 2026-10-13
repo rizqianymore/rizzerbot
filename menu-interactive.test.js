@@ -140,6 +140,78 @@ await ok("R4 .menu all → teks full (jalur lama)", async () => {
   }
 });
 
+// --- integrasi dispatch asli: ketik .menu lalu tap kategori ---
+await ok("I1 dispatch .menu → 1 pesan interactive utama", async () => {
+  const { dispatchMessage } = await import("./src/core/dispatch/run.js");
+  commands.set("menu", menu.default);
+  commands.set("aa", fakeCmd("aa", "Tools"));
+  commands.set("bb", fakeCmd("bb", "General"));
+  try {
+    const sends = [];
+    const sock = {
+      user: { id: "9@s.whatsapp.net" },
+      isSubBot: false,
+      sendMessage: async (jid, c) => sends.push(c),
+      sendPresenceUpdate: async () => {},
+      readMessages: async () => {},
+    };
+    const logger = { info: () => {}, warn: () => {}, error: () => {} };
+    await dispatchMessage(
+      sock,
+      {
+        key: { remoteJid: "8@s.whatsapp.net", id: `I1-${Date.now()}`, fromMe: true },
+        pushName: "T",
+        messageTimestamp: Math.floor(Date.now() / 1000),
+        message: { conversation: ".menu" },
+      },
+      logger
+    );
+    assert.equal(sends.length, 1);
+    assert.equal(sends[0].interactiveMessage.buttons.length, 2);
+  } finally {
+    commands.delete("menu");
+    commands.delete("aa");
+    commands.delete("bb");
+  }
+});
+await ok("I2 dispatch tap .menu Tools → 1 pesan isi TOOLS", async () => {
+  const { dispatchMessage } = await import("./src/core/dispatch/run.js");
+  commands.set("menu", menu.default);
+  commands.set("aa", fakeCmd("aa", "Tools"));
+  commands.set("bb", fakeCmd("bb", "General"));
+  try {
+    const sends = [];
+    const sock = {
+      user: { id: "9@s.whatsapp.net" },
+      isSubBot: false,
+      sendMessage: async (jid, c) => sends.push(c),
+      sendPresenceUpdate: async () => {},
+      readMessages: async () => {},
+    };
+    const logger = { info: () => {}, warn: () => {}, error: () => {} };
+    await dispatchMessage(
+      sock,
+      {
+        key: { remoteJid: "8@s.whatsapp.net", id: `I2-${Date.now()}`, fromMe: true },
+        pushName: "T",
+        messageTimestamp: Math.floor(Date.now() / 1000),
+        message: {
+          interactiveResponseMessage: {
+            nativeFlowResponseMessage: { paramsJson: JSON.stringify({ id: ".menu Tools" }) },
+          },
+        },
+      },
+      logger
+    );
+    assert.equal(sends.length, 1);
+    assert.ok(sends[0].interactiveMessage.title.includes("TOOLS"));
+  } finally {
+    commands.delete("menu");
+    commands.delete("aa");
+    commands.delete("bb");
+  }
+});
+
 for (const r of out) console.log(r);
 console.log(`\n${pass}/${total} lolos ${pass === total ? "— 100% BISA ✅" : "— BELUM 100% ❌"}`);
 process.exitCode = pass === total ? 0 : 1;
