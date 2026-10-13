@@ -1,7 +1,12 @@
 import { createSticker } from "@/src/services/fetch/media.js";
 import { db } from "@/src/core/database.js";
 import { normalizeText, tokenizeLine } from "./text.js";
-import { MAX_BRAT_STATIC_LENGTH, MAX_BRAT_VIDEO_LENGTH, MAX_BRAT_VIDEO_WORDS } from "./config.js";
+import {
+  MAX_BRAT_STATIC_LENGTH,
+  MAX_BRAT_STATIC_WORDS,
+  MAX_BRAT_VIDEO_LENGTH,
+  MAX_BRAT_VIDEO_WORDS,
+} from "./config.js";
 
 export async function sendStickerBuffer(sock, msg, buffer) {
   const activeSettings = db.getSettings();
@@ -69,6 +74,8 @@ export function countWords(text) {
 }
 
 export function validateBratText(text, isVideo) {
+  const wordCount = countWords(text);
+
   if (isVideo) {
     if (text.length > MAX_BRAT_VIDEO_LENGTH) {
       return {
@@ -76,29 +83,40 @@ export function validateBratText(text, isVideo) {
         error:
           `⚠️ *Kalimat Terlalu Panjang!*\n\n` +
           `Maksimal *${MAX_BRAT_VIDEO_LENGTH} karakter* dan *${MAX_BRAT_VIDEO_WORDS} kata* untuk stiker Brat Video.\n` +
-          `Teks Anda: *${text.length} karakter, ${countWords(text)} kata*.\n\n` +
+          `Teks Anda: *${text.length} karakter, ${wordCount} kata*.\n\n` +
           `💡 _Tips: Gunakan kalimat yang lebih ringkas agar animasi stiker berjalan mulus!_`,
       };
     }
-    if (countWords(text) > MAX_BRAT_VIDEO_WORDS) {
+    if (wordCount > MAX_BRAT_VIDEO_WORDS) {
       return {
         ok: false,
         error:
           `⚠️ *Terlalu Banyak Kata!*\n\n` +
           `Maksimal *${MAX_BRAT_VIDEO_WORDS} kata* untuk stiker Brat Video agar tidak terpotong.\n` +
-          `Teks Anda: *${countWords(text)} kata*.\n\n` +
+          `Teks Anda: *${wordCount} kata*.\n\n` +
           `💡 _Tips: Gunakan kalimat yang lebih ringkas agar animasi stiker berjalan mulus!_`,
       };
     }
     return { ok: true };
   }
+
   if (text.length > MAX_BRAT_STATIC_LENGTH) {
     return {
       ok: false,
       error:
         `⚠️ *Teks Terlalu Panjang!*\n\n` +
-        `Maksimal *${MAX_BRAT_STATIC_LENGTH} karakter* untuk stiker Brat gambar agar teks pas dan terbaca rapi.\n` +
-        `Panjang teks Anda: *${text.length} karakter*.\n\n` +
+        `Maksimal *${MAX_BRAT_STATIC_LENGTH} karakter* dan *${MAX_BRAT_STATIC_WORDS} kata* untuk stiker Brat gambar agar teks pas dan terbaca rapi.\n` +
+        `Panjang teks Anda: *${text.length} karakter, ${wordCount} kata*.\n\n` +
+        `💡 _Tips: Gunakan teks yang lebih padat._`,
+    };
+  }
+  if (wordCount > MAX_BRAT_STATIC_WORDS) {
+    return {
+      ok: false,
+      error:
+        `⚠️ *Terlalu Banyak Kata!*\n\n` +
+        `Maksimal *${MAX_BRAT_STATIC_WORDS} kata* untuk stiker Brat gambar agar teks pas dan terbaca rapi.\n` +
+        `Teks Anda: *${wordCount} kata*.\n\n` +
         `💡 _Tips: Gunakan teks yang lebih padat._`,
     };
   }

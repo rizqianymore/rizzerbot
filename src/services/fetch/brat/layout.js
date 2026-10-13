@@ -147,51 +147,68 @@ function strokeLine(ctx, line, x, y, size) {
 
 const MAX_JUSTIFY_GAP_RATIO = 1.6;
 
-function drawJustifiedLine(ctx, line, x, y, maxWidth, useStroke, size) {
-  const words = line.split(" ").filter(Boolean);
-  if (words.length <= 1) {
-    if (useStroke) strokeLine(ctx, line, x, y, size);
-    ctx.fillText(line, x, y);
-    return;
-  }
-  const widths = words.map((w) => ctx.measureText(w).width);
-  const wordsWidth = widths.reduce((a, b) => a + b, 0);
-  const gap = (maxWidth - wordsWidth) / (words.length - 1);
+/**
+ * Hitung posisi final tiap kata per baris.
+ * Hasilnya dipakai ulang untuk render statis DAN frame reveal video,
+ * sehingga kata selalu muncul di posisi akhirnya (tidak ada pergeseran).
+ */
+function buildLinePlans(ctx, lines, rect, size, align) {
+  setFont(ctx, size);
+  const spaceWidth = ctx.measureText(" ").width;
+  let globalIndex = 0;
 
-  // Gap terlalu besar = baris terasa renggang/mengambang, lebih rapi rata kiri saja.
-  if (gap > size * MAX_JUSTIFY_GAP_RATIO) {
-    if (useStroke) strokeLine(ctx, line, x, y, size);
-    ctx.fillText(line, x, y);
-    return;
-  }
+  return lines.map((line, index) => {
+    const isLastLine = index === lines.length - 1;
+    const words = line.split(" ").filter(Boolean);
+    const widths = words.map((word) => ctx.measureText(word).width);
+    const wordsWidth = widths.reduce((a, b) => a + b, 0);
 
-  let cx = x;
-  for (let i = 0; i < words.length; i++) {
-    if (useStroke) strokeLine(ctx, words[i], cx, y, size);
-    ctx.fillText(words[i], cx, y);
-    cx += widths[i] + gap;
-  }
+    let startX = rect.x;
+    let gap = spaceWidth;
+
+    if (align === "justify" && !isLastLine && words.length > 1) {
+      const justifyGap = (rect.w - wordsWidth) / (words.length - 1);
+      // Gap terlalu besar = baris renggang, lebih rapi rata kiri saja.
+      if (justifyGap <= size * MAX_JUSTIFY_GAP_RATIO) {
+        gap = justifyGap;
+      }
+    } else if (align === "center") {
+      startX = rect.centerX - (wordsWidth + spaceWidth * (words.length - 1)) / 2;
+    }
+
+    let x = startX;
+    const placed = words.map((word, i) => {
+      const item = { word, x, globalIndex: globalIndex++ };
+      x += widths[i] + gap;
+      return item;
+    });
+
+    return { placed, isLastLine };
+  });
 }
 
-function drawBlockFromLayout(ctx, frameText, layout, rect, options = {}) {
-  setFont(ctx, layout.size);
-  const lines = wrapText(ctx, frameText, rect.w);
-  const align = options.align || TEXT_STYLE.align;
+function drawLinePlans(ctx, linePlans, startY, lineHeight, size, useStroke, revealWords = Infinity) {
+  setFont(ctx, size);
+  ctx.textAlign = "left";
+
+  linePlans.forEach((line, lineIndex) => {
+    const y = startY + lineIndex * lineHeight;
+    for (const item of line.placed) {
+      if (item.globalIndex >= revealWords) break;
+      if (useStroke) strokeLine(ctx, item.word, item.x, y, size);
+      ctx.fillText(item.word, item.x, y);
+    }
+  });
+}
+
+/**
+ * Render layout ke canvas: mendukung subset kata (revealWords) untuk video.
+ */
+export function renderLayout(ctx, layout, options = {}) {
+  const revealWords = options.revealWords ?? Infinity;
   const useStroke = options.stroke ?? layout.stroke ?? false;
 
-  lines.forEach((line, index) => {
-    const y = layout.startY + index * layout.lineHeight;
-    const isLastLine = index === lines.length - 1;
-    if (align === "justify" && !isLastLine) {
-      ctx.textAlign = "left";
-      drawJustifiedLine(ctx, line, rect.x, y, rect.w, useStroke, layout.size);
-      return;
-    }
-    ctx.textAlign = align === "justify" ? "left" : align;
-    const x = align === "justify" ? rect.x : rect.centerX;
-    if (useStroke) strokeLine(ctx, line, x, y, layout.size);
-    ctx.fillText(line, x, y);
-  });
+  drawLinePlans(ctx, layout.linePlans, layout.startY, layout.lineHeight, layout.size, useStroke, revealWords);
 }
 
 export function layoutText(text, template) {
@@ -199,9 +216,13 @@ export function layoutText(text, template) {
   const ctx = canvas.getContext("2d");
   const rect = getSafeRect(template.safeZone);
   const fitted = fitText(ctx, text, rect);
+  const align = TEXT_STYLE.align;
+  const linePlans = buildLinePlans(ctx, fitted.lines, rect, fitted.size, align);
+
   return {
     size: fitted.size,
     lines: fitted.lines,
+    linePlans,
     lineHeight: fitted.lineHeight,
     totalHeight: fitted.totalHeight,
     startY: rect.y + (rect.h - fitted.totalHeight) / 2,
@@ -212,34 +233,26 @@ export function layoutText(text, template) {
 export function drawCenteredText(ctx, text, zone, options = {}) {
   const rect = getSafeRect(zone);
   const fitted = fitText(ctx, text, rect);
-  const startY = rect.y + (rect.h - fitted.totalHeight) / 2;
+  const align = options.align || TEXT_STYLE.align;
+  const linePlans = buildLinePlans(ctx, fitted.lines, rect, fitted.size, align);
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(rect.x, rect.y, rect.w, rect.h);
   ctx.clip();
 
-  setFont(ctx, fitted.size);
   ctx.fillStyle = options.color || TEXT_STYLE.color;
   ctx.textBaseline = "top";
-
-  const align = options.align || TEXT_STYLE.align;
-  const useStroke = options.stroke ?? zone.stroke ?? false;
-
-  fitted.lines.forEach((line, index) => {
-    const y = startY + index * fitted.lineHeight;
-    const isLastLine = index === fitted.lines.length - 1;
-    if (align === "justify" && !isLastLine) {
-      ctx.textAlign = "left";
-      drawJustifiedLine(ctx, line, rect.x, y, rect.w, useStroke, fitted.size);
-      return;
-    }
-    ctx.textAlign = align === "justify" ? "left" : align;
-    if (useStroke) strokeLine(ctx, line, align === "justify" ? rect.x : rect.centerX, y, fitted.size);
-    ctx.fillText(line, align === "justify" ? rect.x : rect.centerX, y);
-  });
+  drawLinePlans(
+    ctx,
+    linePlans,
+    rect.y + (rect.h - fitted.totalHeight) / 2,
+    fitted.lineHeight,
+    fitted.size,
+    options.stroke ?? zone.stroke ?? false
+  );
 
   ctx.restore();
 }
 
-export { drawBlockFromLayout, getSafeRect };
+export { getSafeRect };

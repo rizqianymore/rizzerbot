@@ -55,27 +55,30 @@ export const TEXT_STYLE = {
   fontFamily: "Arial Narrow",
   maxFontSize: 90,
   growMaxFontSize: 200,
-  minFontSize: 14,
+  minFontSize: 12,
   lineHeight: 1.18,
   color: "#111111",
   strokeColor: "rgba(255, 255, 255, 0.9)",
   align: "justify",
+  supersample: 2,
 };
 
 export const VIDEO_CONFIG = {
   fps: 15,
   width: 512,
   height: 512,
-  lyric: {
-    maxWordPerLayer: 5,
-    frameDuration: 0.5,
-    lastFrameDuration: 1.5,
-  },
+  targetDuration: 11,
+  maxRevealSteps: 20,
+  minFrameDuration: 0.12,
+  maxFrameDuration: 0.5,
+  linePauseFactor: 1.7,
+  lastFrameDuration: 1.4,
 };
 
-export const MAX_BRAT_STATIC_LENGTH = 100;
-export const MAX_BRAT_VIDEO_LENGTH = 50;
-export const MAX_BRAT_VIDEO_WORDS = 10;
+export const MAX_BRAT_STATIC_LENGTH = 600;
+export const MAX_BRAT_STATIC_WORDS = 60;
+export const MAX_BRAT_VIDEO_LENGTH = 600;
+export const MAX_BRAT_VIDEO_WORDS = 60;
 
 export const DOWNLOAD_TIMEOUT_MS = 15000;
 export const DOWNLOAD_MAX_BYTES = 10 * 1024 * 1024;

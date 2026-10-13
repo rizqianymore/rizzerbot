@@ -1,4 +1,3 @@
-import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
@@ -6,8 +5,7 @@ import { promisify } from "util";
 import { getFfmpegPath, VIDEO_CONFIG } from "./config.js";
 import { ensureFont, loadTemplateImage } from "./assets.js";
 import { buildRevealFrames } from "./text.js";
-import { layoutText } from "./layout.js";
-import { renderBratFrame } from "./render.js";
+import { prepareBratLayout, renderBratVideoFrames } from "./render.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -15,13 +13,13 @@ function escapeConcatPath(filePath) {
   return filePath.replace(/'/g, "'\\''");
 }
 
-function buildManifest(frames, framePaths) {
+function buildManifest(framePaths, frames) {
   const lines = [];
-  for (let i = 0; i < frames.length; i++) {
+  for (let i = 0; i < framePaths.length; i++) {
     lines.push(`file '${escapeConcatPath(framePaths[i])}'`);
     lines.push(`duration ${frames[i].duration}`);
   }
-  lines.push(`file '${escapeConcatPath(framePaths[framePaths.length - 1])}'`);
+  lines.push(`file '${escapeConcatPath(framePaths.at(-1))}'`);
   return lines.join("\n");
 }
 
@@ -41,7 +39,7 @@ async function encodeVideo(concatPath, outputPath, configObj) {
     "-preset",
     "medium",
     "-crf",
-    "24",
+    "23",
     "-pix_fmt",
     "yuv420p",
     "-movflags",
@@ -49,46 +47,41 @@ async function encodeVideo(concatPath, outputPath, configObj) {
     outputPath,
   ];
 
-  const ffmpegCmd = getFfmpegPath();
-  await execFileAsync(ffmpegCmd, args, {
+  await execFileAsync(getFfmpegPath(), args, {
     maxBuffer: 1024 * 1024 * 10,
-    timeout: 30000,
+    timeout: 60000,
     killSignal: "SIGKILL",
   });
 }
 
 export async function createBratVideo(text, template, options = {}) {
   await ensureFont();
-  const frames = buildRevealFrames(text, VIDEO_CONFIG);
+
+  // Layout dihitung sekali dari teks utuh (resolusi supersample) → frame reveal pakai posisi final.
+  const layout = await prepareBratLayout(text, template);
+  const frames = buildRevealFrames(layout.lines, VIDEO_CONFIG);
   if (!frames.length) {
     throw new Error("Teks kosong untuk membuat video stiker");
   }
 
   const cacheBase = path.join(process.cwd(), "assets", "cache");
-  if (!fs.existsSync(cacheBase)) {
-    try {
-      fs.mkdirSync(cacheBase, { recursive: true });
-    } catch (_) {}
-  }
+  await fsp.mkdir(cacheBase, { recursive: true });
   const tmpDir = await fsp.mkdtemp(path.join(cacheBase, "bratvid-"));
   const outputPath = path.join(tmpDir, "output.mp4");
 
   try {
     const image = await loadTemplateImage(template);
-    const layout = layoutText(text, template);
+    const buffers = await renderBratVideoFrames(image, template, layout, frames, options);
 
-    const framePaths = frames.map((_, index) => {
-      return path.join(tmpDir, `frame-${String(index + 1).padStart(4, "0")}.png`);
-    });
-
-    for (let index = 0; index < frames.length; index++) {
-      const canvas = await renderBratFrame(image, frames[index].text, template, layout, options);
-      const buf = await canvas.encode("png");
-      await fsp.writeFile(framePaths[index], buf);
+    const framePaths = [];
+    for (let index = 0; index < buffers.length; index++) {
+      const framePath = path.join(tmpDir, `frame-${String(index + 1).padStart(4, "0")}.png`);
+      await fsp.writeFile(framePath, buffers[index]);
+      framePaths.push(framePath);
     }
 
     const concatPath = path.join(tmpDir, "concat.txt");
-    await fsp.writeFile(concatPath, buildManifest(frames, framePaths));
+    await fsp.writeFile(concatPath, buildManifest(framePaths, frames));
 
     await encodeVideo(concatPath, outputPath, VIDEO_CONFIG);
     return await fsp.readFile(outputPath);
