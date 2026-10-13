@@ -22,11 +22,7 @@ function baseHeaders(extra = {}) {
 }
 
 function extractToken(html) {
-  const patterns = [
-    /name="_token"\s+value="([^"]+)"/,
-    /name='_token'\s+value='([^']+)'/,
-    /_token"\s*:\s*"([^"]+)"/,
-  ];
+  const patterns = [/name="_token"\s+value="([^"]+)"/, /name='_token'\s+value='([^']+)'/, /_token"\s*:\s*"([^"]+)"/];
   for (const re of patterns) {
     const m = String(html || "").match(re);
     if (m?.[1]) return m[1];
@@ -134,10 +130,7 @@ export async function pollJob(kind, requestId, session, { timeoutMs = 120000, in
     const dataStatus = json?.data?.status;
     if (metaStatus === "ok" || dataStatus === "completed") return json.data;
     if (metaStatus === "failed" || dataStatus === "failed") {
-      throw new KolIdError(
-        json?.error?.message || json?.meta?.message || "kol.id gagal memproses URL",
-        "failed"
-      );
+      throw new KolIdError(json?.error?.message || json?.meta?.message || "kol.id gagal memproses URL", "failed");
     }
   }
 }

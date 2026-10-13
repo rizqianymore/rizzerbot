@@ -6,11 +6,14 @@ export async function getSeasons(limit = 30, offset = 0) {
 }
 
 export function parseSeasonParam(raw) {
-  const s = String(raw || "").trim().toLowerCase();
+  const s = String(raw || "")
+    .trim()
+    .toLowerCase();
   if (!s || s === "current" || s === "now" || s === "tahun ini") return "current";
   if (/^\d{4}$/.test(s)) {
     const y = Number(s);
-    if (y < 1950 || y > new Date().getFullYear() + 1) return { error: `Tahun harus 1950–${new Date().getFullYear() + 1}.` };
+    if (y < 1950 || y > new Date().getFullYear() + 1)
+      return { error: `Tahun harus 1950–${new Date().getFullYear() + 1}.` };
     return s;
   }
   return { error: `Tahun "${raw}" tidak valid. Contoh: .f1standings 2024` };
@@ -37,13 +40,24 @@ export async function getCurrentNext() {
 
 const RESULT_TYPES = new Set(["race", "qualy", "fp1", "fp2", "fp3", "sprint/race", "sprint/qualy"]);
 export function parseResultType(raw) {
-  const s = String(raw || "race").trim().toLowerCase();
+  const s = String(raw || "race")
+    .trim()
+    .toLowerCase();
   const map = {
-    race: "race", balapan: "race",
-    qualy: "qualy", qualifying: "qualy", kualifikasi: "qualy", q: "qualy",
-    fp1: "fp1", fp2: "fp2", fp3: "fp3",
-    sprint: "sprint/race", "sprint-race": "sprint/race",
-    "sprint-qualy": "sprint/qualy", sprintqualy: "sprint/qualy", sq: "sprint/qualy",
+    race: "race",
+    balapan: "race",
+    qualy: "qualy",
+    qualifying: "qualy",
+    kualifikasi: "qualy",
+    q: "qualy",
+    fp1: "fp1",
+    fp2: "fp2",
+    fp3: "fp3",
+    sprint: "sprint/race",
+    "sprint-race": "sprint/race",
+    "sprint-qualy": "sprint/qualy",
+    sprintqualy: "sprint/qualy",
+    sq: "sprint/qualy",
   };
   return map[s] || null;
 }

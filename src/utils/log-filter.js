@@ -1,7 +1,6 @@
 const BYPASS = process.env.LOG_VERBOSE === "1" || process.env.DEBUG_LIBSIGNAL === "1";
 
 const SUPPRESSED_SUBSTRINGS = [
-
   "Closing open session in favor of incoming prekey bundle",
 
   "Failed to decrypt message with any known session",
@@ -26,7 +25,6 @@ function argsToText(args) {
         if (typeof a === "string") return a;
         if (a instanceof Error) return `${a.message}\n${a.stack || ""}`;
         if (typeof a === "object") {
-
           const s = String(a?.message || a?.stack || "");
           if (s && s !== "[object Object]") return s;
           return "";
@@ -44,7 +42,6 @@ export function shouldSuppressLog(...args) {
   if (!args.length) return false;
   const text = argsToText(args);
   if (!text) {
-
     const first = typeof args[0] === "string" ? args[0] : "";
     return SUPPRESSED_SUBSTRINGS.some((p) => first.includes(p));
   }

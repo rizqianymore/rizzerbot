@@ -78,7 +78,9 @@ export function createTransaction({
     formattedPrice: formatRupiah(cleanPrice),
     buyer: String(buyer || "Customer").trim(),
     buyerJid,
-    payment: String(payment || "QRIS").trim().toUpperCase(),
+    payment: String(payment || "QRIS")
+      .trim()
+      .toUpperCase(),
     status: normalizeStatus(status),
     note: String(note || "-").trim(),
     time: getJakartaTime(),
@@ -96,8 +98,16 @@ export function createTransaction({
 }
 
 export function normalizeStatus(raw) {
-  const s = String(raw || "").trim().toLowerCase();
-  if (s.includes("lunas") || s.includes("sukses") || s.includes("success") || s.includes("done") || s.includes("berhasil")) {
+  const s = String(raw || "")
+    .trim()
+    .toLowerCase();
+  if (
+    s.includes("lunas") ||
+    s.includes("sukses") ||
+    s.includes("success") ||
+    s.includes("done") ||
+    s.includes("berhasil")
+  ) {
     return "LUNAS";
   }
   if (s.includes("batal") || s.includes("cancel") || s.includes("gagal") || s.includes("failed")) {

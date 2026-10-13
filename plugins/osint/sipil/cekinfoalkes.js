@@ -1,12 +1,12 @@
 import { searchInfoAlkes, formatResults } from "@/src/services/osint/infoalkes.js";
 
 const KATEGORI = {
-  "1": "nomor_izin_edar",
-  "2": "nama_produk",
-  "3": "pendaftar",
-  "4": "tipe",
-  "5": "produsen",
-  "6": "jenis_produk",
+  1: "nomor_izin_edar",
+  2: "nama_produk",
+  3: "pendaftar",
+  4: "tipe",
+  5: "produsen",
+  6: "jenis_produk",
 };
 
 const _KATEGORI_LABEL = {
@@ -32,22 +32,22 @@ export default {
     if (!rawArgs) {
       return reply(
         `🔍 *CEK INFO ALKES / PKRT*\n\n` +
-        `Masukkan nomor izin edar, nama produk, pendaftar, tipe, produsen, atau jenis produk.\n\n` +
-        `*Format:*\n` +
-        `\`${currentPrefix}cekinfoalkes <query> [kategori]\`\n\n` +
-        `*Kategori (opsional):*\n` +
-        `1. Nomor Izin Edar (default)\n` +
-        `2. Nama Produk\n` +
-        `3. Pendaftar\n` +
-        `4. Tipe\n` +
-        `5. Produsen\n` +
-        `6. Jenis Produk\n\n` +
-        `*Contoh:*\n` +
-        `• \`${currentPrefix}cekinfoalkes AKL 21603712060\`\n` +
-        `• \`${currentPrefix}infoalkes "LITHO Surgical" 2\`\n` +
-        `• \`${currentPrefix}cekalex "PT. I-TECH" 3\`\n` +
-        `• \`${currentPrefix}ceknies "Surgical Laser" 2\`\n\n` +
-        `_Sumber: infoalkes.kemkes.go.id (e-Info Alkes PKRT Kemkes RI)_`
+          `Masukkan nomor izin edar, nama produk, pendaftar, tipe, produsen, atau jenis produk.\n\n` +
+          `*Format:*\n` +
+          `\`${currentPrefix}cekinfoalkes <query> [kategori]\`\n\n` +
+          `*Kategori (opsional):*\n` +
+          `1. Nomor Izin Edar (default)\n` +
+          `2. Nama Produk\n` +
+          `3. Pendaftar\n` +
+          `4. Tipe\n` +
+          `5. Produsen\n` +
+          `6. Jenis Produk\n\n` +
+          `*Contoh:*\n` +
+          `• \`${currentPrefix}cekinfoalkes AKL 21603712060\`\n` +
+          `• \`${currentPrefix}infoalkes "LITHO Surgical" 2\`\n` +
+          `• \`${currentPrefix}cekalex "PT. I-TECH" 3\`\n` +
+          `• \`${currentPrefix}ceknies "Surgical Laser" 2\`\n\n` +
+          `_Sumber: infoalkes.kemkes.go.id (e-Info Alkes PKRT Kemkes RI)_`
       );
     }
 

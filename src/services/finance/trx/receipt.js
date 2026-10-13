@@ -152,7 +152,7 @@ export async function generateReceiptCard(trx) {
 
   ctx.fillStyle = "#484f58";
   for (let i = 0; i < barCount; i++) {
-    const barW = (i % 3 === 0 ? 4 : 2);
+    const barW = i % 3 === 0 ? 4 : 2;
     ctx.fillRect(barStartX + i * 8, barY, barW, 35);
   }
 
@@ -163,7 +163,11 @@ export async function generateReceiptCard(trx) {
 
   ctx.fillStyle = "#6e7681";
   ctx.font = "11px sans-serif";
-  ctx.fillText("Terima kasih atas pesanan Anda! Simpan struk ini sebagai bukti transaksi.", width / 2, cardY + cardH - 12);
+  ctx.fillText(
+    "Terima kasih atas pesanan Anda! Simpan struk ini sebagai bukti transaksi.",
+    width / 2,
+    cardY + cardH - 12
+  );
 
   return canvas.toBuffer("image/png");
 }

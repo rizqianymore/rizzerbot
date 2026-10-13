@@ -25,14 +25,13 @@ export function extractUserToken(rawToken) {
   try {
     const parsed = JSON.parse(trimmed);
     if (typeof parsed?.value === "string") return parsed.value;
-  } catch (_) { }
+  } catch (_) {}
   return trimmed;
 }
 
 export function generateFakeCookie() {
   const ts = Date.now();
-  const hex = (n) =>
-    Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const hex = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("");
   const uid = () =>
     "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;

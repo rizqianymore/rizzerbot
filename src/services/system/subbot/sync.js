@@ -60,7 +60,6 @@ export async function syncSubBotsDatabase() {
 
 export async function autoRestoreSubBots() {
   try {
-
     await syncSubBotsDatabase();
 
     if (!fs.existsSync(baseSessionsDir)) return;

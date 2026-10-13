@@ -8,13 +8,13 @@ import {
 } from "@/src/services/fetch/brat.js";
 
 export default {
-  "name": "bratvermeil",
-  "aliases": ["sbratvermeil"],
-  "description": "Membuat stiker Brat versi Vermeil",
-  "usage": "<teks>",
-  "premiumOnly": true,
-  "category": "Sticker",
-  "run": async (sock, msg, args, { reply, prefix }) => {
+  name: "bratvermeil",
+  aliases: ["sbratvermeil"],
+  description: "Membuat stiker Brat versi Vermeil",
+  usage: "<teks>",
+  premiumOnly: true,
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, prefix }) => {
     const currentPrefix = prefix || ".";
     const { text } = parseBratArgs(args);
     if (!text) {

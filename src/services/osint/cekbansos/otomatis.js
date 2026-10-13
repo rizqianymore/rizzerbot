@@ -64,10 +64,12 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
       }
 
       // Reload captcha jika gagal
-      await page.evaluate(() => {
-        const reloadBtn = document.querySelector('button[onclick*="reload"], .btn-refresh, a[href*="reload"]');
-        if (reloadBtn) reloadBtn.click();
-      }).catch(() => {});
+      await page
+        .evaluate(() => {
+          const reloadBtn = document.querySelector('button[onclick*="reload"], .btn-refresh, a[href*="reload"]');
+          if (reloadBtn) reloadBtn.click();
+        })
+        .catch(() => {});
       await new Promise((r) => setTimeout(r, 1000));
     }
 

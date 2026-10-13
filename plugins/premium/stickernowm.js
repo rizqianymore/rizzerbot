@@ -1,43 +1,35 @@
-import {
-  getMediaBuffer,
-  createSticker,
-  findDownloadableTarget,
-} from '@/src/services/fetch/media.js';
+import { getMediaBuffer, createSticker, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 export default {
-  "name": "stickernowm",
-  "description": "Create sticker without watermark (support gambar & video)",
-  "usage": "[teks atas | bawah] (reply gambar/video)",
-  "premiumOnly": true,
-  "category": "Premium",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
-      const targetMsg = findDownloadableTarget(msg);
-      const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
-      if (!buffer) return reply("❌ Balas gambar atau video dengan caption *\\.stickernowm*");
+  name: "stickernowm",
+  description: "Create sticker without watermark (support gambar & video)",
+  usage: "[teks atas | bawah] (reply gambar/video)",
+  premiumOnly: true,
+  category: "Premium",
+  run: async (sock, msg, args, { reply, sendTyping }) => {
+    await sendTyping();
+    const targetMsg = findDownloadableTarget(msg);
+    const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
+    if (!buffer) return reply("❌ Balas gambar atau video dengan caption *\\.stickernowm*");
 
-      let topText = "";
-      let bottomText = "";
-      if (args.length > 0) {
-        const fullText = args.join(" ");
-        if (fullText.includes("|")) {
-          const parts = fullText.split("|");
-          topText = parts[0]?.trim() || "";
-          bottomText = parts.slice(1).join("|")?.trim() || "";
-        } else {
-          bottomText = fullText.trim();
-        }
+    let topText = "";
+    let bottomText = "";
+    if (args.length > 0) {
+      const fullText = args.join(" ");
+      if (fullText.includes("|")) {
+        const parts = fullText.split("|");
+        topText = parts[0]?.trim() || "";
+        bottomText = parts.slice(1).join("|")?.trim() || "";
+      } else {
+        bottomText = fullText.trim();
       }
+    }
 
-      try {
-        const stickerBuffer = await createSticker(buffer, { pack: "", author: "", topText, bottomText });
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { sticker: stickerBuffer },
-          { quoted: msg }
-        );
-      } catch (err) {
-        await reply(`❌ Gagal membuat stiker: ${err.message}`);
-      }
-    },
+    try {
+      const stickerBuffer = await createSticker(buffer, { pack: "", author: "", topText, bottomText });
+      await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer }, { quoted: msg });
+    } catch (err) {
+      await reply(`❌ Gagal membuat stiker: ${err.message}`);
+    }
+  },
 };

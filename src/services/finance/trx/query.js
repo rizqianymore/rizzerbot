@@ -16,7 +16,9 @@ export function getStatusBadge(status) {
 
 export function getTransaction(id) {
   const list = getTransactionsDb();
-  const q = String(id || "").trim().toUpperCase();
+  const q = String(id || "")
+    .trim()
+    .toUpperCase();
   if (!q) return null;
   const exact = list.find((t) => t.id === q);
   if (exact) return exact;
@@ -27,7 +29,9 @@ export function getTransaction(id) {
 
 export function updateTransaction(id, updates = {}) {
   const list = getTransactionsDb();
-  const q = String(id || "").trim().toUpperCase();
+  const q = String(id || "")
+    .trim()
+    .toUpperCase();
   const idx = list.findIndex((t) => t.id === q);
   if (idx === -1) return null;
 
@@ -50,7 +54,9 @@ export function listTransactions({ limit = 10, groupJid = null } = {}) {
 
 export function deleteTransaction(id) {
   const list = getTransactionsDb();
-  const q = String(id || "").trim().toUpperCase();
+  const q = String(id || "")
+    .trim()
+    .toUpperCase();
   const idx = list.findIndex((t) => t.id === q);
   if (idx === -1) return false;
   list.splice(idx, 1);

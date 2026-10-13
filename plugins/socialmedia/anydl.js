@@ -13,10 +13,10 @@ export default {
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
         `⚡ *UNIVERSAL DOWNLOADER (YOINKS)*\n\n` +
-        `Mendukung: YouTube, Instagram, TikTok, X (Twitter), Facebook, Threads, Reddit, Vimeo, dll.\n\n` +
-        `*Penggunaan:*\n` +
-        `• \`${prefix || "."}dl <url>\` (Video)\n` +
-        `• \`${prefix || "."}dl <url> mp3\` (Audio Only)`
+          `Mendukung: YouTube, Instagram, TikTok, X (Twitter), Facebook, Threads, Reddit, Vimeo, dll.\n\n` +
+          `*Penggunaan:*\n` +
+          `• \`${prefix || "."}dl <url>\` (Video)\n` +
+          `• \`${prefix || "."}dl <url> mp3\` (Audio Only)`
       );
     }
 
@@ -49,9 +49,7 @@ export default {
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio
-          ? { audio: buffer, mimetype: "audio/mpeg" }
-          : { video: buffer, caption, mimetype: "video/mp4" },
+        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
 

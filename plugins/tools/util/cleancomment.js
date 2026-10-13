@@ -84,17 +84,20 @@ export default {
     if (!rawCode) {
       return reply(
         `🧹 *CODE COMMENT CLEANER*\n\n` +
-        `Hapus semua baris komentar (\`//\` dan \`/* ... */\`) tanpa merusak string URL atau isi kode.\n\n` +
-        `*Cara Penggunaan:*\n` +
-        `1. Langsung ketik kode:\n` +
-        `   \`${currentPrefix}cleancomment const x = 10; // ini komentar\`\n` +
-        `2. Balas (quote) pesan yang berisi kode lalu ketik:\n` +
-        `   \`${currentPrefix}cleancomment\``
+          `Hapus semua baris komentar (\`//\` dan \`/* ... */\`) tanpa merusak string URL atau isi kode.\n\n` +
+          `*Cara Penggunaan:*\n` +
+          `1. Langsung ketik kode:\n` +
+          `   \`${currentPrefix}cleancomment const x = 10; // ini komentar\`\n` +
+          `2. Balas (quote) pesan yang berisi kode lalu ketik:\n` +
+          `   \`${currentPrefix}cleancomment\``
       );
     }
 
     const _isCodeblock = rawCode.startsWith("```");
-    rawCode = rawCode.replace(/^```[a-zA-Z0-9_-]*\s*/i, "").replace(/```$/i, "").trim();
+    rawCode = rawCode
+      .replace(/^```[a-zA-Z0-9_-]*\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
 
     await sendTyping();
 

@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
+import { solveDuckDuckGoChallenge, makeDuckDuckGoFeSignals } from "./challenge.js";
 import {
-  solveDuckDuckGoChallenge,
-  makeDuckDuckGoFeSignals,
-} from "./challenge.js";
-import { DUCKDUCKGO_DEFAULT_MODEL, normalizeDuckDuckGoModel, pickDuckDuckGoModel, extractFreeDuckDuckGoModelIds } from "./models.js";
+  DUCKDUCKGO_DEFAULT_MODEL,
+  normalizeDuckDuckGoModel,
+  pickDuckDuckGoModel,
+  extractFreeDuckDuckGoModelIds,
+} from "./models.js";
 
 const DUCKDUCKGO_BASE = "https://duck.ai";
 const STATUS_URL = `${DUCKDUCKGO_BASE}/duckchat/v1/status`;
@@ -12,8 +14,7 @@ const MODELS_URL = `${DUCKDUCKGO_BASE}/duckchat/v1/models`;
 
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
-const DEFAULT_FE_VERSION =
-  "serp_20260424_180649_ET-0bdc33b2a02ebf8f235def65d887787f694720a1";
+const DEFAULT_FE_VERSION = "serp_20260424_180649_ET-0bdc33b2a02ebf8f235def65d887787f694720a1";
 
 let modelsCache = null;
 const MODEL_IDS_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -110,7 +111,6 @@ export async function askDuckDuckGo(promptOrMessages, options = {}) {
     }
   }
   if (lastChallengeError) {
-
     throw new Error(
       "DuckDuckGo anti-bot challenge gagal dipecahkan setelah 3x percobaan. Coba lagi dalam beberapa saat."
     );

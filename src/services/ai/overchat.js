@@ -130,7 +130,11 @@ export async function ClaudeHaiku(prompt, options = {}) {
     };
   } catch (err) {
     const aborted = err?.name === "AbortError";
-    return { status: false, code: aborted ? 408 : 0, error: aborted ? "Timeout 90 detik." : (err?.message || "Fetch gagal.") };
+    return {
+      status: false,
+      code: aborted ? 408 : 0,
+      error: aborted ? "Timeout 90 detik." : err?.message || "Fetch gagal.",
+    };
   } finally {
     clearTimeout(timer);
   }

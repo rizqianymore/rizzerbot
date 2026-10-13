@@ -38,7 +38,7 @@ if (fs.existsSync(envPath)) {
         }
       }
     }
-  } catch (_) { }
+  } catch (_) {}
 }
 
 const candidateFfmpegPaths = [
@@ -67,15 +67,15 @@ startBot()
       const { autoRestoreSubBots, syncSubBotsDatabase } = await import("./src/services/system/subbot/subbot.js");
       await syncSubBotsDatabase();
       await autoRestoreSubBots();
-    } catch (_) { }
+    } catch (_) {}
     try {
       const { startExpiryCron } = await import("./src/services/system/expiry.js");
       startExpiryCron(logger);
-    } catch (_) { }
+    } catch (_) {}
     try {
       const { startChatLogCron } = await import("./src/services/system/chatlogger.js");
       startChatLogCron(logger);
-    } catch (_) { }
+    } catch (_) {}
   })
   .catch((err) => {
     logger?.error?.("Fatal initialization error:", err);
@@ -89,7 +89,7 @@ async function gracefulShutdown(signal) {
   try {
     const { cleanOrphanChromeProcesses } = await import("./src/utils/cleaner.js");
     cleanOrphanChromeProcesses(logger);
-  } catch (_) { }
+  } catch (_) {}
   setTimeout(() => {
     process.exit(0);
   }, 1000);

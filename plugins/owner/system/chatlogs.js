@@ -3,14 +3,13 @@ import { getChatLogsList, getChatLogContent } from "@/src/services/system/chatlo
 import { formatBytes } from "@/src/services/system/backup.js";
 
 export default {
-  "name": "chatlogs",
-  "aliases": ["chatlog", "listlogs", "getlogs"],
-  "description": "Melihat dan mendownload rekaman log pesan WhatsApp (Hanya Bot Utama)",
-  "usage": "[opsional: tanggal / download]",
-  "ownerOnly": true,
-  "category": "Owner",
-  "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, _logger }) => {
-
+  name: "chatlogs",
+  aliases: ["chatlog", "listlogs", "getlogs"],
+  description: "Melihat dan mendownload rekaman log pesan WhatsApp (Hanya Bot Utama)",
+  usage: "[opsional: tanggal / download]",
+  ownerOnly: true,
+  category: "Owner",
+  run: async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, _logger }) => {
     if (isSubBot || sock?.isSubBot) {
       return reply("❌ *Akses Ditolak!*\n\nLog pesan chat hanya dapat dibuka dan diakses melalui *Bot Utama*.");
     }
@@ -31,7 +30,9 @@ export default {
 
       const target = targetDate ? getChatLogContent(targetDate) : getChatLogContent(logs[0].file);
       if (!target || !fs.existsSync(target.filePath)) {
-        return reply(`❌ File log untuk tanggal/nama \`${targetDate}\` tidak ditemukan.\n\nGunakan \`.chatlogs\` untuk melihat daftar file.`);
+        return reply(
+          `❌ File log untuk tanggal/nama \`${targetDate}\` tidak ditemukan.\n\nGunakan \`.chatlogs\` untuk melihat daftar file.`
+        );
       }
 
       await reply(`Mengirimkan file log \`${target.file}\` (${target.data.length} pesan)...`);
@@ -66,7 +67,7 @@ export default {
 
       let text = `*PREVIEW 15 PESAN TERAKHIR (${target.file})*\n\n`;
       list.forEach((item, idx) => {
-        const from = item.fromMe ? "Bot" : (item.pushName || item.sender.split("@")[0]);
+        const from = item.fromMe ? "Bot" : item.pushName || item.sender.split("@")[0];
         const loc = item.isGroup ? "Group" : "Private";
         const content = item.text ? item.text.slice(0, 70) : `[Media: ${item.mediaType || "Unknown"}]`;
         text += `${idx + 1}. [${item.time}] *${from}* (${loc}):\n   ${content}\n\n`;

@@ -16,9 +16,9 @@ export default {
     if (!url || !/mediafire\.com/i.test(url)) {
       return reply(
         `📁 *MEDIAFIRE DOWNLOADER*\n\n` +
-        `Masukkan URL MediaFire yang valid.\n\n` +
-        `*Contoh:*\n` +
-        `\`${currentPrefix}mediafire https://www.mediafire.com/file/xxxx/file\``
+          `Masukkan URL MediaFire yang valid.\n\n` +
+          `*Contoh:*\n` +
+          `\`${currentPrefix}mediafire https://www.mediafire.com/file/xxxx/file\``
       );
     }
 
@@ -34,7 +34,9 @@ export default {
       if (downloadUrl) lines.push(`Link: ${downloadUrl}`);
       const _infoText = lines.join("\n");
 
-      const isLarge = /\b\d+\s*GB/i.test(filesize) || (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
+      const isLarge =
+        /\b\d+\s*GB/i.test(filesize) ||
+        (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
 
       if (isLarge) {
         return reply(`⚠️ File berukuran cukup besar (${filesize}). Silakan unduh langsung melalui link di atas.`);

@@ -128,7 +128,7 @@ export class DeepSeekWebSession {
         },
         body: JSON.stringify({ chat_session_id: sessionId }),
       });
-    } catch (_) { }
+    } catch (_) {}
   }
 
   async getPowChallenge(accessToken) {

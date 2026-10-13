@@ -41,7 +41,9 @@ const VIDEO_FLAGS = new Set(["--video", "--vid"]);
 const GREEN_FLAGS = new Set(["--green", "-g"]);
 
 export function parseBratArgs(args, { allowVideo = false, allowGreen = false } = {}) {
-  const tokens = String(args?.join(" ") || "").split(/\s+/).filter(Boolean);
+  const tokens = String(args?.join(" ") || "")
+    .split(/\s+/)
+    .filter(Boolean);
   let isVideo = false;
   let bgColor = "#FFFFFF";
   const words = [];

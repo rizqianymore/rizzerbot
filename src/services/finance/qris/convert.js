@@ -33,7 +33,6 @@ export function convertQRIS(qrisString, { amount, fee = null } = {}) {
     if (managedTags.has(el.tag)) continue;
 
     if (el.tag === "01") {
-
       result.push(makeTLV("01", "12", "Point of Initiation Method"));
       continue;
     }

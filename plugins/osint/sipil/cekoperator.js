@@ -14,10 +14,10 @@ export default {
     if (!input) {
       return reply(
         `📱 *CEK OPERATOR SELULER*\n\n` +
-        `Masukkan nomor HP Indonesia (format 08xx / 628xx / +628xx).\n\n` +
-        `*Contoh:*\n` +
-        `• \`${currentPrefix}cekoperator 081212345678\`\n` +
-        `• \`${currentPrefix}cekhlr +6285812345678\``
+          `Masukkan nomor HP Indonesia (format 08xx / 628xx / +628xx).\n\n` +
+          `*Contoh:*\n` +
+          `• \`${currentPrefix}cekoperator 081212345678\`\n` +
+          `• \`${currentPrefix}cekhlr +6285812345678\``
       );
     }
 

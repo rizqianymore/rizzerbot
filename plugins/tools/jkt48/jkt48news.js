@@ -3,18 +3,39 @@ import { getJkt48News } from "@/src/services/hiburan/jkt48.js";
 const JKT48_BASE = "https://jkt48.com";
 
 const MONTH_NAMES = {
-  januari: 1, jan: 1, january: 1,
-  februari: 2, feb: 2, february: 2,
-  maret: 3, mar: 3, march: 3,
-  april: 4, apr: 4,
-  mei: 5, may: 5,
-  juni: 6, jun: 6, june: 6,
-  juli: 7, jul: 7, july: 7,
-  agustus: 8, agu: 8, agt: 8, august: 8,
-  september: 9, sep: 9,
-  oktober: 10, okt: 10, october: 10,
-  november: 11, nov: 11,
-  desember: 12, des: 12, december: 12,
+  januari: 1,
+  jan: 1,
+  january: 1,
+  februari: 2,
+  feb: 2,
+  february: 2,
+  maret: 3,
+  mar: 3,
+  march: 3,
+  april: 4,
+  apr: 4,
+  mei: 5,
+  may: 5,
+  juni: 6,
+  jun: 6,
+  june: 6,
+  juli: 7,
+  jul: 7,
+  july: 7,
+  agustus: 8,
+  agu: 8,
+  agt: 8,
+  august: 8,
+  september: 9,
+  sep: 9,
+  oktober: 10,
+  okt: 10,
+  october: 10,
+  november: 11,
+  nov: 11,
+  desember: 12,
+  des: 12,
+  december: 12,
 };
 
 function formatDate(dateStr) {
@@ -144,41 +165,41 @@ function _parseUserQuery(args, now = new Date()) {
 }
 
 export default {
-  "name": "jkt48news",
-  "aliases": ["jktnews","beritajkt48"],
-  "description": "Rangkuman berita dan pengumuman resmi terbaru JKT48",
-  "usage": "[jumlah berita]",
-  "premiumOnly": true,
-  "category": "Tools",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
-      await reply("📰 Memuat pengumuman terbaru JKT48...");
+  name: "jkt48news",
+  aliases: ["jktnews", "beritajkt48"],
+  description: "Rangkuman berita dan pengumuman resmi terbaru JKT48",
+  usage: "[jumlah berita]",
+  premiumOnly: true,
+  category: "Tools",
+  run: async (sock, msg, args, { reply, sendTyping }) => {
+    await sendTyping();
+    await reply("📰 Memuat pengumuman terbaru JKT48...");
 
-      const limit = parseInt(args[0], 10) || 5;
+    const limit = parseInt(args[0], 10) || 5;
 
-      try {
-        const newsList = await getJkt48News(limit);
-        if (!Array.isArray(newsList) || newsList.length === 0) {
-          return reply("❌ Tidak ada pengumuman berita JKT48 saat ini.");
-        }
-
-        let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n\n`;
-
-        newsList.forEach((item, idx) => {
-          const tgl = formatDate(item.valid_date_from);
-          const cat = item.category ? `[${item.category}]` : "";
-          const url = item.link ? `${JKT48_BASE}/news/${item.link}` : "-";
-          text += `*${idx + 1}. ${cat} ${item.title}*\n`;
-          text += `   _🕒 Tanggal: ${tgl}_\n`;
-          text += `   🔗 Link: ${url}\n\n`;
-        });
-
-        text += `💡 _Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
-
-        await reply(text.trim());
-      } catch (err) {
-        console.error("[JKT48 News Error]", err.message);
-        await reply(`❌ Gagal mengambil berita JKT48: ${err.message}`);
+    try {
+      const newsList = await getJkt48News(limit);
+      if (!Array.isArray(newsList) || newsList.length === 0) {
+        return reply("❌ Tidak ada pengumuman berita JKT48 saat ini.");
       }
-    },
+
+      let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n\n`;
+
+      newsList.forEach((item, idx) => {
+        const tgl = formatDate(item.valid_date_from);
+        const cat = item.category ? `[${item.category}]` : "";
+        const url = item.link ? `${JKT48_BASE}/news/${item.link}` : "-";
+        text += `*${idx + 1}. ${cat} ${item.title}*\n`;
+        text += `   _🕒 Tanggal: ${tgl}_\n`;
+        text += `   🔗 Link: ${url}\n\n`;
+      });
+
+      text += `💡 _Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
+
+      await reply(text.trim());
+    } catch (err) {
+      console.error("[JKT48 News Error]", err.message);
+      await reply(`❌ Gagal mengambil berita JKT48: ${err.message}`);
+    }
+  },
 };

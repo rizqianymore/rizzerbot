@@ -13,7 +13,6 @@ import { checkPermits, checkRateLimit } from "./limits.js";
 import { executeCommand } from "./execute.js";
 
 export async function dispatchMessage(sock, msg, logger) {
-
   return db.runWithBot(resolveBotJid(sock), () => dispatchInner(sock, msg, logger));
 }
 
@@ -84,7 +83,14 @@ async function dispatchInner(sock, msg, logger) {
 
   if (checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent })) return;
 
-  const resolved = await resolveCommandAccess(sock, msg, { botJidEarly, botJid, isFromMe, normalizedRawSender, remoteNormalized, messageContent });
+  const resolved = await resolveCommandAccess(sock, msg, {
+    botJidEarly,
+    botJid,
+    isFromMe,
+    normalizedRawSender,
+    remoteNormalized,
+    messageContent,
+  });
   if (resolved.drop) return;
   const { activeSettings, prefix, args, commandName, cmd, senderJid } = resolved;
   const { isOwner, isAdmin, isPremium } = resolved;
@@ -100,7 +106,7 @@ async function dispatchInner(sock, msg, logger) {
   if (isOwner && access.user && (!access.user.owner || !access.user.premium)) {
     logger?.warn?.(
       `[PrivEsc-Guard] ${senderJid} lolos cek owner via config/tugas tapi record DB belum owner. ` +
-      `Akses ephemeral untuk perintah ini saja, TANPA tulis database.`
+        `Akses ephemeral untuk perintah ini saja, TANPA tulis database.`
     );
   }
 
@@ -128,5 +134,20 @@ async function dispatchInner(sock, msg, logger) {
     if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid)) return;
   }
 
-  await executeCommand(sock, msg, logger, { remoteJid, senderJid, cmd, access, activeSettings, prefix, args, commandName, isOwner, isAdmin, isPremium, user, botJid, isSubBotSock });
+  await executeCommand(sock, msg, logger, {
+    remoteJid,
+    senderJid,
+    cmd,
+    access,
+    activeSettings,
+    prefix,
+    args,
+    commandName,
+    isOwner,
+    isAdmin,
+    isPremium,
+    user,
+    botJid,
+    isSubBotSock,
+  });
 }

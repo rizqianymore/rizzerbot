@@ -1,8 +1,6 @@
-const UA =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
+const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
 
-const NPM_LOGO =
-  "https://raw.githubusercontent.com/npm/logos/master/npm%20square/npm-square-red-rounded.png";
+const NPM_LOGO = "https://raw.githubusercontent.com/npm/logos/master/npm%20square/npm-square-red-rounded.png";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -40,9 +38,7 @@ export default {
     const query = args.join(" ").trim();
     if (!query) {
       return reply(
-        `*NPM STALKER*\n\n` +
-        `Penggunaan: *${prefix}npmstalk <nama package>*\n` +
-        `Contoh: *${prefix}npmstalk axios*`
+        `*NPM STALKER*\n\n` + `Penggunaan: *${prefix}npmstalk <nama package>*\n` + `Contoh: *${prefix}npmstalk axios*`
       );
     }
 
@@ -51,10 +47,7 @@ export default {
     await react("🕕");
 
     try {
-
-      const search = await getJson(
-        `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`
-      );
+      const search = await getJson(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`);
       const hit = search?.objects?.[0]?.package;
       if (!hit?.name) throw new Error(`Package NPM "${query}" tidak ditemukan`);
 
@@ -63,7 +56,11 @@ export default {
       const latestMeta = (latestTag && detail?.versions?.[latestTag]) || {};
       const versionCount = detail?.versions ? Object.keys(detail.versions).length : 0;
       const maintainers = Array.isArray(detail?.maintainers)
-        ? detail.maintainers.slice(0, 5).map((m) => m.name || m.email).filter(Boolean).join(", ")
+        ? detail.maintainers
+            .slice(0, 5)
+            .map((m) => m.name || m.email)
+            .filter(Boolean)
+            .join(", ")
         : "-";
       const keywords = Array.isArray(latestMeta.keywords || hit.keywords)
         ? (latestMeta.keywords || hit.keywords).slice(0, 6).join(", ")
@@ -89,11 +86,7 @@ export default {
       if (links.homepage) card += `Homepage: ${links.homepage}`;
 
       try {
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { image: { url: NPM_LOGO }, caption: card },
-          { quoted: msg }
-        );
+        await sock.sendMessage(msg.key.remoteJid, { image: { url: NPM_LOGO }, caption: card }, { quoted: msg });
       } catch {
         await reply(card);
       }

@@ -9,13 +9,13 @@ import {
 } from "@/src/services/fetch/brat.js";
 
 export default {
-  "name": "bratgojovid",
-  "aliases": ["sbratgojovid"],
-  "description": "Membuat stiker Brat Gojo video animasi berjalan",
-  "usage": "<teks>",
-  "premiumOnly": true,
-  "category": "Sticker",
-  "run": async (sock, msg, args, { reply, prefix }) => {
+  name: "bratgojovid",
+  aliases: ["sbratgojovid"],
+  description: "Membuat stiker Brat Gojo video animasi berjalan",
+  usage: "<teks>",
+  premiumOnly: true,
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, prefix }) => {
     const currentPrefix = prefix || ".";
     const { text } = parseBratArgs(args);
     if (!text) {

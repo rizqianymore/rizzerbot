@@ -1,36 +1,25 @@
-import fs from 'fs';
-import path from 'path';
-import { AsyncLocalStorage } from 'node:async_hooks';
-import {
-  isRecord,
-  normalizeJid,
-  normalizePhone,
-  phoneDigitsOfPhoneJid,
-  toBoolean,
-} from './utils.js';
-import { normalizeSettings } from './settings.js';
-import {
-  MAIN_KEY,
-  SUBBOTS_DIR,
-  isMainBotJid,
-  registerBotJid,
-} from './botids.js';
-import { Store } from './store-admin.js';
+import fs from "fs";
+import path from "path";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { isRecord, normalizeJid, normalizePhone, phoneDigitsOfPhoneJid, toBoolean } from "./utils.js";
+import { normalizeSettings } from "./settings.js";
+import { MAIN_KEY, SUBBOTS_DIR, isMainBotJid, registerBotJid } from "./botids.js";
+import { Store } from "./store-admin.js";
 
 export const botAls = new AsyncLocalStorage();
 export const stores = new Map();
 
 export function mainPaths() {
-  const dbPath = path.join(process.cwd(), 'database', 'database.json');
-  const usersDbPath = path.join(process.cwd(), 'database', 'users.json');
+  const dbPath = path.join(process.cwd(), "database", "database.json");
+  const usersDbPath = path.join(process.cwd(), "database", "users.json");
   return { dbPath, usersDbPath };
 }
 
 export function subPaths(digits) {
   const dir = path.join(SUBBOTS_DIR, digits);
   return {
-    dbPath: path.join(dir, 'database.json'),
-    usersDbPath: path.join(dir, 'users.json'),
+    dbPath: path.join(dir, "database.json"),
+    usersDbPath: path.join(dir, "users.json"),
   };
 }
 
@@ -78,7 +67,7 @@ export function findLegacySubConfig(digits) {
     for (const [k, v] of Object.entries(legacy)) {
       if (normalizePhone(k) === digits && isRecord(v)) return v;
     }
-  } catch (_) { }
+  } catch (_) {}
   return null;
 }
 
@@ -92,7 +81,7 @@ export function ensureSubStore(botJid, seed = {}) {
       existing.data.settings.botName = String(seed.botName);
       touched = true;
     }
-    const curOwner = normalizeJid(existing.data.settings.ownerNumber || '');
+    const curOwner = normalizeJid(existing.data.settings.ownerNumber || "");
     if (seed.ownerNumber && !curOwner) {
       const clean = normalizeJid(seed.ownerNumber);
       if (clean) {
@@ -122,7 +111,7 @@ export function ensureSubStore(botJid, seed = {}) {
         : [],
   };
   if (legacy?.public !== undefined) initial.public = toBoolean(legacy.public, true);
-  if (typeof legacy?.prefix === 'string' && legacy.prefix.trim()) initial.prefix = legacy.prefix.trim();
+  if (typeof legacy?.prefix === "string" && legacy.prefix.trim()) initial.prefix = legacy.prefix.trim();
 
   const s = new Store(key, false, dbPath, usersDbPath);
   s.data.settings = normalizeSettings({ ...s.data.settings, ...initial });
@@ -145,7 +134,9 @@ export function runWithBot(botJid, fn) {
 
 export function mainAccessor() {
   return {
-    get data() { return mainStore.data; },
+    get data() {
+      return mainStore.data;
+    },
     save: () => mainStore.save(),
     getSettings: () => mainStore.getSettings(),
     updateSettings: (u) => mainStore.updateSettings(u),

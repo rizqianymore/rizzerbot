@@ -11,7 +11,7 @@ function runJsSandbox(code) {
   const logs = [];
   const sandbox = {
     console: {
-      log: (...args) => logs.push(args.map(a => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" ")),
+      log: (...args) => logs.push(args.map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" ")),
       error: (...args) => logs.push("[ERROR] " + args.join(" ")),
       warn: (...args) => logs.push("[WARN] " + args.join(" ")),
       info: (...args) => logs.push("[INFO] " + args.join(" ")),
@@ -104,11 +104,11 @@ export default {
     if (!raw) {
       return reply(
         `📦 *SANDBOX CODE RUNNER*\n\n` +
-        `Jalankan potongan kode Javascript atau Python secara terisolasi & aman.\n\n` +
-        `*Penggunaan:*\n` +
-        `• JS: \`${currentPrefix}sandbox console.log(1 + 1)\`\n` +
-        `• Python: \`${currentPrefix}sandbox --py print(sum([1, 2, 3]))\`\n` +
-        `• Alias cepat: \`${currentPrefix}py print("halo")\` atau \`${currentPrefix}js [1,2,3].map(x => x*2)\``
+          `Jalankan potongan kode Javascript atau Python secara terisolasi & aman.\n\n` +
+          `*Penggunaan:*\n` +
+          `• JS: \`${currentPrefix}sandbox console.log(1 + 1)\`\n` +
+          `• Python: \`${currentPrefix}sandbox --py print(sum([1, 2, 3]))\`\n` +
+          `• Alias cepat: \`${currentPrefix}py print("halo")\` atau \`${currentPrefix}js [1,2,3].map(x => x*2)\``
       );
     }
 
@@ -125,7 +125,10 @@ export default {
       code = raw.replace(/^--?js\s*/i, "").trim();
     }
 
-    code = code.replace(/^```(?:js|javascript|py|python)?\s*/i, "").replace(/```$/i, "").trim();
+    code = code
+      .replace(/^```(?:js|javascript|py|python)?\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
 
     if (!code) {
       return reply("❌ Masukkan kode yang ingin dijalankan!");
@@ -163,10 +166,7 @@ export default {
         return reply(text.trim());
       }
     } catch (err) {
-      return reply(
-        `❌ *SANDBOX EXECUTION ERROR*\n\n` +
-        `\`\`\`\n${err.message || String(err)}\n\`\`\``
-      );
+      return reply(`❌ *SANDBOX EXECUTION ERROR*\n\n` + `\`\`\`\n${err.message || String(err)}\n\`\`\``);
     }
   },
 };

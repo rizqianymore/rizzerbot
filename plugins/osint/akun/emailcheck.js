@@ -1,10 +1,22 @@
 import dns from "node:dns/promises";
 
 const DISPOSABLE_DOMAINS = new Set([
-  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
-  "sharklasers.com", "yopmail.com", "trashmail.com", "getairmail.com",
-  "dispostable.com", "mohmal.com", "crazymailing.com", "fakemailgenerator.com",
-  "temp-mail.org", "nada.ltd", "burnermail.io", "mytemp.email"
+  "mailinator.com",
+  "tempmail.com",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "sharklasers.com",
+  "yopmail.com",
+  "trashmail.com",
+  "getairmail.com",
+  "dispostable.com",
+  "mohmal.com",
+  "crazymailing.com",
+  "fakemailgenerator.com",
+  "temp-mail.org",
+  "nada.ltd",
+  "burnermail.io",
+  "mytemp.email",
 ]);
 
 export default {
@@ -19,10 +31,7 @@ export default {
     const email = (args[0] || "").trim().toLowerCase();
 
     if (!email) {
-      return reply(
-        `❌ Masukkan alamat email!\n` +
-        `Contoh: \`${currentPrefix}emailcheck target@gmail.com\``
-      );
+      return reply(`❌ Masukkan alamat email!\n` + `Contoh: \`${currentPrefix}emailcheck target@gmail.com\``);
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;

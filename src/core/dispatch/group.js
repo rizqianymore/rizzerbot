@@ -20,8 +20,7 @@ export async function getGroupAccessError(sock, remoteJid, senderJid, cmd, acces
   const botJid = resolveBotJid(sock);
   const botParticipant = findParticipant(meta, botJid);
   const isBotAdmin = Boolean(
-    botParticipant &&
-    (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
+    botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
   );
 
   if (cmd.botAdminOnly && !isBotAdmin) {
@@ -31,9 +30,7 @@ export async function getGroupAccessError(sock, remoteJid, senderJid, cmd, acces
   if (cmd.groupAdminOnly) {
     const userParticipant = findParticipant(meta, senderJid);
     const isGroupAdmin = Boolean(
-      access.admin ||
-      (userParticipant &&
-        (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
+      access.admin || (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
     );
     if (!isGroupAdmin) {
       return "❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!";

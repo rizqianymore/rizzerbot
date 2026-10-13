@@ -2,7 +2,6 @@ import { JKT48_BASE, STATIC_MEMBERS } from "./constants.js";
 import { jktInPageFetch } from "./client.js";
 
 export async function getJkt48Members() {
-
   try {
     const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/members/`);
     if (json?.status && Array.isArray(json?.data)) {
@@ -24,9 +23,7 @@ export async function getAkb48FandomMemberDetail(memberName) {
   if (!memberName) return null;
 
   try {
-    const formattedTitle = encodeURIComponent(
-      memberName.trim().replace(/\s+/g, "_")
-    );
+    const formattedTitle = encodeURIComponent(memberName.trim().replace(/\s+/g, "_"));
     const apiUrl = `https://akb48.fandom.com/api.php?action=parse&page=${formattedTitle}&prop=wikitext|images&format=json`;
 
     const { default: axios } = await import("axios");
@@ -42,7 +39,6 @@ export async function getAkb48FandomMemberDetail(memberName) {
       });
       parseData = res.data?.parse;
     } catch (_) {
-
       const pageResult = await jktInPageFetch(apiUrl);
       parseData = pageResult?.parse;
     }
@@ -54,8 +50,7 @@ export async function getAkb48FandomMemberDetail(memberName) {
     const candidateImg = Array.isArray(parseData.images)
       ? parseData.images.find(
           (img) =>
-            /\.(jpe?g|png|webp)$/i.test(img) &&
-            !/logo|icon|\.svg|x\.svg|showroom|tiktok|instagram|idn/i.test(img)
+            /\.(jpe?g|png|webp)$/i.test(img) && !/logo|icon|\.svg|x\.svg|showroom|tiktok|instagram|idn/i.test(img)
         )
       : null;
 
@@ -87,11 +82,7 @@ export async function getAkb48FandomMemberDetail(memberName) {
     const getField = (field) => {
       const reg = new RegExp(`\\|\\s*${field}\\s*=\\s*([^\\n|]+)`, "i");
       const m = wikitext.match(reg);
-      return m
-        ? m[1]
-            .replace(/\[\[|\]\]|\{\{[^}]+\}\}|<[^>]+>/g, "")
-            .trim()
-        : null;
+      return m ? m[1].replace(/\[\[|\]\]|\{\{[^}]+\}\}|<[^>]+>/g, "").trim() : null;
     };
 
     const realName = getField("realname");
@@ -212,7 +203,10 @@ export async function getJkt48MemberDetail(idOrName) {
     twitter: data?.twitter_account || "",
     instagram: data?.instagram_account || "",
     tiktok: data?.tiktok_account || "",
-    photo: target.photo || (data?.photo ? `${JKT48_BASE}/api/v1/storages/${data.photo.replace(/^\/+/, "")}` : null) || fandomData?.wikiImageUrl,
+    photo:
+      target.photo ||
+      (data?.photo ? `${JKT48_BASE}/api/v1/storages/${data.photo.replace(/^\/+/, "")}` : null) ||
+      fandomData?.wikiImageUrl,
     fandom: fandomData || null,
   };
 }

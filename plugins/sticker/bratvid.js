@@ -7,13 +7,13 @@ import {
 } from "@/src/services/fetch/brat.js";
 
 export default {
-  "name": "bratvid",
-  "aliases": ["bratvideo", "bratvid2"],
-  "description": "Membuat stiker teks Brat video animasi teks berjalan",
-  "usage": "<teks> [--green]",
-  "premiumOnly": true,
-  "category": "Sticker",
-  "run": async (sock, msg, args, { reply, prefix }) => {
+  name: "bratvid",
+  aliases: ["bratvideo", "bratvid2"],
+  description: "Membuat stiker teks Brat video animasi teks berjalan",
+  usage: "<teks> [--green]",
+  premiumOnly: true,
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, prefix }) => {
     const currentPrefix = prefix || ".";
     const { text, bgColor } = parseBratArgs(args, { allowVideo: false, allowGreen: true });
     if (!text) {

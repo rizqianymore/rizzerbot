@@ -1,5 +1,4 @@
-const UA =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
+const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -22,7 +21,6 @@ async function getJson(url, options = {}) {
 }
 
 async function resolveUserId(input) {
-
   if (/^\d+$/.test(input)) return Number(input);
   const data = await getJson("https://users.roblox.com/v1/usernames/users", {
     method: "POST",
@@ -49,8 +47,8 @@ export default {
     if (!input) {
       return reply(
         `*ROBLOX STALKER*\n\n` +
-        `Penggunaan: *${prefix}robloxstalk <username / ID>*\n` +
-        `Contoh: *${prefix}robloxstalk builderman*`
+          `Penggunaan: *${prefix}robloxstalk <username / ID>*\n` +
+          `Contoh: *${prefix}robloxstalk builderman*`
       );
     }
 
@@ -91,19 +89,14 @@ export default {
           ? PRESENCE_LABEL[presenceInfo.userPresenceType] || "Unknown"
           : "Unknown";
       const lastLocation =
-        presenceInfo?.lastLocation && presenceInfo.lastLocation !== "Website"
-          ? ` (${presenceInfo.lastLocation})`
-          : "";
+        presenceInfo?.lastLocation && presenceInfo.lastLocation !== "Website" ? ` (${presenceInfo.lastLocation})` : "";
 
       let card = `*ROBLOX STALKER*\n`;
       card += `Username: ${profile.name}\n`;
       card += `Display Name: ${profile.displayName || profile.name}\n`;
       card += `Player ID: ${profile.id ?? userId}\n`;
       if (profile.description) {
-        const bio =
-          profile.description.length > 250
-            ? profile.description.slice(0, 250) + "..."
-            : profile.description;
+        const bio = profile.description.length > 250 ? profile.description.slice(0, 250) + "..." : profile.description;
         card += `Bio: ${bio}\n`;
       }
       card += `Followers: ${(followers.count ?? 0).toLocaleString("id-ID")}\n`;
@@ -118,11 +111,7 @@ export default {
       const avatarImg = avatar?.data?.[0]?.imageUrl;
       if (avatarImg && avatarImg.startsWith("http")) {
         try {
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            { image: { url: avatarImg }, caption: card },
-            { quoted: msg }
-          );
+          await sock.sendMessage(msg.key.remoteJid, { image: { url: avatarImg }, caption: card }, { quoted: msg });
         } catch {
           await reply(card);
         }

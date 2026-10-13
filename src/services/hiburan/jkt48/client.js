@@ -35,9 +35,7 @@ export async function getJkt48News(limit = 5) {
     }
   } catch (_) {}
 
-  const json = await jktInPageFetch(
-    `${JKT48_BASE}/api/v1/news?lang=id&limit=${safeLimit}`
-  );
+  const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/news?lang=id&limit=${safeLimit}`);
   if (!json?.status || !Array.isArray(json?.data)) {
     throw new Error("Gagal memuat berita dari server resmi JKT48.");
   }
@@ -63,8 +61,20 @@ export async function getJkt48Schedules(month, year) {
         const dd = String(d.getUTCDate()).padStart(2, "0");
         const dateStr = `${yyyy}-${mm}-${dd}`;
 
-        const startTimeStr = t.start_date ? new Date(t.start_date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) : "14:00";
-        const endTimeStr = t.end_date ? new Date(t.end_date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) : "16:00";
+        const startTimeStr = t.start_date
+          ? new Date(t.start_date).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Jakarta",
+            })
+          : "14:00";
+        const endTimeStr = t.end_date
+          ? new Date(t.end_date).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Jakarta",
+            })
+          : "16:00";
 
         return {
           schedule_id: t.id,
@@ -83,9 +93,7 @@ export async function getJkt48Schedules(month, year) {
     }
   } catch (_) {}
 
-  const json = await jktInPageFetch(
-    `${JKT48_BASE}/api/v1/schedules?lang=id&month=${m}&year=${y}`
-  );
+  const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/schedules?lang=id&month=${m}&year=${y}`);
   if (!json?.status || !Array.isArray(json?.data)) {
     throw new Error(`Gagal memuat jadwal JKT48 bulan ${m}/${y}.`);
   }
@@ -117,9 +125,7 @@ export async function getJkt48ScheduleDetail(codeOrSlug) {
     }
   } catch (_) {}
 
-  const json = await jktInPageFetch(
-    `${JKT48_BASE}/api/v1/schedules/${encodeURIComponent(targetSlug)}?lang=id`
-  );
+  const json = await jktInPageFetch(`${JKT48_BASE}/api/v1/schedules/${encodeURIComponent(targetSlug)}?lang=id`);
   if (!json?.status || !json?.data) {
     throw new Error(`Detail show "${codeOrSlug}" tidak ditemukan.`);
   }

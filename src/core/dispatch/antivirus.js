@@ -56,10 +56,11 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const extLen = m.extendedTextMessage?.text?.length || 0;
     const btns = m.interactiveMessage?.nativeFlowMessage?.buttons;
     const btnCount = Array.isArray(btns) ? btns.length : 0;
-    const flood = rawStr.length > LIMIT.rawScan &&
-      /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/.test(rawStr);
+    const flood = rawStr.length > LIMIT.rawScan && /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/.test(rawStr);
     if (crashKey || flood || vcardLen > LIMIT.vcard || extLen > LIMIT.extText || btnCount > LIMIT.buttons) {
-      logger?.warn?.(`[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`);
+      logger?.warn?.(
+        `[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`
+      );
       await dropInGroup();
       trackCrashSender(msg.key.participant || remoteJid);
       return true;

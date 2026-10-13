@@ -94,11 +94,7 @@ export async function smartRequest(url, options = {}) {
         cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
       }
 
-      const isChallenge = isCloudflareChallenge(
-        res.status,
-        res.headers,
-        typeof res.data === "string" ? res.data : ""
-      );
+      const isChallenge = isCloudflareChallenge(res.status, res.headers, typeof res.data === "string" ? res.data : "");
 
       if (isChallenge) {
         if (bypassCloudflare === false) {

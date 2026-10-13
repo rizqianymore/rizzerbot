@@ -1,4 +1,4 @@
-import { normalizeJid } from './db/utils.js';
+import { normalizeJid } from "./db/utils.js";
 import {
   resolvePhoneJid,
   pickPhoneJid,
@@ -7,7 +7,7 @@ import {
   learnGroupLidMap,
   flushLidMap,
   bindLidStoreProvider,
-} from './db/lidmap.js';
+} from "./db/lidmap.js";
 import {
   setMainBotJid,
   getMainBotJid,
@@ -16,20 +16,9 @@ import {
   isPrimaryOwnerJid,
   registerBotJid,
   bindBotIdProviders,
-} from './db/botids.js';
-import {
-  getBotSettings,
-  updateBotSettings,
-  isBotOwner,
-} from './db/bot-settings.js';
-import {
-  stores,
-  mainStore,
-  activeStore,
-  ensureSubStore,
-  runWithBot,
-  mainAccessor,
-} from './db/stores.js';
+} from "./db/botids.js";
+import { getBotSettings, updateBotSettings, isBotOwner } from "./db/bot-settings.js";
+import { stores, mainStore, activeStore, ensureSubStore, runWithBot, mainAccessor } from "./db/stores.js";
 
 export { flushLidMap, setMainBotJid, getMainBotJid };
 
@@ -37,7 +26,9 @@ bindLidStoreProvider(() => mainStore);
 bindBotIdProviders({ getMainStore: () => mainStore, getStores: () => stores });
 
 export const db = {
-  get data() { return activeStore().data; },
+  get data() {
+    return activeStore().data;
+  },
   save: () => activeStore().save(),
   normalizeJid,
   resolvePhoneJid,
@@ -82,7 +73,9 @@ export const db = {
 };
 
 export function flushAllStores() {
-  try { flushLidMap(true); } catch (_) { }
+  try {
+    flushLidMap(true);
+  } catch (_) {}
   for (const store of stores.values()) {
     try {
       if (store._saveTimer) {
@@ -90,7 +83,7 @@ export function flushAllStores() {
         store._saveTimer = null;
       }
       store.save();
-    } catch (_) { }
+    } catch (_) {}
   }
 }
 
@@ -98,7 +91,7 @@ if (typeof process !== "undefined" && !process.env.RIZZER_NO_FLUSH_HOOK) {
   const flush = () => {
     try {
       flushAllStores();
-    } catch (_) { }
+    } catch (_) {}
   };
   process.once("beforeExit", flush);
   process.once("SIGINT", () => {

@@ -32,11 +32,7 @@ export async function checkRateLimit(activeSettings, senderJid, sock, msg, remot
     }
     const rec = registerBurst(senderJid);
     if (rec.mutedUntil && Date.now() < rec.mutedUntil) {
-      await sock.sendMessage(
-        remoteJid,
-        { text: `🚫 *Spam burst terdeteksi!* Kamu dimute 60 detik.` },
-        { quoted: msg }
-      );
+      await sock.sendMessage(remoteJid, { text: `🚫 *Spam burst terdeteksi!* Kamu dimute 60 detik.` }, { quoted: msg });
       return true;
     }
   }

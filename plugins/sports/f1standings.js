@@ -19,7 +19,6 @@ export default {
     const a1 = (args?.[1] || "").trim().toLowerCase();
     await sendTyping();
     try {
-
       let seasonRaw = "current";
       let typeRaw = "drivers";
       if (a0 && /^(driver|pembalap)/i.test(a0)) typeRaw = "drivers";
@@ -36,16 +35,12 @@ export default {
       if (season?.error) {
         return reply(
           `❌ ${season.error}\n\nGunakan: \`${currentPrefix}f1standings [tahun|current] [drivers|constructors]\`\n` +
-          `Contoh: \`${currentPrefix}f1standings 2024\`, \`${currentPrefix}f1standings current constructors\``
+            `Contoh: \`${currentPrefix}f1standings 2024\`, \`${currentPrefix}f1standings current constructors\``
         );
       }
       const isConstructors = typeRaw === "constructors";
-      const data = isConstructors
-        ? await getConstructorsChampionship(season)
-        : await getDriversChampionship(season);
-      return reply(
-        isConstructors ? fmtConstructorsStandings(data) : fmtDriversStandings(data)
-      );
+      const data = isConstructors ? await getConstructorsChampionship(season) : await getDriversChampionship(season);
+      return reply(isConstructors ? fmtConstructorsStandings(data) : fmtDriversStandings(data));
     } catch (err) {
       return reply(`❌ Gagal memuat klasemen: ${err.message}`);
     }

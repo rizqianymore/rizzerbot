@@ -2,7 +2,11 @@ import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid } from "./identity.js";
 
-export async function resolveCommandAccess(sock, msg, { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent }) {
+export async function resolveCommandAccess(
+  sock,
+  msg,
+  { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent }
+) {
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
   if (!messageContent.startsWith(prefix)) return { drop: true };
@@ -15,14 +19,9 @@ export async function resolveCommandAccess(sock, msg, { _botJidEarly, botJid, is
   if (!cmd) return { drop: true };
 
   const remoteJid = msg.key.remoteJid;
-  const senderJid = isFromMe
-    ? (botJid || normalizedRawSender)
-    : normalizedRawSender;
+  const senderJid = isFromMe ? botJid || normalizedRawSender : normalizedRawSender;
 
-  const isSenderOwner =
-    isFromMe ||
-    db.isOwner(senderJid) ||
-    db.isBotOwner(botJid, senderJid);
+  const isSenderOwner = isFromMe || db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
 
   const access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
@@ -47,8 +46,9 @@ export async function resolveCommandAccess(sock, msg, { _botJidEarly, botJid, is
       ? activeSettings.publicCommands.map((c) => String(c || "").toLowerCase())
       : [];
     const invoked = new Set(
-      [commandName, cmd.name?.toLowerCase(), ...((cmd.aliases || []).map((a) => String(a || "").toLowerCase()))]
-        .filter(Boolean)
+      [commandName, cmd.name?.toLowerCase(), ...(cmd.aliases || []).map((a) => String(a || "").toLowerCase())].filter(
+        Boolean
+      )
     );
     const isPublicCommand = [...invoked].some((n) => allowed.includes(n));
     if (!isPublicCommand) return { drop: true };
@@ -63,5 +63,18 @@ export async function resolveCommandAccess(sock, msg, { _botJidEarly, botJid, is
     role: "user",
   };
 
-  return { activeSettings, prefix, args, commandName, cmd, senderJid, access, isOwner, isAdmin, isPremium, isRegistered, user };
+  return {
+    activeSettings,
+    prefix,
+    args,
+    commandName,
+    cmd,
+    senderJid,
+    access,
+    isOwner,
+    isAdmin,
+    isPremium,
+    isRegistered,
+    user,
+  };
 }

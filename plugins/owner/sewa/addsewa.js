@@ -19,28 +19,26 @@ async function resolveGroupJid(sock, input) {
 }
 
 export default {
-  "name": "addsewa",
-  "aliases": ["sewaadd", "tambahsewa"],
-  "description": "Tambah masa sewa bot di grup",
-  "usage": "<link/id grup> <hari>",
-  "ownerOnly": true,
-  "category": "Owner",
-  "run": async (sock, msg, args, { reply, sendTyping, senderJid }) => {
-      const groupJid = await resolveGroupJid(sock, args[0]);
-      const days = Number(args[1]);
-      if (!groupJid || !Number.isFinite(days) || days <= 0) {
-        return reply(
-          "Format salah!\nGunakan: `.addsewa <link/id grup> <hari>`\nContoh: `.addsewa https://chat.whatsapp.com/xxxx 30`"
-        );
-      }
-      await sendTyping();
-      try {
-        const r = addRental(groupJid, days, db.normalizeJid(senderJid));
-        await reply(
-          `Sewa dicatat.\nGrup: ${groupJid}\nBerakhir: ${new Date(r.until).toLocaleString("id-ID")}`
-        );
-      } catch (err) {
-        return reply(`Gagal: ${err.message}`);
-      }
-    },
+  name: "addsewa",
+  aliases: ["sewaadd", "tambahsewa"],
+  description: "Tambah masa sewa bot di grup",
+  usage: "<link/id grup> <hari>",
+  ownerOnly: true,
+  category: "Owner",
+  run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
+    const groupJid = await resolveGroupJid(sock, args[0]);
+    const days = Number(args[1]);
+    if (!groupJid || !Number.isFinite(days) || days <= 0) {
+      return reply(
+        "Format salah!\nGunakan: `.addsewa <link/id grup> <hari>`\nContoh: `.addsewa https://chat.whatsapp.com/xxxx 30`"
+      );
+    }
+    await sendTyping();
+    try {
+      const r = addRental(groupJid, days, db.normalizeJid(senderJid));
+      await reply(`Sewa dicatat.\nGrup: ${groupJid}\nBerakhir: ${new Date(r.until).toLocaleString("id-ID")}`);
+    } catch (err) {
+      return reply(`Gagal: ${err.message}`);
+    }
+  },
 };

@@ -61,8 +61,7 @@ export default {
       // ---- List profesi ----
       if (first === "profesi") {
         const jenisTerm = (parts[1] || "").toLowerCase();
-        const jenis =
-          ["medis", "dokter", "named", "1"].includes(jenisTerm) ? JENIS.medis : JENIS.nakes;
+        const jenis = ["medis", "dokter", "named", "1"].includes(jenisTerm) ? JENIS.medis : JENIS.nakes;
         const list = await getProfesi(jenis);
         return reply(formatProfesiList(list, jenis));
       }

@@ -6,9 +6,14 @@ export function parseTrxInput(rawText, quoted, _getTargetJid) {
   let status = "LUNAS";
   let note = "-";
 
-  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = rawText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-  const isKeyValue = lines.some((l) => /^(barang|pesanan|item|harga|price|nominal|buyer|pembeli|metode|payment|status|catatan|note):/i.test(l));
+  const isKeyValue = lines.some((l) =>
+    /^(barang|pesanan|item|harga|price|nominal|buyer|pembeli|metode|payment|status|catatan|note):/i.test(l)
+  );
 
   if (isKeyValue) {
     for (const line of lines) {
@@ -33,10 +38,8 @@ export function parseTrxInput(rawText, quoted, _getTargetJid) {
     if (parts[4]) status = parts[4];
     if (parts[5]) note = parts[5];
   } else {
-
     const words = rawText.split(/\s+/);
     if (words.length >= 2) {
-
       const priceIdx = words.findIndex((w) => /^\d+(\.\d+)?k?$/i.test(w) || /^rp\.?\d+/i.test(w));
       if (priceIdx !== -1) {
         item = words.slice(0, priceIdx).join(" ");

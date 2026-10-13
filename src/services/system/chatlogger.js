@@ -75,7 +75,8 @@ export function recordMessage(sock, msg) {
       return d.length >= 8 ? `${d}@s.whatsapp.net` : "";
     };
     const rawSender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
-    const sender = toPhoneJid(msg.key.participantAlt) || toPhoneJid(msg.key.remoteJidAlt) || toPhoneJid(rawSender) || rawSender;
+    const sender =
+      toPhoneJid(msg.key.participantAlt) || toPhoneJid(msg.key.remoteJidAlt) || toPhoneJid(rawSender) || rawSender;
     const isGroup = remoteJid.endsWith("@g.us");
 
     const m = msg.message;
@@ -147,7 +148,6 @@ export function cleanupOldLogs(logger) {
         if (dateMatch) {
           const fileDate = new Date(`${dateMatch[1]}T00:00:00`).getTime();
           if (!isNaN(fileDate)) {
-
             fileAgeMs = Math.max(fileAgeMs, now - (fileDate + 24 * 60 * 60 * 1000));
           }
         }

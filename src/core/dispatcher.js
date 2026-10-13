@@ -1,1 +1,1 @@
-export { dispatchMessage } from './dispatch/run.js';
+export { dispatchMessage } from "./dispatch/run.js";

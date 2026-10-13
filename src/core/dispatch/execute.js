@@ -4,21 +4,32 @@ import { getUniversalContextInfo, findPhoneJid } from "./message.js";
 import { getGroupAccessError } from "./group.js";
 
 export async function executeCommand(sock, msg, logger, env) {
-  const { remoteJid, senderJid, cmd, access, activeSettings, prefix, args, commandName, isOwner, isAdmin, isPremium, user, botJid, isSubBotSock } = env;
-
-  const groupAccessError = await getGroupAccessError(
-    sock,
+  const {
     remoteJid,
     senderJid,
     cmd,
-    access
-  );
+    access,
+    activeSettings,
+    prefix,
+    args,
+    commandName,
+    isOwner,
+    isAdmin,
+    isPremium,
+    user,
+    botJid,
+    isSubBotSock,
+  } = env;
+
+  const groupAccessError = await getGroupAccessError(sock, remoteJid, senderJid, cmd, access);
   if (groupAccessError) {
     if (activeSettings.silentDeny !== false) return;
     return sock.sendMessage(remoteJid, { text: groupAccessError }, { quoted: msg });
   }
 
-  logger?.info?.(`[Command] ${cmd.name} from ${msg.pushName || "User"} (${senderJid}) via ${isSubBotSock ? "sub" : "main"} (${botJid})`);
+  logger?.info?.(
+    `[Command] ${cmd.name} from ${msg.pushName || "User"} (${senderJid}) via ${isSubBotSock ? "sub" : "main"} (${botJid})`
+  );
   db.recordCommand(cmd.name);
 
   const responseDelay = Number(activeSettings.responseDelay) || 0;
@@ -51,19 +62,18 @@ export async function executeCommand(sock, msg, logger, env) {
     isGroup: isGroupJid(remoteJid),
     user,
     msg,
-    quoted: (getUniversalContextInfo(msg.message)?.quotedMessage) || null,
+    quoted: getUniversalContextInfo(msg.message)?.quotedMessage || null,
     sendTyping: async () => {
-      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
+      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
     },
     reply: async (text) => {
       if (responseDelay > 0) {
-        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
+        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
         await delay(responseDelay);
       }
       return sock.sendMessage(remoteJid, { text }, { quoted: msg });
     },
     getTargetJid: (targetArgs) => {
-
       const _ctx = getUniversalContextInfo(msg.message) || {};
       const quotedJid = _ctx.participant || _ctx.remoteJid;
       if (quotedJid && !String(quotedJid).endsWith("@g.us")) {
@@ -72,7 +82,7 @@ export async function executeCommand(sock, msg, logger, env) {
       }
 
       const mentioned = _ctx.mentionedJid;
-      const mentionedList = Array.isArray(mentioned) ? mentioned : (mentioned ? [mentioned] : []);
+      const mentionedList = Array.isArray(mentioned) ? mentioned : mentioned ? [mentioned] : [];
       for (const candidate of mentionedList) {
         const resolved = db.resolvePhoneJid(candidate);
         if (resolved.endsWith("@s.whatsapp.net")) return resolved;

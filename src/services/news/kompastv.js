@@ -18,7 +18,7 @@ export async function getLatestKompasNews(category = "news", limit = 5) {
     timeout: 15000,
     bypassCloudflare: "auto",
   });
-  const blocks = html.split("<div class=\"opininews2\">").slice(1);
+  const blocks = html.split('<div class="opininews2">').slice(1);
   const articles = [];
 
   for (const block of blocks) {
@@ -123,14 +123,28 @@ export async function getKompasArticleDetail(articleUrl) {
     timeout: 15000,
     bypassCloudflare: "auto",
   });
-  const title = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, "").trim() || "Berita Kompas TV";
+  const title =
+    html
+      .match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]
+      ?.replace(/<[^>]+>/g, "")
+      .trim() || "Berita Kompas TV";
   const image = html.match(/<meta property="og:image" content="([^"]+)"/i)?.[1] || null;
 
   const dateMatch = html.match(/<span class="time-news">([\s\S]*?)<\/span>/i);
-  const time = dateMatch ? dateMatch[1].replace(/<[^>]+>/g, "").replace(/^Kompas\.tv\s*-\s*/i, "").trim() : "";
+  const time = dateMatch
+    ? dateMatch[1]
+        .replace(/<[^>]+>/g, "")
+        .replace(/^Kompas\.tv\s*-\s*/i, "")
+        .trim()
+    : "";
 
   const authorMatch = html.match(/<div class="author-text">([\s\S]*?)<\/div>/i);
-  const author = authorMatch ? authorMatch[1].replace(/\s+/g, " ").replace(/<[^>]+>/g, "").trim() : "";
+  const author = authorMatch
+    ? authorMatch[1]
+        .replace(/\s+/g, " ")
+        .replace(/<[^>]+>/g, "")
+        .trim()
+    : "";
 
   const paragraphs = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
     .map((m) => m[1].replace(/<[^>]+>/g, "").trim())

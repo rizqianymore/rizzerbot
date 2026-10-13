@@ -1,5 +1,4 @@
 export const BANNED_PATTERNS = [
-
   /\b(?:bokep|porn|porno|pornografi|hentai|ecchi|sex|seks|ngentot|ngewe|kontol|memek|pepek|itil|jembut|tetek|toket|coli|colmek|crot|vagina|penis|bugil|telanjang|lonte|perek|open\s*bo|bispak|jav|masturbasi|cum|creampie|blowjob|deepthroat|dildo|sange|horny|bokepjepang|bokepindo|pornhub|xnxx|xvideos|nude|nudes|boobs|tits|pussy|dick|cock|milf|hentaihaven|rule34)\b/i,
 
   /\b(?:pantek|puki|pukimak|pecun|jablay)\b/i,

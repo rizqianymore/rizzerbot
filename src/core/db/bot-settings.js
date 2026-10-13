@@ -1,20 +1,9 @@
-import { settings } from '@/config/settings.js';
-import {
-  cloneValue,
-  normalizeJid,
-  phoneDigitsOfPhoneJid,
-  samePhoneJidStrict,
-  toBoolean,
-} from './utils.js';
-import { configDefaults, normalizeSettings } from './settings.js';
-import { resolvePhoneJid } from './lidmap.js';
-import { isMainBotJid, isPrimaryOwnerJid } from './botids.js';
-import {
-  ensureSubStore,
-  findLegacySubConfig,
-  mainStore,
-  peekSubStoreByKey,
-} from './stores.js';
+import { settings } from "@/config/settings.js";
+import { cloneValue, normalizeJid, phoneDigitsOfPhoneJid, samePhoneJidStrict, toBoolean } from "./utils.js";
+import { configDefaults, normalizeSettings } from "./settings.js";
+import { resolvePhoneJid } from "./lidmap.js";
+import { isMainBotJid, isPrimaryOwnerJid } from "./botids.js";
+import { ensureSubStore, findLegacySubConfig, mainStore, peekSubStoreByKey } from "./stores.js";
 
 export function getBotSettings(botJid) {
   const normalized = normalizeJid(botJid);
@@ -41,8 +30,12 @@ export function getBotSettings(botJid) {
   const legacy = key ? findLegacySubConfig(key) : null;
   return {
     ...cloneValue(configDefaults),
-    public: legacy?.public !== undefined ? toBoolean(legacy.public, configDefaults.public) : toBoolean(configDefaults.public, false),
-    prefix: typeof legacy?.prefix === 'string' && legacy.prefix.trim() ? legacy.prefix.trim() : (configDefaults.prefix || '.'),
+    public:
+      legacy?.public !== undefined
+        ? toBoolean(legacy.public, configDefaults.public)
+        : toBoolean(configDefaults.public, false),
+    prefix:
+      typeof legacy?.prefix === "string" && legacy.prefix.trim() ? legacy.prefix.trim() : configDefaults.prefix || ".",
     botName: legacy?.botName || `SubBot (+${key || normalized})`,
     ownerNumber: (legacy?.ownerNumber && normalizeJid(legacy.ownerNumber)) || normalized,
     ownerNumbers: Array.isArray(legacy?.ownerNumbers) ? legacy.ownerNumbers.map(normalizeJid).filter(Boolean) : [],
@@ -73,7 +66,7 @@ export function updateBotSettings(botJid, updates = {}) {
     if (clean) current.ownerNumber = clean;
   }
   if (updates.ownerNumbers !== undefined && Array.isArray(updates.ownerNumbers)) {
-    current.ownerNumbers = updates.ownerNumbers.map(normalizeJid).filter((j) => j && j.endsWith('@s.whatsapp.net'));
+    current.ownerNumbers = updates.ownerNumbers.map(normalizeJid).filter((j) => j && j.endsWith("@s.whatsapp.net"));
   }
   store.data.settings = normalizeSettings(current);
   store.refreshConfiguredJids();
@@ -94,7 +87,7 @@ export function isBotOwner(botJid, userJid) {
 
   const botIsMain = !normalizedBot || isMainBotJid(normalizedBot);
   if (botIsMain) {
-    if (normalizedUser.endsWith('@s.whatsapp.net')) {
+    if (normalizedUser.endsWith("@s.whatsapp.net")) {
       const userPhone = phoneDigitsOfPhoneJid(normalizedUser);
       if (userPhone) {
         const phoneJid = `${userPhone}@s.whatsapp.net`;
@@ -106,10 +99,9 @@ export function isBotOwner(botJid, userJid) {
 
   const key = phoneDigitsOfPhoneJid(normalizedBot);
   const store = key ? peekSubStoreByKey(key) : null;
-  const botOwner = store ? normalizeJid(store.data.settings?.ownerNumber) : '';
-  const botOwnersList = store && Array.isArray(store.data.settings?.ownerNumbers)
-    ? store.data.settings.ownerNumbers.map(normalizeJid)
-    : [];
+  const botOwner = store ? normalizeJid(store.data.settings?.ownerNumber) : "";
+  const botOwnersList =
+    store && Array.isArray(store.data.settings?.ownerNumbers) ? store.data.settings.ownerNumbers.map(normalizeJid) : [];
 
   if (botOwner && samePhone(normalizedUser, botOwner)) return true;
   if (botOwnersList.some((o) => samePhone(normalizedUser, o))) return true;

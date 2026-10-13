@@ -9,13 +9,13 @@ import {
 } from "@/src/services/fetch/brat.js";
 
 export default {
-  "name": "brat",
-  "aliases": ["bratimg", "brattext", "sbrat"],
-  "description": "Membuat stiker teks Brat Classic (lokal generator)",
-  "usage": "<teks> [--green] [--video]",
-  "premiumOnly": true,
-  "category": "Sticker",
-  "run": async (sock, msg, args, { reply, prefix }) => {
+  name: "brat",
+  aliases: ["bratimg", "brattext", "sbrat"],
+  description: "Membuat stiker teks Brat Classic (lokal generator)",
+  usage: "<teks> [--green] [--video]",
+  premiumOnly: true,
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, prefix }) => {
     const currentPrefix = prefix || ".";
     const { text, isVideo, bgColor } = parseBratArgs(args, { allowVideo: true, allowGreen: true });
     if (!text) {

@@ -14,10 +14,10 @@ export default {
     if (!input) {
       return reply(
         `🔒 *CERTIFICATE TRANSPARENCY TRACE*\n\n` +
-        `Masukkan nama domain untuk melacak subdomain & sertifikatnya.\n\n` +
-        `*Contoh:*\n` +
-        `• \`${currentPrefix}certtrace example.com\`\n` +
-        `• \`${currentPrefix}crt github.com\``
+          `Masukkan nama domain untuk melacak subdomain & sertifikatnya.\n\n` +
+          `*Contoh:*\n` +
+          `• \`${currentPrefix}certtrace example.com\`\n` +
+          `• \`${currentPrefix}crt github.com\``
       );
     }
 

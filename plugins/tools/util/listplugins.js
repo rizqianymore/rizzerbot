@@ -10,7 +10,12 @@ export default {
   description: "Menampilkan daftar semua plugin yang ter-load beserta detailnya",
   usage: "",
   category: "Tools",
-  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
+  run: async (
+    sock,
+    msg,
+    args,
+    { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }
+  ) => {
     await sendTyping();
 
     const activeSettings = ctxSettings || db.getSettings();
@@ -73,7 +78,7 @@ export default {
         if (p.groupAdminOnly) badges.push("👑GAdmin");
         if (p.botAdminOnly) badges.push("🤖BAdmin");
         const badgeStr = badges.length ? ` [${badges.join(", ")}]` : "";
-        const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map(a => `${prefix}${a}`).join(", ")}` : "";
+        const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map((a) => `${prefix}${a}`).join(", ")}` : "";
         text += `│ • ${prefix}${p.name}${badgeStr}\n`;
         text += `│   ├ Desc: ${p.description}\n`;
         if (p.usage) text += `│   ├ Usage: ${prefix}${p.name} ${p.usage}\n`;

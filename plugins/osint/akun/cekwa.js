@@ -6,7 +6,13 @@ function fmtDate(ts) {
   const ms = n < 1e12 ? n * 1000 : n;
   const d = new Date(ms);
   if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function extractStatus(item) {
@@ -59,25 +65,27 @@ export default {
         try {
           const r = await sock.fetchStatus(jid);
           return extractStatus(Array.isArray(r) ? r[0] : null);
-        } catch { return { bio: "", setAt: 0 }; }
+        } catch {
+          return { bio: "", setAt: 0 };
+        }
       })(),
       (async () => {
         try {
           return (await sock.profilePictureUrl(jid, "image")) || "";
-        } catch { return ""; }
+        } catch {
+          return "";
+        }
       })(),
       (async () => {
         try {
           return (await sock.getBusinessProfile(jid)) || null;
-        } catch { return null; }
+        } catch {
+          return null;
+        }
       })(),
     ]);
 
-    const lines = [
-      `📱 *WHATSAPP LOOKUP*`,
-      `Nomor: +${number}`,
-      `Terdaftar: ${exists ? "✅ Ya" : "❌ Tidak"}`,
-    ];
+    const lines = [`📱 *WHATSAPP LOOKUP*`, `Nomor: +${number}`, `Terdaftar: ${exists ? "✅ Ya" : "❌ Tidak"}`];
     if (returnedJid && returnedJid !== jid) lines.push(`JID: \`${returnedJid}\``);
     lines.push(`Bio: ${statusRes.bio ? `\n> ${statusRes.bio}` : "-"}`);
     if (statusRes.bio) lines.push(`Bio diperbarui: ${fmtDate(statusRes.setAt)}`);

@@ -4,11 +4,20 @@
 const CRT_BASE = "https://crt.sh/";
 const OTX_BASE = "https://otx.alienvault.com/api/v1/indicators/domain/";
 const HT_BASE = "https://api.hackertarget.com/hostsearch/?q=";
-const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 export function cleanDomain(input) {
-  let d = String(input || "").trim().toLowerCase();
-  d = d.replace(/^[a-z]+:\/\//, "").split("/")[0].split("?")[0].split("#")[0].split("@").pop();
+  let d = String(input || "")
+    .trim()
+    .toLowerCase();
+  d = d
+    .replace(/^[a-z]+:\/\//, "")
+    .split("/")[0]
+    .split("?")[0]
+    .split("#")[0]
+    .split("@")
+    .pop();
   d = d.replace(/^\*\./, "").replace(/:\d+$/, "").replace(/\.+$/, "");
   return d;
 }
@@ -89,7 +98,10 @@ async function fetchHackerTarget(domain) {
   if (!res.ok) throw new Error(`Hackertarget HTTP ${res.status}`);
   const text = await res.text();
   if (/error|no records|limit/i.test(text.slice(0, 200))) throw new Error("Hackertarget tanpa hasil");
-  return text.split("\n").map((line) => line.split(",")[0].trim().toLowerCase()).filter(Boolean);
+  return text
+    .split("\n")
+    .map((line) => line.split(",")[0].trim().toLowerCase())
+    .filter(Boolean);
 }
 
 export async function searchCerts(input) {
@@ -133,9 +145,7 @@ export async function searchCerts(input) {
   }
 
   if (!subSet.size && !rows.length) {
-    throw new Error(
-      `Tidak ada data untuk *${domain}* (crt.sh sedang limit, coba lagi beberapa saat)`
-    );
+    throw new Error(`Tidak ada data untuk *${domain}* (crt.sh sedang limit, coba lagi beberapa saat)`);
   }
   if (!subSet.size) subSet.add(domain);
 

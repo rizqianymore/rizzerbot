@@ -23,7 +23,6 @@ export async function generateQrisCard({
   _fee = 0,
   expiredMinutes = 15,
 }) {
-
   const qrImageBuffer = await QRCode.toBuffer(qrisPayload, {
     type: "png",
     errorCorrectionLevel: "M",
@@ -109,13 +108,7 @@ export async function generateQrisCard({
   ctx.restore();
 
   const qrPadding = 16;
-  ctx.drawImage(
-    qrImage,
-    qrBoxX + qrPadding,
-    qrBoxY + qrPadding,
-    qrBoxSize - qrPadding * 2,
-    qrBoxSize - qrPadding * 2
-  );
+  ctx.drawImage(qrImage, qrBoxX + qrPadding, qrBoxY + qrPadding, qrBoxSize - qrPadding * 2, qrBoxSize - qrPadding * 2);
 
   const centerSize = 46;
   const centerX = (width - centerSize) / 2;

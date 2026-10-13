@@ -34,7 +34,9 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
   if (isVideo) {
     const cacheDir = path.join(process.cwd(), "assets", "cache");
     if (!fs.existsSync(cacheDir)) {
-      try { fs.mkdirSync(cacheDir, { recursive: true }); } catch (_) {}
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      } catch (_) {}
     }
     const tmpBase = path.join(cacheDir, `stk-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     const inVid = `${tmpBase}.mp4`;
@@ -59,19 +61,28 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
       const ffmpegArgs = [
         "-y",
-        "-ss", "00:00:00",
-        "-t", "00:00:07",
-        "-i", inVid,
+        "-ss",
+        "00:00:00",
+        "-t",
+        "00:00:07",
+        "-i",
+        inVid,
         ...(createdOverlay ? ["-i", overlayPng] : []),
         ...(createdOverlay ? ["-filter_complex", filters, "-map", "[outv]"] : ["-vf", filters]),
-        "-loop", "0",
-        "-preset", "picture",
+        "-loop",
+        "0",
+        "-preset",
+        "picture",
         "-an",
-        "-fps_mode", "passthrough",
-        "-s", "512:512",
+        "-fps_mode",
+        "passthrough",
+        "-s",
+        "512:512",
         // Kualitas encoding WebP (libwebp). Default ffmpeg hanya 75 -> buram.
-        "-quality", "90",
-        "-compression_level", "6",
+        "-quality",
+        "90",
+        "-compression_level",
+        "6",
         outWebp,
       ];
 
@@ -152,8 +163,8 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
     const exif = Buffer.concat([
       Buffer.from([
-        0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x16, 0x00, 0x00, 0x00,
+        0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x16, 0x00, 0x00, 0x00,
       ]),
       Buffer.from(json, "utf-8"),
     ]);

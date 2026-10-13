@@ -1,24 +1,19 @@
-import fs from 'fs';
-import path from 'path';
-import { settings } from '@/config/settings.js';
-import {
-  normalizeJid,
-  normalizePhone,
-  phoneDigitsOfPhoneJid,
-  samePhoneJidStrict,
-} from './utils.js';
-import { resolvePhoneJid } from './lidmap.js';
+import fs from "fs";
+import path from "path";
+import { settings } from "@/config/settings.js";
+import { normalizeJid, normalizePhone, phoneDigitsOfPhoneJid, samePhoneJidStrict } from "./utils.js";
+import { resolvePhoneJid } from "./lidmap.js";
 
-export const MAIN_KEY = '';
-export const SUBBOTS_DIR = path.join(process.cwd(), 'database', 'subbots');
+export const MAIN_KEY = "";
+export const SUBBOTS_DIR = path.join(process.cwd(), "database", "subbots");
 
 const activeBotJids = new Set();
-let mainBotJidMemory = '';
+let mainBotJidMemory = "";
 const _providers = { getMainStore: null, getStores: null };
 
 export function bindBotIdProviders(providers = {}) {
-  if (typeof providers.getMainStore === 'function') _providers.getMainStore = providers.getMainStore;
-  if (typeof providers.getStores === 'function') _providers.getStores = providers.getStores;
+  if (typeof providers.getMainStore === "function") _providers.getMainStore = providers.getMainStore;
+  if (typeof providers.getStores === "function") _providers.getStores = providers.getStores;
 }
 
 export function setMainBotJid(jid) {
@@ -32,7 +27,7 @@ export function getMainBotJid() {
     const mainStore = _providers.getMainStore ? _providers.getMainStore() : null;
     return normalizeJid(mainStore?.data?.settings?.ownerNumber || settings.ownerNumber);
   } catch (_) {
-    return '';
+    return "";
   }
 }
 
@@ -48,7 +43,7 @@ export function isMainBotJid(jid) {
     if ((o && n === o) || (p && n === p)) return true;
     const pn = normalizePhone(n);
     if (pn && ((o && normalizePhone(o) === pn) || (p && normalizePhone(p) === pn))) return true;
-  } catch (_) { }
+  } catch (_) {}
   return false;
 }
 
@@ -65,17 +60,17 @@ export function getKnownSubDigits() {
   try {
     if (fs.existsSync(SUBBOTS_DIR)) {
       for (const entry of fs.readdirSync(SUBBOTS_DIR)) {
-        const digits = String(entry).replace(/[^0-9]/g, '');
+        const digits = String(entry).replace(/[^0-9]/g, "");
         if (digits) out.add(digits);
       }
     }
-  } catch (_) { }
+  } catch (_) {}
   return [...out];
 }
 
 export function isPrimaryOwnerJid(jid) {
   const normalized = resolvePhoneJid(jid);
-  if (!normalized || !normalized.endsWith('@s.whatsapp.net')) return false;
+  if (!normalized || !normalized.endsWith("@s.whatsapp.net")) return false;
   const mainStore = _providers.getMainStore ? _providers.getMainStore() : null;
   const primary = normalizeJid(mainStore?.data?.settings?.ownerNumber || settings.ownerNumber);
   if (primary && normalized === primary) return true;
@@ -83,8 +78,12 @@ export function isPrimaryOwnerJid(jid) {
   if (pn && pn.length >= 8) {
     if (primary && phoneDigitsOfPhoneJid(primary) === pn) return true;
     const pairing = normalizeJid(mainStore?.data?.settings?.pairingNumber || settings.pairingNumber);
-    if (pairing && pairing.endsWith('@s.whatsapp.net') &&
-      (pairing === normalized || phoneDigitsOfPhoneJid(pairing) === pn)) return true;
+    if (
+      pairing &&
+      pairing.endsWith("@s.whatsapp.net") &&
+      (pairing === normalized || phoneDigitsOfPhoneJid(pairing) === pn)
+    )
+      return true;
   }
   return false;
 }
@@ -114,6 +113,6 @@ export function isAnyBotJid(jid) {
       if (!nk) continue;
       if (nk === normalized || (phone && phoneMatch(nk, normalized))) return true;
     }
-  } catch (_) { }
+  } catch (_) {}
   return false;
 }

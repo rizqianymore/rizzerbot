@@ -70,15 +70,13 @@ function wrapParagraph(ctx, paragraph, maxWidth) {
 }
 
 function wrapText(ctx, text, maxWidth) {
-  return text
-    .split("\n")
-    .flatMap((paragraph) => {
-      const clean = paragraph.trim();
-      if (!clean) {
-        return [""];
-      }
-      return wrapParagraph(ctx, clean, maxWidth);
-    });
+  return text.split("\n").flatMap((paragraph) => {
+    const clean = paragraph.trim();
+    if (!clean) {
+      return [""];
+    }
+    return wrapParagraph(ctx, clean, maxWidth);
+  });
 }
 
 function measureFit(ctx, text, rect, size) {

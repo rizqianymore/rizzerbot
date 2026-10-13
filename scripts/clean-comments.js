@@ -1,12 +1,23 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { spawnSync } from 'child_process';
+import fs from "fs";
+import path from "path";
+import os from "os";
+import { spawnSync } from "child_process";
 
-const DEFAULT_TARGETS = ['plugins', 'src', 'config', 'scripts', 'bin', 'index.js'];
-const SKIP_DIRS = new Set(['node_modules', '.git', '.comment-clean-backup', 'database', 'assets', 'logs', 'tmp', 'temp', 'dist', 'build']);
-const DEFAULT_EXTS = ['js', 'mjs', 'cjs'];
+const DEFAULT_TARGETS = ["plugins", "src", "config", "scripts", "bin", "index.js"];
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  ".comment-clean-backup",
+  "database",
+  "assets",
+  "logs",
+  "tmp",
+  "temp",
+  "dist",
+  "build",
+]);
+const DEFAULT_EXTS = ["js", "mjs", "cjs"];
 
 function parseArgs(argv) {
   const opts = {
@@ -25,41 +36,45 @@ function parseArgs(argv) {
     const arg = argv[i];
     const next = () => argv[++i];
     switch (arg) {
-      case '--dir':
-      case '-d':
+      case "--dir":
+      case "-d":
         if (next()) opts.targets.push(next());
         break;
-      case '--ext':
-        if (next()) opts.exts = next().split(',').map((e) => e.replace(/^\./, '').trim()).filter(Boolean);
+      case "--ext":
+        if (next())
+          opts.exts = next()
+            .split(",")
+            .map((e) => e.replace(/^\./, "").trim())
+            .filter(Boolean);
         break;
-      case '--dry-run':
+      case "--dry-run":
         opts.dryRun = true;
         break;
-      case '--no-backup':
+      case "--no-backup":
         opts.backup = false;
         break;
-      case '--no-verify':
+      case "--no-verify":
         opts.verify = false;
         break;
-      case '--no-collapse':
+      case "--no-collapse":
         opts.collapseBlank = false;
         break;
-      case '--keep-jsdoc':
+      case "--keep-jsdoc":
         opts.keepJSDoc = true;
         break;
-      case '--strip-console':
+      case "--strip-console":
         opts.stripConsole = true;
         break;
-      case '--force':
+      case "--force":
         opts.force = true;
         break;
-      case '--help':
-      case '-h':
+      case "--help":
+      case "-h":
         printHelp();
         process.exit(0);
         break;
       default:
-        if (arg.startsWith('-')) {
+        if (arg.startsWith("-")) {
           console.error(`Opsi tidak dikenal: ${arg}`);
           printHelp();
           process.exit(1);
@@ -80,11 +95,11 @@ Usage:
   node scripts/clean-comments.js [target...] [opsi]
 
 Target:
-  Daftar file/folder yang diproses (default: ${DEFAULT_TARGETS.join(', ')})
+  Daftar file/folder yang diproses (default: ${DEFAULT_TARGETS.join(", ")})
 
 Opsi:
   -d, --dir <path>    Tambahkan folder target (bisa diulang)
-      --ext <list>    Ekstensi file, pisah koma (default: ${DEFAULT_EXTS.join(',')})
+      --ext <list>    Ekstensi file, pisah koma (default: ${DEFAULT_EXTS.join(",")})
       --dry-run       Hanya tampilkan laporan, tidak menulis file
       --no-backup     Jangan buat backup (default backup aktif)
       --no-verify     Lewati pengecekan sintaks (node --check)
@@ -96,23 +111,38 @@ Opsi:
 }
 
 const IDENT_CHAR = /[A-Za-z0-9_$]/;
-const REGEX_PREFIX_CHARS = '(,=:[!&|?{};+-*%~^<>';
-const REGEX_KEYWORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
+const REGEX_PREFIX_CHARS = "(,=:[!&|?{};+-*%~^<>";
+const REGEX_KEYWORDS = new Set([
+  "return",
+  "typeof",
+  "instanceof",
+  "in",
+  "of",
+  "new",
+  "delete",
+  "void",
+  "throw",
+  "case",
+  "do",
+  "else",
+  "yield",
+  "await",
+]);
 
 function stripComments(source, options = {}) {
   const keepJSDoc = !!options.keepJSDoc;
   const n = source.length;
-  let out = '';
+  let out = "";
   let i = 0;
 
-  const stack = [{ type: 'code', expr: false, brace: 0 }];
-  let lastCodeChar = '';
-  let lastWord = '';
+  const stack = [{ type: "code", expr: false, brace: 0 }];
+  let lastCodeChar = "";
+  let lastWord = "";
 
   const regexAllowed = () => {
     if (!lastCodeChar) return true;
     if (REGEX_PREFIX_CHARS.includes(lastCodeChar)) return true;
-    if (lastCodeChar === ')' || lastCodeChar === ']' || lastCodeChar === '}') return false;
+    if (lastCodeChar === ")" || lastCodeChar === "]" || lastCodeChar === "}") return false;
     if (IDENT_CHAR.test(lastCodeChar) && REGEX_KEYWORDS.has(lastWord)) return true;
     return false;
   };
@@ -122,8 +152,8 @@ function stripComments(source, options = {}) {
     const c = source[i];
     const c2 = source[i + 1];
 
-    if (top.type === 'line') {
-      if (c === '\n' || c === '\r') {
+    if (top.type === "line") {
+      if (c === "\n" || c === "\r") {
         stack.pop();
         out += c;
       }
@@ -131,8 +161,8 @@ function stripComments(source, options = {}) {
       continue;
     }
 
-    if (top.type === 'block') {
-      if (c === '*' && c2 === '/') {
+    if (top.type === "block") {
+      if (c === "*" && c2 === "/") {
         stack.pop();
         i += 2;
       } else {
@@ -141,9 +171,9 @@ function stripComments(source, options = {}) {
       continue;
     }
 
-    if (top.type === 'string') {
+    if (top.type === "string") {
       out += c;
-      if (c === '\\') {
+      if (c === "\\") {
         if (i + 1 < n) {
           out += source[i + 1];
           i += 2;
@@ -156,8 +186,8 @@ function stripComments(source, options = {}) {
       continue;
     }
 
-    if (top.type === 'template') {
-      if (c === '\\') {
+    if (top.type === "template") {
+      if (c === "\\") {
         out += c;
         if (i + 1 < n) {
           out += source[i + 1];
@@ -167,15 +197,15 @@ function stripComments(source, options = {}) {
         i++;
         continue;
       }
-      if (c === '`') {
+      if (c === "`") {
         out += c;
         stack.pop();
         i++;
         continue;
       }
-      if (c === '$' && c2 === '{') {
-        out += '${';
-        stack.push({ type: 'code', expr: true, brace: 0 });
+      if (c === "$" && c2 === "{") {
+        out += "${";
+        stack.push({ type: "code", expr: true, brace: 0 });
         i += 2;
         continue;
       }
@@ -184,20 +214,20 @@ function stripComments(source, options = {}) {
       continue;
     }
 
-    if (c === '/' && c2 === '/') {
-      stack.push({ type: 'line' });
+    if (c === "/" && c2 === "/") {
+      stack.push({ type: "line" });
       i += 2;
       continue;
     }
 
-    if (c === '/' && c2 === '*') {
-      const isDoc = keepJSDoc && source[i + 2] === '*';
+    if (c === "/" && c2 === "*") {
+      const isDoc = keepJSDoc && source[i + 2] === "*";
       if (isDoc) {
-        out += '/*';
+        out += "/*";
         i += 2;
         while (i < n) {
-          if (source[i] === '*' && source[i + 1] === '/') {
-            out += '*/';
+          if (source[i] === "*" && source[i + 1] === "/") {
+            out += "*/";
             i += 2;
             break;
           }
@@ -208,54 +238,54 @@ function stripComments(source, options = {}) {
       }
 
       let j = i + 2;
-      while (j < n && !(source[j] === '*' && source[j + 1] === '/')) j++;
+      while (j < n && !(source[j] === "*" && source[j + 1] === "/")) j++;
       j = Math.min(j + 2, n);
 
-      const before = out.length ? out[out.length - 1] : '';
+      const before = out.length ? out[out.length - 1] : "";
       let k = j;
       while (k < n && /\s/.test(source[k])) k++;
-      const after = k < n ? source[k] : '';
+      const after = k < n ? source[k] : "";
       if (before && after && IDENT_CHAR.test(before) && IDENT_CHAR.test(after)) {
-        out += ' ';
+        out += " ";
       }
       i = j;
       continue;
     }
 
     if (c === '"' || c === "'") {
-      stack.push({ type: 'string', quote: c });
+      stack.push({ type: "string", quote: c });
       out += c;
       i++;
       lastCodeChar = c;
-      lastWord = '';
+      lastWord = "";
       continue;
     }
 
-    if (c === '`') {
-      stack.push({ type: 'template' });
+    if (c === "`") {
+      stack.push({ type: "template" });
       out += c;
       i++;
       lastCodeChar = c;
-      lastWord = '';
+      lastWord = "";
       continue;
     }
 
-    if (c === '/' && regexAllowed()) {
+    if (c === "/" && regexAllowed()) {
       let j = i + 1;
       let inClass = false;
       let closed = false;
       while (j < n) {
         const rc = source[j];
-        if (rc === '\\') {
+        if (rc === "\\") {
           j += 2;
           continue;
         }
-        if (rc === '\n') break;
+        if (rc === "\n") break;
         if (inClass) {
-          if (rc === ']') inClass = false;
-        } else if (rc === '[') {
+          if (rc === "]") inClass = false;
+        } else if (rc === "[") {
           inClass = true;
-        } else if (rc === '/') {
+        } else if (rc === "/") {
           closed = true;
           j++;
           break;
@@ -269,33 +299,33 @@ function stripComments(source, options = {}) {
           out += source[i];
           i++;
         }
-        lastCodeChar = '/';
-        lastWord = '';
+        lastCodeChar = "/";
+        lastWord = "";
         continue;
       }
       out += c;
       i++;
       lastCodeChar = c;
-      lastWord = '';
+      lastWord = "";
       continue;
     }
 
-    if (top.expr && c === '}') {
+    if (top.expr && c === "}") {
       out += c;
       if (top.brace > 0) top.brace--;
       else stack.pop();
       i++;
       lastCodeChar = c;
-      lastWord = '';
+      lastWord = "";
       continue;
     }
 
-    if (top.expr && c === '{') {
+    if (top.expr && c === "{") {
       top.brace++;
       out += c;
       i++;
       lastCodeChar = c;
-      lastWord = '';
+      lastWord = "";
       continue;
     }
 
@@ -307,7 +337,7 @@ function stripComments(source, options = {}) {
 
     out += c;
     if (IDENT_CHAR.test(c)) lastWord += c;
-    else lastWord = '';
+    else lastWord = "";
     lastCodeChar = c;
     i++;
   }
@@ -316,23 +346,23 @@ function stripComments(source, options = {}) {
 }
 
 function finalize(text, options = {}) {
-  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const eol = text.includes("\r\n") ? "\r\n" : "\n";
   const rawLines = text.split(/\r\n|\n/);
 
   let lines = rawLines.map((line) => {
     if (options.stripConsole && /^\s*console\.(log|debug|info|warn|trace)\s*\(/.test(line)) {
-      return '';
+      return "";
     }
-    return line.trim() === '' ? '' : line.replace(/[ \t]+$/, '');
+    return line.trim() === "" ? "" : line.replace(/[ \t]+$/, "");
   });
 
   if (options.collapseBlank !== false) {
     const collapsed = [];
     let blankRun = 0;
     for (const line of lines) {
-      if (line === '') {
+      if (line === "") {
         blankRun++;
-        if (blankRun <= 1) collapsed.push('');
+        if (blankRun <= 1) collapsed.push("");
       } else {
         blankRun = 0;
         collapsed.push(line);
@@ -341,8 +371,8 @@ function finalize(text, options = {}) {
     lines = collapsed;
   }
 
-  while (lines.length && lines[0] === '') lines.shift();
-  while (lines.length && lines[lines.length - 1] === '') lines.pop();
+  while (lines.length && lines[0] === "") lines.shift();
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
 
   return lines.join(eol) + eol;
 }
@@ -356,7 +386,7 @@ function walk(target, exts, results = []) {
   }
 
   if (stat.isFile()) {
-    const ext = path.extname(target).replace(/^\./, '');
+    const ext = path.extname(target).replace(/^\./, "");
     if (exts.includes(ext)) results.push(target);
     return results;
   }
@@ -375,8 +405,8 @@ function verifySyntax(code) {
   const tmpFile = path.join(os.tmpdir(), `clean-comments-${process.pid}-${Date.now()}.mjs`);
   try {
     fs.writeFileSync(tmpFile, code);
-    const res = spawnSync(process.execPath, ['--check', tmpFile], { encoding: 'utf-8' });
-    return { ok: res.status === 0, error: (res.stderr || '').split('\n').slice(0, 4).join('\n').trim() };
+    const res = spawnSync(process.execPath, ["--check", tmpFile], { encoding: "utf-8" });
+    return { ok: res.status === 0, error: (res.stderr || "").split("\n").slice(0, 4).join("\n").trim() };
   } finally {
     try {
       fs.unlinkSync(tmpFile);
@@ -394,7 +424,7 @@ function createBackup(filePath, backupRoot) {
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   const cwd = process.cwd();
-  const backupRoot = path.join(cwd, '.comment-clean-backup', new Date().toISOString().replace(/[:.]/g, '-'));
+  const backupRoot = path.join(cwd, ".comment-clean-backup", new Date().toISOString().replace(/[:.]/g, "-"));
 
   const files = [];
   for (const target of opts.targets) {
@@ -402,14 +432,14 @@ function main() {
   }
   const unique = [...new Set(files)];
 
-  console.log('='.repeat(64));
-  console.log('CODE COMMENT CLEANER');
-  console.log('='.repeat(64));
-  console.log(`Mode       : ${opts.dryRun ? 'DRY-RUN (tidak menulis)' : 'WRITE'}`);
-  console.log(`Target     : ${unique.length} file .${opts.exts.join('/.')}`);
-  console.log(`Backup     : ${opts.backup && !opts.dryRun ? path.relative(cwd, backupRoot) : 'nonaktif'}`);
-  console.log(`Verify     : ${opts.verify ? 'aktif (node --check)' : 'nonaktif'}`);
-  console.log('='.repeat(64));
+  console.log("=".repeat(64));
+  console.log("CODE COMMENT CLEANER");
+  console.log("=".repeat(64));
+  console.log(`Mode       : ${opts.dryRun ? "DRY-RUN (tidak menulis)" : "WRITE"}`);
+  console.log(`Target     : ${unique.length} file .${opts.exts.join("/.")}`);
+  console.log(`Backup     : ${opts.backup && !opts.dryRun ? path.relative(cwd, backupRoot) : "nonaktif"}`);
+  console.log(`Verify     : ${opts.verify ? "aktif (node --check)" : "nonaktif"}`);
+  console.log("=".repeat(64));
 
   let scanned = 0;
   let modified = 0;
@@ -422,7 +452,7 @@ function main() {
     const rel = path.relative(cwd, filePath);
     let original;
     try {
-      original = fs.readFileSync(filePath, 'utf-8');
+      original = fs.readFileSync(filePath, "utf-8");
     } catch (err) {
       failed++;
       console.log(`[ERROR] ${rel} -> ${err.message}`);
@@ -439,7 +469,7 @@ function main() {
         if (originalCheck.ok || !opts.force) {
           skipped++;
           console.log(`[SKIP]  ${rel} -> sintaks hasil tidak valid, file dibiarkan utuh`);
-          if (check.error) console.log(`        ${check.error.replace(/\n/g, '\n        ')}`);
+          if (check.error) console.log(`        ${check.error.replace(/\n/g, "\n        ")}`);
           continue;
         }
       }
@@ -464,17 +494,17 @@ function main() {
     }
   }
 
-  console.log('='.repeat(64));
-  console.log('RINGKASAN');
+  console.log("=".repeat(64));
+  console.log("RINGKASAN");
   console.log(`- File diperiksa   : ${scanned}`);
   console.log(`- File diubah      : ${modified}`);
   console.log(`- File dilewati    : ${skipped}`);
   console.log(`- Gagal            : ${failed}`);
-  console.log(`- Karakter dibuang : ${removedChars.toLocaleString('id-ID')}`);
+  console.log(`- Karakter dibuang : ${removedChars.toLocaleString("id-ID")}`);
   if (opts.backup && !opts.dryRun && modified > 0) {
     console.log(`- Backup tersimpan : ${path.relative(cwd, backupRoot)}`);
   }
-  console.log('='.repeat(64));
+  console.log("=".repeat(64));
 }
 
 main();

@@ -12,9 +12,20 @@ export function detectScheme(digits) {
   if (/^3(?:0[0-5]|[68])/.test(d)) return { scheme: "Diners Club", lengths: [14], note: "14 digit." };
   if (/^35/.test(d)) return { scheme: "JCB", lengths: [16], note: "Jepang; populer untuk kartu co-brand Indonesia." };
   if (/^62/.test(d)) return { scheme: "UnionPay", lengths: [16, 17, 18, 19], note: "China; 16-19 digit." };
-  if (/^6011|^64|^65/.test(d)) return { scheme: "Discover", lengths: [16, 19], note: "Awalan 6 juga dipakai kartu domestik (cth. GPN Indonesia)." };
-  if (/^60|^81|^82/.test(d)) return { scheme: "RuPay / Domestik", lengths: [16], note: "Awalan 6/8 juga dipakai kartu domestik (cth. GPN Indonesia)." };
-  if (/^50|^5[6-9]/.test(d)) return { scheme: "Maestro", lengths: [12, 13, 14, 15, 16, 17, 18, 19], note: "Debit Maestro (Mastercard)." };
+  if (/^6011|^64|^65/.test(d))
+    return {
+      scheme: "Discover",
+      lengths: [16, 19],
+      note: "Awalan 6 juga dipakai kartu domestik (cth. GPN Indonesia).",
+    };
+  if (/^60|^81|^82/.test(d))
+    return {
+      scheme: "RuPay / Domestik",
+      lengths: [16],
+      note: "Awalan 6/8 juga dipakai kartu domestik (cth. GPN Indonesia).",
+    };
+  if (/^50|^5[6-9]/.test(d))
+    return { scheme: "Maestro", lengths: [12, 13, 14, 15, 16, 17, 18, 19], note: "Debit Maestro (Mastercard)." };
   return { scheme: "Tidak dikenal", lengths: [16], note: "Awalan tidak cocok pola IIN umum." };
 }
 
@@ -95,7 +106,9 @@ function cacheSet(key, data) {
 }
 
 export async function getBinDetail(bin) {
-  const key = String(bin || "").replace(/[^0-9]/g, "").slice(0, 8);
+  const key = String(bin || "")
+    .replace(/[^0-9]/g, "")
+    .slice(0, 8);
   if (key.length < 6) return null;
   const cached = cacheGet(key);
   if (cached) return cached;
@@ -129,9 +142,7 @@ export async function getBinDetail(bin) {
       type: cap(neat(d.type)) || "-",
       prepaid: d.prepaid === true ? true : d.prepaid === false ? false : null,
       bank: neat(bank.name) || "-",
-      country: neat(country.name)
-        ? `${neat(country.name)}${country.alpha2 ? ` (${country.alpha2})` : ""}`
-        : "-",
+      country: neat(country.name) ? `${neat(country.name)}${country.alpha2 ? ` (${country.alpha2})` : ""}` : "-",
       currency: neat(country.currency) || "-",
     };
     cacheSet(key, detail);
@@ -146,9 +157,7 @@ export async function enrichBin(parsed) {
   try {
     const detail = await getBinDetail(parsed.bin);
     if (detail) parsed.detail = detail;
-  } catch (_) {
-
-  }
+  } catch (_) {}
   return parsed;
 }
 

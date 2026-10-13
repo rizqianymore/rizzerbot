@@ -14,15 +14,15 @@ export default {
     if (!input) {
       return reply(
         `📚 *CEK ISBN / DATA BUKU*\n\n` +
-        `Masukkan ISBN-10, ISBN-13, atau judul buku.\n\n` +
-        `*Contoh ISBN:*\n` +
-        `• \`${currentPrefix}cekisbn 9786020334567\`\n` +
-        `• \`${currentPrefix}isbn 978-602-03-3456-7\`\n` +
-        `• \`${currentPrefix}cekbuku 0134685997\`\n\n` +
-        `*Contoh Judul:*\n` +
-        `• \`${currentPrefix}caribuku Effective Java\`\n` +
-        `• \`${currentPrefix}cekbuku Laskar Pelangi\`\n\n` +
-        `_Sumber: OpenLibrary & Google Books (gratis, no API key)_`
+          `Masukkan ISBN-10, ISBN-13, atau judul buku.\n\n` +
+          `*Contoh ISBN:*\n` +
+          `• \`${currentPrefix}cekisbn 9786020334567\`\n` +
+          `• \`${currentPrefix}isbn 978-602-03-3456-7\`\n` +
+          `• \`${currentPrefix}cekbuku 0134685997\`\n\n` +
+          `*Contoh Judul:*\n` +
+          `• \`${currentPrefix}caribuku Effective Java\`\n` +
+          `• \`${currentPrefix}cekbuku Laskar Pelangi\`\n\n` +
+          `_Sumber: OpenLibrary & Google Books (gratis, no API key)_`
       );
     }
 

@@ -5,12 +5,7 @@ import { execFile } from "node:child_process";
 const ROOT = process.cwd();
 const TMP_DIR = path.join(ROOT, "temp");
 
-const INCLUDE_PATHS = [
-  "assets/sessions",
-  "database/database.json",
-  "database/users.json",
-  "database/rentals.json",
-];
+const INCLUDE_PATHS = ["assets/sessions", "database/database.json", "database/users.json", "database/rentals.json"];
 
 export async function createBackup() {
   if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -41,7 +36,10 @@ export async function restoreBackup(tarPath) {
       err ? reject(new Error("File bukan arsip backup yang valid")) : resolve(String(stdout || ""))
     );
   });
-  const entries = list.split("\n").map((s) => s.trim()).filter(Boolean);
+  const entries = list
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   const ALLOWED = [
     /^assets\/sessions\//,
@@ -66,7 +64,6 @@ export async function restoreBackup(tarPath) {
   const hasDb = entries.some((e) => e.replace(/^\.\//, "").startsWith("database/"));
   if (!hasSessions && !hasDb) throw new Error("Arsip tidak berisi data sesi/database rizzerbot");
   await new Promise((resolve, reject) => {
-
     execFile("tar", ["-xzf", tarPath, "-C", ROOT, "--no-same-owner"], { timeout: 120000 }, (err) =>
       err ? reject(new Error(`Restore gagal: ${err.message}`)) : resolve()
     );

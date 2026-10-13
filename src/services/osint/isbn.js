@@ -68,7 +68,11 @@ async function fetchOpenLibrary(isbn) {
     pages: data.number_of_pages || "-",
     isbn10: (data.identifiers?.isbn_10 || []).join(", ") || "-",
     isbn13: (data.identifiers?.isbn_13 || []).join(", ") || "-",
-    subjects: (data.subjects || []).slice(0, 10).map((s) => s.name).join(", ") || "-",
+    subjects:
+      (data.subjects || [])
+        .slice(0, 10)
+        .map((s) => s.name)
+        .join(", ") || "-",
     coverUrl: data.cover?.large || data.cover?.medium || data.cover?.small || null,
     openLibraryUrl: data.url || `https://openlibrary.org/isbn/${clean}`,
     raw: data,

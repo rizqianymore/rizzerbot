@@ -5,11 +5,11 @@ const COMMODITY_TICKER_MAP = {
   "CL1:COM": "CL=F",
   "SI1:COM": "SI=F",
   "NG1:COM": "NG=F",
-  "GOLD": "GC=F",
-  "OIL": "CL=F",
-  "SILVER": "SI=F",
-  "BTC": "BTC-USD",
-  "ETH": "ETH-USD",
+  GOLD: "GC=F",
+  OIL: "CL=F",
+  SILVER: "SI=F",
+  BTC: "BTC-USD",
+  ETH: "ETH-USD",
 };
 
 async function fetchFromBloomberg(tickerId, cookie = "") {
@@ -99,7 +99,6 @@ export async function getStockTicker(ticker, userCookie = "") {
   try {
     return await fetchFromBloomberg(cleanTicker, userCookie);
   } catch (_bbgErr) {
-
     return await fetchFromYahooFinance(cleanTicker);
   }
 }

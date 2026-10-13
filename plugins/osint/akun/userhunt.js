@@ -12,10 +12,7 @@ export default {
     const username = (args[0] || "").trim().replace(/^@/, "");
 
     if (!username) {
-      return reply(
-        `❌ Masukkan username yang ingin dicari!\n` +
-        `Contoh: \`${currentPrefix}userhunt torvalds\``
-      );
+      return reply(`❌ Masukkan username yang ingin dicari!\n` + `Contoh: \`${currentPrefix}userhunt torvalds\``);
     }
 
     if (!isValidUsername(username)) {

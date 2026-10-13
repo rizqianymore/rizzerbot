@@ -1,58 +1,53 @@
-import {
-  getMediaBuffer,
-  createSticker,
-  findDownloadableTarget,
-} from '@/src/services/fetch/media.js';
+import { getMediaBuffer, createSticker, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 export default {
-  "name": "sticker",
-  "aliases": ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
-  "description": "Convert image/video to sticker (support meme teks atas | bawah)",
-  "usage": "[teks atas | bawah] (reply/kirim gambar atau video)",
-  "category": "Sticker",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
+  name: "sticker",
+  aliases: ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
+  description: "Convert image/video to sticker (support meme teks atas | bawah)",
+  usage: "[teks atas | bawah] (reply/kirim gambar atau video)",
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, sendTyping }) => {
+    await sendTyping();
 
-      const targetMsg = findDownloadableTarget(msg);
+    const targetMsg = findDownloadableTarget(msg);
 
-      if (!targetMsg) {
-        return reply(
-          "❌ Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
+    if (!targetMsg) {
+      return reply(
+        "❌ Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
           "• *.sticker* — ubah jadi stiker (video/GIF tetap bergerak)\n" +
           "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)"
-        );
-      }
+      );
+    }
 
-      let buffer = null;
-      try {
-        buffer = await getMediaBuffer(sock, targetMsg);
-      } catch (err) {
-        return reply(`❌ ${err?.message || "Gagal membaca media."}`);
-      }
-      if (!buffer) return reply("❌ Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker.");
+    let buffer = null;
+    try {
+      buffer = await getMediaBuffer(sock, targetMsg);
+    } catch (err) {
+      return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+    }
+    if (!buffer)
+      return reply(
+        "❌ Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker."
+      );
 
-      let topText = "";
-      let bottomText = "";
-      if (args.length > 0) {
-        const fullText = args.join(" ");
-        if (fullText.includes("|")) {
-          const parts = fullText.split("|");
-          topText = parts[0]?.trim() || "";
-          bottomText = parts.slice(1).join("|")?.trim() || "";
-        } else {
-          bottomText = fullText.trim();
-        }
+    let topText = "";
+    let bottomText = "";
+    if (args.length > 0) {
+      const fullText = args.join(" ");
+      if (fullText.includes("|")) {
+        const parts = fullText.split("|");
+        topText = parts[0]?.trim() || "";
+        bottomText = parts.slice(1).join("|")?.trim() || "";
+      } else {
+        bottomText = fullText.trim();
       }
+    }
 
-      try {
-        const stickerBuffer = await createSticker(buffer, { topText, bottomText });
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { sticker: stickerBuffer },
-          { quoted: msg }
-        );
-      } catch (err) {
-        await reply(`❌ Gagal membuat stiker: ${err.message}`);
-      }
-    },
+    try {
+      const stickerBuffer = await createSticker(buffer, { topText, bottomText });
+      await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer }, { quoted: msg });
+    } catch (err) {
+      await reply(`❌ Gagal membuat stiker: ${err.message}`);
+    }
+  },
 };

@@ -21,14 +21,8 @@ export function findDeepSeekPowNonce(prefix, challenge, difficulty) {
   if (!DIGEST_HEX_PATTERN.test(challenge)) {
     throw new TypeError("DeepSeek PoW challenge must be a 64-character hex digest");
   }
-  if (
-    !Number.isSafeInteger(difficulty) ||
-    difficulty < 1 ||
-    difficulty > MAX_DEEPSEEK_POW_DIFFICULTY
-  ) {
-    throw new RangeError(
-      `DeepSeek PoW difficulty must be an integer from 1 to ${MAX_DEEPSEEK_POW_DIFFICULTY}`
-    );
+  if (!Number.isSafeInteger(difficulty) || difficulty < 1 || difficulty > MAX_DEEPSEEK_POW_DIFFICULTY) {
+    throw new RangeError(`DeepSeek PoW difficulty must be an integer from 1 to ${MAX_DEEPSEEK_POW_DIFFICULTY}`);
   }
 
   const prefixBytes = new TextEncoder().encode(prefix);

@@ -33,8 +33,15 @@ function isRealImageBuffer(buf) {
   if (!buf || buf.length < MIN_BYTES) return false;
   const isJpeg = buf[0] === 0xff && buf[1] === 0xd8;
   const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
-  const isWebp = buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
-    buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50;
+  const isWebp =
+    buf[0] === 0x52 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x46 &&
+    buf[8] === 0x57 &&
+    buf[9] === 0x45 &&
+    buf[10] === 0x42 &&
+    buf[11] === 0x50;
   const isGif = buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46;
   return isJpeg || isPng || isWebp || isGif;
 }
@@ -61,7 +68,9 @@ const KINDS = {
 };
 
 export function parseSteamKind(raw) {
-  const s = String(raw || "").trim().toLowerCase();
+  const s = String(raw || "")
+    .trim()
+    .toLowerCase();
   if (!s) return KINDS.promo;
   return KINDS[s] || null;
 }
@@ -69,20 +78,28 @@ export function parseSteamKind(raw) {
 export function formatIDR(cents) {
   const n = Number(cents);
   if (!Number.isFinite(n)) return "-";
-  return "Rp" + Math.round(n / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return (
+    "Rp" +
+    Math.round(n / 100)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+  );
 }
 
 export async function getSteamDeals(kindKey = "specials", limit = 8) {
   const data = await fetchCategories();
   const items = data?.[kindKey]?.items || [];
-  return items.slice(0, limit).map((a) => ({
-    id: a?.id,
-    name: String(a?.name || "Unknown"),
-    discount: Number(a?.discount_percent) || 0,
-    was: a?.original_price ?? null,
-    now: a?.final_price ?? null,
-    image: a?.large_capsule_image || a?.small_capsule_image || "",
-  })).filter((d) => d.id);
+  return items
+    .slice(0, limit)
+    .map((a) => ({
+      id: a?.id,
+      name: String(a?.name || "Unknown"),
+      discount: Number(a?.discount_percent) || 0,
+      was: a?.original_price ?? null,
+      now: a?.final_price ?? null,
+      image: a?.large_capsule_image || a?.small_capsule_image || "",
+    }))
+    .filter((d) => d.id);
 }
 
 export function fmtSteamDeals(title, deals) {

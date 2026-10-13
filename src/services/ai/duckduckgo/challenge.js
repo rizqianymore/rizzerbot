@@ -189,11 +189,7 @@ function buildChallengeStack(origin, bundlePath) {
   return `Error\nat l (${url}:2:1695625)\nat async ${url}:2:1519117`;
 }
 
-export async function solveDuckDuckGoChallenge(
-  challenge,
-  userAgent,
-  options = {}
-) {
+export async function solveDuckDuckGoChallenge(challenge, userAgent, options = {}) {
   const js = Buffer.from(challenge, "base64").toString("utf8");
   const stubs = CHALLENGE_STUBS.replace("__DDG_REAL_UA__", JSON.stringify(userAgent)).replace(
     "__DDG_HTML_LOOKUP__",
@@ -205,8 +201,7 @@ export async function solveDuckDuckGoChallenge(
   const result = await vm.runInContext(js, context, { timeout: 5000 });
   const elapsedMs = Date.now() - startedAt;
   const clientHashes = Array.isArray(result.client_hashes) ? result.client_hashes : [];
-  if (clientHashes.length === 0)
-    throw new Error("DuckDuckGo challenge returned empty client_hashes");
+  if (clientHashes.length === 0) throw new Error("DuckDuckGo challenge returned empty client_hashes");
   clientHashes[0] = userAgent;
   result.client_hashes = clientHashes.map((hash) => sha256Base64(String(hash)));
 

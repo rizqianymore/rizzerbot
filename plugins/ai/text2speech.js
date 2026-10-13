@@ -13,8 +13,8 @@ export default {
     if (!raw) {
       return reply(
         `*TEXT TO SPEECH*\n\n` +
-        `Penggunaan: *${prefix}text2speech <teks> | [id/en]*\n` +
-        `Contoh: *${prefix}text2speech Halo, apa kabar?*`
+          `Penggunaan: *${prefix}text2speech <teks> | [id/en]*\n` +
+          `Contoh: *${prefix}text2speech Halo, apa kabar?*`
       );
     }
 
@@ -29,11 +29,7 @@ export default {
 
     try {
       const audio = await textToSpeech(teks, lang);
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { audio, mimetype: "audio/mpeg", ptt: true },
-        { quoted: msg }
-      );
+      await sock.sendMessage(msg.key.remoteJid, { audio, mimetype: "audio/mpeg", ptt: true }, { quoted: msg });
       await react("✅");
     } catch (err) {
       await react("❌");

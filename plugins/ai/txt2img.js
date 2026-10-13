@@ -25,9 +25,9 @@ export default {
     if (!raw) {
       return reply(
         `*TEXT TO IMAGE*\n\n` +
-        `Penggunaan: *${prefix}txt2img <prompt> [--style <nama_style>]*\n` +
-        `Contoh: *${prefix}txt2img kucing astronot di luar angkasa*\n\n` +
-        `Style: ${Object.keys(STYLE_PROMPTS).join(", ")}`
+          `Penggunaan: *${prefix}txt2img <prompt> [--style <nama_style>]*\n` +
+          `Contoh: *${prefix}txt2img kucing astronot di luar angkasa*\n\n` +
+          `Style: ${Object.keys(STYLE_PROMPTS).join(", ")}`
       );
     }
 

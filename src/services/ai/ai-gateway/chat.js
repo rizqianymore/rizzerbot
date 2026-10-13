@@ -5,10 +5,10 @@ export class DeepSeekWebWithAutoRefresh extends DeepSeekWebSession {
   async chat(prompt, { thinking = false, search = false, userToken = null } = {}) {
     const token = extractUserToken(
       userToken ||
-      this.currentUserToken ||
-      process.env.DEEPSEEK_COOKIE_TOKEN ||
-      process.env.DEEPSEEK_TOKEN ||
-      process.env.DEEPSEEK_USER_TOKEN
+        this.currentUserToken ||
+        process.env.DEEPSEEK_COOKIE_TOKEN ||
+        process.env.DEEPSEEK_TOKEN ||
+        process.env.DEEPSEEK_USER_TOKEN
     );
     if (!token) {
       throw new Error(
@@ -121,8 +121,7 @@ export class DeepSeekWebWithAutoRefresh extends DeepSeekWebSession {
         source: "deepseek-web",
       };
     } finally {
-
-      this.deleteSession(accessToken, sessionId).catch(() => { });
+      this.deleteSession(accessToken, sessionId).catch(() => {});
     }
   }
 

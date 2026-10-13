@@ -26,10 +26,13 @@ export default {
         try {
           const d = await getDriverById(query);
           return replyDetail(sock, msg, reply, fmtDriver(d), d.url);
-        } catch (_) {  }
+        } catch (_) {}
       }
       const hits = await searchDrivers(query, 10);
-      if (!hits.length) return reply(`❌ Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``);
+      if (!hits.length)
+        return reply(
+          `❌ Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``
+        );
       if (hits.length === 1) return replyDetail(sock, msg, reply, fmtDriver(hits[0]), hits[0].url);
       let text = `🏎️ *HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((d, i) => {

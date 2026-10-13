@@ -28,15 +28,24 @@ function buildManifest(frames, framePaths) {
 async function encodeVideo(concatPath, outputPath, configObj) {
   const args = [
     "-y",
-    "-f", "concat",
-    "-safe", "0",
-    "-i", concatPath,
-    "-vf", `fps=${configObj.fps},scale=${configObj.width}:${configObj.height}:flags=lanczos`,
-    "-c:v", "libx264",
-    "-preset", "medium",
-    "-crf", "24",
-    "-pix_fmt", "yuv420p",
-    "-movflags", "+faststart",
+    "-f",
+    "concat",
+    "-safe",
+    "0",
+    "-i",
+    concatPath,
+    "-vf",
+    `fps=${configObj.fps},scale=${configObj.width}:${configObj.height}:flags=lanczos`,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "medium",
+    "-crf",
+    "24",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
     outputPath,
   ];
 
@@ -57,7 +66,9 @@ export async function createBratVideo(text, template, options = {}) {
 
   const cacheBase = path.join(process.cwd(), "assets", "cache");
   if (!fs.existsSync(cacheBase)) {
-    try { fs.mkdirSync(cacheBase, { recursive: true }); } catch (_) {}
+    try {
+      fs.mkdirSync(cacheBase, { recursive: true });
+    } catch (_) {}
   }
   const tmpDir = await fsp.mkdtemp(path.join(cacheBase, "bratvid-"));
   const outputPath = path.join(tmpDir, "output.mp4");

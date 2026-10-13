@@ -4,7 +4,9 @@ import { request } from "@/src/utils/request.js";
 const INEWS_SEARCH_URL = "https://www.inews.id/find";
 
 export async function searchInews(query, limit = 5) {
-  const cleanQuery = String(query || "").trim().slice(0, 200);
+  const cleanQuery = String(query || "")
+    .trim()
+    .slice(0, 200);
   if (!cleanQuery) return [];
 
   const maxResults = Math.min(Math.max(Number(limit) || 5, 1), 20);
@@ -49,9 +51,7 @@ export async function searchInews(query, limit = 5) {
       if (articleUrl.includes("/playlists/")) continue;
 
       const titleLower = title.toLowerCase();
-      const isRelevant =
-        queryWords.length === 0 ||
-        queryWords.some((word) => titleLower.includes(word));
+      const isRelevant = queryWords.length === 0 || queryWords.some((word) => titleLower.includes(word));
 
       if (isRelevant && !results.some((r) => r.url === articleUrl)) {
         results.push({

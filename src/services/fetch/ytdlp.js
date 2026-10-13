@@ -43,10 +43,7 @@ export async function ensureYtDlp(onStatus = () => {}) {
   ensurePromise = (async () => {
     if (await commandWorks("yt-dlp", ["--version"])) return "yt-dlp";
 
-    const localBinary = path.join(
-      BIN_DIR,
-      process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp"
-    );
+    const localBinary = path.join(BIN_DIR, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
     if (await commandWorks(localBinary, ["--version"])) return localBinary;
 
@@ -90,11 +87,7 @@ function cleanYtDlpError(stderr = "") {
 export async function probe(url, options = {}) {
   const ytdlp = await ensureYtDlp(options.onStatus);
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      ytdlp,
-      ["-J", "--no-playlist", "--no-warnings", url],
-      { signal: options.signal }
-    );
+    const child = spawn(ytdlp, ["-J", "--no-playlist", "--no-warnings", url], { signal: options.signal });
     let stdout = "";
     let stderr = "";
 
@@ -103,9 +96,7 @@ export async function probe(url, options = {}) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code !== 0) {
-        return reject(
-          new Error(cleanYtDlpError(stderr) || `yt-dlp keluar dengan kode ${code}`)
-        );
+        return reject(new Error(cleanYtDlpError(stderr) || `yt-dlp keluar dengan kode ${code}`));
       }
       try {
         const info = JSON.parse(stdout);
@@ -148,12 +139,7 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
   } else {
     // Utamakan max resolution sesuai requested, fallback ke best available mp4
     const h = parseInt(quality) || 720;
-    args.push(
-      "-f",
-      `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`,
-      "--merge-output-format",
-      "mp4"
-    );
+    args.push("-f", `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`, "--merge-output-format", "mp4");
   }
 
   // Tambahkan ffmpeg jika ada di system
@@ -186,14 +172,15 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
     child.on("error", reject);
     child.on("close", async (code) => {
       if (code !== 0) {
-        return reject(
-          new Error(cleanYtDlpError(stderr) || `Download gagal (yt-dlp exit code ${code})`)
-        );
+        return reject(new Error(cleanYtDlpError(stderr) || `Download gagal (yt-dlp exit code ${code})`));
       }
 
       if (!filepath) {
         // cari baris stdout yang mencantumkan path
-        const matches = stdout.split("\n").map((l) => l.trim()).filter((l) => path.isAbsolute(l));
+        const matches = stdout
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => path.isAbsolute(l));
         if (matches.length > 0) {
           filepath = matches[matches.length - 1];
         }

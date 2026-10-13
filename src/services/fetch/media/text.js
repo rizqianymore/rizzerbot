@@ -10,7 +10,8 @@ if (fs.existsSync(fontBratPath)) {
   } catch (_) {}
 }
 
-const FONT_FALLBACK = '"Impact", "ArialNarrow", "DejaVu Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+const FONT_FALLBACK =
+  '"Impact", "ArialNarrow", "DejaVu Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
 
 function splitWordIfTooLong(ctx, word, maxWidth) {
   const chars = [...word];
@@ -57,12 +58,10 @@ function wrapLine(ctx, lineText, maxWidth) {
 }
 
 function wrapText(ctx, text, maxWidth) {
-  return text
-    .split("\n")
-    .flatMap((line) => {
-      const clean = line.trim();
-      return clean ? wrapLine(ctx, clean, maxWidth) : [""];
-    });
+  return text.split("\n").flatMap((line) => {
+    const clean = line.trim();
+    return clean ? wrapLine(ctx, clean, maxWidth) : [""];
+  });
 }
 
 function calculateTextFit(ctx, text, maxWidth, maxHeight) {
@@ -141,7 +140,7 @@ export async function createTextOverlayCanvas(width = 512, height = 512, { topTe
   const ctx = canvas.getContext("2d");
   const marginX = Math.floor(width * 0.05);
   const maxTextWidth = width - marginX * 2;
-  const maxSectionHeight = Math.floor(height * 0.40);
+  const maxSectionHeight = Math.floor(height * 0.4);
   const paddingY = Math.max(10, Math.floor(height * 0.03));
 
   if (top) {
@@ -173,7 +172,7 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
 
   const marginX = Math.floor(width * 0.05);
   const maxTextWidth = width - marginX * 2;
-  const maxSectionHeight = Math.floor(height * 0.40);
+  const maxSectionHeight = Math.floor(height * 0.4);
   const paddingY = Math.max(10, Math.floor(height * 0.03));
 
   if (top) {

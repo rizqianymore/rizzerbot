@@ -9,7 +9,12 @@ export function checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender,
       return true;
     }
 
-    if (!db.isOwner(normalizedRawSender) && !db.isAdmin(normalizedRawSender) && looksLikeExternalBot(msg, messageContent) && messageContent.startsWith(_g.prefix || ".")) {
+    if (
+      !db.isOwner(normalizedRawSender) &&
+      !db.isAdmin(normalizedRawSender) &&
+      looksLikeExternalBot(msg, messageContent) &&
+      messageContent.startsWith(_g.prefix || ".")
+    ) {
       logger?.warn?.(`[Anti-Bot] Heuristik bot luar cocok: ${normalizedRawSender} (${msg.pushName})`);
       return true;
     }

@@ -12,7 +12,6 @@ export class StealthBrowserManager extends StealthBrowserCore {
       await page.setUserAgent(device.userAgent);
 
       await page.evaluateOnNewDocument(() => {
-
         Object.defineProperty(navigator, "webdriver", { get: () => undefined });
 
         window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
@@ -109,7 +108,6 @@ export class StealthBrowserManager extends StealthBrowserCore {
     const origin = u.origin;
 
     try {
-
       await this.solveChallenge(origin);
 
       await page.goto(`${origin}/favicon.ico`, { waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});

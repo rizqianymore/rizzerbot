@@ -29,9 +29,7 @@ function splitIntoLayers(tokens, maxWordPerLayer) {
 
 function resolveDurations(frames, lyric) {
   return frames.map((frame) => {
-    return frame.isLastInLayer
-      ? Math.max(0.05, lyric.lastFrameDuration)
-      : Math.max(0.05, lyric.frameDuration);
+    return frame.isLastInLayer ? Math.max(0.05, lyric.lastFrameDuration) : Math.max(0.05, lyric.frameDuration);
   });
 }
 

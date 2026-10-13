@@ -1,8 +1,7 @@
 import { parsePlat } from "./parse.js";
 import { formatPlatInfo } from "./format.js";
 
-const FIRESTORE_BASE =
-  "https://firestore.googleapis.com/v1/projects/informasisamsat/databases/(default)/documents";
+const FIRESTORE_BASE = "https://firestore.googleapis.com/v1/projects/informasisamsat/databases/(default)/documents";
 const SAMSAT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const samsatCache = new Map();
 
@@ -54,15 +53,20 @@ function parseSamsatDoc(doc) {
 }
 
 export async function getSamsatDetail(kode, suffix) {
-  const depan = String(kode || "").toUpperCase().trim();
-  const belakangKey = String(suffix || "").toUpperCase().trim().charAt(0) || "";
+  const depan = String(kode || "")
+    .toUpperCase()
+    .trim();
+  const belakangKey =
+    String(suffix || "")
+      .toUpperCase()
+      .trim()
+      .charAt(0) || "";
   if (!depan) return null;
 
   const depanDoc = await firestoreGet(`nopol/${encodeURIComponent(depan)}`).catch(() => null);
   if (!depanDoc) return null;
 
   if (!belakangKey || !/^[A-Z]$/.test(belakangKey)) {
-
     return null;
   }
 
@@ -70,14 +74,18 @@ export async function getSamsatDetail(kode, suffix) {
     const doc = await firestoreGet(`nopol/${encodeURIComponent(depan)}/belakang/${belakangKey}`);
     const parsed = parseSamsatDoc(doc);
     if (parsed) return parsed;
-  } catch (_) {
-
-  }
+  } catch (_) {}
 
   try {
     const list = await firestoreGet(`nopol/${encodeURIComponent(depan)}/belakang?pageSize=100`);
     const docs = Array.isArray(list?.documents) ? list.documents : [];
-    const hit = docs.find((d) => String(d.name || "").split("/").pop()?.toUpperCase() === belakangKey);
+    const hit = docs.find(
+      (d) =>
+        String(d.name || "")
+          .split("/")
+          .pop()
+          ?.toUpperCase() === belakangKey
+    );
     return parseSamsatDoc(hit);
   } catch (_) {
     return null;
@@ -92,9 +100,7 @@ export async function enrichSamsat(parsed) {
   try {
     const detail = await getSamsatDetail(parsed.kode, parsed.suffix);
     if (detail) parsed.samsat = detail;
-  } catch (_) {
-
-  }
+  } catch (_) {}
   return parsed;
 }
 

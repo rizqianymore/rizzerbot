@@ -1,21 +1,21 @@
 import { ClaudeHaiku } from "@/src/services/ai/overchat.js";
 
 export default {
-  "name": "claudehaiku",
-  "aliases": ["claude","haiku","chiku"],
-  "description": "Chat dengan Claude Haiku 4.5 via OverChat",
-  "usage": "<pertanyaan>",
-  "premiumOnly": true,
-  "category": "AI",
-  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  name: "claudehaiku",
+  aliases: ["claude", "haiku", "chiku"],
+  description: "Chat dengan Claude Haiku 4.5 via OverChat",
+  usage: "<pertanyaan>",
+  premiumOnly: true,
+  category: "AI",
+  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();
 
     const text = args.join(" ").trim();
     if (!text) {
       return reply(
         `*CLAUDE HAIKU*\n\n` +
-        `Penggunaan: *${prefix}claudehaiku <pertanyaan>*\n` +
-        `Contoh: *${prefix}claudehaiku Jelaskan teori relativitas*`
+          `Penggunaan: *${prefix}claudehaiku <pertanyaan>*\n` +
+          `Contoh: *${prefix}claudehaiku Jelaskan teori relativitas*`
       );
     }
 
@@ -28,9 +28,7 @@ export default {
 
       if (!result.status) {
         await react("☢");
-        return reply(
-          `*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`
-        );
+        return reply(`*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`);
       }
 
       await react("✅");

@@ -15,7 +15,10 @@ function shouldSkipBeforeQueue(msg) {
 
   if (msg.message) {
     const keys = Object.keys(msg.message);
-    if (keys.length === 1 && (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")) {
+    if (
+      keys.length === 1 &&
+      (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")
+    ) {
       return true;
     }
   }
@@ -23,7 +26,7 @@ function shouldSkipBeforeQueue(msg) {
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) return true;
-  } catch (_) { }
+  } catch (_) {}
   return false;
 }
 
@@ -73,20 +76,18 @@ export function setupSubBotEvents({
             registered: true,
           });
         });
-      } catch (_) { }
+      } catch (_) {}
       logger.info(`[SubBot ${cleanNumber}] Berhasil online dengan database sendiri (terisolasi).`);
     } else if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-      logger.warn(
-        `[SubBot ${cleanNumber}] Connection closed (status: ${statusCode}). Reconnect: ${shouldReconnect}`
-      );
+      logger.warn(`[SubBot ${cleanNumber}] Connection closed (status: ${statusCode}). Reconnect: ${shouldReconnect}`);
 
       if (shouldReconnect) {
         botEntry.status = "reconnecting";
         setTimeout(() => {
-          reconnectFn().catch(() => { });
+          reconnectFn().catch(() => {});
         }, 5000);
       } else {
         botEntry.status = "disconnected";
@@ -97,7 +98,7 @@ export function setupSubBotEvents({
         } catch (_) {}
         try {
           deleteFolderRecursive(sessionDir);
-        } catch (_) { }
+        } catch (_) {}
       }
     }
   });
@@ -110,7 +111,9 @@ export function setupSubBotEvents({
 
       const autoRead = db.runWithBot(subJid, () => db.getSettings().autoRead);
       if (autoRead) {
-        try { await sock.readMessages([msg.key]).catch(() => { }); } catch (_) { }
+        try {
+          await sock.readMessages([msg.key]).catch(() => {});
+        } catch (_) {}
       }
       try {
         recordMessage(sock, msg);

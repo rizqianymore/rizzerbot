@@ -34,9 +34,9 @@ export default {
     if (!isDatang && !isPulang) {
       return reply(
         `📋 *CARA ABSEN:*\n\n` +
-        `• \`${currentPrefix}absensi datang\`\n` +
-        `• \`${currentPrefix}absensi pulang\`\n\n` +
-        `_ID (${ID}) & Lemdik (${LEMDIK_ID}) sudah otomatis terpasang._`
+          `• \`${currentPrefix}absensi datang\`\n` +
+          `• \`${currentPrefix}absensi pulang\`\n\n` +
+          `_ID (${ID}) & Lemdik (${LEMDIK_ID}) sudah otomatis terpasang._`
       );
     }
 

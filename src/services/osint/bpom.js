@@ -129,14 +129,10 @@ export function formatProduk(item, index) {
   text += `   🏭 *Pendaftar:* ${item.pendaftar}\n`;
   if (item.merk && item.merk !== "-") text += `   🏷️ *Merk:* ${item.merk}\n`;
   if (item.kemasan && item.kemasan !== "-") text += `   📦 *Kemasan:* ${item.kemasan}\n`;
-  if (item.bentukSediaan && item.bentukSediaan !== "-")
-    text += `   💊 *Bentuk Sediaan:* ${item.bentukSediaan}\n`;
-  if (item.komposisi && item.komposisi !== "-")
-    text += `   🧪 *Komposisi:* ${item.komposisi}\n`;
-  if (item.tanggalTerbit && item.tanggalTerbit !== "-")
-    text += `   📅 *Tgl Terbit:* ${item.tanggalTerbit}\n`;
-  if (item.tanggalExpired && item.tanggalExpired !== "-")
-    text += `   ⏰ *Tgl Expired:* ${item.tanggalExpired}\n`;
+  if (item.bentukSediaan && item.bentukSediaan !== "-") text += `   💊 *Bentuk Sediaan:* ${item.bentukSediaan}\n`;
+  if (item.komposisi && item.komposisi !== "-") text += `   🧪 *Komposisi:* ${item.komposisi}\n`;
+  if (item.tanggalTerbit && item.tanggalTerbit !== "-") text += `   📅 *Tgl Terbit:* ${item.tanggalTerbit}\n`;
+  if (item.tanggalExpired && item.tanggalExpired !== "-") text += `   ⏰ *Tgl Expired:* ${item.tanggalExpired}\n`;
   text += `   ✅ *Status:* ${item.status}\n`;
   return text;
 }

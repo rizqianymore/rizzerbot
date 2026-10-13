@@ -6,10 +6,7 @@ export const deepseekWebExecutor = new DeepSeekWebWithAutoRefresh();
 
 export async function askDeepSeek(prompt, { thinking = false, search = false, userToken = null } = {}) {
   const token = extractUserToken(
-    userToken ||
-    process.env.DEEPSEEK_COOKIE_TOKEN ||
-    process.env.DEEPSEEK_TOKEN ||
-    process.env.DEEPSEEK_USER_TOKEN
+    userToken || process.env.DEEPSEEK_COOKIE_TOKEN || process.env.DEEPSEEK_TOKEN || process.env.DEEPSEEK_USER_TOKEN
   );
   const apiKey = process.env.DEEPSEEK_API_KEY;
 

@@ -67,7 +67,8 @@ export const USERHUNT_PLATFORMS = [
     check: (u) => `https://hub.docker.com/v2/users/${encodeURIComponent(u)}/`,
     decide: (status, body, u, ctx) => {
       if (status === 200 && bodyHas(body, `"username"`)) return true;
-      if ((status === 301 || status === 302 || status === 308) && String(ctx?.location || "").includes("/v2/orgs/")) return true;
+      if ((status === 301 || status === 302 || status === 308) && String(ctx?.location || "").includes("/v2/orgs/"))
+        return true;
       return false;
     },
   },
@@ -143,8 +144,7 @@ export const USERHUNT_PLATFORMS = [
     confidence: "MEDIUM",
     url: (u) => `https://t.me/${u}`,
     check: (u) => `https://t.me/${u}`,
-    decide: (status, body, u) =>
-      status === 200 && !bodyHas(body, `Telegram: Contact @${String(u).toLowerCase()}`),
+    decide: (status, body, u) => status === 200 && !bodyHas(body, `Telegram: Contact @${String(u).toLowerCase()}`),
   },
   {
     key: "medium",
@@ -153,9 +153,7 @@ export const USERHUNT_PLATFORMS = [
     url: (u) => `https://medium.com/@${u}`,
     check: (u) => `https://medium.com/@${u}`,
     decide: (status, body) =>
-      status === 200 &&
-      bodyHas(body, '"__typename":"User"') &&
-      !bodyHas(body, "PAGE NOT FOUND"),
+      status === 200 && bodyHas(body, '"__typename":"User"') && !bodyHas(body, "PAGE NOT FOUND"),
   },
   {
     key: "pinterest",
@@ -164,9 +162,7 @@ export const USERHUNT_PLATFORMS = [
     url: (u) => `https://www.pinterest.com/${u}/`,
     check: (u) => `https://www.pinterest.com/${u}/`,
     decide: (status, body) =>
-      status === 200 &&
-      !bodyHas(body, "User not found", "Page not found") &&
-      !bodyHas(body, "<title></title>"),
+      status === 200 && !bodyHas(body, "User not found", "Page not found") && !bodyHas(body, "<title></title>"),
   },
 ];
 
@@ -211,10 +207,6 @@ export async function checkUsernameOn(platform, username) {
 }
 
 export async function checkUsernameAll(username) {
-  const results = await Promise.allSettled(
-    USERHUNT_PLATFORMS.map((p) => checkUsernameOn(p, username))
-  );
-  return results
-    .filter((r) => r.status === "fulfilled" && r.value.exists)
-    .map((r) => r.value);
+  const results = await Promise.allSettled(USERHUNT_PLATFORMS.map((p) => checkUsernameOn(p, username)));
+  return results.filter((r) => r.status === "fulfilled" && r.value.exists).map((r) => r.value);
 }

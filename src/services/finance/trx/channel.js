@@ -20,7 +20,6 @@ export async function checkIsChannelAdmin(targetSock, channelJid) {
       }
     }
   } catch (_) {
-
     isAdmin = true;
   }
 

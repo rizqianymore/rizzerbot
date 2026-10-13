@@ -24,7 +24,7 @@ export async function checkProfanityInput(sock, msg, logger, { remoteJid, sender
         text:
           `⚠️ *Peringatan Konten*\n\n` +
           `Pesan mengandung kata atau permintaan konten terlarang (*"${check.matchedWord}"*).\n` +
-          `Permintaan dibatalkan.`
+          `Permintaan dibatalkan.`,
       },
       { quoted: msg }
     );

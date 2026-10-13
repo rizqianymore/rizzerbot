@@ -14,13 +14,13 @@ export default {
     if (!query) {
       return reply(
         `🔍 *CEK IZIN EDAR BPOM*\n\n` +
-        `Masukkan nama produk, merk, nomor registrasi, NIE, atau nama pendaftar.\n\n` +
-        `*Contoh:*\n` +
-        `• \`${currentPrefix}cekbpom Paracetamol\`\n` +
-        `• \`${currentPrefix}bpom Wardah\`\n` +
-        `• \`${currentPrefix}cekproduk ML-123456789\`\n` +
-        `• \`${currentPrefix}ceknie PT Kimia Farma\`\n\n` +
-        `_Data: cekbpom.pom.go.id (Produk Teregistrasi yang masih berlaku)_`
+          `Masukkan nama produk, merk, nomor registrasi, NIE, atau nama pendaftar.\n\n` +
+          `*Contoh:*\n` +
+          `• \`${currentPrefix}cekbpom Paracetamol\`\n` +
+          `• \`${currentPrefix}bpom Wardah\`\n` +
+          `• \`${currentPrefix}cekproduk ML-123456789\`\n` +
+          `• \`${currentPrefix}ceknie PT Kimia Farma\`\n\n` +
+          `_Data: cekbpom.pom.go.id (Produk Teregistrasi yang masih berlaku)_`
       );
     }
 

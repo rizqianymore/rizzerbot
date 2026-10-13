@@ -38,7 +38,7 @@ export default {
     if (!target) {
       return reply(
         `Pilih sub-perintah: nim, dosen, nis, bansos, plat, operator, cert, kodepos, trx\n` +
-        `Contoh: \`${currentPrefix}cek nim 201311413\`, \`${currentPrefix}cek dosen 2013119103\`, \`${currentPrefix}cek cert example.com\`, \`${currentPrefix}cek kodepos Kemanggisan\``
+          `Contoh: \`${currentPrefix}cek nim 201311413\`, \`${currentPrefix}cek dosen 2013119103\`, \`${currentPrefix}cek cert example.com\`, \`${currentPrefix}cek kodepos Kemanggisan\``
       );
     }
 

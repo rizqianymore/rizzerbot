@@ -13,21 +13,19 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
     const { connection, lastDisconnect, qr } = update;
 
     if (qr && !usePairingCode) {
-      logger.info(
-        "New QR Code generated. Scan the code below to pair your WhatsApp account:"
-      );
+      logger.info("New QR Code generated. Scan the code below to pair your WhatsApp account:");
       qrcode.generate(qr, { small: true });
     }
 
     if (connection === "close") {
       if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
-      const reason =
-        lastDisconnect?.error?.message || lastDisconnect?.error || "Unknown";
+      const reason = lastDisconnect?.error?.message || lastDisconnect?.error || "Unknown";
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       logger.warn(
-        `Primary connection closed. Reason: ${reason} (Status Code: ${statusCode || "N/A"
+        `Primary connection closed. Reason: ${reason} (Status Code: ${
+          statusCode || "N/A"
         }). Reconnecting: ${shouldReconnect}`
       );
 
@@ -54,14 +52,9 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         try {
           deleteFolderRecursive(authDir);
         } catch (e) {
-          logger.error(
-            "Failed to delete corrupted primary session:",
-            e.message
-          );
+          logger.error("Failed to delete corrupted primary session:", e.message);
         }
-        logger.info(
-          "Re-initializing bot connection with fresh state in 3 seconds..."
-        );
+        logger.info("Re-initializing bot connection with fresh state in 3 seconds...");
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;
@@ -71,22 +64,22 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         }, 3000);
       }
     } else if (connection === "open") {
-    logger.info("Primary Rizzer Bot successfully connected and is now online!");
-    try {
-      const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
-      setPrimaryOnline(true);
-      if (connectionState.lastDisconnectAt && Date.now() - connectionState.lastDisconnectAt > 60 * 1000) {
-        const menit = Math.round((Date.now() - connectionState.lastDisconnectAt) / 60000);
-        notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => {});
-      }
-    } catch (_) {}
-    connectionState.lastDisconnectAt = 0;
-    if (sock.user?.id) {
-      db.registerBotJid(sock.user.id);
+      logger.info("Primary Rizzer Bot successfully connected and is now online!");
       try {
-        if (typeof db.setMainBotJid === "function") db.setMainBotJid(sock.user.id);
+        const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
+        setPrimaryOnline(true);
+        if (connectionState.lastDisconnectAt && Date.now() - connectionState.lastDisconnectAt > 60 * 1000) {
+          const menit = Math.round((Date.now() - connectionState.lastDisconnectAt) / 60000);
+          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => {});
+        }
       } catch (_) {}
-    }
+      connectionState.lastDisconnectAt = 0;
+      if (sock.user?.id) {
+        db.registerBotJid(sock.user.id);
+        try {
+          if (typeof db.setMainBotJid === "function") db.setMainBotJid(sock.user.id);
+        } catch (_) {}
+      }
     }
   });
 }
@@ -103,7 +96,11 @@ export function attachMessageHandler(sock) {
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
         if (msg.message) {
           const keys = Object.keys(msg.message);
-          if (keys.length === 1 && (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")) continue;
+          if (
+            keys.length === 1 &&
+            (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")
+          )
+            continue;
         }
         try {
           const ts = Number(msg.messageTimestamp);
@@ -111,7 +108,7 @@ export function attachMessageHandler(sock) {
         } catch (_) {}
 
         if (db.getSettings().autoRead) {
-          await sock.readMessages([msg.key]).catch(() => { });
+          await sock.readMessages([msg.key]).catch(() => {});
         }
         try {
           recordMessage(sock, msg);

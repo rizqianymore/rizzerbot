@@ -55,12 +55,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   };
 
   const isTrashFile = (name) => {
-    return (
-      name.endsWith(".tmp") ||
-      name.endsWith(".temp") ||
-      name.endsWith(".log") ||
-      name.startsWith("temp_")
-    );
+    return name.endsWith(".tmp") || name.endsWith(".temp") || name.endsWith(".log") || name.startsWith("temp_");
   };
 
   for (const basePath of pathsToClean) {
@@ -129,9 +124,7 @@ export function autoCleanSessionCache(logger) {
     const { deletedCount, freedBytes } = cleanTempFiles();
     if (deletedCount > 0 && logger) {
       const mb = (freedBytes / (1024 * 1024)).toFixed(2);
-      logger.info(
-        `[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi (${mb} MB).`
-      );
+      logger.info(`[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi (${mb} MB).`);
     }
   } catch (err) {
     if (logger) {
@@ -216,19 +209,19 @@ export function periodicDatabaseSnapshot(logger) {
 
 export function cleanOrphanChromeProcesses(logger) {
   try {
-    import("child_process").then(({ exec }) => {
-
-      exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {
-        if (!err && logger) {
-          logger.info("[System Cleaner] Membersihkan proses browser renderer yang tidak terpakai.");
-        }
-      });
-    }).catch(() => {});
+    import("child_process")
+      .then(({ exec }) => {
+        exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {
+          if (!err && logger) {
+            logger.info("[System Cleaner] Membersihkan proses browser renderer yang tidak terpakai.");
+          }
+        });
+      })
+      .catch(() => {});
   } catch (_) {}
 }
 
 export function startAutoCleanInterval(logger) {
-
   try {
     clearAllCache({ logger });
     periodicDatabaseSnapshot(logger);

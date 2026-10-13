@@ -221,7 +221,7 @@ export function parseDetailHtml(html, _jenis) {
 
 // ---- Profesi helpers ----
 
-const profesiCache = { "1": null, "2": null };
+const profesiCache = { 1: null, 2: null };
 let profesiExpiry = 0;
 
 export async function getProfesi(jenis = JENIS.nakes) {
@@ -229,20 +229,16 @@ export async function getProfesi(jenis = JENIS.nakes) {
   if (profesiCache[jenis] && now < profesiExpiry) return profesiCache[jenis];
 
   await ensureCookies();
-  const res = await client.post(
-    PROFESI_URL,
-    new URLSearchParams({ jenis }),
-    {
-      headers: {
-        "User-Agent": UA,
-        Accept: "application/json,*/*",
-        "X-Requested-With": "XMLHttpRequest",
-        "Content-Type": "application/x-www-form-urlencoded",
-        Cookie: cachedCookies,
-        Referer: `${BASE}/ceknamednakes/form`,
-      },
-    }
-  );
+  const res = await client.post(PROFESI_URL, new URLSearchParams({ jenis }), {
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json,*/*",
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: cachedCookies,
+      Referer: `${BASE}/ceknamednakes/form`,
+    },
+  });
 
   if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
   const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;

@@ -18,7 +18,11 @@ export function getJenisKendaraan(angka, kodeDepan) {
 }
 
 function normalizeInput(raw) {
-  return String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, " ").replace(/\s+/g, " ").trim();
+  return String(raw || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function parsePlat(rawInput) {
@@ -69,7 +73,6 @@ export function parsePlat(rawInput) {
 
   m = norm.match(/^(\d{1,6})\s*([IVXL]{1,5}|\d{1,2}|AD|AL|AU|PM|POLRI|TNI)?$/);
   if (m && norm.match(/^\d/)) {
-
     const tail = (m[2] || "").trim();
     const looksMil = /^(I{1,3}V?|V|IV|VI{0,3}|IX|X|AD|AL|AU|PM)$/.test(tail) || /TNI|POLRI/.test(norm);
     if (looksMil || /^\d{4,6}(\s|$)/.test(norm)) {

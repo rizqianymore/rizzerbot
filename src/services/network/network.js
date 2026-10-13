@@ -23,14 +23,8 @@ export async function getDnsRecords(rawDomain) {
     domain,
     a: a.status === "fulfilled" ? a.value : [],
     aaaa: aaaa.status === "fulfilled" ? aaaa.value : [],
-    mx:
-      mx.status === "fulfilled"
-        ? mx.value.map((m) => `${m.exchange} (priority: ${m.priority})`)
-        : [],
-    txt:
-      txt.status === "fulfilled"
-        ? txt.value.map((t) => (Array.isArray(t) ? t.join(" ") : t))
-        : [],
+    mx: mx.status === "fulfilled" ? mx.value.map((m) => `${m.exchange} (priority: ${m.priority})`) : [],
+    txt: txt.status === "fulfilled" ? txt.value.map((t) => (Array.isArray(t) ? t.join(" ") : t)) : [],
     ns: ns.status === "fulfilled" ? ns.value : [],
     cname: cname.status === "fulfilled" ? cname.value : [],
   };
@@ -57,8 +51,7 @@ export async function getWhois(rawDomain) {
   const domain = cleanDomain(rawDomain);
   let rawData = await queryWhoisServer(domain, "whois.iana.org");
 
-  const referMatch =
-    rawData.match(/refer:\s+([^\s]+)/i) || rawData.match(/whois:\s+([^\s]+)/i);
+  const referMatch = rawData.match(/refer:\s+([^\s]+)/i) || rawData.match(/whois:\s+([^\s]+)/i);
 
   if (referMatch && referMatch[1]) {
     const referralServer = referMatch[1].trim();
@@ -79,7 +72,9 @@ export async function getWhois(rawDomain) {
   const registrar = extract(/Registrar:\s*([^\r\n]+)/i);
   const createdDate = extract(/(?:Creation Date|Created On|created):\s*([^\r\n]+)/i);
   const updatedDate = extract(/(?:Updated Date|Last Updated On|changed):\s*([^\r\n]+)/i);
-  const expiryDate = extract(/(?:Registry Expiry Date|Registrar Registration Expiration Date|Expiration Date|expires):\s*([^\r\n]+)/i);
+  const expiryDate = extract(
+    /(?:Registry Expiry Date|Registrar Registration Expiration Date|Expiration Date|expires):\s*([^\r\n]+)/i
+  );
   const registrarWhois = extract(/Registrar WHOIS Server:\s*([^\r\n]+)/i);
   const abuseEmail = extract(/(?:Registrar Abuse Contact Email):\s*([^\r\n]+)/i);
 

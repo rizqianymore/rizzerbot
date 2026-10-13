@@ -22,10 +22,9 @@ export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
     await solveTurnstileIfPresent(page, 10000);
 
     await page
-      .waitForFunction(
-        () => /Biodata Dosen|Tidak ada hasil|notFound/i.test(document.body.innerText),
-        { timeout: 20000 }
-      )
+      .waitForFunction(() => /Biodata Dosen|Tidak ada hasil|notFound/i.test(document.body.innerText), {
+        timeout: 20000,
+      })
       .catch(() => {});
     await new Promise((r) => setTimeout(r, 2000));
 
@@ -100,7 +99,11 @@ export async function getCekdosenInfoText(input, opts = {}) {
       return { error: `Data dosen "${raw}" tidak ditemukan di PDDikti.` };
     }
 
-    const norm = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, "");
+    const norm = (s) =>
+      String(s ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "");
     const exact = dosen.find((m) => norm(m.nidn) === norm(raw));
 
     if (exact?.id) {

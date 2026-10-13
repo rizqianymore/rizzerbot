@@ -65,12 +65,12 @@ Setiap file plugin mengekspor objek `default` berupa command (atau array command
 
 ```js
 export default {
-  name: "ping",              // nama perintah (wajib)
-  aliases: ["ceklap"],       // alias opsional
+  name: "ping", // nama perintah (wajib)
+  aliases: ["ceklap"], // alias opsional
   description: "Cek waktu respons bot",
   usage: "",
   category: "General",
-  premiumOnly: false,        // pembatasan akses opsional
+  premiumOnly: false, // pembatasan akses opsional
   run: async (sock, msg, args, ctx) => {
     const { reply, prefix } = ctx;
     await reply(`🏓 Pong! \`${prefix}ping\``);

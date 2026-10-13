@@ -39,7 +39,6 @@ async function processQueue(key, logger) {
     const { sock, msg } = queue.tasks[0];
 
     try {
-
       await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
     } catch (err) {
       if (logger) {
@@ -76,7 +75,9 @@ export function enqueueMessage(sock, msg, logger) {
   const queue = chatQueues.get(key);
   if (queue.tasks.length >= MAX_QUEUE_PER_CHAT) {
     if (logger) {
-      logger.warn(`[Queue Overflow] Chat ${key} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`);
+      logger.warn(
+        `[Queue Overflow] Chat ${key} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`
+      );
     }
     queue.tasks.shift();
   }

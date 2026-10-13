@@ -27,9 +27,7 @@ export async function resolveGroupTarget(sock, input, { autoJoin = true } = {}) 
     try {
       await sock.groupAcceptInvite(code);
       await sleep(2000);
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
   return target;
 }

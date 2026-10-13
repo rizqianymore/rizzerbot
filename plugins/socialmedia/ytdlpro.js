@@ -28,8 +28,9 @@ export default {
           const yt = await downloadYoutube(url, { maxQuality: "720" });
           if (yt?.videoUrl && yt.hasAudio) {
             const buf = await fetchBuffer(yt.videoUrl, {
-              "User-Agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-              "Referer": "https://www.youtube.com/",
+              "User-Agent":
+                "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+              Referer: "https://www.youtube.com/",
             });
             if (buf && buf.length < 90 * 1024 * 1024) {
               buffer = buf;
@@ -76,9 +77,7 @@ export default {
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio
-          ? { audio: buffer, mimetype: "audio/mpeg" }
-          : { video: buffer, caption, mimetype: "video/mp4" },
+        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
 

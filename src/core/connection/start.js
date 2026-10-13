@@ -1,8 +1,4 @@
-import makeWASocket, {
-  useMultiFileAuthState,
-  Browsers,
-  fetchLatestBaileysVersion,
-} from "baileys";
+import makeWASocket, { useMultiFileAuthState, Browsers, fetchLatestBaileysVersion } from "baileys";
 import pino from "pino";
 import path from "path";
 import fs from "fs";
@@ -36,7 +32,7 @@ export async function startBot() {
       connectionState.primarySock.ev.removeAllListeners("messages.upsert");
       connectionState.primarySock.ev.removeAllListeners("creds.update");
       connectionState.primarySock.end();
-    } catch (_) { }
+    } catch (_) {}
     connectionState.primarySock = null;
   }
 
@@ -70,7 +66,9 @@ export async function startBot() {
           throw new Error("Format creds.json tidak lengkap atau korup");
         }
       } catch (err) {
-        logger.warn(`Sesi sebelumnya tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru yang bersih...`);
+        logger.warn(
+          `Sesi sebelumnya tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru yang bersih...`
+        );
         deleteFolderRecursive(authDir);
         fs.mkdirSync(authDir, { recursive: true });
       }
@@ -81,7 +79,9 @@ export async function startBot() {
       version: [2, 3000, 1043857760],
     }));
 
-    logger.info(`Initializing primary Rizzer Bot connection (WA Version: ${version ? version.join('.') : 'default'})...`);
+    logger.info(
+      `Initializing primary Rizzer Bot connection (WA Version: ${version ? version.join(".") : "default"})...`
+    );
 
     const usePairingCode = activeSettings.usePairingCode;
     const msgRetryCounterCache = new Map();
@@ -113,25 +113,15 @@ export async function startBot() {
     if (usePairingCode && !sock.authState.creds.registered) {
       const phoneNumber = db.normalizeJid(activeSettings.pairingNumber).split("@")[0];
       if (!phoneNumber) {
-        logger.error(
-          "Pairing phone number is missing or invalid in database/settings.js!"
-        );
+        logger.error("Pairing phone number is missing or invalid in database/settings.js!");
       } else {
         const requestPairing = async () => {
           try {
-            logger.info(
-              `Requesting pairing code for primary bot: ${phoneNumber}...`
-            );
+            logger.info(`Requesting pairing code for primary bot: ${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
-            console.log(
-              `\n\x1b[36m====================================\x1b[0m`
-            );
-            console.log(
-              `🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`
-            );
-            console.log(
-              `\x1b[36m====================================\x1b[0m\n`
-            );
+            console.log(`\n\x1b[36m====================================\x1b[0m`);
+            console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
+            console.log(`\x1b[36m====================================\x1b[0m\n`);
           } catch (err) {
             logger.error(`Failed to request pairing code: ${err.message || err}. Retrying in 5 seconds...`);
             timers.pairingTimeout = setTimeout(requestPairing, 5000);
@@ -143,8 +133,8 @@ export async function startBot() {
 
     attachConnectionEvents(sock, { authDir, usePairingCode, timers, restart: () => startBot() });
 
-  sock.isSubBot = false;
-  attachMessageHandler(sock);
+    sock.isSubBot = false;
+    attachMessageHandler(sock);
 
     connectionState.isStarting = false;
     return sock;
@@ -154,7 +144,7 @@ export async function startBot() {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
-      startBot().catch(() => { });
+      startBot().catch(() => {});
     }, 5000);
     return null;
   }

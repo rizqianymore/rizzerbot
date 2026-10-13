@@ -97,17 +97,19 @@ export async function checkRentals(logger) {
     try {
       if (r.until <= Date.now()) {
         if (!sock) continue;
-        try { await sock.groupLeave(gid); } catch (_) {}
+        try {
+          await sock.groupLeave(gid);
+        } catch (_) {}
         delete data.groups[gid];
         left++;
-        try { await notify?.(`Sewa grup ${gid} habis, bot keluar otomatis.`); } catch (_) {}
+        try {
+          await notify?.(`Sewa grup ${gid} habis, bot keluar otomatis.`);
+        } catch (_) {}
       } else if (!r.warned && r.until - Date.now() < 24 * 60 * 60 * 1000) {
         r.warned = true;
         warned++;
         try {
-          await notify?.(
-            `Sewa grup ${gid} habis <24 jam (${new Date(r.until).toLocaleString("id-ID")}).`
-          );
+          await notify?.(`Sewa grup ${gid} habis <24 jam (${new Date(r.until).toLocaleString("id-ID")}).`);
         } catch (_) {}
       }
     } catch (_) {}

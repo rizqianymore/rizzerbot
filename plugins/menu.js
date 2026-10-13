@@ -44,7 +44,12 @@ export default {
   description: "Menampilkan daftar seluruh perintah dan panduan cara penggunaannya.",
   usage: "[command / kategori]",
   category: "General",
-  run: async (sock, msg, args, { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }) => {
+  run: async (
+    sock,
+    msg,
+    args,
+    { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }
+  ) => {
     await sendTyping();
 
     const activeSettings = ctxSettings || db.getSettings();
@@ -58,15 +63,26 @@ export default {
       const targetCmd = commands.get(rawArg);
 
       if (targetCmd) {
-        const hiddenForStranger = !isOwner && !isAdmin && !isPremium &&
+        const hiddenForStranger =
+          !isOwner &&
+          !isAdmin &&
+          !isPremium &&
           (targetCmd.groupOnly || targetCmd.groupAdminOnly || targetCmd.botAdminOnly);
-        if ((targetCmd.ownerOnly && !isOwner) || (targetCmd.adminOnly && !isAdmin) || (targetCmd.premiumOnly && !isPremium) || hiddenForStranger) {
+        if (
+          (targetCmd.ownerOnly && !isOwner) ||
+          (targetCmd.adminOnly && !isAdmin) ||
+          (targetCmd.premiumOnly && !isPremium) ||
+          hiddenForStranger
+        ) {
           return await reply(`❌ *${rawArg}* tidak ditemukan.\n\nKetik ${prefix}menu untuk daftar perintah.`);
         }
 
         const usageArgs = targetCmd.usage || "";
         const usage = usageArgs ? ` *${prefix}${targetCmd.name} ${usageArgs}*` : ` *${prefix}${targetCmd.name}*`;
-        const aliases = targetCmd.aliases && targetCmd.aliases.length > 0 ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ") : "-";
+        const aliases =
+          targetCmd.aliases && targetCmd.aliases.length > 0
+            ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ")
+            : "-";
 
         const detailText =
           `*PANDUAN PERINTAH: ${prefix}${targetCmd.name}*\n\n` +

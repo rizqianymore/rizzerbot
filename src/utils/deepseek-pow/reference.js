@@ -14,7 +14,6 @@ function rotateLeft64(value, amount) {
 }
 
 function keccakP1600Reference(state, roundCount) {
-
   const columnParity = new Array(5).fill(0n);
 
   const thetaMix = new Array(5).fill(0n);
@@ -38,10 +37,7 @@ function keccakP1600Reference(state, roundCount) {
         const destinationX = y;
         const destinationY = (2 * x + 3 * y) % 5;
         const lane = x + 5 * y;
-        rhoPiState[destinationX + 5 * destinationY] = rotateLeft64(
-          state[lane],
-          ROTATION_OFFSETS[lane]
-        );
+        rhoPiState[destinationX + 5 * destinationY] = rotateLeft64(state[lane], ROTATION_OFFSETS[lane]);
       }
     }
 
@@ -49,8 +45,7 @@ function keccakP1600Reference(state, roundCount) {
       const row = 5 * y;
       for (let x = 0; x < 5; x++) {
         state[x + row] =
-          rhoPiState[x + row] ^
-          (~rhoPiState[((x + 1) % 5) + row] & LANE_MASK & rhoPiState[((x + 2) % 5) + row]);
+          rhoPiState[x + row] ^ (~rhoPiState[((x + 1) % 5) + row] & LANE_MASK & rhoPiState[((x + 2) % 5) + row]);
       }
     }
     state[0] ^= ROUND_CONSTANTS[round];

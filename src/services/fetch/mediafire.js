@@ -26,10 +26,12 @@ export async function mediafireDownload(url) {
     html.match(/aria-label="Download file"[^>]*href="([^"]+)"/i) ||
     html.match(/https?:\/\/download\d+\.mediafire\.com\/[^\s"'>]+/i);
 
-  const downloadUrl = dlMatch ? (dlMatch[1] || dlMatch[0]) : null;
+  const downloadUrl = dlMatch ? dlMatch[1] || dlMatch[0] : null;
 
   if (!downloadUrl) {
-    throw new Error("Gagal menemukan link download langsung dari MediaFire. Kemungkinan file telah dihapus atau terkena proteksi password.");
+    throw new Error(
+      "Gagal menemukan link download langsung dari MediaFire. Kemungkinan file telah dihapus atau terkena proteksi password."
+    );
   }
 
   const filenameMatch =
@@ -79,7 +81,6 @@ export async function solveSafelink(url) {
     for (const p of commonParams) {
       const val = searchParams.get(p);
       if (val) {
-
         if (/^https?:\/\//i.test(val)) {
           targetUrl = val;
           break;
@@ -117,7 +118,9 @@ export async function solveSafelink(url) {
         }
 
         if (!targetUrl) {
-          const hostMatch = data.match(/href=["'](https?:\/\/(?:www\.)?(?:mediafire\.com|drive\.google\.com|mega\.nz|sfile\.mobi)[^"']+)["']/i);
+          const hostMatch = data.match(
+            /href=["'](https?:\/\/(?:www\.)?(?:mediafire\.com|drive\.google\.com|mega\.nz|sfile\.mobi)[^"']+)["']/i
+          );
           if (hostMatch && hostMatch[1]) {
             targetUrl = hostMatch[1].trim();
           }

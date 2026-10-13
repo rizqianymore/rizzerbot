@@ -60,7 +60,9 @@ export function formatTanggal(tgl) {
 }
 
 export function jkLabel(jk) {
-  const s = String(jk ?? "").trim().toUpperCase();
+  const s = String(jk ?? "")
+    .trim()
+    .toUpperCase();
   if (s === "L") return "Laki-laki";
   if (s === "P") return "Perempuan";
   return neat(jk);

@@ -23,9 +23,9 @@ export async function solveTurnstileIfPresent(page, timeoutMs = 8000) {
     try {
       const frames = page.frames();
       for (const frame of frames) {
-        const checkbox = await frame.$(
-          "input[type=checkbox], .cf-turnstile-wrapper, #challenge-stage"
-        ).catch(() => null);
+        const checkbox = await frame
+          .$("input[type=checkbox], .cf-turnstile-wrapper, #challenge-stage")
+          .catch(() => null);
         if (checkbox) {
           await checkbox.click().catch(() => {});
         }
@@ -59,18 +59,16 @@ async function getTokenPage() {
       await solveTurnstileIfPresent(page);
 
       await page
-        .waitForFunction(
-          () => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function",
-          { timeout: 15000 }
-        )
+        .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
+          timeout: 15000,
+        })
         .catch(async () => {
           await page.reload({ waitUntil: "domcontentloaded", timeout: TOKEN_TIMEOUT_MS }).catch(() => {});
           await solveTurnstileIfPresent(page);
           await page
-            .waitForFunction(
-              () => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function",
-              { timeout: 20000 }
-            )
+            .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
+              timeout: 20000,
+            })
             .catch(() => {
               throw new Error("grecaptcha tidak termuat (Cloudflare / jaringan bermasalah)");
             });
@@ -103,10 +101,7 @@ export async function getRecaptchaToken() {
         (sitekey) =>
           new Promise((resolve, reject) => {
             try {
-              const timer = setTimeout(
-                () => reject(new Error("timeout grecaptcha.execute (15 dtk)")),
-                15000
-              );
+              const timer = setTimeout(() => reject(new Error("timeout grecaptcha.execute (15 dtk)")), 15000);
               grecaptcha.ready(() => {
                 grecaptcha
                   .execute(sitekey, { action: "search" })

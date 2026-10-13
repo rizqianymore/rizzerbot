@@ -9,88 +9,88 @@ async function streamToBuffer(stream) {
 }
 
 export default {
-  "name": "rvo",
-  "aliases": ["readviewonce","viewonce"],
-  "description": "Membuka dan mendownload media sekali lihat (view once)",
-  "usage": "(reply media view once)",
-  "premiumOnly": true,
-  "category": "Tools",
-  "run": async (sock, msg, args, { reply, sendTyping, quoted }) => {
-      await sendTyping();
+  name: "rvo",
+  aliases: ["readviewonce", "viewonce"],
+  description: "Membuka dan mendownload media sekali lihat (view once)",
+  usage: "(reply media view once)",
+  premiumOnly: true,
+  category: "Tools",
+  run: async (sock, msg, args, { reply, sendTyping, quoted }) => {
+    await sendTyping();
 
-      if (!quoted) {
-        return reply("❌ Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*!");
-      }
+    if (!quoted) {
+      return reply("❌ Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*!");
+    }
 
-      const inner =
-        quoted.viewOnceMessage?.message ||
-        quoted.viewOnceMessageV2?.message ||
-        quoted.viewOnceMessageV2Extension?.message ||
-        quoted;
+    const inner =
+      quoted.viewOnceMessage?.message ||
+      quoted.viewOnceMessageV2?.message ||
+      quoted.viewOnceMessageV2Extension?.message ||
+      quoted;
 
-      const imageMsg = inner.imageMessage;
-      const videoMsg = inner.videoMessage;
-      const audioMsg = inner.audioMessage;
+    const imageMsg = inner.imageMessage;
+    const videoMsg = inner.videoMessage;
+    const audioMsg = inner.audioMessage;
 
-      if (!imageMsg && !videoMsg && !audioMsg) {
-        return reply("❌ Pesan yang dibalas bukan media View Once atau media gambar/video/audio!");
-      }
+    if (!imageMsg && !videoMsg && !audioMsg) {
+      return reply("❌ Pesan yang dibalas bukan media View Once atau media gambar/video/audio!");
+    }
 
-      await reply("🔓 Membuka media sekali lihat...");
+    await reply("🔓 Membuka media sekali lihat...");
 
-      try {
-        if (imageMsg) {
-          const stream = await downloadContentFromMessage(imageMsg, "image");
-          const buffer = await streamToBuffer(stream);
+    try {
+      if (imageMsg) {
+        const stream = await downloadContentFromMessage(imageMsg, "image");
+        const buffer = await streamToBuffer(stream);
 
-          let caption = "🔓 *View Once Image Unlocked*";
-          if (imageMsg.caption) {
-            caption += `\n\n*Caption Asli:* ${imageMsg.caption}`;
-          }
-
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            {
-              image: buffer,
-              caption,
-              mimetype: imageMsg.mimetype || "image/jpeg",
-            },
-            { quoted: msg }
-          );
-        } else if (videoMsg) {
-          const stream = await downloadContentFromMessage(videoMsg, "video");
-          const buffer = await streamToBuffer(stream);
-
-          let caption = "🔓 *View Once Video Unlocked*";
-          if (videoMsg.caption) {
-            caption += `\n\n*Caption Asli:* ${videoMsg.caption}`;
-          }
-
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            {
-              video: buffer,
-              caption,
-              mimetype: videoMsg.mimetype || "video/mp4",
-            },
-            { quoted: msg }
-          );
-        } else if (audioMsg) {
-          const stream = await downloadContentFromMessage(audioMsg, "audio");
-          const buffer = await streamToBuffer(stream);
-
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            {
-              audio: buffer,
-              mimetype: audioMsg.mimetype || "audio/ogg; codecs=opus",
-              ptt: Boolean(audioMsg.ptt),
-            },
-            { quoted: msg }
-          );
+        let caption = "🔓 *View Once Image Unlocked*";
+        if (imageMsg.caption) {
+          caption += `\n\n*Caption Asli:* ${imageMsg.caption}`;
         }
-      } catch (err) {
-        await reply(`❌ Gagal membuka View Once: ${err.message}`);
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            image: buffer,
+            caption,
+            mimetype: imageMsg.mimetype || "image/jpeg",
+          },
+          { quoted: msg }
+        );
+      } else if (videoMsg) {
+        const stream = await downloadContentFromMessage(videoMsg, "video");
+        const buffer = await streamToBuffer(stream);
+
+        let caption = "🔓 *View Once Video Unlocked*";
+        if (videoMsg.caption) {
+          caption += `\n\n*Caption Asli:* ${videoMsg.caption}`;
+        }
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            video: buffer,
+            caption,
+            mimetype: videoMsg.mimetype || "video/mp4",
+          },
+          { quoted: msg }
+        );
+      } else if (audioMsg) {
+        const stream = await downloadContentFromMessage(audioMsg, "audio");
+        const buffer = await streamToBuffer(stream);
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            audio: buffer,
+            mimetype: audioMsg.mimetype || "audio/ogg; codecs=opus",
+            ptt: Boolean(audioMsg.ptt),
+          },
+          { quoted: msg }
+        );
       }
-    },
+    } catch (err) {
+      await reply(`❌ Gagal membuka View Once: ${err.message}`);
+    }
+  },
 };

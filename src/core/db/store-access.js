@@ -5,11 +5,11 @@ import {
   phoneDigitsOfPhoneJid,
   samePhoneJidStrict,
   toBoolean,
-} from './utils.js';
-import { configDefaults, normalizeSettings } from './settings.js';
-import { resolvePhoneJid } from './lidmap.js';
-import { isAnyBotJid, isPrimaryOwnerJid } from './botids.js';
-import { StoreUsers } from './store-users.js';
+} from "./utils.js";
+import { configDefaults, normalizeSettings } from "./settings.js";
+import { resolvePhoneJid } from "./lidmap.js";
+import { isAnyBotJid, isPrimaryOwnerJid } from "./botids.js";
+import { StoreUsers } from "./store-users.js";
 
 export class StoreAccess extends StoreUsers {
   getSettings() {
@@ -17,7 +17,7 @@ export class StoreAccess extends StoreUsers {
   }
 
   updateSettings(updates = {}) {
-    const allowedKeys = new Set([...Object.keys(configDefaults), 'admins', 'premiumUsers']);
+    const allowedKeys = new Set([...Object.keys(configDefaults), "admins", "premiumUsers"]);
     const next = { ...this.data.settings };
     for (const [key, value] of Object.entries(updates)) {
       if (allowedKeys.has(key)) next[key] = cloneValue(value);
@@ -32,23 +32,15 @@ export class StoreAccess extends StoreUsers {
   isOwner(jid) {
     const normalized = resolvePhoneJid(jid);
     if (!normalized) return false;
-    if (
-      isPrimaryOwnerJid(normalized) ||
-      this.ownerJids.has(normalized) ||
-      this.data.users[normalized]?.owner
-    ) {
+    if (isPrimaryOwnerJid(normalized) || this.ownerJids.has(normalized) || this.data.users[normalized]?.owner) {
       return true;
     }
 
-    if (!normalized.endsWith('@s.whatsapp.net')) return false;
+    if (!normalized.endsWith("@s.whatsapp.net")) return false;
     const digits = phoneDigitsOfPhoneJid(normalized);
     if (digits && digits.length >= 8) {
       const phoneJid = `${digits}@s.whatsapp.net`;
-      if (
-        isPrimaryOwnerJid(phoneJid) ||
-        this.ownerJids.has(phoneJid) ||
-        this.data.users[phoneJid]?.owner
-      ) {
+      if (isPrimaryOwnerJid(phoneJid) || this.ownerJids.has(phoneJid) || this.data.users[phoneJid]?.owner) {
         return true;
       }
     }
@@ -59,7 +51,9 @@ export class StoreAccess extends StoreUsers {
   isAdmin(jid) {
     const normalized = resolvePhoneJid(jid);
     if (!normalized) return false;
-    return Boolean(normalized && (this.isOwner(normalized) || this.adminJids.has(normalized) || this.data.users[normalized]?.admin));
+    return Boolean(
+      normalized && (this.isOwner(normalized) || this.adminJids.has(normalized) || this.data.users[normalized]?.admin)
+    );
   }
 
   isPremium(jid) {
@@ -67,7 +61,7 @@ export class StoreAccess extends StoreUsers {
     if (!normalized) return false;
     if (this.isOwner(normalized) || this.isAdmin(normalized) || this.premiumJids.has(normalized)) return true;
 
-    if (!normalized.endsWith('@s.whatsapp.net')) {
+    if (!normalized.endsWith("@s.whatsapp.net")) {
       const user = this.data.users[normalized];
       return Boolean(user?.premium && !isPremiumExpired(user));
     }
@@ -99,32 +93,33 @@ export class StoreAccess extends StoreUsers {
       owner,
       admin,
       premium,
-      role: owner ? 'owner' : admin ? 'admin' : premium ? 'premium' : 'user',
+      role: owner ? "owner" : admin ? "admin" : premium ? "premium" : "user",
       banned: Boolean(user?.banned) && !owner,
     };
   }
 
   hasAccess(jid, requiredAccess) {
-    if (requiredAccess === undefined || requiredAccess === null || requiredAccess === '') {
+    if (requiredAccess === undefined || requiredAccess === null || requiredAccess === "") {
       return true;
     }
-    const requirements = (Array.isArray(requiredAccess) ? requiredAccess : [requiredAccess])
-      .filter((requirement) => requirement !== undefined && requirement !== null && requirement !== '');
+    const requirements = (Array.isArray(requiredAccess) ? requiredAccess : [requiredAccess]).filter(
+      (requirement) => requirement !== undefined && requirement !== null && requirement !== ""
+    );
     if (requirements.length === 0) return true;
     const access = this.getAccess(jid);
-    const normalizedRequirements = requirements.map((requirement) => String(requirement || '').toLowerCase());
-    if (access.banned && !normalizedRequirements.includes('banned')) return false;
+    const normalizedRequirements = requirements.map((requirement) => String(requirement || "").toLowerCase());
+    if (access.banned && !normalizedRequirements.includes("banned")) return false;
     return requirements.every((requirement) => {
-      switch (String(requirement || '').toLowerCase()) {
-        case 'owner':
+      switch (String(requirement || "").toLowerCase()) {
+        case "owner":
           return access.owner;
-        case 'admin':
+        case "admin":
           return access.admin;
-        case 'premium':
+        case "premium":
           return access.premium;
-        case 'banned':
+        case "banned":
           return access.banned;
-        case 'user':
+        case "user":
           return Boolean(access.user || access.owner || access.admin || access.premium) && !access.banned;
         default:
           return false;

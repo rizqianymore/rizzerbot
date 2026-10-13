@@ -27,7 +27,9 @@ export async function webpToVideo(buffer) {
 
     const cacheDir = path.join(process.cwd(), "assets", "cache");
     if (!fs.existsSync(cacheDir)) {
-      try { fs.mkdirSync(cacheDir, { recursive: true }); } catch (_) {}
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      } catch (_) {}
     }
     const tmpDir = await fsp.mkdtemp(path.join(cacheDir, "webpvid-"));
 
@@ -40,12 +42,18 @@ export async function webpToVideo(buffer) {
       const outMp4 = path.join(tmpDir, "out.mp4");
       await execFileAsync(getFfmpegPath(), [
         "-y",
-        "-framerate", "15",
-        "-i", path.join(tmpDir, "frame_%04d.png"),
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
-        "-movflags", "+faststart",
+        "-framerate",
+        "15",
+        "-i",
+        path.join(tmpDir, "frame_%04d.png"),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-vf",
+        "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+        "-movflags",
+        "+faststart",
         outMp4,
       ]);
 
@@ -65,10 +73,7 @@ export async function upscaleImage(buffer, scale = 2) {
     const meta = await img.metadata();
     const width = Math.round((meta.width || 500) * scale);
     const height = Math.round((meta.height || 500) * scale);
-    return await img
-      .resize(width, height, { kernel: sharp.kernel.lanczos3 })
-      .png()
-      .toBuffer();
+    return await img.resize(width, height, { kernel: sharp.kernel.lanczos3 }).png().toBuffer();
   } catch (_err) {
     throw new Error("Gagal memproses gambar");
   }

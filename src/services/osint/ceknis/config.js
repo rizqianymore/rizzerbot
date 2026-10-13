@@ -41,6 +41,9 @@ export const UA =
 
 export function buildUrl(query, mode = "nis") {
   const q = String(query ?? "").trim();
-  const m = String(mode ?? "nis").trim().toLowerCase() || "nis";
+  const m =
+    String(mode ?? "nis")
+      .trim()
+      .toLowerCase() || "nis";
   return `${getSiswaBaseUrl()}?query=${encodeURIComponent(q)}&mode=${encodeURIComponent(m)}`;
 }

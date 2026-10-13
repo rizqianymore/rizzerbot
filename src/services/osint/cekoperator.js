@@ -60,7 +60,9 @@ const PREFIXES = [
 const SORTED = [...PREFIXES].sort((a, b) => b.prefix.length - a.prefix.length);
 
 export function normalizeNumber(input) {
-  let n = String(input || "").trim().replace(/[\s\-().]/g, "");
+  let n = String(input || "")
+    .trim()
+    .replace(/[\s\-().]/g, "");
   if (n.startsWith("+62")) n = "0" + n.slice(3);
   else if (n.startsWith("62")) n = "0" + n.slice(2);
   return n;

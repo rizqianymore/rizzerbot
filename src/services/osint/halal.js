@@ -92,8 +92,7 @@ function parsePagination(payload) {
 function normalizeItem(item) {
   const pabrik = Array.isArray(item.pabrik) ? item.pabrik : [];
   // Prefer production facility (FAPAB), else first
-  const prod =
-    pabrik.find((p) => p.fasil_id === "FAPAB") || pabrik[0] || {};
+  const prod = pabrik.find((p) => p.fasil_id === "FAPAB") || pabrik[0] || {};
   return {
     merekDagang: stripHtml(item.merek_dagang) || "-",
     namaProduk: stripHtml(item.nama_produk) || "-",
@@ -124,9 +123,7 @@ export async function searchHalal(query, { key = "produk", page = 1 } = {}) {
 
   const param = SEARCH_KEYS[key] || SEARCH_KEYS.produk;
   const q = query.trim();
-  const url = `${BASE}${SEARCH_PATH}?${param}=${encodeURIComponent(q)}${
-    page > 1 ? `&page=${page}` : ""
-  }`;
+  const url = `${BASE}${SEARCH_PATH}?${param}=${encodeURIComponent(q)}${page > 1 ? `&page=${page}` : ""}`;
 
   let res;
   try {
@@ -173,7 +170,8 @@ export async function searchHalal(query, { key = "produk", page = 1 } = {}) {
 export function formatResults(query, result, startTime) {
   const latency = (Date.now() - startTime).toFixed(0);
   const { data, totalItems } = result;
-  const keyLabel = { produk: "Nama Produk", pelaku: "Pelaku Usaha", sertifikat: "No. Sertifikat" }[result.key] || "Produk";
+  const keyLabel =
+    { produk: "Nama Produk", pelaku: "Pelaku Usaha", sertifikat: "No. Sertifikat" }[result.key] || "Produk";
 
   let text = `☪️ *CEK PRODUK HALAL — BPJPH*\n\n`;
   text += `🔍 Pencarian (${keyLabel}): \`${query}\`\n`;

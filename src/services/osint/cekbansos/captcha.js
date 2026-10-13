@@ -3,13 +3,7 @@ import sharp from "sharp";
 import { client, UA } from "./client.js";
 
 async function preprocessCaptcha(buffer) {
-  return sharp(buffer)
-    .grayscale()
-    .normalize()
-    .resize({ width: 480 })
-    .threshold(165)
-    .png()
-    .toBuffer();
+  return sharp(buffer).grayscale().normalize().resize({ width: 480 }).threshold(165).png().toBuffer();
 }
 
 export async function solveCaptchaGemini(imageBuffer) {
@@ -24,21 +18,21 @@ export async function solveCaptchaGemini(imageBuffer) {
           {
             parts: [
               {
-                text: "Analyze this image containing a distorted 4-character CAPTCHA text. Output ONLY the 4 characters, in exact order, with no spaces, punctuation, or explanations."
+                text: "Analyze this image containing a distorted 4-character CAPTCHA text. Output ONLY the 4 characters, in exact order, with no spaces, punctuation, or explanations.",
               },
               {
                 inline_data: {
                   mime_type: "image/png",
                   data: b64,
-                }
-              }
-            ]
-          }
+                },
+              },
+            ],
+          },
         ],
         generationConfig: {
           temperature: 0,
           maxOutputTokens: 10,
-        }
+        },
       },
       { timeout: 8000 }
     );

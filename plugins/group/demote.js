@@ -49,40 +49,40 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
 }
 
 export default {
-  "name": "demote",
-  "groupOnly": true,
-  "groupAdminOnly": true,
-  "botAdminOnly": true,
-  "aliases": ["turunadmin"],
-  "description": "Menurunkan jabatan admin grup menjadi member biasa",
-  "usage": "@user",
-  "category": "Group",
-  "run": async (sock, msg, args, context) => {
-      await context.sendTyping();
-      const ctx = await getGroupContext(sock, msg, context, {
-        requireUserAdmin: true,
-        requireBotAdmin: true,
-      });
-      if (!ctx) return;
+  name: "demote",
+  groupOnly: true,
+  groupAdminOnly: true,
+  botAdminOnly: true,
+  aliases: ["turunadmin"],
+  description: "Menurunkan jabatan admin grup menjadi member biasa",
+  usage: "@user",
+  category: "Group",
+  run: async (sock, msg, args, context) => {
+    await context.sendTyping();
+    const ctx = await getGroupContext(sock, msg, context, {
+      requireUserAdmin: true,
+      requireBotAdmin: true,
+    });
+    if (!ctx) return;
 
-      const targetJid = context.getTargetJid(args);
-      if (!targetJid) {
-        return context.reply("❌ Balas pesan admin atau masukkan nomor yang ingin dicabut status adminnya!");
-      }
+    const targetJid = context.getTargetJid(args);
+    if (!targetJid) {
+      return context.reply("❌ Balas pesan admin atau masukkan nomor yang ingin dicabut status adminnya!");
+    }
 
-      try {
-        await sock.groupParticipantsUpdate(ctx.remoteJid, [targetJid], "demote");
-        invalidateGroupMeta(ctx.remoteJid);
-        await sock.sendMessage(
-          ctx.remoteJid,
-          {
-            text: `🔻 Status admin untuk @${targetJid.split("@")[0]} telah dicabut.`,
-            mentions: [targetJid],
-          },
-          { quoted: msg }
-        );
-      } catch (err) {
-        await context.reply(`❌ Gagal menurunkan admin: ${err.message}`);
-      }
-    },
+    try {
+      await sock.groupParticipantsUpdate(ctx.remoteJid, [targetJid], "demote");
+      invalidateGroupMeta(ctx.remoteJid);
+      await sock.sendMessage(
+        ctx.remoteJid,
+        {
+          text: `🔻 Status admin untuk @${targetJid.split("@")[0]} telah dicabut.`,
+          mentions: [targetJid],
+        },
+        { quoted: msg }
+      );
+    } catch (err) {
+      await context.reply(`❌ Gagal menurunkan admin: ${err.message}`);
+    }
+  },
 };

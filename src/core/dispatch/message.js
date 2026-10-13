@@ -57,25 +57,32 @@ export function getPhoneDigitsFn(value) {
 }
 
 export function isPhoneJid(jid, minimumDigits = 10) {
-  return Boolean(
-    jid &&
-    jid.endsWith("@s.whatsapp.net") &&
-    getPhoneDigitsFn(jid).length >= minimumDigits
-  );
+  return Boolean(jid && jid.endsWith("@s.whatsapp.net") && getPhoneDigitsFn(jid).length >= minimumDigits);
 }
 
 export function findPhoneJid(values) {
-  const parts = (Array.isArray(values) ? values : String(values || "").trim().split(/[\s,;]+/))
+  const parts = (
+    Array.isArray(values)
+      ? values
+      : String(values || "")
+          .trim()
+          .split(/[\s,;]+/)
+  )
     .map((value) => String(value || "").trim())
     .filter(Boolean);
 
   for (let start = 0; start < parts.length; start += 1) {
     const directValue = parts[start];
     if (directValue.includes("@") || directValue.startsWith("+")) {
-
       const directJid = db.resolvePhoneJid(directValue);
       const explicitJid = directValue.includes("@") && directValue.indexOf("@", 1) >= 0;
-      if (directJid && !directJid.endsWith("@g.us") && directJid.endsWith("@s.whatsapp.net") && (explicitJid || isPhoneJid(directJid))) return directJid;
+      if (
+        directJid &&
+        !directJid.endsWith("@g.us") &&
+        directJid.endsWith("@s.whatsapp.net") &&
+        (explicitJid || isPhoneJid(directJid))
+      )
+        return directJid;
     }
 
     let candidate = "";

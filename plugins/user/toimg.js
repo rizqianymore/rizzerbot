@@ -1,45 +1,44 @@
-
-import { getMediaBuffer, webpToImage, webpToVideo, findDownloadableTarget } from '@/src/services/fetch/media.js';
+import { getMediaBuffer, webpToImage, webpToVideo, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 export default {
-  "name": "toimg",
-  "aliases": ["toimage", "tovid", "tovideo"],
-  "description": "Convert sticker to image or video",
-  "usage": "(reply stiker)",
-  "premiumOnly": true,
-  "category": "User",
-  "run": async (sock, msg, args, { reply, sendTyping }) => {
-      await sendTyping();
-      const targetMsg = findDownloadableTarget(msg);
-      let buffer = null;
-      if (targetMsg) {
-        try {
-          buffer = await getMediaBuffer(sock, targetMsg);
-        } catch (err) {
-          return reply(`❌ ${err?.message || "Gagal membaca media."}`);
-        }
-      }
-      if (!buffer) return reply("❌ Balas stiker dengan perintah *.toimg* atau *.tovid*");
-
+  name: "toimg",
+  aliases: ["toimage", "tovid", "tovideo"],
+  description: "Convert sticker to image or video",
+  usage: "(reply stiker)",
+  premiumOnly: true,
+  category: "User",
+  run: async (sock, msg, args, { reply, sendTyping }) => {
+    await sendTyping();
+    const targetMsg = findDownloadableTarget(msg);
+    let buffer = null;
+    if (targetMsg) {
       try {
-        const vidBuffer = await webpToVideo(buffer);
-        if (vidBuffer) {
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            { video: vidBuffer, caption: "🎥 *HASIL KONVERSI STIKER KE VIDEO*" },
-            { quoted: msg }
-          );
-          return;
-        }
+        buffer = await getMediaBuffer(sock, targetMsg);
+      } catch (err) {
+        return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+      }
+    }
+    if (!buffer) return reply("❌ Balas stiker dengan perintah *.toimg* atau *.tovid*");
 
-        const png = await webpToImage(buffer);
+    try {
+      const vidBuffer = await webpToVideo(buffer);
+      if (vidBuffer) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { image: png, caption: "🖼️ *HASIL KONVERSI STIKER KE GAMBAR*" },
+          { video: vidBuffer, caption: "🎥 *HASIL KONVERSI STIKER KE VIDEO*" },
           { quoted: msg }
         );
-      } catch (err) {
-        await reply(`❌ Gagal mengkonversi: ${err.message}`);
+        return;
       }
-    },
+
+      const png = await webpToImage(buffer);
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { image: png, caption: "🖼️ *HASIL KONVERSI STIKER KE GAMBAR*" },
+        { quoted: msg }
+      );
+    } catch (err) {
+      await reply(`❌ Gagal mengkonversi: ${err.message}`);
+    }
+  },
 };

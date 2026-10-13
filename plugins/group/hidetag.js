@@ -49,38 +49,34 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
 }
 
 export default {
-  "name": "hidetag",
-  "groupOnly": true,
-  "groupAdminOnly": true,
-  "aliases": ["ht"],
-  "description": "Mention semua member grup secara senyap/transparan",
-  "usage": "<pesan>",
-  "category": "Group",
-  "run": async (sock, msg, args, context) => {
-      await context.sendTyping();
-      const ctx = await getGroupContext(sock, msg, context, { requireUserAdmin: true });
-      if (!ctx) return;
+  name: "hidetag",
+  groupOnly: true,
+  groupAdminOnly: true,
+  aliases: ["ht"],
+  description: "Mention semua member grup secara senyap/transparan",
+  usage: "<pesan>",
+  category: "Group",
+  run: async (sock, msg, args, context) => {
+    await context.sendTyping();
+    const ctx = await getGroupContext(sock, msg, context, { requireUserAdmin: true });
+    if (!ctx) return;
 
-      const mentions = ctx.participants.map((p) => p.id);
-      let text = args.join(" ");
+    const mentions = ctx.participants.map((p) => p.id);
+    let text = args.join(" ");
 
-      if (!text && context.quoted) {
-        text =
-          context.quoted.conversation ||
-          context.quoted.extendedTextMessage?.text ||
-          context.quoted.imageMessage?.caption ||
-          context.quoted.videoMessage?.caption ||
-          "";
-      }
+    if (!text && context.quoted) {
+      text =
+        context.quoted.conversation ||
+        context.quoted.extendedTextMessage?.text ||
+        context.quoted.imageMessage?.caption ||
+        context.quoted.videoMessage?.caption ||
+        "";
+    }
 
-      if (!text) {
-        text = "📢 Perhatian semua member!";
-      }
+    if (!text) {
+      text = "📢 Perhatian semua member!";
+    }
 
-      await sock.sendMessage(
-        ctx.remoteJid,
-        { text, mentions },
-        { quoted: msg }
-      );
-    },
+    await sock.sendMessage(ctx.remoteJid, { text, mentions }, { quoted: msg });
+  },
 };

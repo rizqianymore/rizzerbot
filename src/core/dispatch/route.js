@@ -26,7 +26,6 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
     const ownerCommands = ["self", "public", "pub", "setprefix", "delbot", "syncsubbot", "vps"];
 
     if (ownerCommands.includes(commandName)) {
-
       if (isSubBotSock) {
         return true;
       }
@@ -37,17 +36,14 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
         }
       }
     } else {
-
       const verdict = await resolveGroupResponder(sock, remoteJid, botJid, isSubBotSock);
       if (verdict.mode === "multi-main-present" || verdict.mode === "multi-sub-only") {
         if (!verdict.shouldRespond) return true;
       } else if (verdict.mode === "unknown") {
-
         if (isSubBotSock) {
           return true;
         }
       }
-
     }
   }
   return false;

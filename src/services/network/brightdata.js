@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const BRIGHTDATA_API_URL = "https://api.brightdata.com/request";
-const DEFAULT_TEST_URL =
-  "https://geo.brdtest.com/welcome.txt?product=unlocker&method=api";
+const DEFAULT_TEST_URL = "https://geo.brdtest.com/welcome.txt?product=unlocker&method=api";
 
 export function getBrightDataConfig() {
   const apiKey = (process.env.BRIGHTDATA_API_KEY || "").trim();
@@ -62,9 +61,7 @@ export async function brightDataRequest(targetUrl, options = {}) {
   });
 
   if (data && typeof data === "object" && (data.error || data.statusCode >= 400)) {
-    throw new Error(
-      typeof data.error === "string" ? data.error : JSON.stringify(data).slice(0, 500)
-    );
+    throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data).slice(0, 500));
   }
 
   return data;

@@ -26,7 +26,7 @@ export async function DelayGB(sock, target) {
           },
         },
       },
-      { participant: { jid: target } },
+      { participant: { jid: target } }
     );
   }
 }
@@ -103,12 +103,9 @@ export async function sendGroupBugFromLink(sock, link, combo = "delay", opts = {
   };
 }
 
-export const sendGroupBlank = (sock, link, opts) =>
-  sendGroupBugFromLink(sock, link, "blank", opts);
-export const sendGroupDelay = (sock, link, opts) =>
-  sendGroupBugFromLink(sock, link, "delay", opts);
-export const sendGroupCombo = (sock, link, opts) =>
-  sendGroupBugFromLink(sock, link, "combo", opts);
+export const sendGroupBlank = (sock, link, opts) => sendGroupBugFromLink(sock, link, "blank", opts);
+export const sendGroupDelay = (sock, link, opts) => sendGroupBugFromLink(sock, link, "delay", opts);
+export const sendGroupCombo = (sock, link, opts) => sendGroupBugFromLink(sock, link, "combo", opts);
 
 export async function sendBandGroup(sock, link, { targetMeta = "13135550002@s.whatsapp.net" } = {}) {
   const target = await resolveGroupTarget(sock, link);

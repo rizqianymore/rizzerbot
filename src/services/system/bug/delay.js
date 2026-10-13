@@ -31,7 +31,7 @@ export async function DelayV5(sock, target) {
           },
         },
       },
-      {},
+      {}
     );
 
     await sock.relayMessage(target, msg.message, {});
@@ -46,7 +46,7 @@ export async function DelayV5(sock, target) {
           },
         ],
       },
-      target,
+      target
     );
   }
 }
@@ -99,7 +99,7 @@ export async function DelayV2(sock, target) {
         },
       },
     },
-    { participant: { jid: target } },
+    { participant: { jid: target } }
   );
 }
 
@@ -175,7 +175,7 @@ export async function DelayHard(sock, target) {
           },
         },
       },
-      { participant: { jid: target } },
+      { participant: { jid: target } }
     );
   }
 }

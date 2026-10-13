@@ -67,7 +67,7 @@ export function isVideoOrAnimated(buf) {
   if (ftyp === "ftyp" || ftyp === "moov") return true;
   if (buf.slice(0, 4).toString() === "\x00\x00\x00 ") return true;
   // WebM / MKV
-  if (buf[0] === 0x1A && buf[1] === 0x45 && buf[2] === 0xDF && buf[3] === 0xA3) return true;
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return true;
   // AVI
   if (buf.slice(0, 4).toString() === "RIFF" && buf.slice(8, 12).toString() === "AVI ") return true;
   // Animated WebP

@@ -14,10 +14,7 @@ export default {
     const username = (args[0] || "").trim().replace(/^@/, "");
 
     if (!username) {
-      return reply(
-        `❌ Masukkan username yang ingin dicek!\n` +
-        `Contoh: \`${currentPrefix}stalktiktok tiktok\``
-      );
+      return reply(`❌ Masukkan username yang ingin dicek!\n` + `Contoh: \`${currentPrefix}stalktiktok tiktok\``);
     }
     if (!isValidUsername(username)) {
       return reply("❌ Format username tidak valid (hanya huruf, angka, dot, strip, underscore, 3-30 karakter).");
@@ -27,7 +24,9 @@ export default {
     const result = await checkUsernameOn(platform, username);
 
     if (result.exists) {
-      return reply(`✅ Username *${username}* ditemukan di *${result.name}*!\n🔗 ${result.url}\n🎯 Akurasi: ${result.confidence}`);
+      return reply(
+        `✅ Username *${username}* ditemukan di *${result.name}*!\n🔗 ${result.url}\n🎯 Akurasi: ${result.confidence}`
+      );
     }
     return reply(`❌ Username *${username}* tidak ditemukan di *${result.name}*.`);
   },

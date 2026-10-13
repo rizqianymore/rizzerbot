@@ -24,8 +24,7 @@ export async function searchDrivers(query, limit = 10) {
 
   hits.sort((a, b) => {
     const score = (d) =>
-      norm(d.driverId) === norm(q) || norm(d.shortName) === norm(q) ? 0
-      : norm(d.surname) === norm(q) ? 1 : 2;
+      norm(d.driverId) === norm(q) || norm(d.shortName) === norm(q) ? 0 : norm(d.surname) === norm(q) ? 1 : 2;
     return score(a) - score(b);
   });
   return hits.slice(0, limit);

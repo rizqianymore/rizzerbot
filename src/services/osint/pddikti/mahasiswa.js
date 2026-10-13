@@ -1,5 +1,16 @@
 import { stealthBrowser } from "@/src/utils/request.js";
-import { BASE, UA, DETAIL_TTL_MS, detailCache, cacheGet, cacheSet, fetchWithTimeout, neat, formatTanggal, jkLabel } from "./constants.js";
+import {
+  BASE,
+  UA,
+  DETAIL_TTL_MS,
+  detailCache,
+  cacheGet,
+  cacheSet,
+  fetchWithTimeout,
+  neat,
+  formatTanggal,
+  jkLabel,
+} from "./constants.js";
 import { getRecaptchaToken, solveTurnstileIfPresent } from "./token.js";
 import { searchPddikti } from "./search.js";
 
@@ -36,7 +47,9 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
       if (json?.status === "success" && json?.data) {
         const d = json.data;
         const [jenjang = "", prodi = ""] = String(d.prodi || "").includes("-")
-          ? String(d.prodi).split("-").map((s) => s.trim())
+          ? String(d.prodi)
+              .split("-")
+              .map((s) => s.trim())
           : [d.jenjang || "-", d.prodi || "-"];
         const jkRaw = String(d.jenis_kelamin || "").toLowerCase();
         const data = {
@@ -101,10 +114,9 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
     await solveTurnstileIfPresent(page, 10000);
 
     await page
-      .waitForFunction(
-        () => /Biodata Mahasiswa|Tidak ada hasil|notFound/i.test(document.body.innerText),
-        { timeout: 20000 }
-      )
+      .waitForFunction(() => /Biodata Mahasiswa|Tidak ada hasil|notFound/i.test(document.body.innerText), {
+        timeout: 20000,
+      })
       .catch(() => {});
     await new Promise((r) => setTimeout(r, 2000));
 
@@ -189,7 +201,11 @@ export async function getCeknimInfoText(input, opts = {}) {
       return { error: `Data mahasiswa "${raw}" tidak ditemukan di PDDikti.` };
     }
 
-    const norm = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, "");
+    const norm = (s) =>
+      String(s ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "");
     const exact = mhs.find((m) => norm(m.nim) === norm(raw));
 
     if (exact?.id) {

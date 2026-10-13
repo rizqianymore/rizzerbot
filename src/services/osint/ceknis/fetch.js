@@ -64,7 +64,8 @@ async function fetchWithRedirect(url, { timeoutMs = 10000, maxRedirects = 5 } = 
 
     if ([301, 302, 303, 307, 308].includes(res.status)) {
       const location = res.headers.get("location");
-      if (!location) throw new Error(`Redirect ${res.status} tanpa header Location (kemungkinan deployment GAS expired)`);
+      if (!location)
+        throw new Error(`Redirect ${res.status} tanpa header Location (kemungkinan deployment GAS expired)`);
       if (redirects >= maxRedirects) throw new Error("Terlalu banyak redirect (>5, user_content_key mungkin expired)");
       currentUrl = new URL(location, currentUrl).toString();
       redirects++;
@@ -117,7 +118,10 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
   const query = String(nis ?? "").trim();
-  const m = String(mode ?? "nis").trim().toLowerCase() || "nis";
+  const m =
+    String(mode ?? "nis")
+      .trim()
+      .toLowerCase() || "nis";
   if (!query) throw new Error("NIS wajib diisi");
 
   const cacheKey = `${getSiswaBaseUrl()}|${m}:${query}`;
@@ -136,8 +140,7 @@ export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
     } catch (err) {
       lastErr = err;
       const msg = String(err?.message || "");
-      const retryable =
-        err?.name === "AbortError" || /429|5\d\d|timeout|Timeout|ECONN|fetch failed/i.test(msg);
+      const retryable = err?.name === "AbortError" || /429|5\d\d|timeout|Timeout|ECONN|fetch failed/i.test(msg);
       if (retryable && attempt < retries) {
         await delay(800 * (attempt + 1));
         continue;

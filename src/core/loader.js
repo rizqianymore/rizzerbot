@@ -18,7 +18,6 @@ function getFilesRecursive(dir, baseDir = dir) {
     if (file.isDirectory()) {
       results = results.concat(getFilesRecursive(fullPath, baseDir));
     } else if (file.isFile() && file.name.endsWith(".js")) {
-
       if (file.name.startsWith("_")) continue;
       results.push({
         absolutePath: fullPath,
@@ -86,14 +85,10 @@ export async function reloadPluginFile(absolutePath, relativePath) {
     }
 
     if (!loadedAny) {
-      console.log(
-        `  ! Plugin file ${relativePath} did not export any valid commands.`
-      );
+      console.log(`  ! Plugin file ${relativePath} did not export any valid commands.`);
     }
   } catch (err) {
-    console.error(
-      `  ✗ Failed to load/reload plugin ${relativePath}: ${err.message}`
-    );
+    console.error(`  ✗ Failed to load/reload plugin ${relativePath}: ${err.message}`);
   }
 }
 
@@ -171,12 +166,8 @@ export async function loadPlugins() {
   for (const file of files) {
     await reloadPluginFile(file.absolutePath, file.relativePath);
   }
-  console.log(
-    `Loaded ${commands.size} command entries (names + aliases) in total.`
-  );
+  console.log(`Loaded ${commands.size} command entries (names + aliases) in total.`);
 
   updateDirectoryWatchers();
-  console.log(
-    `Watching plugins directory for automatic hot-reloads.`
-  );
+  console.log(`Watching plugins directory for automatic hot-reloads.`);
 }

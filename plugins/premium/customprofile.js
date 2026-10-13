@@ -1,17 +1,17 @@
-import { db } from '@/src/core/database.js';
+import { db } from "@/src/core/database.js";
 
 export default {
-  "name": "customprofile",
-  "aliases": ["setprofile"],
-  "description": "Set custom profile text",
-  "usage": "<teks bio>",
-  "premiumOnly": true,
-  "category": "Premium",
-  "run": async (sock, msg, args, { reply, sendTyping, senderJid }) => {
-      await sendTyping();
-      const text = args.join(" ").trim();
-      if (!text) return reply("❌ Masukkan teks profil! Contoh: *.customprofile CEO of Rizz*");
-      db.updateUser(senderJid, { profile: text });
-      await reply(`✅ Profil kustom diatur:\n\n"${text}"`);
-    },
+  name: "customprofile",
+  aliases: ["setprofile"],
+  description: "Set custom profile text",
+  usage: "<teks bio>",
+  premiumOnly: true,
+  category: "Premium",
+  run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
+    await sendTyping();
+    const text = args.join(" ").trim();
+    if (!text) return reply("❌ Masukkan teks profil! Contoh: *.customprofile CEO of Rizz*");
+    db.updateUser(senderJid, { profile: text });
+    await reply(`✅ Profil kustom diatur:\n\n"${text}"`);
+  },
 };

@@ -18,8 +18,14 @@ export async function sendImage(sock, remoteJid, msg, target, cap) {
     // WhatsApp image message tidak selalu mau terima webp langsung — konversi ke jpeg.
     const isWebp =
       buf.length > 12 &&
-      buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
-      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50;
+      buf[0] === 0x52 &&
+      buf[1] === 0x49 &&
+      buf[2] === 0x46 &&
+      buf[3] === 0x46 &&
+      buf[8] === 0x57 &&
+      buf[9] === 0x45 &&
+      buf[10] === 0x42 &&
+      buf[11] === 0x50;
     if (isWebp) {
       try {
         const { default: sharp } = await import("sharp");
@@ -39,11 +45,7 @@ export async function sendImage(sock, remoteJid, msg, target, cap) {
 export async function sendVideo(sock, remoteJid, msg, target, cap) {
   try {
     const buf = await toBuffer(target);
-    await sock.sendMessage(
-      remoteJid,
-      { video: buf, caption: cap, mimetype: "video/mp4" },
-      { quoted: msg }
-    );
+    await sock.sendMessage(remoteJid, { video: buf, caption: cap, mimetype: "video/mp4" }, { quoted: msg });
   } catch (_) {
     if (target.url) {
       await sock.sendMessage(

@@ -32,8 +32,15 @@ function isRealImageBuffer(buf) {
   const b = buf;
   const isJpeg = b[0] === 0xff && b[1] === 0xd8;
   const isPng = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
-  const isWebp = b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+  const isWebp =
+    b[0] === 0x52 &&
+    b[1] === 0x49 &&
+    b[2] === 0x46 &&
+    b[3] === 0x46 &&
+    b[8] === 0x57 &&
+    b[9] === 0x45 &&
+    b[10] === 0x42 &&
+    b[11] === 0x50;
   const isGif = b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46;
   return isJpeg || isPng || isWebp || isGif;
 }
@@ -56,7 +63,6 @@ export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
   const cached = wikiCacheGet(title);
   if (cached) return cached;
   try {
-
     const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&formatversion=2&pithumbsize=${thumbSize}`;
     const res = await fetchWithTimeout(api);
     const j = await res.json();
@@ -81,7 +87,21 @@ export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
   }
 }
 
-const LOGO_DENY = ["commons-logo", "wikimedia", "wikipedia", "edit-", "icon", "button", "symbol", "arrow", "increase", "decrease", "check-", "red x", "green tick"];
+const LOGO_DENY = [
+  "commons-logo",
+  "wikimedia",
+  "wikipedia",
+  "edit-",
+  "icon",
+  "button",
+  "symbol",
+  "arrow",
+  "increase",
+  "decrease",
+  "check-",
+  "red x",
+  "green tick",
+];
 async function getWikiLogoFallback(title, thumbSize) {
   try {
     const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&formatversion=2&imlimit=100`;

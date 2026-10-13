@@ -18,7 +18,6 @@ export default {
     const [a0 = "", a1 = "", a2 = ""] = (args || []).map((a) => String(a).trim());
     await sendTyping();
     try {
-
       if (/^(last|terakhir)$/i.test(a0)) {
         const type = parseResultType(a1 || "race") || "race";
         const data = await getLastSessionResult(type, 10);
@@ -29,17 +28,23 @@ export default {
       let roundRaw = "";
       let typeRaw = "race";
       if (/^\d{4}$/.test(a0) && /^\d+$/.test(a1)) {
-        seasonRaw = a0; roundRaw = a1; typeRaw = a2 || "race";
+        seasonRaw = a0;
+        roundRaw = a1;
+        typeRaw = a2 || "race";
       } else if (/^current$/i.test(a0) && /^\d+$/.test(a1)) {
-        seasonRaw = "current"; roundRaw = a1; typeRaw = a2 || "race";
+        seasonRaw = "current";
+        roundRaw = a1;
+        typeRaw = a2 || "race";
       } else if (/^\d+$/.test(a0)) {
-        seasonRaw = "current"; roundRaw = a0; typeRaw = a1 || "race";
+        seasonRaw = "current";
+        roundRaw = a0;
+        typeRaw = a1 || "race";
       } else {
         return reply(
           `Masukkan tahun & round! Contoh:\n` +
-          `• \`${currentPrefix}f1results 2024 1 race\`\n` +
-          `• \`${currentPrefix}f1results 2024 1 qualy\`\n` +
-          `• \`${currentPrefix}f1results last race\``
+            `• \`${currentPrefix}f1results 2024 1 race\`\n` +
+            `• \`${currentPrefix}f1results 2024 1 qualy\`\n` +
+            `• \`${currentPrefix}f1results last race\``
         );
       }
       const season = parseSeasonParam(seasonRaw);

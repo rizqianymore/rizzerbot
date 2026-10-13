@@ -71,8 +71,7 @@ export async function fetchAllList(listPath, listKey, { pageSize = 100, maxTotal
 export const norm = (s) => String(s ?? "").toLowerCase();
 export function matchDriver(d, q) {
   const query = norm(q);
-  return [d.driverId, d.name, d.surname, `${d.name} ${d.surname}`, d.shortName]
-    .some((v) => norm(v).includes(query));
+  return [d.driverId, d.name, d.surname, `${d.name} ${d.surname}`, d.shortName].some((v) => norm(v).includes(query));
 }
 export function matchTeam(t, q) {
   const query = norm(q);

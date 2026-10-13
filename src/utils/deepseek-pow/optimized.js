@@ -8,12 +8,8 @@ import {
 
 export const DEEPSEEK_HASH_ROUNDS = 23;
 export const DIGEST_HEX_PATTERN = /^[a-f0-9]{64}$/i;
-export const ROUND_CONSTANTS_LOW = Uint32Array.from(ROUND_CONSTANTS, (value) =>
-  Number(value & 0xffffffffn)
-);
-export const ROUND_CONSTANTS_HIGH = Uint32Array.from(ROUND_CONSTANTS, (value) =>
-  Number((value >> 32n) & 0xffffffffn)
-);
+export const ROUND_CONSTANTS_LOW = Uint32Array.from(ROUND_CONSTANTS, (value) => Number(value & 0xffffffffn));
+export const ROUND_CONSTANTS_HIGH = Uint32Array.from(ROUND_CONSTANTS, (value) => Number((value >> 32n) & 0xffffffffn));
 export const RHO_PI_DESTINATION_WORDS = Uint8Array.from({ length: 25 }, (_, lane) => {
   const x = lane % 5;
   const y = Math.floor(lane / 5);
@@ -39,8 +35,7 @@ export function keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, rou
   for (let round = firstRound; round < ROUND_CONSTANTS.length; round++) {
     for (let x = 0; x < 5; x++) {
       const word = 2 * x;
-      columnParity[word] =
-        state[word] ^ state[word + 10] ^ state[word + 20] ^ state[word + 30] ^ state[word + 40];
+      columnParity[word] = state[word] ^ state[word + 10] ^ state[word + 20] ^ state[word + 30] ^ state[word + 40];
       columnParity[word + 1] =
         state[word + 1] ^ state[word + 11] ^ state[word + 21] ^ state[word + 31] ^ state[word + 41];
     }
@@ -94,8 +89,7 @@ export function keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, rou
       const nextWord = CHI_NEXT_WORDS[lane];
       const nextNextWord = CHI_NEXT_NEXT_WORDS[lane];
       state[word] = rhoPiState[word] ^ (~rhoPiState[nextWord] & rhoPiState[nextNextWord]);
-      state[word + 1] =
-        rhoPiState[word + 1] ^ (~rhoPiState[nextWord + 1] & rhoPiState[nextNextWord + 1]);
+      state[word + 1] = rhoPiState[word + 1] ^ (~rhoPiState[nextWord + 1] & rhoPiState[nextNextWord + 1]);
     }
 
     state[0] ^= ROUND_CONSTANTS_LOW[round];
@@ -103,15 +97,7 @@ export function keccakP1600Uint32(state, rhoPiState, columnParity, thetaMix, rou
   }
 }
 
-export function absorbFullUint32Block(
-  state,
-  bytes,
-  offset,
-  rhoPiState,
-  columnParity,
-  thetaMix,
-  roundCount
-) {
+export function absorbFullUint32Block(state, bytes, offset, rhoPiState, columnParity, thetaMix, roundCount) {
   for (let index = 0; index < SHA3_256_RATE_BYTES; index++) {
     const word = index >>> 2;
     state[word] ^= bytes[offset + index] << ((index & 3) * 8);

@@ -20,9 +20,7 @@ http.interceptors.request.use((config) => {
   config.headers = config.headers || {};
   for (const [key, value] of Object.entries(defaultHeaders)) {
     const lowerKey = key.toLowerCase();
-    const hasHeader = Object.keys(config.headers).some(
-      (h) => h.toLowerCase() === lowerKey
-    );
+    const hasHeader = Object.keys(config.headers).some((h) => h.toLowerCase() === lowerKey);
     if (!hasHeader && value !== undefined && value !== null) {
       config.headers[key] = value;
     }
@@ -31,13 +29,15 @@ http.interceptors.request.use((config) => {
 });
 
 export async function fetchLyrics(artist, title) {
-  const cleanArtist = String(artist || "").trim().slice(0, 100);
-  const cleanTitle = String(title || "").trim().slice(0, 100);
+  const cleanArtist = String(artist || "")
+    .trim()
+    .slice(0, 100);
+  const cleanTitle = String(title || "")
+    .trim()
+    .slice(0, 100);
   if (!cleanArtist || !cleanTitle) throw new Error("Artis dan judul lagu wajib diisi");
   const { data } = await http.get(
-    `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(
-      cleanTitle
-    )}`
+    `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`
   );
   if (!data?.lyrics?.trim?.()) throw new Error("Lirik tidak ditemukan");
   return String(data.lyrics).trim();
@@ -47,18 +47,15 @@ export async function translateText(text, lang = "id") {
   const clean = String(text || "").trim();
   if (!clean) throw new Error("Teks untuk diterjemahkan kosong");
   if (clean.length > 2000) throw new Error("Teks terlalu panjang (maksimal 2000 karakter)");
-  const { data } = await http.get(
-    "https://translate.googleapis.com/translate_a/single",
-    {
-      params: {
-        client: "gtx",
-        sl: "auto",
-        tl: lang,
-        dt: "t",
-        q: clean,
-      },
-    }
-  );
+  const { data } = await http.get("https://translate.googleapis.com/translate_a/single", {
+    params: {
+      client: "gtx",
+      sl: "auto",
+      tl: lang,
+      dt: "t",
+      q: clean,
+    },
+  });
   const segments = Array.isArray(data?.[0]) ? data[0] : null;
   const translated = segments?.map((seg) => seg?.[0]).join("");
   if (!translated) throw new Error("Terjemahan gagal");
@@ -73,23 +70,22 @@ export async function textToSpeech(text, lang = "id-ID") {
   const clean = String(text || "").trim();
   if (!clean) throw new Error("Teks untuk TTS kosong");
   if (clean.length > 300) throw new Error("Teks terlalu panjang untuk TTS (maksimal 300 karakter)");
-  const { data } = await http.get(
-    "https://translate.google.com/translate_tts",
-    {
-      params: {
-        ie: "UTF-8",
-        client: "tw-ob",
-        tl: lang,
-        q: clean,
-      },
-      responseType: "arraybuffer",
-    }
-  );
+  const { data } = await http.get("https://translate.google.com/translate_tts", {
+    params: {
+      ie: "UTF-8",
+      client: "tw-ob",
+      tl: lang,
+      q: clean,
+    },
+    responseType: "arraybuffer",
+  });
   return Buffer.from(data);
 }
 
 export async function searchAnime(query) {
-  const clean = String(query || "").trim().slice(0, 100);
+  const clean = String(query || "")
+    .trim()
+    .slice(0, 100);
   if (!clean) throw new Error("Kata kunci anime kosong");
   const { data } = await http.get("https://api.jikan.moe/v4/anime", {
     params: { q: clean, limit: 1 },
@@ -113,21 +109,22 @@ export async function searchAnime(query) {
 export async function tiktokDownload(url) {
   const ratingId = `snaptik_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   const headers = {
-    "authority": "snaptik.fi",
-    "accept": "*/*",
+    authority: "snaptik.fi",
+    accept: "*/*",
     "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
     "content-type": "application/json",
-    "cookie": `snaptik_rating_id=${ratingId}`,
-    "origin": "https://snaptik.fi",
-    "priority": "u=1, i",
-    "referer": "https://snaptik.fi/id/download-tiktok-video",
+    cookie: `snaptik_rating_id=${ratingId}`,
+    origin: "https://snaptik.fi",
+    priority: "u=1, i",
+    referer: "https://snaptik.fi/id/download-tiktok-video",
     "sec-ch-ua": '"Chromium";v="154", "Google Chrome";v="154", "Not A(Brand";v="99"',
     "sec-ch-ua-mobile": "?1",
     "sec-ch-ua-platform": '"Android"',
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "user-agent": "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+    "user-agent":
+      "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
   };
 
   let lastError = null;

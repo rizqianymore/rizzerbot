@@ -34,7 +34,7 @@ export function findGroupParticipant(meta, jid) {
     for (const c of cands) {
       try {
         if (c && db.sameUser(c, jid)) return p;
-      } catch (_) {  }
+      } catch (_) {}
     }
   }
   return null;
@@ -94,7 +94,9 @@ export async function getCachedGroupMeta(sock, jid) {
   try {
     const meta = await sock.groupMetadata(jid);
 
-    try { db.learnGroupLidMap(meta); } catch (_) {}
+    try {
+      db.learnGroupLidMap(meta);
+    } catch (_) {}
     _groupMetaStore.set(cacheKey, { data: meta, expireAt: now + GROUP_META_TTL_MS });
     return meta;
   } catch (_) {

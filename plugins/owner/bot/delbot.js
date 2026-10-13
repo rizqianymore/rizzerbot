@@ -1,32 +1,32 @@
-import { db } from '@/src/core/database.js';
+import { db } from "@/src/core/database.js";
 
 export default {
-  "name": "delbot",
-  "aliases": ["stopbot","removebot"],
-  "description": "Hentikan dan hapus sub-bot",
-  "usage": "<nomor bot>",
-  "ownerOnly": true,
-  "category": "Owner",
-  "run": async (sock, msg, args, { reply, isPrimarySuperOwner, senderJid, logger }) => {
-      logger?.warn?.(`[OwnerCmd] delbot oleh ${senderJid} target=${args[0]}`);
-      const target = args[0]?.replace(/[^0-9]/g, "");
-      if (!target) return reply("❌ Masukkan nomor bot yang ingin dihapus! Contoh: *.delbot 628xxx*");
+  name: "delbot",
+  aliases: ["stopbot", "removebot"],
+  description: "Hentikan dan hapus sub-bot",
+  usage: "<nomor bot>",
+  ownerOnly: true,
+  category: "Owner",
+  run: async (sock, msg, args, { reply, isPrimarySuperOwner, senderJid, logger }) => {
+    logger?.warn?.(`[OwnerCmd] delbot oleh ${senderJid} target=${args[0]}`);
+    const target = args[0]?.replace(/[^0-9]/g, "");
+    if (!target) return reply("❌ Masukkan nomor bot yang ingin dihapus! Contoh: *.delbot 628xxx*");
 
-      const targetJid = `${target}@s.whatsapp.net`;
+    const targetJid = `${target}@s.whatsapp.net`;
 
-      if (!isPrimarySuperOwner) {
-        const isOwnerOfTarget = db.isBotOwner(targetJid, senderJid);
-        if (!isOwnerOfTarget) {
-          return reply("❌ Anda hanya dapat mematikan dan menghapus bot milik Anda sendiri!");
-        }
+    if (!isPrimarySuperOwner) {
+      const isOwnerOfTarget = db.isBotOwner(targetJid, senderJid);
+      if (!isOwnerOfTarget) {
+        return reply("❌ Anda hanya dapat mematikan dan menghapus bot milik Anda sendiri!");
       }
+    }
 
-      try {
-        const { stopSubBot } = await import("@/src/services/system/subbot/subbot.js");
-        await stopSubBot(target);
-        reply(`✅ Sub-bot *+${target}* berhasil dimatikan dan dihapus dari sesi.`);
-      } catch (err) {
-        reply(`❌ Gagal menghapus sub-bot: ${err.message}`);
-      }
-    },
+    try {
+      const { stopSubBot } = await import("@/src/services/system/subbot/subbot.js");
+      await stopSubBot(target);
+      reply(`✅ Sub-bot *+${target}* berhasil dimatikan dan dihapus dari sesi.`);
+    } catch (err) {
+      reply(`❌ Gagal menghapus sub-bot: ${err.message}`);
+    }
+  },
 };

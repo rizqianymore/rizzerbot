@@ -47,11 +47,7 @@ export async function resolveImagePayload(settings = {}) {
 export async function sendWithImage(sock, remoteJid, imagePayload, caption, quoted) {
   if (imagePayload) {
     try {
-      return await sock.sendMessage(
-        remoteJid,
-        { image: imagePayload, caption },
-        { quoted }
-      );
+      return await sock.sendMessage(remoteJid, { image: imagePayload, caption }, { quoted });
     } catch (_) {}
   }
   return await sock.sendMessage(remoteJid, { text: caption }, { quoted });

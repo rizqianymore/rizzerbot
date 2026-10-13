@@ -1,11 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { DatabaseSync } from 'node:sqlite';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { DatabaseSync } from "node:sqlite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_PATH = path.resolve(__dirname, '../../database/samsat.db');
+const DB_PATH = path.resolve(__dirname, "../../database/samsat.db");
 
 let dbInstance = null;
 let queryPlateStmt = null;
@@ -20,8 +20,8 @@ function getDatabase() {
   try {
     dbInstance = new DatabaseSync(DB_PATH, { readOnly: true });
 
-    dbInstance.exec('PRAGMA query_only = 1;');
-    dbInstance.exec('PRAGMA synchronous = NORMAL;');
+    dbInstance.exec("PRAGMA query_only = 1;");
+    dbInstance.exec("PRAGMA synchronous = NORMAL;");
 
     queryPlateStmt = dbInstance.prepare(`
       SELECT * FROM samsat WHERE number = ? LIMIT 1
@@ -33,7 +33,7 @@ function getDatabase() {
 
     return dbInstance;
   } catch (err) {
-    console.error('[SamsatService] Gagal membuka database:', err);
+    console.error("[SamsatService] Gagal membuka database:", err);
     return null;
   }
 }
@@ -41,10 +41,12 @@ function getDatabase() {
 export function searchByPlate(rawPlate) {
   const db = getDatabase();
   if (!db || !queryPlateStmt) {
-    throw new Error('Database SAMSAT belum diinisialisasi atau file database/samsat.db tidak ditemukan.');
+    throw new Error("Database SAMSAT belum diinisialisasi atau file database/samsat.db tidak ditemukan.");
   }
 
-  const cleanPlate = String(rawPlate).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const cleanPlate = String(rawPlate)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase();
   if (!cleanPlate) return null;
 
   return queryPlateStmt.get(cleanPlate) || null;
@@ -53,7 +55,7 @@ export function searchByPlate(rawPlate) {
 export function searchByNik(rawNik) {
   const db = getDatabase();
   if (!db || !queryNikStmt) {
-    throw new Error('Database SAMSAT belum diinisialisasi atau file database/samsat.db tidak ditemukan.');
+    throw new Error("Database SAMSAT belum diinisialisasi atau file database/samsat.db tidak ditemukan.");
   }
 
   const cleanNik = String(rawNik).trim();

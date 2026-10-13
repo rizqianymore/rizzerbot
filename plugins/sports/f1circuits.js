@@ -28,7 +28,8 @@ export default {
         } catch (_) {}
       }
       const hits = await searchCircuits(query, 10);
-      if (!hits.length) return reply(`❌ Sirkuit "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1circuits monza\``);
+      if (!hits.length)
+        return reply(`❌ Sirkuit "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1circuits monza\``);
       if (hits.length === 1) return replyDetail(sock, msg, reply, fmtCircuit(hits[0]), hits[0].url);
       let text = `🔄 *HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((c, i) => {

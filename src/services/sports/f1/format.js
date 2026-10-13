@@ -5,7 +5,6 @@ export async function replyDetail(sock, msg, replyFn, caption, wikiUrl) {
   try {
     const img = await getWikiThumbnail(wikiUrl);
     if (img) {
-
       if (text.length > 1000) {
         await sock.sendMessage(msg.key.remoteJid, { image: img }, { quoted: msg });
         await replyFn(text);
@@ -55,7 +54,9 @@ export function fmtDriversStandings(data, limit = 10) {
   const lines = [`🏆 *Klasemen Pembalap ${data?.season ?? ""}*`];
   arr.slice(0, limit).forEach((r) => {
     const d = r.driver || {};
-    lines.push(`${r.position}. ${d.name ?? ""} ${d.surname ?? ""} (${d.shortName ?? r.driverId}) — ${r.teamId} | ${r.points} pts | 🏅${r.wins ?? 0}`);
+    lines.push(
+      `${r.position}. ${d.name ?? ""} ${d.surname ?? ""} (${d.shortName ?? r.driverId}) — ${r.teamId} | ${r.points} pts | 🏅${r.wins ?? 0}`
+    );
   });
   return lines.join("\n");
 }
@@ -100,11 +101,15 @@ export function fmtSessionResults(data, limit = 10) {
     const d = r.driver || {};
     const name = `${d.name ?? ""} ${d.surname ?? ""}`.trim() || r.driverId || "-";
     if (r.q3 !== undefined || r.q1 !== undefined) {
-      lines.push(`P${r.gridPosition ?? "-"} ${name} (${d.shortName ?? "-"}): Q1 ${r.q1 ?? "-"} | Q2 ${r.q2 ?? "-"} | Q3 ${r.q3 ?? "-"}`);
+      lines.push(
+        `P${r.gridPosition ?? "-"} ${name} (${d.shortName ?? "-"}): Q1 ${r.q1 ?? "-"} | Q2 ${r.q2 ?? "-"} | Q3 ${r.q3 ?? "-"}`
+      );
     } else {
       const pos = r.position ?? "-";
       const time = r.time ?? r.fastLap ?? (r.retired ? `DNF (${r.retired})` : "-");
-      lines.push(`P${pos} ${name} (${d.shortName ?? "-"} | ${r.team?.teamId ?? r.teamId ?? "-"}) — ${r.points ?? 0} pts | ${time}`);
+      lines.push(
+        `P${pos} ${name} (${d.shortName ?? "-"} | ${r.team?.teamId ?? r.teamId ?? "-"}) — ${r.points ?? 0} pts | ${time}`
+      );
     }
   });
   if (results.length > limit) lines.push(`_... dan ${results.length - limit} hasil lainnya._`);

@@ -16,9 +16,9 @@ export default {
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
         `🔓 *SAFELINK SOLVER / BYPASS*\n\n` +
-        `Masukkan URL safelink atau shortlink yang ingin di-bypass.\n\n` +
-        `*Contoh:*\n` +
-        `\`${currentPrefix}safelink https://safefileku.com/download/xxxx\``
+          `Masukkan URL safelink atau shortlink yang ingin di-bypass.\n\n` +
+          `*Contoh:*\n` +
+          `\`${currentPrefix}safelink https://safefileku.com/download/xxxx\``
       );
     }
 
@@ -44,12 +44,14 @@ export default {
 
           await reply(
             `📁 *MEDIAFIRE FOUND*\n\n` +
-            `📄 *Nama:* ${filename}\n` +
-            `📊 *Ukuran:* ${filesize}\n` +
-            `⬇️ *Direct Link:*\n${downloadUrl}`
+              `📄 *Nama:* ${filename}\n` +
+              `📊 *Ukuran:* ${filesize}\n` +
+              `⬇️ *Direct Link:*\n${downloadUrl}`
           );
 
-          const isLarge = /\b\d+\s*GB/i.test(filesize) || (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
+          const isLarge =
+            /\b\d+\s*GB/i.test(filesize) ||
+            (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
           if (!isLarge) {
             const fileBuffer = await fetchBuffer(downloadUrl);
             await sock.sendMessage(

@@ -18,7 +18,9 @@ function cacheSet(key, data) {
 }
 
 export function parseGithubUser(rawInput) {
-  const raw = String(rawInput || "").trim().replace(/^@/, "");
+  const raw = String(rawInput || "")
+    .trim()
+    .replace(/^@/, "");
   if (!raw) return { valid: false, reason: "input kosong. Contoh: .githubstalk torvalds" };
   if (raw.length > 39) return { valid: false, reason: "username maksimal 39 karakter" };
   if (!/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(raw)) {
@@ -35,7 +37,9 @@ function fmtDate(iso) {
 }
 
 export async function getGithubProfile(username) {
-  const user = String(username || "").trim().replace(/^@/, "");
+  const user = String(username || "")
+    .trim()
+    .replace(/^@/, "");
   const cached = cacheGet(user.toLowerCase());
   if (cached) return cached;
 
