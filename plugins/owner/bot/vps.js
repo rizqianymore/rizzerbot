@@ -7,7 +7,7 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("❌ Informasi status server VPS hanya dapat diakses oleh SuperOwner.");
+      return reply("Informasi status server VPS hanya dapat diakses oleh SuperOwner.");
     }
     await sendTyping();
 
@@ -42,7 +42,7 @@ export default {
       }
 
       const text =
-        `🖥️ *INFORMASI SERVER VPS*\n\n` +
+        `*INFORMASI SERVER VPS*\n\n` +
         `• OS: ${platform} ${arch} (${release})\n` +
         `• Uptime: ${sysDays}h ${sysHours}j ${sysMinutes}m\n` +
         `• CPU: ${cpuModel} (${cpuCores} Core)\n` +

@@ -13,10 +13,10 @@ export default {
     const uniqueAdmins = [...new Set(adminList.map((j) => db.normalizeJid(j)))].filter((j) => !db.isOwner(j));
 
     if (uniqueAdmins.length === 0) {
-      return reply("ℹ️ Belum ada Admin Bot tambahan yang terdaftar.");
+      return reply("Belum ada Admin Bot tambahan yang terdaftar.");
     }
 
-    let text = `🛡️ *DAFTAR ADMIN*\n\n`;
+    let text = `*DAFTAR ADMIN*\n\n`;
     uniqueAdmins.forEach((j, i) => {
       const num = j.split("@")[0];
       text += `${i + 1}. +${num}\n`;

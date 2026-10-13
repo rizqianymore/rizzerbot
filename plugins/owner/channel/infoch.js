@@ -14,14 +14,14 @@ export default {
 
     if (!channelJid) {
       return reply(
-        `📢 *INFORMASI SALURAN*\n\n` +
-          `Status: 🔴 Belum terhubung\n\n` +
+        `*INFORMASI SALURAN*\n\n` +
+          `Status: Belum terhubung\n\n` +
           `Gunakan \`.setch <JID_SALURAN>\` untuk menghubungkan bot ke saluran.`
       );
     }
 
     let infoText =
-      `📢 *Informasi Saluran*\n\n` +
+      `*Informasi Saluran*\n\n` +
       `• JID Saluran: \`${channelJid}\`\n` +
       `• Nama Label: *${settings.channelName || "Official Channel"}*\n` +
       `• Auto Post TRX: *${settings.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n`;

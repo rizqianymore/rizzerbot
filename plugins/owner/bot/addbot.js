@@ -14,22 +14,22 @@ export default {
     const { isSubBotSocket, isSubBotNumber } = await import("@/src/services/system/subbot/subbot.js");
     if (isSubBotSocket(sock) || isSubBotNumber(senderJid)) {
       return reply(
-        "❌ *Akses Ditolak!*\n\n" +
+        "*Akses Ditolak!*\n\n" +
           "Akun Sub-Bot tidak diizinkan untuk menambahkan bot baru (*.addbot*). Fitur ini hanya dapat digunakan oleh Bot Utama."
       );
     }
 
     const number = args[0]?.replace(/[^0-9]/g, "");
     if (!number || number.length < 8) {
-      return reply("❌ Masukkan nomor WhatsApp untuk dijadikan bot! Contoh: *.addbot 6281234567890 [nomor_owner]*");
+      return reply("Masukkan nomor WhatsApp untuk dijadikan bot! Contoh: *.addbot 6281234567890 [nomor_owner]*");
     }
 
     const targetOwner = args[1] ? db.normalizeJid(args[1]) : senderJid;
 
     await reply(
-      `⏳ Menyiapkan sesi bot untuk *${number}*...\n` +
-        `👤 *Owner Bot:* +${targetOwner.split("@")[0]}\n` +
-        `⚙️ *Mode:* Pengaturan Mandiri (1 Bot 1 Owner, Self/Public & Prefix Terpisah)\n` +
+      `Menyiapkan sesi bot untuk *${number}*...\n` +
+        `*Owner Bot:* +${targetOwner.split("@")[0]}\n` +
+        `*Mode:* Pengaturan Mandiri (1 Bot 1 Owner, Self/Public & Prefix Terpisah)\n` +
         `Kode pairing akan dikirimkan sebentar lagi.`
     );
 
@@ -39,19 +39,19 @@ export default {
         number,
         async (code) => {
           const message =
-            `🔑 *KODE PAIRING BOT BARU*\n\n` +
-            `📱 *Nomor Bot:* +${number}\n` +
-            `👑 *Owner:* +${targetOwner.split("@")[0]}\n` +
-            `⚙️ *Mode:* Pengaturan Mandiri (Self/Public/Prefix Terpisah)\n` +
-            `⚠️ *Batasan:* Sub-bot tidak dapat menggunakan fitur .addbot\n` +
-            `🔐 *Kode Pairing:* *\`${code}\`*\n\n` +
+            `*KODE PAIRING BOT BARU*\n\n` +
+            `*Nomor Bot:* +${number}\n` +
+            `*Owner:* +${targetOwner.split("@")[0]}\n` +
+            `*Mode:* Pengaturan Mandiri (Self/Public/Prefix Terpisah)\n` +
+            `*Batasan:* Sub-bot tidak dapat menggunakan fitur .addbot\n` +
+            `*Kode Pairing:* *\`${code}\`*\n\n` +
             `_Buka WhatsApp di nomor tersebut > Perangkat Tertaut > Tautkan dengan nomor telepon, lalu masukkan kode di atas._`;
           await reply(message);
         },
         targetOwner
       );
     } catch (err) {
-      await reply(`❌ Gagal membuat sub bot: ${err.message}`);
+      await reply(`Gagal membuat sub bot: ${err.message}`);
     }
   },
 };

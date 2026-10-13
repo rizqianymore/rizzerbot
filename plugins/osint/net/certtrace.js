@@ -13,7 +13,7 @@ export default {
 
     if (!input) {
       return reply(
-        `🔒 *CERTIFICATE TRANSPARENCY TRACE*\n\n` +
+        `*CERTIFICATE TRANSPARENCY TRACE*\n\n` +
           `Masukkan nama domain untuk melacak subdomain & sertifikatnya.\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}certtrace example.com\`\n` +
@@ -22,13 +22,13 @@ export default {
     }
 
     await sendTyping();
-    await reply(`🔍 Melacak jejak sertifikat *${input}* di crt.sh...`);
+    await reply(`Melacak jejak sertifikat *${input}* di crt.sh...`);
 
     try {
       const text = await getCertTraceText(input);
       return reply(text);
     } catch (err) {
-      return reply(`❌ Gagal melacak sertifikat: ${err.message}`);
+      return reply(`Gagal melacak sertifikat: ${err.message}`);
     }
   },
 };

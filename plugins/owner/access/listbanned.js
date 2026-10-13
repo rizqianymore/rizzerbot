@@ -10,13 +10,13 @@ export default {
   run: async (sock, msg, args, { reply, senderJid, logger, isPrimarySuperOwner }) => {
     logger?.warn?.(`[OwnerCmd] listbanned oleh ${senderJid}`);
     if (!isPrimarySuperOwner) {
-      return reply("❌ Daftar banned hanya dapat dilihat oleh SuperOwner Bot Utama.");
+      return reply("Daftar banned hanya dapat dilihat oleh SuperOwner Bot Utama.");
     }
     const banned = Object.entries(db.data.users || {}).filter(
       ([jid, u]) => jid.endsWith("@s.whatsapp.net") && u?.banned && !u?.owner
     );
-    if (!banned.length) return reply("✅ Tidak ada user yang dibanned.");
-    const lines = [`🚫 *DAFTAR BANNED (${banned.length})*\n`];
+    if (!banned.length) return reply("Tidak ada user yang dibanned.");
+    const lines = [`*DAFTAR BANNED (${banned.length})*\n`];
     banned.slice(0, 50).forEach(([jid, u], i) => {
       lines.push(`${i + 1}. +${jid.split("@")[0]}${u.name ? ` (${u.name})` : ""}`);
     });

@@ -4,13 +4,13 @@ import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js"
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -64,13 +64,13 @@ export default {
     const mentions = ctx.participants.map((p) => p.id);
     const customMessage = args.join(" ") || "Halo semuanya!";
 
-    let text = `📢 *Tag All - ${ctx.meta.subject}*\n`;
-    text += `📝 *Pesan:* ${customMessage}\n`;
-    text += `👥 *Total Member:* ${mentions.length}\n\n`;
+    let text = `*Tag All - ${ctx.meta.subject}*\n`;
+    text += `*Pesan:* ${customMessage}\n`;
+    text += `*Total Member:* ${mentions.length}\n\n`;
 
     ctx.participants.forEach((p, index) => {
       const num = p.id.split("@")[0];
-      const role = p.admin ? (p.admin === "superadmin" ? " 👑 (Creator)" : " ⭐ (Admin)") : "";
+      const role = p.admin ? (p.admin === "superadmin" ? " (Creator)" : " (Admin)") : "";
       text += `${index + 1}. @${num}${role}\n`;
     });
 

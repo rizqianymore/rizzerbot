@@ -11,13 +11,13 @@ export default {
 
     if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
       logger?.warn?.(`[OwnerCmd] delowner DITOLAK untuk ${senderJid} via ${activeBotJid}`);
-      return reply("❌ Perintah ini hanya untuk Owner bot ini!");
+      return reply("Perintah ini hanya untuk Owner bot ini!");
     }
     logger?.warn?.(`[OwnerCmd] delowner oleh ${senderJid} via ${activeBotJid}`);
     const jid = getTargetJid(args);
-    if (!jid) return reply("❌ Balas pesan user atau masukkan nomor! Contoh: *.delowner 628xx*");
+    if (!jid) return reply("Balas pesan user atau masukkan nomor! Contoh: *.delowner 628xx*");
     if (db.isPrimaryOwner(jid)) {
-      return reply("❌ Nomor tersebut adalah Primary Owner (Pemilik Utama) dan tidak dapat dihapus!");
+      return reply("Nomor tersebut adalah Primary Owner (Pemilik Utama) dan tidak dapat dihapus!");
     }
 
     const isSub = Boolean(
@@ -29,14 +29,14 @@ export default {
       const curOwners = Array.isArray(curConfig.ownerNumbers) ? curConfig.ownerNumbers : [];
       const nextOwners = curOwners.filter((o) => db.normalizeJid(o) !== jid);
       db.updateBotSettings(activeBotJid, { ownerNumbers: nextOwners });
-      return reply(`✅ Berhasil mencabut status Owner bot ini dari *${jid.split("@")[0]}*.`);
+      return reply(`Berhasil mencabut status Owner bot ini dari *${jid.split("@")[0]}*.`);
     }
 
     if (!db.isOwner(jid)) {
-      return reply(`ℹ️ *${jid.split("@")[0]}* bukan Owner.`);
+      return reply(`*${jid.split("@")[0]}* bukan Owner.`);
     }
 
     db.setOwner(jid, false);
-    reply(`✅ Berhasil menghapus *${jid.split("@")[0]}* dari daftar Owner Bot.`);
+    reply(`Berhasil menghapus *${jid.split("@")[0]}* dari daftar Owner Bot.`);
   },
 };

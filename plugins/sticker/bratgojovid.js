@@ -17,7 +17,7 @@ export default {
     const currentPrefix = prefix || ".";
     const { text } = parseBratArgs(args);
     if (!text) {
-      return reply(`⚠️ Harap masukkan teksnya!\nContoh: \`${currentPrefix}bratgojovid Halo semuanya\``);
+      return reply(`Harap masukkan teksnya!\nContoh: \`${currentPrefix}bratgojovid Halo semuanya\``);
     }
 
     const check = validateBratText(text, true);
@@ -25,15 +25,12 @@ export default {
       return reply(check.error);
     }
 
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
     try {
       const videoBuffer = await createBratVideo(text, TEMPLATES.gojo);
       await sendStickerBuffer(sock, msg, videoBuffer);
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      reply(`❌ Gagal membuat stiker Brat Gojo Video: ${err.message}`);
+      reply(`Gagal membuat stiker Brat Gojo Video: ${err.message}`);
     }
   },
 };

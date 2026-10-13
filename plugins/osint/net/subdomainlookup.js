@@ -11,23 +11,23 @@ export default {
     await sendTyping();
     const domain = args[0];
     if (!domain) {
-      return reply("❌ Masukkan domain target! Contoh: *.subdomainlookup kemkes.go.id*");
+      return reply("Masukkan domain target! Contoh: *.subdomainlookup kemkes.go.id*");
     }
 
-    await reply(`🔎 Memindai subdomain untuk *${domain}*...`);
+    await reply(`Memindai subdomain untuk *${domain}*...`);
 
     try {
       const data = await getSubdomains(domain);
       if (!data.subdomains || data.subdomains.length === 0) {
-        return reply(`❌ Tidak ditemukan subdomain publik untuk *${domain}*.`);
+        return reply(`Tidak ditemukan subdomain publik untuk *${domain}*.`);
       }
 
-      const lines = [`🌐 *SUBDOMAIN SCANNER: ${data.domain.toUpperCase()}*`, `_Ditemukan ${data.count} subdomain_`];
+      const lines = [`*SUBDOMAIN SCANNER: ${data.domain.toUpperCase()}*`, `_Ditemukan ${data.count} subdomain_`];
 
       const displayed = data.subdomains.slice(0, 25);
       for (let i = 0; i < displayed.length; i++) {
         const item = displayed[i];
-        lines.push(`*${i + 1}.* \`${item.subdomain}\` → _${item.ip}_`);
+        lines.push(`*${i + 1}.* \`${item.subdomain}\` _${item.ip}_`);
       }
 
       if (data.count > 25) {
@@ -36,7 +36,7 @@ export default {
 
       await reply(lines.join("\n"));
     } catch (err) {
-      await reply(`❌ Gagal mencari subdomain: ${err.message}`);
+      await reply(`Gagal mencari subdomain: ${err.message}`);
     }
   },
 };

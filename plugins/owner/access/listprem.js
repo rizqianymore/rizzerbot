@@ -11,10 +11,10 @@ export default {
     const allPrems = db.getAllPremiumUsers();
 
     if (allPrems.length === 0) {
-      return reply("ℹ️ Belum ada user Premium khusus yang terdaftar.");
+      return reply("Belum ada user Premium khusus yang terdaftar.");
     }
 
-    let text = `⭐ *DAFTAR PENGGUNA PREMIUM*\n\n`;
+    let text = `*DAFTAR PENGGUNA PREMIUM*\n\n`;
     allPrems.forEach((u, i) => {
       const num = u.jid.split("@")[0];
       const status = u.isPermanent ? "Permanen" : `Hingga ${new Date(u.premiumUntil).toLocaleDateString("id-ID")}`;

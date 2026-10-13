@@ -12,14 +12,14 @@ export default {
     const raw = (args[0] || "").trim();
 
     if (!raw) {
-      return reply(`❌ Masukkan target domain/URL!\n` + `Contoh: \`${currentPrefix}httpprobe kemkes.go.id\``);
+      return reply(`Masukkan target domain/URL!\n` + `Contoh: \`${currentPrefix}httpprobe kemkes.go.id\``);
     }
 
     const domain = cleanDomain(raw);
     const targetUrl = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${domain}`;
 
     await sendTyping();
-    await reply(`🔍 Melakukan HTTP Recon untuk *${targetUrl}*...`);
+    await reply(`Melakukan HTTP Recon untuk *${targetUrl}*...`);
 
     const start = Date.now();
     const ctrl = new AbortController();
@@ -57,7 +57,7 @@ export default {
       const referrer = headers["referrer-policy"] || "-";
 
       const lines = [
-        `🌐 *HTTP/WEB RECONNAISSANCE*`,
+        `*HTTP/WEB RECONNAISSANCE*`,
         ``,
         `• *Target URL:* ${res.url}`,
         `• *Status Code:* \`${res.status} ${res.statusText}\``,
@@ -66,9 +66,9 @@ export default {
         `• *WAF / CDN:* ${wafCdn.length > 0 ? wafCdn.join(", ") : "Tidak terdeteksi / Direct"}`,
         `• *Content-Type:* \`${headers["content-type"] || "-"}\``,
         ``,
-        `🛡️ *Security Headers:*`,
-        `  - HSTS: ${hsts ? "✅ Enabled" : "❌ Disabled / Missing"}`,
-        `  - CSP: ${csp ? "✅ Enabled" : "❌ Disabled / Missing"}`,
+        `*Security Headers:*`,
+        `  - HSTS: ${hsts ? "Enabled" : "Disabled / Missing"}`,
+        `  - CSP: ${csp ? "Enabled" : "Disabled / Missing"}`,
         `  - X-Frame-Options: \`${xfo}\``,
         `  - X-Content-Type-Options: \`${xcto}\``,
         `  - Referrer-Policy: \`${referrer}\``,
@@ -77,9 +77,9 @@ export default {
       return reply(lines.join("\n"));
     } catch (err) {
       if (err.name === "AbortError") {
-        return reply("❌ Request timeout (12 detik). Host target tidak merespons.");
+        return reply("Request timeout (12 detik). Host target tidak merespons.");
       }
-      return reply(`❌ Gagal melakukan HTTP probe: ${err.message}`);
+      return reply(`Gagal melakukan HTTP probe: ${err.message}`);
     } finally {
       clearTimeout(timer);
     }

@@ -11,28 +11,28 @@ export default {
     await sendTyping();
     const domain = args[0];
     if (!domain) {
-      return reply("❌ Masukkan nama domain! Contoh: *.whois openai.com*");
+      return reply("Masukkan nama domain! Contoh: *.whois openai.com*");
     }
 
-    await reply(`🔍 Memeriksa data WHOIS untuk *${domain}*...`);
+    await reply(`Memeriksa data WHOIS untuk *${domain}*...`);
 
     try {
       const info = await getWhois(domain);
 
       const lines = [
-        `📋 *WHOIS DOMAIN INFORMATION*`,
-        `🌐 *Domain:* ${info.domain}`,
-        `🏢 *Registrar:* ${info.registrar}`,
-        `📅 *Didaftarkan:* ${info.createdDate}`,
-        `🔄 *Diperbarui:* ${info.updatedDate}`,
-        `⏳ *Kedaluwarsa:* ${info.expiryDate}`,
-        info.abuseEmail !== "-" ? `🚨 *Abuse Email:* ${info.abuseEmail}` : "",
-        info.registrarWhois !== "-" ? `🖥️ *Whois Server:* ${info.registrarWhois}` : "",
+        `*WHOIS DOMAIN INFORMATION*`,
+        `*Domain:* ${info.domain}`,
+        `*Registrar:* ${info.registrar}`,
+        `*Didaftarkan:* ${info.createdDate}`,
+        `*Diperbarui:* ${info.updatedDate}`,
+        `*Kedaluwarsa:* ${info.expiryDate}`,
+        info.abuseEmail !== "-" ? `*Abuse Email:* ${info.abuseEmail}` : "",
+        info.registrarWhois !== "-" ? `*Whois Server:* ${info.registrarWhois}` : "",
       ].filter(Boolean);
 
       await reply(lines.join("\n"));
     } catch (err) {
-      await reply(`❌ Gagal WHOIS: ${err.message}`);
+      await reply(`Gagal WHOIS: ${err.message}`);
     }
   },
 };

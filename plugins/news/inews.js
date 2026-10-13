@@ -19,7 +19,7 @@ export default {
         label: "iNews.id",
         latestTitle: "BERITA TERKINI iNews.id",
         latestSubtitle: "Sumber: inews.id",
-        readingText: "📖 Mengambil isi lengkap berita iNews.id...",
+        readingText: "Mengambil isi lengkap berita iNews.id...",
         errorLabel: "Gagal mengambil berita iNews",
         latest: async ({ limit, offset }) => (await getLatestInews(limit + offset)).slice(offset),
         search: async ({ query, limit, offset }) => (await searchInews(query, limit + offset)).slice(offset),

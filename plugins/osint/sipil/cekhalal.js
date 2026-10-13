@@ -25,7 +25,7 @@ export default {
 
     if (!rawArgs) {
       return reply(
-        `☪️ *CEK PRODUK HALAL — BPJPH*\n\n` +
+        `*CEK PRODUK HALAL — BPJPH*\n\n` +
           `Cek apakah produk sudah bersertifikat halal resmi dari BPJPH Kemenag.\n\n` +
           `*Format:*\n` +
           `\`${currentPrefix}cekhalal <nama produk>\`\n` +
@@ -55,13 +55,13 @@ export default {
       }
 
       if (query.trim().length < 2) {
-        return reply("❌ Query terlalu pendek (minimal 2 karakter).");
+        return reply("Query terlalu pendek (minimal 2 karakter).");
       }
 
       const result = await searchHalal(query, { key, page: 1 });
       return reply(formatResults(query, result, startTime));
     } catch (err) {
-      return reply(`❌ Gagal memeriksa: ${err.message}`);
+      return reply(`Gagal memeriksa: ${err.message}`);
     }
   },
 };

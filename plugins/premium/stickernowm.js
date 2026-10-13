@@ -10,7 +10,7 @@ export default {
     await sendTyping();
     const targetMsg = findDownloadableTarget(msg);
     const buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
-    if (!buffer) return reply("❌ Balas gambar atau video dengan caption *\\.stickernowm*");
+    if (!buffer) return reply("Balas gambar atau video dengan caption *\\.stickernowm*");
 
     let topText = "";
     let bottomText = "";
@@ -29,7 +29,7 @@ export default {
       const stickerBuffer = await createSticker(buffer, { pack: "", author: "", topText, bottomText });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer }, { quoted: msg });
     } catch (err) {
-      await reply(`❌ Gagal membuat stiker: ${err.message}`);
+      await reply(`Gagal membuat stiker: ${err.message}`);
     }
   },
 };

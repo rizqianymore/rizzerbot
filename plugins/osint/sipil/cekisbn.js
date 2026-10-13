@@ -13,7 +13,7 @@ export default {
 
     if (!input) {
       return reply(
-        `📚 *CEK ISBN / DATA BUKU*\n\n` +
+        `*CEK ISBN / DATA BUKU*\n\n` +
           `Masukkan ISBN-10, ISBN-13, atau judul buku.\n\n` +
           `*Contoh ISBN:*\n` +
           `• \`${currentPrefix}cekisbn 9786020334567\`\n` +
@@ -41,7 +41,7 @@ export default {
       }
       return reply(formatIsbnResult(data));
     } catch (err) {
-      return reply(`❌ ${err.message}`);
+      return reply(`${err.message}`);
     }
   },
 };

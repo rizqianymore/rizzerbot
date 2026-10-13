@@ -13,19 +13,19 @@ export default {
     try {
       buffer = targetMsg ? await getMediaBuffer(sock, targetMsg) : null;
     } catch (err) {
-      return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+      return reply(`${err?.message || "Gagal membaca media."}`);
     }
-    if (!buffer) return reply("❌ Balas/buka gambar dengan caption *\\.hd*");
-    await reply("✨ Memproses gambar ke HD...");
+    if (!buffer) return reply("Balas/buka gambar dengan caption *\\.hd*");
+    await reply("Memproses gambar ke HD...");
     try {
       const hdBuffer = await upscaleImage(buffer, 2);
       await sock.sendMessage(
         msg.key.remoteJid,
-        { image: hdBuffer, caption: "✨ *HASIL UPSCALE HD (2X)*" },
+        { image: hdBuffer, caption: "*HASIL UPSCALE HD (2X)*" },
         { quoted: msg }
       );
     } catch (err) {
-      await reply(`❌ Gagal memproses: ${err.message}`);
+      await reply(`Gagal memproses: ${err.message}`);
     }
   },
 };

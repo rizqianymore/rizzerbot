@@ -8,12 +8,12 @@ export default {
     if (!args[0]) return reply("Masukkan link grup!");
     const { parseGroupInviteCode } = await import("@/src/services/system/bug/helpers.js");
     const code = parseGroupInviteCode(args[0]);
-    if (!code) return reply("❌ Link grup tidak valid! Contoh: https://chat.whatsapp.com/xxxx");
+    if (!code) return reply("Link grup tidak valid! Contoh: https://chat.whatsapp.com/xxxx");
     try {
       await sock.groupAcceptInvite(code);
     } catch (err) {
-      return reply(`❌ Gagal bergabung: ${err?.message || err}`);
+      return reply(`Gagal bergabung: ${err?.message || err}`);
     }
-    reply("✅ Berhasil bergabung.");
+    reply("Berhasil bergabung.");
   },
 };

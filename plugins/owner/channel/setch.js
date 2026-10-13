@@ -9,14 +9,14 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("❌ Pengaturan saluran resmi hanya dapat diubah oleh SuperOwner Bot Utama.");
+      return reply("Pengaturan saluran resmi hanya dapat diubah oleh SuperOwner Bot Utama.");
     }
     await sendTyping();
     const input = args[0]?.trim();
     if (!input) {
       const cur = db.main().getSettings();
       return reply(
-        `📢 *Manajemen Saluran*\n\n` +
+        `*Manajemen Saluran*\n\n` +
           `• Saluran saat ini: *${cur.channelJid || "Belum diatur"}*\n` +
           `• Nama saluran: *${cur.channelName || "Official Channel"}*\n` +
           `• Auto post trx: *${cur.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n\n` +
@@ -30,9 +30,9 @@ export default {
 
     if (input.toLowerCase() === "name" || input.toLowerCase() === "nama") {
       const newName = args.slice(1).join(" ").trim();
-      if (!newName) return reply("❌ Masukkan nama baru untuk saluran!");
+      if (!newName) return reply("Masukkan nama baru untuk saluran!");
       db.main().updateSettings({ channelName: newName });
-      return reply(`✅ Nama saluran bot berhasil diubah menjadi: *${newName}*`);
+      return reply(`Nama saluran bot berhasil diubah menjadi: *${newName}*`);
     }
 
     let channelJid = input;
@@ -54,7 +54,7 @@ export default {
         channelJid = `${channelJid}@newsletter`;
       } else {
         return reply(
-          `❌ Format ID Saluran tidak valid!\n` +
+          `Format ID Saluran tidak valid!\n` +
             `ID Saluran WhatsApp harus berakhiran *@newsletter* atau berupa link saluran resmi.\n` +
             `Contoh: \`.setch 120363312345678901@newsletter\``
         );
@@ -63,9 +63,9 @@ export default {
 
     db.main().updateSettings({ channelJid });
     reply(
-      `✅ *Saluran Berhasil Diatur!*\n\n` +
-        `📢 *JID Saluran:* \`${channelJid}\`\n` +
-        `⚡ *Auto-Forward TRX:* Otomatis aktif. Setiap transaksi atau orderan baru akan dikirimkan ke saluran ini.`
+      `*Saluran Berhasil Diatur!*\n\n` +
+        `*JID Saluran:* \`${channelJid}\`\n` +
+        `*Auto-Forward TRX:* Otomatis aktif. Setiap transaksi atau orderan baru akan dikirimkan ke saluran ini.`
     );
   },
 };

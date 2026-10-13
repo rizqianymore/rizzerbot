@@ -4,13 +4,13 @@ import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js"
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -68,9 +68,9 @@ export default {
     try {
       const code = await sock.groupInviteCode(ctx.remoteJid);
       const link = `https://chat.whatsapp.com/${code}`;
-      await context.reply(`🔗 *Link Undangan Grup ${ctx.meta.subject}:*\n${link}`);
+      await context.reply(`*Link Undangan Grup ${ctx.meta.subject}:*\n${link}`);
     } catch (err) {
-      await context.reply(`❌ Gagal mengambil link grup: ${err.message}`);
+      await context.reply(`Gagal mengambil link grup: ${err.message}`);
     }
   },
 };

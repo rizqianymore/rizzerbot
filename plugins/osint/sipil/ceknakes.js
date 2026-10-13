@@ -28,7 +28,7 @@ export default {
     const rawArgs = (args || []).join(" ").trim();
 
     const helpText =
-      `🩺 *CEK NAKES — KONSIL KESEHATAN INDONESIA*\n\n` +
+      `*CEK NAKES — KONSIL KESEHATAN INDONESIA*\n\n` +
       `Cek apakah seseorang terdaftar sebagai Tenaga Kesehatan atau Tenaga Medis (STR aktif).\n\n` +
       `*Format:*\n` +
       `\`${currentPrefix}ceknakes <nama>\` — cari nakes (nama persis)\n` +
@@ -71,7 +71,7 @@ export default {
         const rest = parts.slice(1);
         if (rest.length < 2) {
           return reply(
-            `❌ *Tenaga Medis* membutuhkan *nama* dan *profesi*.\n\n` +
+            `*Tenaga Medis* membutuhkan *nama* dan *profesi*.\n\n` +
               `*Format:* \`${currentPrefix}ceknakes medis <nama> <profesi>\`\n` +
               `*Contoh:* \`${currentPrefix}ceknakes medis yudi dokter\`\n\n` +
               `Lihat daftar profesi: \`${currentPrefix}ceknakes profesi medis\``
@@ -82,7 +82,7 @@ export default {
         const profesiCode = await resolveProfesi(JENIS.medis, profesiTerm);
         if (!profesiCode) {
           return reply(
-            `❌ Profesi *"${profesiTerm}"* tidak ditemukan.\n` +
+            `Profesi *"${profesiTerm}"* tidak ditemukan.\n` +
               `Lihat daftar: \`${currentPrefix}ceknakes profesi medis\``
           );
         }
@@ -128,7 +128,7 @@ export default {
       const details = await fetchDetails(result.data.slice(0, 3), JENIS.nakes);
       return reply(formatResults(query, result, details, { jenis: JENIS.nakes, tipe }));
     } catch (err) {
-      return reply(`❌ Gagal memeriksa: ${err.message}`);
+      return reply(`Gagal memeriksa: ${err.message}`);
     }
   },
 };

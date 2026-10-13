@@ -7,7 +7,7 @@ export default {
   run: async (sock, msg, args, { reply, senderJid, logger, isPrimarySuperOwner }) => {
     logger?.warn?.(`[OwnerCmd] eval oleh ${senderJid}`);
     if (!isPrimarySuperOwner) {
-      return reply("❌ Perintah evaluasi kode hanya dapat dijalankan oleh SuperOwner Bot Utama.");
+      return reply("Perintah evaluasi kode hanya dapat dijalankan oleh SuperOwner Bot Utama.");
     }
     if (!args.length) return reply("Masukkan kode!");
     try {

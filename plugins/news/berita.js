@@ -23,7 +23,7 @@ export default {
         label: "Agregator Berita",
         latestTitle: "BERITA TERKINI HARI INI",
         latestSubtitle: `Sumber: ${SOURCE_NAMES}`,
-        readingText: "📖 Mengambil isi lengkap artikel...",
+        readingText: "Mengambil isi lengkap artikel...",
         errorLabel: "Gagal mengambil berita",
         latest: async ({ limit, offset }) => {
           const items = (await getRssLatest({ limit: limit + offset })).slice(offset);

@@ -19,7 +19,7 @@ export default {
         label: "Kompas TV",
         latestTitle: "BERITA TERKINI KOMPAS TV",
         latestSubtitle: "Pembaruan langsung dari kompas.tv/news",
-        readingText: "📖 Mengambil isi lengkap berita Kompas TV...",
+        readingText: "Mengambil isi lengkap berita Kompas TV...",
         errorLabel: "Gagal mengambil berita Kompas TV",
         latest: async ({ limit, offset }) => (await getLatestKompasNews("news", limit + offset)).slice(offset),
         search: async ({ query, limit, offset }) => (await searchKompasNews(query, limit + offset)).slice(offset),

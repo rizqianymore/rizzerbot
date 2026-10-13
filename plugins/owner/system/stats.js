@@ -45,14 +45,14 @@ export default {
     const lidMapSize = Object.keys(db.data.lidMap || {}).length;
     const root = process.cwd();
     reply(
-      `📊 *STATISTIK BOT*\n\n` +
-        `👥 *User:* ${users.length} total\n` +
+      `*STATISTIK BOT*\n\n` +
+        `*User:* ${users.length} total\n` +
         `• Owner: ${owners} | Admin: ${admins} | Premium: ${premiums}\n` +
         `• Terdaftar: ${registered} | Banned: ${banned}\n` +
-        `• Peta LID→HP: ${lidMapSize} entri\n\n` +
-        `⌨️ *Command dijalankan:* ${totalCmd}x\n` +
+        `• Peta LIDHP: ${lidMapSize} entri\n\n` +
+        `*Command dijalankan:* ${totalCmd}x\n` +
         (top.length ? top.map(([c, n], i) => `${i + 1}. .${c} — ${n}x`).join("\n") + "\n\n" : "") +
-        `💾 *Ukuran file:*\n` +
+        `*Ukuran file:*\n` +
         `• database.json: ${fileSize(path.join(root, "database", "database.json"))}\n` +
         `• users.json: ${fileSize(path.join(root, "database", "users.json"))}\n` +
         `• transactions.json: ${fileSize(path.join(root, "database", "transactions.json"))}`

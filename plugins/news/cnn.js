@@ -19,7 +19,7 @@ export default {
         label: "CNN",
         latestTitle: "BERITA TERKINI CNN",
         latestSubtitle: "Sumber: edition.cnn.com",
-        readingText: "📖 Mengambil isi lengkap artikel CNN...",
+        readingText: "Mengambil isi lengkap artikel CNN...",
         errorLabel: "Gagal mengambil berita CNN",
         latest: async ({ limit }) => (await getCnnLatestNews(limit)).items,
         search: async ({ query, limit, page }) => (await searchCNNNews(query, { size: limit, page })).items,

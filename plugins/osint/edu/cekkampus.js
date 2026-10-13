@@ -13,7 +13,7 @@ export default {
 
     if (!input) {
       return reply(
-        `🎓 *CEK PERGURUAN TINGGI — PDDIKTI*\n\n` +
+        `*CEK PERGURUAN TINGGI — PDDIKTI*\n\n` +
           `Masukkan nama perguruan tinggi atau kode PT.\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}cekkampus Institut Teknologi Bandung\`\n` +
@@ -28,7 +28,7 @@ export default {
       const result = await getKampusInfoText(input);
       if (result.error) {
         return reply(
-          `❌ ${result.error}\n\n` +
+          `${result.error}\n\n` +
             `Gunakan: \`${currentPrefix}cekkampus <nama / kode PT>\`\n` +
             `Contoh: \`${currentPrefix}cekkampus Universitas Indonesia\``
         );

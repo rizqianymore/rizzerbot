@@ -74,7 +74,7 @@ export default {
           (targetCmd.premiumOnly && !isPremium) ||
           hiddenForStranger
         ) {
-          return await reply(`❌ *${rawArg}* tidak ditemukan.\n\nKetik ${prefix}menu untuk daftar perintah.`);
+          return await reply(`*${rawArg}* tidak ditemukan.\n\nKetik ${prefix}menu untuk daftar perintah.`);
         }
 
         const usageArgs = targetCmd.usage || "";
@@ -121,7 +121,7 @@ export default {
     });
 
     if (targetCategory && Object.keys(categories).length === 0) {
-      return reply(`❌ Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
+      return reply(`Kategori *${rawArg}* tidak ditemukan atau tidak tersedia.`);
     }
 
     const catKeys = sortCategoryKeys(Object.keys(categories));

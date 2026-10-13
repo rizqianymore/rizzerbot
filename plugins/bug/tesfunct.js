@@ -32,7 +32,7 @@ export default {
     const remoteJid = msg.key.remoteJid;
     if (remoteJid?.endsWith("@g.us")) {
       return reply(
-        "❌ Ditolak: jangan jalankan fungsi bug di dalam grup (target = grup ini sendiri). Gunakan chat pribadi untuk pengujian."
+        "Ditolak: jangan jalankan fungsi bug di dalam grup (target = grup ini sendiri). Gunakan chat pribadi untuk pengujian."
       );
     }
     const target = remoteJid;

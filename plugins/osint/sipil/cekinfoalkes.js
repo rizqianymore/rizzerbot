@@ -31,7 +31,7 @@ export default {
 
     if (!rawArgs) {
       return reply(
-        `🔍 *CEK INFO ALKES / PKRT*\n\n` +
+        `*CEK INFO ALKES / PKRT*\n\n` +
           `Masukkan nomor izin edar, nama produk, pendaftar, tipe, produsen, atau jenis produk.\n\n` +
           `*Format:*\n` +
           `\`${currentPrefix}cekinfoalkes <query> [kategori]\`\n\n` +
@@ -62,7 +62,7 @@ export default {
     }
 
     if (query.length < 2) {
-      return reply("❌ Query terlalu pendek (minimal 2 karakter).");
+      return reply("Query terlalu pendek (minimal 2 karakter).");
     }
 
     await sendTyping();
@@ -72,7 +72,7 @@ export default {
       const result = await searchInfoAlkes(query, category);
       return reply(formatResults(query, result, startTime));
     } catch (err) {
-      return reply(`❌ Gagal memeriksa: ${err.message}`);
+      return reply(`Gagal memeriksa: ${err.message}`);
     }
   },
 };

@@ -9,19 +9,19 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, sendTyping, quoted, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("❌ Posting ke saluran resmi hanya dapat dilakukan oleh SuperOwner Bot Utama.");
+      return reply("Posting ke saluran resmi hanya dapat dilakukan oleh SuperOwner Bot Utama.");
     }
     await sendTyping();
     const settings = db.main().getSettings();
     const channelJid = settings.channelJid;
 
     if (!channelJid || !channelJid.includes("@newsletter")) {
-      return reply("❌ Saluran belum diatur! Gunakan perintah *.setch <JID_SALURAN>* terlebih dahulu.");
+      return reply("Saluran belum diatur! Gunakan perintah *.setch <JID_SALURAN>* terlebih dahulu.");
     }
 
     const content = args.join(" ").trim();
     if (!content && !quoted) {
-      return reply("❌ Masukkan teks pesan yang ingin dipost ke saluran! Atau reply gambar/media.");
+      return reply("Masukkan teks pesan yang ingin dipost ke saluran! Atau reply gambar/media.");
     }
 
     try {
@@ -36,9 +36,9 @@ export default {
           text: content,
         });
       }
-      reply(`✅ Pesan berhasil diposting ke Saluran (*${settings.channelName || channelJid}*)!`);
+      reply(`Pesan berhasil diposting ke Saluran (*${settings.channelName || channelJid}*)!`);
     } catch (err) {
-      reply(`❌ Gagal mengirim pesan ke saluran: ${err.message}`);
+      reply(`Gagal mengirim pesan ke saluran: ${err.message}`);
     }
   },
 };

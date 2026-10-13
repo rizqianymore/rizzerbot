@@ -39,11 +39,11 @@ export default {
       style = (parts[1].trim().split(/\s+/)[0] || "cinematic").toLowerCase();
       if (!STYLE_PROMPTS[style]) style = "cinematic";
     }
-    if (!promptText) return reply("❌ Masukkan prompt gambar!");
+    if (!promptText) return reply("Masukkan prompt gambar!");
 
     const react = (emoji) =>
       sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-    await react("🎨");
+await react("🎨");
     await reply(`Menggambar "${promptText.slice(0, 100)}" (style: ${style})...`);
 
     try {
@@ -59,9 +59,9 @@ export default {
         },
         { quoted: msg }
       );
-      await react("✅");
+await react("✅");
     } catch (err) {
-      await react("❌");
+await react("❌");
       await reply(`*TEXT TO IMAGE GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },

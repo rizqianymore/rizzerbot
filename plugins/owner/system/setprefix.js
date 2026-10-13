@@ -11,7 +11,7 @@ export default {
 
     if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
       logger?.warn?.(`[OwnerCmd] setprefix DITOLAK untuk ${senderJid} via ${activeBotJid}`);
-      return reply("❌ Perintah ini hanya untuk Owner bot ini!");
+      return reply("Perintah ini hanya untuk Owner bot ini!");
     }
     logger?.warn?.(`[OwnerCmd] setprefix oleh ${senderJid} via ${activeBotJid}`);
 
@@ -21,12 +21,12 @@ export default {
 
     if (!prefix || prefix.length > 3 || /\s/.test(prefix)) {
       return reply(
-        "❌ Prefix harus berupa 1-3 karakter tanpa spasi.\nContoh: `.setprefix !` atau `.setprefix ! --all` (sinkron ke semua bot)"
+        "Prefix harus berupa 1-3 karakter tanpa spasi.\nContoh: `.setprefix !` atau `.setprefix ! --all` (sinkron ke semua bot)"
       );
     }
 
     if (syncAll && !isPrimarySuperOwner) {
-      return reply("❌ Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
+      return reply("Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
     }
 
     if (syncAll) {
@@ -37,10 +37,10 @@ export default {
         const sJid = `${b.number}@s.whatsapp.net`;
         db.updateBotSettings(sJid, { prefix });
       }
-      reply(`✅ Prefix berhasil diubah & disinkronkan ke semua bot: \`${prefix}\``);
+      reply(`Prefix berhasil diubah & disinkronkan ke semua bot: \`${prefix}\``);
     } else {
       db.updateBotSettings(activeBotJid, { prefix });
-      reply(`✅ Prefix berhasil diubah ke: \`${prefix}\` untuk bot ini (+${activeBotJid.split("@")[0]}).`);
+      reply(`Prefix berhasil diubah ke: \`${prefix}\` untuk bot ini (+${activeBotJid.split("@")[0]}).`);
     }
   },
 };

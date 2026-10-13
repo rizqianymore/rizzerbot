@@ -13,7 +13,7 @@ export default {
 
     if (!input) {
       return reply(
-        `🏫 *CEK SEKOLAH — DAPODIK*\n\n` +
+        `*CEK SEKOLAH — DAPODIK*\n\n` +
           `Masukkan nama sekolah atau NPSN (8 digit).\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}ceksekolah SMAN 1 Jakarta\`\n` +
@@ -28,7 +28,7 @@ export default {
       const result = await getSekolahInfoText(input);
       if (result.error) {
         return reply(
-          `❌ ${result.error}\n\n` +
+          `${result.error}\n\n` +
             `Gunakan: \`${currentPrefix}ceksekolah <nama / NPSN>\`\n` +
             `Contoh: \`${currentPrefix}ceksekolah SMAN 3 Bandung\``
         );

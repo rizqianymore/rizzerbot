@@ -36,16 +36,16 @@ export default {
   premiumOnly: true,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     const raw = (args[0] || "").trim();
-    if (!raw) return reply("❌ Masukkan nomor!\nContoh: *.cekwa 087812345678*");
+    if (!raw) return reply("Masukkan nomor!\nContoh: *.cekwa 087812345678*");
 
     const jid = db.normalizeJid(raw);
     if (!jid || !jid.endsWith("@s.whatsapp.net")) {
-      return reply("❌ Nomor tidak valid. Contoh: *.cekwa 087812345678*");
+      return reply("Nomor tidak valid. Contoh: *.cekwa 087812345678*");
     }
     const number = jid.split("@")[0];
 
     await sendTyping();
-    await reply(`🔍 Melacak nomor *+${number}*...`);
+    await reply(`Melacak nomor *+${number}*...`);
 
     // 1. Cek terdaftar di WhatsApp
     let exists = false;
@@ -85,21 +85,21 @@ export default {
       })(),
     ]);
 
-    const lines = [`📱 *WHATSAPP LOOKUP*`, `Nomor: +${number}`, `Terdaftar: ${exists ? "✅ Ya" : "❌ Tidak"}`];
+    const lines = [`*WHATSAPP LOOKUP*`, `Nomor: +${number}`, `Terdaftar: ${exists ? "Ya" : "Tidak"}`];
     if (returnedJid && returnedJid !== jid) lines.push(`JID: \`${returnedJid}\``);
     lines.push(`Bio: ${statusRes.bio ? `\n> ${statusRes.bio}` : "-"}`);
     if (statusRes.bio) lines.push(`Bio diperbarui: ${fmtDate(statusRes.setAt)}`);
-    lines.push(`Foto profil: ${photoRes ? "✅ Ada" : "➖ Privat/tidak ada"}`);
+    lines.push(`Foto profil: ${photoRes ? "Ada" : "Privat/tidak ada"}`);
     if (bizRes) {
       const b = bizRes;
-      lines.push(`Bisnis: ✅ Ya`);
+      lines.push(`Bisnis: Ya`);
       if (b.name || b.businessName) lines.push(`Nama bisnis: ${b.name || b.businessName}`);
       if (b.description) lines.push(`Deskripsi: ${String(b.description).slice(0, 300)}`);
       if (b.email) lines.push(`Email: ${b.email}`);
       if (b.website?.length) lines.push(`Website: ${b.website.join(", ")}`);
       if (b.address) lines.push(`Alamat: ${b.address}`);
     } else {
-      lines.push(`Bisnis: ➖ Bukan akun bisnis`);
+      lines.push(`Bisnis: Bukan akun bisnis`);
     }
     lines.push(``);
     lines.push(`_Nama kontak tidak bisa dilacak (hanya terlihat jika pernah chat)._`);

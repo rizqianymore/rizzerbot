@@ -10,8 +10,8 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, senderJid }) => {
     await sendTyping();
     const text = args.join(" ").trim();
-    if (!text) return reply("❌ Masukkan teks profil! Contoh: *.customprofile CEO of Rizz*");
+    if (!text) return reply("Masukkan teks profil! Contoh: *.customprofile CEO of Rizz*");
     db.updateUser(senderJid, { profile: text });
-    await reply(`✅ Profil kustom diatur:\n\n"${text}"`);
+    await reply(`Profil kustom diatur:\n\n"${text}"`);
   },
 };

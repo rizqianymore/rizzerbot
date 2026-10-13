@@ -4,13 +4,13 @@ import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -68,17 +68,17 @@ export default {
     const targetJid = context.getTargetJid(args);
     if (!targetJid) {
       return context.reply(
-        "❌ Balas pesan member yang ingin di-kick atau ketik nomornya! Contoh: *.kick @user* atau *.kick 628xxx*"
+        "Balas pesan member yang ingin di-kick atau ketik nomornya! Contoh: *.kick @user* atau *.kick 628xxx*"
       );
     }
 
     const botJid = db.normalizeJid(sock.user?.id);
     if (db.normalizeJid(targetJid) === botJid) {
-      return context.reply("❌ Bot tidak bisa meng-kick diri sendiri!");
+      return context.reply("Bot tidak bisa meng-kick diri sendiri!");
     }
 
     if (db.isOwner(targetJid)) {
-      return context.reply("❌ Tidak dapat mengeluarkan Owner Bot dari grup!");
+      return context.reply("Tidak dapat mengeluarkan Owner Bot dari grup!");
     }
 
     try {
@@ -87,13 +87,13 @@ export default {
       await sock.sendMessage(
         ctx.remoteJid,
         {
-          text: `👋 Berhasil mengeluarkan @${targetJid.split("@")[0]} dari grup.`,
+          text: `Berhasil mengeluarkan @${targetJid.split("@")[0]} dari grup.`,
           mentions: [targetJid],
         },
         { quoted: msg }
       );
     } catch (err) {
-      await context.reply(`❌ Gagal mengeluarkan member: ${err.message}`);
+      await context.reply(`Gagal mengeluarkan member: ${err.message}`);
     }
   },
 };

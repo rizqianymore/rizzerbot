@@ -13,7 +13,7 @@ export default {
 
     if (!query) {
       return reply(
-        `🔍 *CEK IZIN EDAR BPOM*\n\n` +
+        `*CEK IZIN EDAR BPOM*\n\n` +
           `Masukkan nama produk, merk, nomor registrasi, NIE, atau nama pendaftar.\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}cekbpom Paracetamol\`\n` +
@@ -25,7 +25,7 @@ export default {
     }
 
     if (query.length < 2) {
-      return reply("❌ Query terlalu pendek (minimal 2 karakter).");
+      return reply("Query terlalu pendek (minimal 2 karakter).");
     }
 
     await sendTyping();
@@ -35,7 +35,7 @@ export default {
       const results = await searchProduk(query);
       return reply(formatResults(query, results, startTime));
     } catch (err) {
-      return reply(`❌ Gagal memeriksa: ${err.message}`);
+      return reply(`Gagal memeriksa: ${err.message}`);
     }
   },
 };

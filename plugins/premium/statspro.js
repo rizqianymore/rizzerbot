@@ -14,7 +14,7 @@ export default {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
     let text =
-      `📊 *STATISTIK PENGGUNAAN BOT*\n\n` +
+      `*STATISTIK PENGGUNAAN BOT*\n\n` +
       `*Total Perintah:* ${total}\n` +
       `*Jumlah Fitur:* ${Object.keys(usage).length}\n\n` +
       `*Top 10 Command:*\n`;

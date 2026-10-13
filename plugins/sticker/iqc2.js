@@ -17,7 +17,7 @@ export default {
     const [rawMsg, rawChatTime, rawStatusBarTime] = text.split("|");
 
     if (!rawMsg?.trim()) {
-      return reply("❌ Teks tidak boleh kosong! Contoh: *.iqc2 Halo hilman*");
+      return reply("Teks tidak boleh kosong! Contoh: *.iqc2 Halo hilman*");
     }
 
     const now = new Date();
@@ -35,14 +35,11 @@ export default {
       `&statusBarTime=${encodeURIComponent(statusBarTime)}`;
 
     await sendTyping();
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
     try {
       await sock.sendMessage(msg.key.remoteJid, { image: { url }, caption: "" }, { quoted: msg });
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      return reply(`❌ Gagal membuat iqc: ${err.message}`);
+      return reply(`Gagal membuat iqc: ${err.message}`);
     }
   },
 };

@@ -13,7 +13,7 @@ export default {
 
     if (!input) {
       return reply(
-        `📱 *CEK OPERATOR SELULER*\n\n` +
+        `*CEK OPERATOR SELULER*\n\n` +
           `Masukkan nomor HP Indonesia (format 08xx / 628xx / +628xx).\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}cekoperator 081212345678\`\n` +
@@ -25,7 +25,7 @@ export default {
 
     const parsed = parseOperator(input);
     if (!parsed.valid) {
-      return reply(`❌ ${parsed.reason || "Nomor tidak valid."}`);
+      return reply(`${parsed.reason || "Nomor tidak valid."}`);
     }
 
     return reply(getOperatorInfoText(input));

@@ -11,12 +11,12 @@ export default {
     logger?.warn?.(`[OwnerCmd] maintenance oleh ${senderJid} args=${args.join(" ")}`);
     const activeBotJid = botJid || db.normalizeJid(sock.user?.id);
     if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
-      return reply("❌ Perintah ini hanya untuk Owner bot ini!");
+      return reply("Perintah ini hanya untuk Owner bot ini!");
     }
 
     const wantAll = args.some((a) => String(a).toLowerCase() === "--all");
     if (wantAll && !isPrimarySuperOwner) {
-      return reply("❌ Flag --all hanya dapat dipakai SuperOwner Bot Utama.");
+      return reply("Flag --all hanya dapat dipakai SuperOwner Bot Utama.");
     }
     const arg = String(args.find((a) => !a.startsWith("--")) || "").toLowerCase();
 
@@ -42,7 +42,7 @@ export default {
       : ["off", "0", "tidak", "mati"].includes(arg)
         ? false
         : null;
-    if (enabled === null) return reply("❌ Pakai *.maintenance on* atau *.maintenance off*.");
+    if (enabled === null) return reply("Pakai *.maintenance on* atau *.maintenance off*.");
 
     await sendTyping();
     if (wantAll) {
@@ -61,14 +61,14 @@ export default {
             changed++;
         } catch (_) {}
       }
-      return reply(`🔧 *Maintenance ${enabled ? "ON" : "OFF"} untuk ${changed} bot.*`);
+      return reply(`*Maintenance ${enabled ? "ON" : "OFF"} untuk ${changed} bot.*`);
     }
 
     const changed = applyTo(activeBotJid, enabled);
     reply(
       changed
-        ? `🔧 *Maintenance ${enabled ? "DIAKTIFKAN" : "DIMATIKAN"}* untuk bot ini.${enabled ? "\nSelain owner, perintah user akan diabaikan." : ""}`
-        : `ℹ️ Maintenance bot ini sudah ${enabled ? "ON" : "OFF"}.`
+        ? `*Maintenance ${enabled ? "DIAKTIFKAN" : "DIMATIKAN"}* untuk bot ini.${enabled ? "\nSelain owner, perintah user akan diabaikan." : ""}`
+        : `Maintenance bot ini sudah ${enabled ? "ON" : "OFF"}.`
     );
   },
 };

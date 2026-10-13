@@ -22,7 +22,7 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, senderJid, logger, isPrimarySuperOwner }) => {
     logger?.warn?.(`[OwnerCmd] cleanusers oleh ${senderJid} args=${args.join(" ")}`);
     if (!isPrimarySuperOwner) {
-      return reply("❌ Bersih-bersih database hanya dapat dilakukan oleh SuperOwner Bot Utama.");
+      return reply("Bersih-bersih database hanya dapat dilakukan oleh SuperOwner Bot Utama.");
     }
     let days = 30;
     for (const a of args) {
@@ -37,7 +37,7 @@ export default {
 
     if (!confirm) {
       return reply(
-        `🧹 *BERSIHKAN USER SAMPAH*\n\n` +
+        `*BERSIHKAN USER SAMPAH*\n\n` +
           `Kriteria: tak terdaftar, tanpa hak, tak aktif > ${days} hari.\n` +
           `Ditemukan: *${junk.length} user*\n` +
           (junk.length
@@ -60,6 +60,6 @@ export default {
     logger?.warn?.(
       `[OwnerCmd] cleanusers DIEKSEKUSI oleh ${senderJid}: ${deleted}/${junk.length} dihapus (>${days} hari)`
     );
-    reply(`✅ *Bersih-bersih selesai:* ${deleted} user sampah dihapus (tak aktif > ${days} hari).`);
+    reply(`*Bersih-bersih selesai:* ${deleted} user sampah dihapus (tak aktif > ${days} hari).`);
   },
 };

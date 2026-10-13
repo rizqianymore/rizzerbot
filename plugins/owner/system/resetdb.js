@@ -49,31 +49,31 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, senderJid, logger, isPrimarySuperOwner }) => {
     logger?.warn?.(`[OwnerCmd] resetdb oleh ${senderJid} args=${args.join(" ")}`);
     if (!isPrimarySuperOwner) {
-      return reply("❌ Reset database hanya dapat dijalankan oleh SuperOwner Bot Utama.");
+      return reply("Reset database hanya dapat dijalankan oleh SuperOwner Bot Utama.");
     }
 
     const subCount = countSubbotDbs();
     const keyword = String(args[0] || "").toLowerCase();
     if (keyword !== "confirm" && keyword !== "ya" && keyword !== "yes") {
       return reply(
-        `⚠️ *RESET DATABASE UTAMA*\n\n` +
+        `*RESET DATABASE UTAMA*\n\n` +
           `Perintah ini akan MENGHAPUS:\n` +
           `• Seluruh data user (owner tambahan, admin, premium, banned)\n` +
           `• Riwayat transaksi & data sewa grup\n` +
           `• Chat log & audit hak akses\n` +
-          `• Peta LID→HP (dipelajari ulang otomatis)\n\n` +
+          `• Peta LIDHP (dipelajari ulang otomatis)\n\n` +
           `Yang AMAN (tidak disentuh):\n` +
-          `• ✅ ${subCount} database sub-bot aktif\n` +
-          `• ✅ Seluruh sesi login (bot tetap online)\n` +
-          `• ✅ Setting bot (owner utama, prefix, mode)\n` +
-          `• ✅ File backup di database/backups/\n\n` +
+          `• ${subCount} database sub-bot aktif\n` +
+          `• Seluruh sesi login (bot tetap online)\n` +
+          `• Setting bot (owner utama, prefix, mode)\n` +
+          `• File backup di database/backups/\n\n` +
           `Bot akan restart otomatis setelah reset.\n\n` +
           `_Ketik *.resetdb confirm* untuk lanjut._`
       );
     }
 
     await sendTyping();
-    await reply("🗑️ Mereset database utama... (sub-bot & sesi aman)");
+    await reply("Mereset database utama... (sub-bot & sesi aman)");
 
     const wiped = [];
     const failed = [];
@@ -123,15 +123,15 @@ export default {
         `[OwnerCmd] resetdb DIEKSEKUSI oleh ${senderJid}: hapus=[${wiped.join(", ")}] gagal=[${failed.join(", ") || "tidak ada"}] subbot_aman=${subAfter}`
       );
       await reply(
-        `✅ *Reset Database Selesai!*\n\n` +
-          `🧹 Dihapus: ${wiped.join(", ")}\n` +
-          (failed.length ? `⚠️ Gagal: ${failed.join(", ")}\n` : ``) +
-          `🤖 Sub-bot aman: ${subAfter} database tidak disentuh\n` +
-          `🔄 Bot restart dalam 3 detik untuk memuat database bersih...`
+        `*Reset Database Selesai!*\n\n` +
+          `Dihapus: ${wiped.join(", ")}\n` +
+          (failed.length ? `Gagal: ${failed.join(", ")}\n` : ``) +
+          `Sub-bot aman: ${subAfter} database tidak disentuh\n` +
+          `Bot restart dalam 3 detik untuk memuat database bersih...`
       );
     } catch (err) {
       logger?.error?.(`[resetdb] gagal: ${err.message}`);
-      return reply(`❌ Reset gagal: ${err.message}\nDatabase sub-bot & sesi tidak disentuh.`);
+      return reply(`Reset gagal: ${err.message}\nDatabase sub-bot & sesi tidak disentuh.`);
     }
 
     setTimeout(async () => {

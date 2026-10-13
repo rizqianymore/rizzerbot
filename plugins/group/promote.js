@@ -4,13 +4,13 @@ import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -67,7 +67,7 @@ export default {
 
     const targetJid = context.getTargetJid(args);
     if (!targetJid) {
-      return context.reply("❌ Balas pesan member atau masukkan nomor yang ingin dinaikkan jadi admin!");
+      return context.reply("Balas pesan member atau masukkan nomor yang ingin dinaikkan jadi admin!");
     }
 
     try {
@@ -76,13 +76,13 @@ export default {
       await sock.sendMessage(
         ctx.remoteJid,
         {
-          text: `👑 Selamat! @${targetJid.split("@")[0]} sekarang telah menjadi Admin grup.`,
+          text: `Selamat! @${targetJid.split("@")[0]} sekarang telah menjadi Admin grup.`,
           mentions: [targetJid],
         },
         { quoted: msg }
       );
     } catch (err) {
-      await context.reply(`❌ Gagal menaikkan admin: ${err.message}`);
+      await context.reply(`Gagal menaikkan admin: ${err.message}`);
     }
   },
 };

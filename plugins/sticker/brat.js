@@ -27,7 +27,6 @@ export default {
       return reply(check.error);
     }
 
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});
 
     try {
       if (isVideo) {
@@ -37,10 +36,8 @@ export default {
         const imageBuffer = await createBratImage(text, TEMPLATES.classic, { bgColor });
         await sendStickerBuffer(sock, msg, imageBuffer);
       }
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      reply(`❌ Gagal membuat stiker Brat: ${err.message}`);
+      reply(`Gagal membuat stiker Brat: ${err.message}`);
     }
   },
 };

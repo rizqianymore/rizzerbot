@@ -11,11 +11,11 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, _logger }) => {
     if (isSubBot || sock?.isSubBot) {
-      return reply("❌ *Akses Ditolak!*\n\nLog pesan chat hanya dapat dibuka dan diakses melalui *Bot Utama*.");
+      return reply("*Akses Ditolak!*\n\nLog pesan chat hanya dapat dibuka dan diakses melalui *Bot Utama*.");
     }
 
     if (!isPrimarySuperOwner) {
-      return reply("❌ Fitur riwayat log pesan hanya dapat diakses oleh *SuperOwner* Bot Utama.");
+      return reply("Fitur riwayat log pesan hanya dapat diakses oleh *SuperOwner* Bot Utama.");
     }
 
     await sendTyping();
@@ -25,13 +25,13 @@ export default {
       const targetDate = args[1];
       const logs = getChatLogsList();
       if (logs.length === 0) {
-        return reply("ℹ️ Belum ada log pesan yang tersimpan.");
+        return reply("Belum ada log pesan yang tersimpan.");
       }
 
       const target = targetDate ? getChatLogContent(targetDate) : getChatLogContent(logs[0].file);
       if (!target || !fs.existsSync(target.filePath)) {
         return reply(
-          `❌ File log untuk tanggal/nama \`${targetDate}\` tidak ditemukan.\n\nGunakan \`.chatlogs\` untuk melihat daftar file.`
+          `File log untuk tanggal/nama \`${targetDate}\` tidak ditemukan.\n\nGunakan \`.chatlogs\` untuk melihat daftar file.`
         );
       }
 
@@ -78,22 +78,22 @@ export default {
 
     const logs = getChatLogsList();
     if (logs.length === 0) {
-      return reply("ℹ️ Belum ada catatan pesan WhatsApp yang tersimpan saat ini.");
+      return reply("Belum ada catatan pesan WhatsApp yang tersimpan saat ini.");
     }
 
-    let message = `📋 *DAFTAR LOG PESAN WHATSAPP (3 HARI TERAKHIR)*\n`;
+    let message = `*DAFTAR LOG PESAN WHATSAPP (3 HARI TERAKHIR)*\n`;
     message += `_Hanya SuperOwner di Bot Utama yang dapat membuka log ini._\n\n`;
 
     let totalBytes = 0;
     logs.forEach((item, idx) => {
       totalBytes += item.size;
       message += `*${idx + 1}. ${item.file}*\n`;
-      message += `   📅 Tanggal: \`${item.date}\`\n`;
-      message += `   📦 Ukuran: ${formatBytes(item.size)}\n\n`;
+      message += `   Tanggal: \`${item.date}\`\n`;
+      message += `   Ukuran: ${formatBytes(item.size)}\n\n`;
     });
 
-    message += `📊 *Total Ukuran:* ${formatBytes(totalBytes)}\n\n`;
-    message += `*💡 Panduan Perintah:*\n`;
+    message += `*Total Ukuran:* ${formatBytes(totalBytes)}\n\n`;
+    message += `*Panduan Perintah:*\n`;
     message += `• \`.chatlogs download <tanggal/file>\` : Kirim file log JSON ke chat ini\n`;
     message += `• \`.chatlogs view <tanggal/file>\` : Intip 15 pesan terakhir langsung di WhatsApp\n`;
     message += `• Contoh: \`.chatlogs download ${logs[0].date}\``;

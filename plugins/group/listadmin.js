@@ -4,13 +4,13 @@ import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js"
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -65,22 +65,22 @@ export default {
 
     const admins = ctx.participants.filter((p) => p.admin);
     if (!admins.length) {
-      return context.reply("❌ Tidak ditemukan admin di grup ini.");
+      return context.reply("Tidak ditemukan admin di grup ini.");
     }
 
     const creator = admins.find((p) => p.admin === "superadmin");
     const regularAdmins = admins.filter((p) => p.admin !== "superadmin");
 
-    let text = `👑 *DAFTAR ADMIN GRUP*\n`;
-    text += `📌 *Grup:* ${ctx.meta.subject}\n`;
-    text += `👥 *Total Admin:* ${admins.length}\n\n`;
+    let text = `*DAFTAR ADMIN GRUP*\n`;
+    text += `*Grup:* ${ctx.meta.subject}\n`;
+    text += `*Total Admin:* ${admins.length}\n\n`;
 
     if (creator) {
-      text += `👑 *Creator / Pembuat Grup:*\n• @${creator.id.split("@")[0]}\n\n`;
+      text += `*Creator / Pembuat Grup:*\n• @${creator.id.split("@")[0]}\n\n`;
     }
 
     if (regularAdmins.length > 0) {
-      text += `⭐ *Admin:*\n`;
+      text += `*Admin:*\n`;
       regularAdmins.forEach((a, i) => {
         text += `${i + 1}. @${a.id.split("@")[0]}\n`;
       });

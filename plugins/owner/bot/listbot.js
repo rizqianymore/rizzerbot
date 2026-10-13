@@ -12,7 +12,7 @@ export default {
     const list = getSubBotsList();
 
     if (!list || list.length === 0) {
-      return reply("ℹ️ Belum ada sub-bot yang aktif.\nGunakan *.addbot <nomor>* untuk menambahkan bot baru.");
+      return reply("Belum ada sub-bot yang aktif.\nGunakan *.addbot <nomor>* untuk menambahkan bot baru.");
     }
 
     const filteredList = isPrimarySuperOwner
@@ -23,7 +23,7 @@ export default {
         });
 
     if (filteredList.length === 0) {
-      return reply("ℹ️ Tidak ada sub-bot yang terdaftar atas kepemilikan nomor Anda.");
+      return reply("Tidak ada sub-bot yang terdaftar atas kepemilikan nomor Anda.");
     }
 
     const lines = [`*DAFTAR BOT AKTIF (${filteredList.length})*\n`];

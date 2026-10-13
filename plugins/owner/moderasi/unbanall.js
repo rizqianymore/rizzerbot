@@ -10,7 +10,7 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, senderJid, logger, isPrimarySuperOwner }) => {
     logger?.warn?.(`[OwnerCmd] unbanall oleh ${senderJid}`);
     if (!isPrimarySuperOwner) {
-      return reply("❌ Unban massal hanya dapat dilakukan oleh SuperOwner Bot Utama.");
+      return reply("Unban massal hanya dapat dilakukan oleh SuperOwner Bot Utama.");
     }
     const banned = Object.entries(db.data.users || {})
       .filter(([jid, u]) => jid.endsWith("@s.whatsapp.net") && u?.banned && !u?.owner)
@@ -18,7 +18,7 @@ export default {
     const confirm = args.some((a) => ["confirm", "ya", "yes"].includes(String(a).toLowerCase()));
     if (!confirm) {
       return reply(
-        `⚠️ *UNBAN SEMUA (${banned.length} user)*\n\n` +
+        `*UNBAN SEMUA (${banned.length} user)*\n\n` +
           (banned.length
             ? `Akan di-unban: ${banned
                 .slice(0, 10)
@@ -38,6 +38,6 @@ export default {
       } catch (_) {}
     }
     logger?.warn?.(`[OwnerCmd] unbanall DIEKSEKUSI oleh ${senderJid}: ${ok}/${banned.length}`);
-    reply(`✅ *Unban massal selesai:* ${ok} user dibuka blokirnya.`);
+    reply(`*Unban massal selesai:* ${ok} user dibuka blokirnya.`);
   },
 };

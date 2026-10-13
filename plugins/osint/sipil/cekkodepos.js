@@ -46,7 +46,7 @@ export default {
 
     if (!input) {
       return reply(
-        `📮 *PENCARIAN KODE POS INDONESIA*\n\n` +
+        `*PENCARIAN KODE POS INDONESIA*\n\n` +
           `Masukkan nama daerah (kelurahan, kecamatan, kota) atau 5 digit kode pos.\n\n` +
           `*Contoh:*\n` +
           `• \`${currentPrefix}cekkodepos Kemanggisan\`\n` +
@@ -56,24 +56,24 @@ export default {
     }
 
     if (input.length < 3) {
-      return reply("❌ Kata kunci pencarian terlalu pendek (minimal 3 karakter).");
+      return reply("Kata kunci pencarian terlalu pendek (minimal 3 karakter).");
     }
 
     await sendTyping();
-    await reply(`🔍 Mencari data kode pos untuk *${input}*...`);
+    await reply(`Mencari data kode pos untuk *${input}*...`);
 
     try {
       const list = await searchKodePos(input);
 
       if (!list || list.length === 0) {
-        return reply(`❌ Data wilayah/kode pos untuk *"${input}"* tidak ditemukan.`);
+        return reply(`Data wilayah/kode pos untuk *"${input}"* tidak ditemukan.`);
       }
 
       const total = list.length;
       const displayed = list.slice(0, 15);
 
       const lines = [
-        `📮 *HASIL PENCARIAN KODE POS*`,
+        `*HASIL PENCARIAN KODE POS*`,
         `Kata kunci: \`${input}\``,
         `Ditemukan: *${total}* wilayah (menampilkan ${displayed.length} teratas)`,
         ``,
@@ -87,10 +87,10 @@ export default {
         const prov = item.province || "-";
 
         lines.push(`*${idx + 1}. Kode Pos: ${pos}*`);
-        lines.push(`   🏠 Kel/Desa: ${desa}`);
-        lines.push(`   📍 Kec: ${kec}`);
-        lines.push(`   🏛️ Kab/Kota: ${kab}`);
-        lines.push(`   🗺️ Prov: ${prov}`);
+        lines.push(`   Kel/Desa: ${desa}`);
+        lines.push(`   Kec: ${kec}`);
+        lines.push(`   Kab/Kota: ${kab}`);
+        lines.push(`   Prov: ${prov}`);
         lines.push(``);
       });
 
@@ -100,7 +100,7 @@ export default {
 
       return reply(lines.join("\n").trim());
     } catch (err) {
-      return reply(`❌ Terjadi kesalahan saat mencari kode pos: ${err.message}`);
+      return reply(`Terjadi kesalahan saat mencari kode pos: ${err.message}`);
     }
   },
 };

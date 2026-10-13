@@ -11,13 +11,13 @@ export default {
 
     if (!senderJid || !db.isBotOwner(activeBotJid, senderJid)) {
       logger?.warn?.(`[OwnerCmd] self DITOLAK untuk ${senderJid} via ${activeBotJid}`);
-      return reply("❌ Perintah ini hanya untuk Owner bot ini!");
+      return reply("Perintah ini hanya untuk Owner bot ini!");
     }
     logger?.warn?.(`[OwnerCmd] self oleh ${senderJid} via ${activeBotJid}`);
 
     const syncAll = args.includes("--all") || args.includes("-a");
     if (syncAll && !isPrimarySuperOwner) {
-      return reply("❌ Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
+      return reply("Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
     }
 
     if (syncAll) {
@@ -28,10 +28,10 @@ export default {
         const sJid = `${b.number}@s.whatsapp.net`;
         db.updateBotSettings(sJid, { public: false });
       }
-      reply("🔒 *MODE SELF (OWNER ONLY)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
+      reply("*MODE SELF (OWNER ONLY)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
     } else {
       db.updateBotSettings(activeBotJid, { public: false });
-      reply(`🔒 Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode Self.`);
+      reply(`Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode Self.`);
     }
   },
 };

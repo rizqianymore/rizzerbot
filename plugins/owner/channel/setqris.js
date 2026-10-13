@@ -15,7 +15,7 @@ export default {
       const cur = getActiveQrisString();
       const parsed = parseQRIS(cur);
       return reply(
-        `📱 *PENGATURAN QRIS TOKO*\n\n` +
+        `*PENGATURAN QRIS TOKO*\n\n` +
           `• *Merchant:* ${parsed.merchantName || "-"}\n` +
           `• *Kota:* ${parsed.merchantCity || "-"}\n` +
           `• *String Aktif:* \`${cur}\`\n\n` +
@@ -26,7 +26,7 @@ export default {
 
     const validation = validateQRIS(newString);
     if (!validation.valid) {
-      return reply(`❌ Format string QRIS tidak valid!\n` + `Alasan:\n- ` + validation.errors.join("\n- "));
+      return reply(`Format string QRIS tidak valid!\n` + `Alasan:\n- ` + validation.errors.join("\n- "));
     }
 
     const parsed = parseQRIS(newString);
@@ -37,11 +37,11 @@ export default {
     });
 
     reply(
-      `✅ *QRIS BERHASIL DIPERBARUI!*\n\n` +
-        `🏢 *Merchant:* ${parsed.merchantName}\n` +
-        `📍 *Kota:* ${parsed.merchantCity}\n` +
-        `🔐 *CRC16:* ${parsed.crc} (Valid)\n` +
-        `⚡ Semua pembayaran otomatis akan menggunakan QRIS ini.`
+      `*QRIS BERHASIL DIPERBARUI!*\n\n` +
+        `*Merchant:* ${parsed.merchantName}\n` +
+        `*Kota:* ${parsed.merchantCity}\n` +
+        `*CRC16:* ${parsed.crc} (Valid)\n` +
+        `Semua pembayaran otomatis akan menggunakan QRIS ini.`
     );
   },
 };

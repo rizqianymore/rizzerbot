@@ -12,24 +12,24 @@ export default {
     const username = (args[0] || "").trim().replace(/^@/, "");
 
     if (!username) {
-      return reply(`❌ Masukkan username yang ingin dicari!\n` + `Contoh: \`${currentPrefix}userhunt torvalds\``);
+      return reply(`Masukkan username yang ingin dicari!\n` + `Contoh: \`${currentPrefix}userhunt torvalds\``);
     }
 
     if (!isValidUsername(username)) {
-      return reply("❌ Format username tidak valid (hanya huruf, angka, dot, strip, underscore, 3-30 karakter).");
+      return reply("Format username tidak valid (hanya huruf, angka, dot, strip, underscore, 3-30 karakter).");
     }
 
     await sendTyping();
-    await reply(`🔍 Melacak jejak username *${username}* di ${USERHUNT_PLATFORMS.length} platform online...`);
+    await reply(`Melacak jejak username *${username}* di ${USERHUNT_PLATFORMS.length} platform online...`);
 
     const found = await checkUsernameAll(username);
     const high = found.filter((i) => i.confidence === "HIGH");
 
-    const badge = (c) => (c === "HIGH" ? "🟢" : c === "MEDIUM" ? "🟡" : "⚪");
+    const badge = (c) => (c === "HIGH" ? "" : c === "MEDIUM" ? "" : "");
     const lines = [
-      `🕵️‍♂️ *OSINT USERNAME SCANNER*`,
+      `*OSINT USERNAME SCANNER*`,
       `Target: \`${username}\``,
-      `Hasil: Ditemukan di *${found.length}* dari *${USERHUNT_PLATFORMS.length}* platform (*${high.length}* terverifikasi 🟢)`,
+      `Hasil: Ditemukan di *${found.length}* dari *${USERHUNT_PLATFORMS.length}* platform (*${high.length}* terverifikasi )`,
       ``,
     ];
 
@@ -40,7 +40,7 @@ export default {
         lines.push(`${idx + 1}. ${badge(item.confidence)} *${item.name}* [${item.confidence}]: ${item.url}`);
       });
       lines.push(``);
-      lines.push(`_🟢=API resmi, 🟡=penanda kuat, ⚪=heuristik (wajib cek manual)._`);
+      lines.push(`_=API resmi, =penanda kuat, =heuristik (wajib cek manual)._`);
       lines.push(`_Username sama ≠ orang yang sama — cocokkan foto/bio sebelum menyimpulkan._`);
     }
 

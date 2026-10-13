@@ -9,9 +9,9 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("❌ Pengaturan saluran resmi hanya dapat diubah oleh SuperOwner Bot Utama.");
+      return reply("Pengaturan saluran resmi hanya dapat diubah oleh SuperOwner Bot Utama.");
     }
     db.main().updateSettings({ channelJid: "" });
-    reply("✅ Konfigurasi Saluran bot berhasil dinonaktifkan/dihapus.");
+    reply("Konfigurasi Saluran bot berhasil dinonaktifkan/dihapus.");
   },
 };

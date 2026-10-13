@@ -246,12 +246,12 @@ export default {
 
     const react = (emoji) =>
       sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-    await react("🎨");
+await react("🎨");
     await reply(`Membuat gambar dengan *${selected.name}*...`);
 
     try {
       const imgs = await generateImage(prompt, selected);
-      await react("✅");
+await react("✅");
       for (const url of imgs) {
         await sock
           .sendMessage(
@@ -262,7 +262,7 @@ export default {
           .catch(() => reply(`Link gambar: ${url}`));
       }
     } catch (err) {
-      await react("❌");
+await react("❌");
       await reply(`*DREAM AI GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },

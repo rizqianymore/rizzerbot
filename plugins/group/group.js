@@ -4,13 +4,13 @@ import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js"
 async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("❌ Perintah ini hanya dapat digunakan di dalam grup!");
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
     return null;
   }
 
   const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
   if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("❌ Gagal mengambil informasi grup WhatsApp.");
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
     return null;
   }
 
@@ -30,12 +30,12 @@ async function getGroupContext(sock, msg, context, { requireUserAdmin = true, re
   );
 
   if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("❌ Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
     return null;
   }
 
   if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("❌ Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
     return null;
   }
 
@@ -68,13 +68,13 @@ export default {
     const action = (args[0] || "").toLowerCase();
     if (action === "open" || action === "buka") {
       await sock.groupSettingUpdate(ctx.remoteJid, "not_announcement");
-      await context.reply("🔓 *GRUP BERHASIL DIBUKA!* Semua member sekarang dapat mengirim pesan.");
+      await context.reply("*GRUP BERHASIL DIBUKA!* Semua member sekarang dapat mengirim pesan.");
     } else if (action === "close" || action === "tutup") {
       await sock.groupSettingUpdate(ctx.remoteJid, "announcement");
-      await context.reply("🔒 *GRUP BERHASIL DITUTUP!* Hanya admin yang dapat mengirim pesan.");
+      await context.reply("*GRUP BERHASIL DITUTUP!* Hanya admin yang dapat mengirim pesan.");
     } else {
       await context.reply(
-        "❌ Perintah tidak valid! Gunakan: *.group open* (buka grup) atau *.group close* (tutup grup)"
+        "Perintah tidak valid! Gunakan: *.group open* (buka grup) atau *.group close* (tutup grup)"
       );
     }
   },
