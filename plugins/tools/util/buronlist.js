@@ -1,3 +1,5 @@
+import { isButtonTap } from "@/src/utils/buttons.js";
+
 export const BURON_DUMMY = [
   { nama: "Andi", kasus: "Penipuan", status: "DPO" },
   { nama: "Budi", kasus: "Penggelapan", status: "Buronan" },
@@ -85,10 +87,17 @@ export default {
   category: "Tools",
   run: async (sock, msg, args, context) => {
     await context.sendTyping();
+    const prefix = context.prefix || ".";
+    const tap = isButtonTap(msg);
     const q = args.join(" ").trim().toLowerCase();
     const data = q ? BURON_DUMMY.filter((b) => b.nama.toLowerCase().includes(q)) : BURON_DUMMY;
     if (q && data.length === 0) return context.reply(`Buron *${q}* tidak ditemukan.`);
     const jid = msg.key.remoteJid;
-    await sendBuronList(sock, jid, data, msg, context.prefix || ".");
+    await sendBuronList(sock, jid, data, msg, prefix);
+    if (tap && q) {
+      // tap menonaktifkan buton lama + hasil filter tak ada buton:
+      // kirim menu full fresh biar tetap bisa klik berkali-kali
+      await sendBuronList(sock, jid, BURON_DUMMY, msg, prefix).catch(() => {});
+    }
   },
 };

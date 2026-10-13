@@ -1,4 +1,5 @@
 import { extractMessageContent } from "ourin-baileys";
+import { extractButtonText } from "@/src/utils/buttons.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid, resolveSenderJid, resolveBotJid, resolveBotIdentity } from "./identity.js";
 import { isCrashBlocked } from "./guards.js";
@@ -61,6 +62,7 @@ async function dispatchInner(sock, msg, logger) {
     msg.message.videoMessage?.caption ||
     msg.message.documentMessage?.caption ||
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
+    extractButtonText(msg.message) ||
     "";
 
   if (await checkAntiCrash(sock, msg, logger, remoteJid, messageContent)) return;
