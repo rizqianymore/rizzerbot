@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { STICKER_VIDEO_MAX_SECONDS } from "../media/sticker.js";
 
 export function getFfmpegPath() {
   if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
@@ -67,10 +68,12 @@ export const VIDEO_CONFIG = {
   fps: 15,
   width: 512,
   height: 512,
-  targetDuration: 11,
+  // Durasi total video. Harus selalu di bawah batas potong stiker, kalau tidak
+  // kata-kata terakhir tidak akan pernah muncul di stiker yang dikirim.
+  targetDuration: STICKER_VIDEO_MAX_SECONDS - 0.5,
   maxRevealSteps: 20,
   minFrameDuration: 0.12,
-  maxFrameDuration: 0.5,
+  maxFrameDuration: 1.2,
   linePauseFactor: 1.7,
   lastFrameDuration: 1.4,
 };

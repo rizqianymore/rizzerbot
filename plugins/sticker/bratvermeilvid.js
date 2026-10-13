@@ -4,8 +4,6 @@ import {
   sendStickerBuffer,
   parseBratArgs,
   validateBratText,
-  MAX_BRAT_VIDEO_LENGTH,
-  MAX_BRAT_VIDEO_WORDS,
 } from "@/src/services/fetch/brat.js";
 
 export default {
@@ -24,9 +22,7 @@ export default {
 
     const check = validateBratText(text, true);
     if (!check.ok) {
-      return reply(
-        `⚠️ Kalimat terlalu panjang! Maksimal ${MAX_BRAT_VIDEO_LENGTH} karakter dan ${MAX_BRAT_VIDEO_WORDS} kata untuk video Brat Vermeil.`
-      );
+      return reply(check.error);
     }
 
     await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});

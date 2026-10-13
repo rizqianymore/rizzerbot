@@ -1,11 +1,15 @@
 import { VIDEO_CONFIG } from "./config.js";
 
 export function normalizeText(text) {
-  return String(text || "")
-    .replace(/\r/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return (
+    String(text || "")
+      .replace(/\r/g, "")
+      // spasi tak terlihat (copy-paste) dianggap spasi biasa agar wrapping tidak pecah
+      .replace(/[\u00A0\u2007\u202F]/g, " ")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  );
 }
 
 export function tokenizeLine(line) {
@@ -13,6 +17,18 @@ export function tokenizeLine(line) {
     .replace(/[,，]/g, " ")
     .split(/\s+/)
     .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Pemisahan kata yang SAMA PERSIS dengan yang dipakai layout (layout.js),
+ * sehingga indeks kata pada frame reveal selalu sejajar dengan posisi kata
+ * di canvas. Jangan diganti dengan tokenizer lain (mis. yang membuang tanda baca)
+ * karena jumlah kata bisa berbeda dan reveal jadi meleset.
+ */
+export function splitWords(line) {
+  return String(line || "")
+    .split(" ")
     .filter(Boolean);
 }
 
@@ -28,8 +44,10 @@ function clamp(value, min, max) {
  * @returns {{ revealedWords: number, duration: number, isLast: boolean }[]}
  */
 export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
+  // splitWords() = pemisahan kata yang sama persis dengan layout, sehingga
+  // revealedWords selalu sejajar dengan globalIndex di canvas.
   const wordLines = (Array.isArray(lines) ? lines : [])
-    .map((line) => tokenizeLine(line))
+    .map((line) => splitWords(line))
     .filter((tokens) => tokens.length > 0);
   const totalWords = wordLines.reduce((sum, tokens) => sum + tokens.length, 0);
   if (!totalWords) return [];
@@ -61,19 +79,42 @@ export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
   }
 
   const lastDuration = Math.max(0.1, configObj.lastFrameDuration);
-  const moving = Math.max(1, steps.length - 1);
-  const base = clamp(
-    (configObj.targetDuration - lastDuration) / moving,
-    configObj.minFrameDuration,
-    configObj.maxFrameDuration
-  );
+  const minFrame = Math.max(0.04, configObj.minFrameDuration || 0.04);
+  const maxFrame = Math.max(minFrame, configObj.maxFrameDuration || minFrame * 10);
+  const pauseFactor = Math.max(1, configObj.linePauseFactor || 1);
 
-  return steps.map((step, index) => {
+  // Frame terakhir hanya hold, sisanya frame bergerak. Frame jeda akhir baris
+  // lebih lama dari frame biasa, jadi bobotnya ikut dihitung saat membagi durasi.
+  const movingSteps = steps.slice(0, -1);
+  const pauseCount = movingSteps.filter((step) => step.endOfLine).length;
+  const weightedSteps = Math.max(1, movingSteps.length - pauseCount + pauseCount * pauseFactor);
+
+  const hasTarget = Number.isFinite(configObj.targetDuration) && configObj.targetDuration > lastDuration;
+  const target = hasTarget ? configObj.targetDuration : null;
+  // Tanpa target durasi, frame bergerak diberi durasi maksimum.
+  const budget = target ?? lastDuration + weightedSteps * maxFrame;
+  const base = clamp((budget - lastDuration) / weightedSteps, minFrame, maxFrame);
+
+  const frames = steps.map((step, index) => {
     const isLast = index === steps.length - 1;
     let duration = isLast ? lastDuration : base;
     if (!isLast && step.endOfLine) {
-      duration = clamp(base * configObj.linePauseFactor, configObj.minFrameDuration, configObj.maxFrameDuration * 2);
+      duration = clamp(base * pauseFactor, minFrame, maxFrame * 2);
     }
     return { revealedWords: step.revealedWords, duration, isLast };
   });
+
+  // Kunci total durasi: tidak boleh melebihi target, karena video yang lebih
+  // panjang dari batas potong stiker akan memotong kata-kata terakhir.
+  if (target) {
+    const total = frames.reduce((sum, frame) => sum + frame.duration, 0);
+    if (total > target) {
+      const scale = target / total;
+      for (const frame of frames) {
+        frame.duration = Math.max(minFrame, frame.duration * scale);
+      }
+    }
+  }
+
+  return frames;
 }

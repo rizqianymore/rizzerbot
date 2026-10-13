@@ -4,7 +4,6 @@ import {
   sendStickerBuffer,
   parseBratArgs,
   validateBratText,
-  MAX_BRAT_STATIC_LENGTH,
 } from "@/src/services/fetch/brat.js";
 
 export default {
@@ -23,7 +22,7 @@ export default {
 
     const check = validateBratText(text, false);
     if (!check.ok) {
-      return reply(`⚠️ Teks terlalu panjang! Maksimal ${MAX_BRAT_STATIC_LENGTH} karakter untuk stiker Brat Gojo.`);
+      return reply(check.error);
     }
 
     await sock.sendMessage(msg.key.remoteJid, { react: { text: "🕕", key: msg.key } }).catch(() => {});

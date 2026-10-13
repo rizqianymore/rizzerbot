@@ -42,7 +42,12 @@ function paintCanvas(image, template, bgColor) {
 export async function renderBratCanvas(image, text, template, options = {}) {
   const scaled = scaleTemplate(template, SUPERSAMPLE);
   const { canvas, ctx } = paintCanvas(image, scaled, options.bgColor);
-  drawCenteredText(ctx, text, scaled.safeZone, options);
+  // Template dengan latar foto (gojo/vermeil) menandai stroke: true di objek
+  // template, bukan di safeZone — teruskan eksplisit agar outline ikut tergambar.
+  drawCenteredText(ctx, text, scaled.safeZone, {
+    ...options,
+    stroke: options.stroke ?? scaled.stroke ?? false,
+  });
   return canvas;
 }
 

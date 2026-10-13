@@ -1,5 +1,6 @@
 import { createCanvas } from "@napi-rs/canvas";
 import { TEXT_STYLE } from "./config.js";
+import { splitWords } from "./text.js";
 
 function getSafeRect(zone) {
   return {
@@ -159,7 +160,7 @@ function buildLinePlans(ctx, lines, rect, size, align) {
 
   return lines.map((line, index) => {
     const isLastLine = index === lines.length - 1;
-    const words = line.split(" ").filter(Boolean);
+    const words = splitWords(line);
     const widths = words.map((word) => ctx.measureText(word).width);
     const wordsWidth = widths.reduce((a, b) => a + b, 0);
 
@@ -168,8 +169,9 @@ function buildLinePlans(ctx, lines, rect, size, align) {
 
     if (align === "justify" && !isLastLine && words.length > 1) {
       const justifyGap = (rect.w - wordsWidth) / (words.length - 1);
+      // Hanya perluas jangan pernah rapat: gap lebih kecil dari spasi = kata menempel.
       // Gap terlalu besar = baris renggang, lebih rapi rata kiri saja.
-      if (justifyGap <= size * MAX_JUSTIFY_GAP_RATIO) {
+      if (justifyGap >= spaceWidth && justifyGap <= size * MAX_JUSTIFY_GAP_RATIO) {
         gap = justifyGap;
       }
     } else if (align === "center") {
@@ -243,13 +245,16 @@ export function drawCenteredText(ctx, text, zone, options = {}) {
 
   ctx.fillStyle = options.color || TEXT_STYLE.color;
   ctx.textBaseline = "top";
+  // Stroke sengaja tidak dibaca dari `zone`: objek safeZone tidak pernah memuat
+  // properti stroke (template.stroke ada di objek template), jadi penggunanya
+  // wajib meneruskannya lewat options.stroke.
   drawLinePlans(
     ctx,
     linePlans,
     rect.y + (rect.h - fitted.totalHeight) / 2,
     fitted.lineHeight,
     fitted.size,
-    options.stroke ?? zone.stroke ?? false
+    options.stroke ?? false
   );
 
   ctx.restore();

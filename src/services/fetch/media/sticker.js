@@ -15,6 +15,17 @@ const execFileAsync = promisify(execFile);
 
 const { Image: WebpMuxImage } = webpmux;
 
+/** Batas durasi video yang dikirim sebagai stiker (detik). Konten setelah ini akan terpotong. */
+export const STICKER_VIDEO_MAX_SECONDS = 7;
+
+function toFfmpegTime(seconds) {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = String(Math.floor(total / 3600)).padStart(2, "0");
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+  const s = String(total % 60).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
 export async function createSticker(buffer, { pack, author, topText, bottomText } = {}) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
@@ -64,7 +75,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         "-ss",
         "00:00:00",
         "-t",
-        "00:00:07",
+        toFfmpegTime(STICKER_VIDEO_MAX_SECONDS),
         "-i",
         inVid,
         ...(createdOverlay ? ["-i", overlayPng] : []),
