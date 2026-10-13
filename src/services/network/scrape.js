@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   DEVICE_PROFILES,
   ACCEPT_LANGUAGES,
@@ -9,25 +8,6 @@ import {
 
 export { DEVICE_PROFILES, ACCEPT_LANGUAGES, getRandomDevice, buildScraperHeaders, request };
 
-const http = axios.create({
-  timeout: 20000,
-});
-
-http.interceptors.request.use((config) => {
-  const device = getRandomDevice();
-  const defaultHeaders = buildScraperHeaders(device);
-
-  config.headers = config.headers || {};
-  for (const [key, value] of Object.entries(defaultHeaders)) {
-    const lowerKey = key.toLowerCase();
-    const hasHeader = Object.keys(config.headers).some((h) => h.toLowerCase() === lowerKey);
-    if (!hasHeader && value !== undefined && value !== null) {
-      config.headers[key] = value;
-    }
-  }
-  return config;
-});
-
 export async function fetchLyrics(artist, title) {
   const cleanArtist = String(artist || "")
     .trim()
@@ -36,8 +16,9 @@ export async function fetchLyrics(artist, title) {
     .trim()
     .slice(0, 100);
   if (!cleanArtist || !cleanTitle) throw new Error("Artis dan judul lagu wajib diisi");
-  const { data } = await http.get(
-    `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`
+  const data = await request.json(
+    `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`,
+    { timeout: 20000 }
   );
   if (!data?.lyrics?.trim?.()) throw new Error("Lirik tidak ditemukan");
   return String(data.lyrics).trim();
@@ -47,7 +28,7 @@ export async function translateText(text, lang = "id") {
   const clean = String(text || "").trim();
   if (!clean) throw new Error("Teks untuk diterjemahkan kosong");
   if (clean.length > 2000) throw new Error("Teks terlalu panjang (maksimal 2000 karakter)");
-  const { data } = await http.get("https://translate.googleapis.com/translate_a/single", {
+  const data = await request.json("https://translate.googleapis.com/translate_a/single", {
     params: {
       client: "gtx",
       sl: "auto",
@@ -55,6 +36,8 @@ export async function translateText(text, lang = "id") {
       dt: "t",
       q: clean,
     },
+    timeout: 20000,
+    via: "brightdata",
   });
   const segments = Array.isArray(data?.[0]) ? data[0] : null;
   const translated = segments?.map((seg) => seg?.[0]).join("");
@@ -70,14 +53,15 @@ export async function textToSpeech(text, lang = "id-ID") {
   const clean = String(text || "").trim();
   if (!clean) throw new Error("Teks untuk TTS kosong");
   if (clean.length > 300) throw new Error("Teks terlalu panjang untuk TTS (maksimal 300 karakter)");
-  const { data } = await http.get("https://translate.google.com/translate_tts", {
+  const data = await request.buffer("https://translate.google.com/translate_tts", {
     params: {
       ie: "UTF-8",
       client: "tw-ob",
       tl: lang,
       q: clean,
     },
-    responseType: "arraybuffer",
+    timeout: 20000,
+    via: "brightdata",
   });
   return Buffer.from(data);
 }
@@ -87,8 +71,9 @@ export async function searchAnime(query) {
     .trim()
     .slice(0, 100);
   if (!clean) throw new Error("Kata kunci anime kosong");
-  const { data } = await http.get("https://api.jikan.moe/v4/anime", {
+  const data = await request.json("https://api.jikan.moe/v4/anime", {
     params: { q: clean, limit: 1 },
+    timeout: 20000,
   });
   const anime = data?.data?.[0];
   if (!anime) throw new Error("Anime tidak ditemukan");
@@ -130,7 +115,7 @@ export async function tiktokDownload(url) {
   let lastError = null;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const { data } = await http.post(
+      const data = await request.post(
         "https://snaptik.fi/api/tiktok",
         { url: url.trim() },
         { headers, timeout: 25000 }

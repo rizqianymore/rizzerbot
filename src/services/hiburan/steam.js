@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 const STEAM_BASE = "https://store.steampowered.com";
 const FETCH_TIMEOUT_MS = 15000;
 const MIN_BYTES = 8 * 1024;
@@ -14,19 +16,8 @@ function cacheSet(key, data, ttlMs) {
   if (cache.size > 50) cache.delete(cache.keys().next().value);
 }
 
-async function fetchWithTimeout(url) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": "rizzerbot/1.0" },
-      signal: ctrl.signal,
-    });
-    if (!res.ok) throw new Error(`Steam HTTP ${res.status}`);
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
+async function fetchSteamJson(url) {
+  return request.json(url, { timeout: FETCH_TIMEOUT_MS });
 }
 
 function isRealImageBuffer(buf) {
@@ -49,8 +40,7 @@ function isRealImageBuffer(buf) {
 async function fetchCategories() {
   const hit = cacheGet("featured");
   if (hit) return hit;
-  const res = await fetchWithTimeout(`${STEAM_BASE}/api/featuredcategories/?cc=ID&l=indonesian`);
-  const data = await res.json();
+  const data = await fetchSteamJson(`${STEAM_BASE}/api/featuredcategories/?cc=ID&l=indonesian`);
   if (!data || typeof data !== "object") throw new Error("Respon Steam tidak valid.");
   cacheSet("featured", data, 30 * 60 * 1000);
   return data;
@@ -116,11 +106,8 @@ export function fmtSteamDeals(title, deals) {
 export async function getSteamDealImage(deals) {
   for (const d of deals || []) {
     try {
-      if (!d?.image || typeof d.image !== "string" || !d.image.startsWith("https://")) continue;
-      const res = await fetchWithTimeout(d.image);
-      const ct = String(res.headers.get("content-type") || "");
-      if (!ct.startsWith("image/")) continue;
-      const buf = Buffer.from(await res.arrayBuffer());
+      if (!d?.image || typeof d.image !== "string" || !/^https:\/\//i.test(d.image)) continue;
+      const buf = await request.buffer(d.image, { timeout: FETCH_TIMEOUT_MS });
       if (isRealImageBuffer(buf)) return buf;
     } catch (_) {}
   }

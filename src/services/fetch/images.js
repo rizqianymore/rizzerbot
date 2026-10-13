@@ -1,14 +1,8 @@
+import { request } from "@/src/utils/request.js";
+
 export async function searchPinterest(query) {
   const url = `https://api.nexray.eu.cc/search/pinterest?q=${encodeURIComponent(query)}`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-  });
-
-  if (!res.ok) throw new Error(`Pinterest API HTTP ${res.status}`);
-  const data = await res.json();
+  const data = await request.json(url, { timeout: 20000 });
 
   if (!data.status || !Array.isArray(data.result) || data.result.length === 0) {
     throw new Error(`Tidak ditemukan pin untuk "${query}"`);
@@ -24,16 +18,11 @@ export async function searchPinterest(query) {
 
 export async function scrapeWebImages(query, limit = 15) {
   const url = `https://www.bing.com/images/search?q=${encodeURIComponent(query)}&first=1&scenario=ImageBasicHover`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    },
+  const html = await request.text(url, {
+    headers: { Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" },
+    timeout: 20000,
+    via: "brightdata",
   });
-
-  if (!res.ok) throw new Error(`Bing Image Scrape HTTP ${res.status}`);
-  const html = await res.text();
 
   const pattern = /m="{([^"]+)}"/g;
   const items = [];

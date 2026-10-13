@@ -1,5 +1,6 @@
 import dns from "node:dns/promises";
 import net from "node:net";
+import { request } from "@/src/utils/request.js";
 
 export function cleanDomain(input) {
   let domain = input.trim().toLowerCase();
@@ -93,12 +94,7 @@ export async function getWhois(rawDomain) {
 export async function getSubdomains(rawDomain) {
   const domain = cleanDomain(rawDomain);
   const url = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-  });
-
-  if (!res.ok) throw new Error(`HostSearch API HTTP ${res.status}`);
-  const text = await res.text();
+  const text = await request.text(url, { timeout: 15000 });
 
   if (text.includes("error") || text.includes("No records") || text.includes("API count exceeded")) {
     throw new Error(text.trim());
@@ -127,8 +123,7 @@ export async function getSubdomains(rawDomain) {
 export async function getIpGeo(ipOrDomain) {
   const target = cleanDomain(ipOrDomain);
   const url = `http://ip-api.com/json/${encodeURIComponent(target)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
-  const res = await fetch(url);
-  const data = await res.json();
+  const data = await request.json(url, { timeout: 15000 });
   if (data.status !== "success") {
     throw new Error(data.message || "Failed to resolve IP details");
   }

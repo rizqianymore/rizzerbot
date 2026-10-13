@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 const BLOOMBERG_URL = "https://www.bloomberg.com/lineup-next/api/tickers";
 
 const COMMODITY_TICKER_MAP = {
@@ -23,9 +25,11 @@ async function fetchFromBloomberg(tickerId, cookie = "") {
   };
   if (cookie) headers["Cookie"] = cookie;
 
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`Bloomberg HTTP ${res.status}`);
-  const data = await res.json();
+  const data = await request.json(url, {
+    headers,
+    timeout: 20000,
+    via: "brightdata",
+  });
   if (Array.isArray(data) && data.length > 0) {
     const item = data[0];
     return {
@@ -52,19 +56,17 @@ async function fetchFromYahooFinance(ticker) {
   const urlFor = (mapped) => `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(mapped)}`;
   let lastErr = null;
   for (const mapped of candidates) {
-    const res = await fetch(urlFor(mapped), {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      lastErr = new Error(`Finance Market HTTP ${res.status}`);
+    let data;
+    try {
+      data = await request.json(urlFor(mapped), {
+        headers: { Accept: "application/json" },
+        timeout: 20000,
+        via: "brightdata",
+      });
+    } catch (err) {
+      lastErr = err;
       continue;
     }
-    const data = await res.json();
     const meta = data.chart?.result?.[0]?.meta;
     if (!meta || meta.regularMarketPrice === undefined) {
       lastErr = new Error(`Data ticker "${ticker}" tidak ditemukan.`);

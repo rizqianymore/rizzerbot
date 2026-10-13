@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 const WIKI_TIMEOUT_MS = 12000;
 const WIKI_MIN_BYTES = 8 * 1024;
 const wikiBufCache = new Map();
@@ -45,16 +47,8 @@ function isRealImageBuffer(buf) {
   return isJpeg || isPng || isWebp || isGif;
 }
 
-async function fetchWithTimeout(url, { timeoutMs = WIKI_TIMEOUT_MS, headers = {} } = {}) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": "rizzerbot/1.0", ...headers }, signal: ctrl.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
+async function fetchWikiJson(url) {
+  return request.json(url, { timeout: WIKI_TIMEOUT_MS });
 }
 
 export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
@@ -64,8 +58,7 @@ export async function getWikiThumbnail(wikiUrl, thumbSize = 1000) {
   if (cached) return cached;
   try {
     const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&formatversion=2&pithumbsize=${thumbSize}`;
-    const res = await fetchWithTimeout(api);
-    const j = await res.json();
+    const j = await fetchWikiJson(api);
     const page = j?.query?.pages?.[0];
     const src = page?.thumbnail?.source;
     if (src && typeof src === "string" && src.startsWith("https://")) {
@@ -105,8 +98,7 @@ const LOGO_DENY = [
 async function getWikiLogoFallback(title, thumbSize) {
   try {
     const api = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&formatversion=2&imlimit=100`;
-    const res = await fetchWithTimeout(api);
-    const j = await res.json();
+    const j = await fetchWikiJson(api);
     const imgs = j?.query?.pages?.[0]?.images || [];
     const cands = imgs
       .map((i) => String(i?.title || ""))
@@ -131,10 +123,7 @@ async function getWikiLogoFallback(title, thumbSize) {
 }
 
 async function downloadValidImage(url) {
-  const img = await fetchWithTimeout(url);
-  const ct = String(img.headers.get("content-type") || "");
-  if (!ct.startsWith("image/")) return null;
-  const buf = Buffer.from(await img.arrayBuffer());
+  const buf = await request.buffer(url, { timeout: WIKI_TIMEOUT_MS });
   if (!isRealImageBuffer(buf)) return null;
   return buf;
 }

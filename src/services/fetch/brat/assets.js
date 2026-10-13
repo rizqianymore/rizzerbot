@@ -1,6 +1,7 @@
 import fs from "fs";
 import fsp from "fs/promises";
 import { loadImage, GlobalFonts } from "@napi-rs/canvas";
+import { request } from "@/src/utils/request.js";
 import {
   ASSETS_DIR,
   BRAT_FONT_PATH,
@@ -31,11 +32,7 @@ async function downloadValidated(url, validate, label) {
   let lastErr = null;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      }
-      const buf = Buffer.from(await res.arrayBuffer());
+      const buf = await request.buffer(url, { timeout: DOWNLOAD_TIMEOUT_MS, retries: 1 });
       if (buf.length === 0 || buf.length > DOWNLOAD_MAX_BYTES) {
         throw new Error("ukuran file tidak wajar");
       }

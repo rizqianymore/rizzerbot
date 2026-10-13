@@ -1,10 +1,8 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
-import { createWriteStream } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
+import { request } from "@/src/utils/request.js";
 
 const BIN_DIR = path.join(process.cwd(), "bin");
 const RELEASE_BASE = "https://github.com/yt-dlp/yt-dlp/releases/latest/download";
@@ -45,13 +43,13 @@ export async function ensureYtDlp(onStatus = () => {}) {
     await fs.mkdir(BIN_DIR, { recursive: true });
 
     const assetUrl = `${RELEASE_BASE}/${ytDlpAssetName()}`;
-    const res = await fetch(assetUrl, { redirect: "follow" });
-    if (!res.ok || !res.body) {
-      throw new Error(`Gagal mengunduh yt-dlp (${res.status} ${res.statusText})`);
+    const buf = await request.buffer(assetUrl, { timeout: 120000, retries: 1 });
+    if (!buf?.length) {
+      throw new Error("Gagal mengunduh yt-dlp (respons kosong)");
     }
 
     const tmpPath = `${localBinary}.download`;
-    await pipeline(Readable.fromWeb(res.body), createWriteStream(tmpPath));
+    await fs.writeFile(tmpPath, buf);
     await fs.chmod(tmpPath, 0o755);
     await fs.rename(tmpPath, localBinary);
 

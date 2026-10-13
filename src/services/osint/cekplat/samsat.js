@@ -1,5 +1,6 @@
 import { parsePlat } from "./parse.js";
 import { formatPlatInfo } from "./format.js";
+import { request } from "@/src/utils/request.js";
 
 const FIRESTORE_BASE = "https://firestore.googleapis.com/v1/projects/informasisamsat/databases/(default)/documents";
 const SAMSAT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -23,20 +24,16 @@ function samsatCacheSet(key, data) {
 async function firestoreGet(path) {
   const cached = samsatCacheGet(`GET:${path}`);
   if (cached) return cached;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
-    const res = await fetch(`${FIRESTORE_BASE}/${path}`, {
+    const data = await request.json(`${FIRESTORE_BASE}/${path}`, {
       headers: { Accept: "application/json" },
-      signal: ctrl.signal,
+      timeout: 10000,
     });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`Firestore HTTP ${res.status}`);
-    const data = await res.json();
     samsatCacheSet(`GET:${path}`, data);
     return data;
-  } finally {
-    clearTimeout(timer);
+  } catch (err) {
+    if (/HTTP 404\b/.test(err?.message || "")) return null;
+    throw err;
   }
 }
 

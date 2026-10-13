@@ -1,4 +1,4 @@
-const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
+import { request } from "@/src/utils/request.js";
 
 const NPM_LOGO = "https://raw.githubusercontent.com/npm/logos/master/npm%20square/npm-square-red-rounded.png";
 
@@ -20,10 +20,12 @@ function fmtAuthor(author) {
 }
 
 async function getJson(url) {
-  const res = await fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`npm Registry HTTP ${res.status}`);
-  return res.json();
+  try {
+    return await request.json(url, { headers: { Accept: "application/json" }, timeout: 15000 });
+  } catch (err) {
+    if (/HTTP 404\b/.test(err?.message || "")) return null;
+    throw err;
+  }
 }
 
 export default {

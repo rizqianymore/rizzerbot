@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 const F1_BASE = "https://f1api.dev/api";
 const FETCH_TIMEOUT_MS = 15000;
 
@@ -19,36 +21,24 @@ export function cacheSet(key, data, ttlMs) {
 export async function fetchJSON(path) {
   const cached = cacheGet(`json:${path}`);
   if (cached) return cached;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  let data;
   try {
-    const res = await fetch(`${F1_BASE}${path}`, {
-      headers: { Accept: "application/json", "User-Agent": "rizzerbot/1.0" },
-      signal: ctrl.signal,
-    });
-    if (res.status === 404) {
-      const body = await res.text().catch(() => "");
+    data = await request.json(`${F1_BASE}${path}`, { timeout: FETCH_TIMEOUT_MS });
+  } catch (err) {
+    if (/HTTP 404\b/.test(err?.message || "")) {
       let msg = "Data tidak ditemukan (404).";
       try {
-        const j = JSON.parse(body);
+        const j = JSON.parse(String(err.message).replace(/^HTTP 404:\s*/, ""));
         if (j?.message) msg = j.message;
       } catch (_) {}
-      const err = new Error(msg);
-      err.status = 404;
-      throw err;
+      throw new Error(msg);
     }
-    if (!res.ok) throw new Error(`F1 API HTTP ${res.status}`);
-    const data = await res.json();
-
-    const dynamic = /championship|current|last|next|\/\d{4}\//.test(path);
-    cacheSet(`json:${path}`, data, dynamic ? 10 * 60 * 1000 : 12 * 60 * 60 * 1000);
-    return data;
-  } catch (err) {
-    if (err?.name === "AbortError") throw new Error("F1 API timeout, coba lagi.");
     throw err;
-  } finally {
-    clearTimeout(timer);
   }
+
+  const dynamic = /championship|current|last|next|\/\d{4}\//.test(path);
+  cacheSet(`json:${path}`, data, dynamic ? 10 * 60 * 1000 : 12 * 60 * 60 * 1000);
+  return data;
 }
 
 export async function fetchAllList(listPath, listKey, { pageSize = 100, maxTotal = 1200 } = {}) {

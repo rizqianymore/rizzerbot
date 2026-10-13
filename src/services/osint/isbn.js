@@ -1,12 +1,4 @@
-import axios from "axios";
-
-const UA =
-  "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36";
-
-const client = axios.create({
-  timeout: 15000,
-  validateStatus: () => true,
-});
+import { request } from "@/src/utils/request.js";
 
 const OPENLIBRARY_BASE = "https://openlibrary.org";
 const GOOGLE_BOOKS_BASE = "https://www.googleapis.com/books/v1";
@@ -53,10 +45,9 @@ export function validateIsbn(isbn) {
 async function fetchOpenLibrary(isbn) {
   const clean = normalizeIsbn(isbn);
   const url = `${OPENLIBRARY_BASE}/api/books?bibkeys=ISBN:${clean}&format=json&jscmd=data`;
-  const res = await client.get(url, { headers: { "User-Agent": UA } });
-  if (res.status !== 200) throw new Error(`OpenLibrary HTTP ${res.status}`);
+  const res = await request.json(url, { timeout: 15000 });
   const key = `ISBN:${clean}`;
-  const data = res.data[key];
+  const data = res[key];
   if (!data) return null;
 
   return {
@@ -82,9 +73,8 @@ async function fetchOpenLibrary(isbn) {
 async function fetchGoogleBooks(isbn) {
   const clean = normalizeIsbn(isbn);
   const url = `${GOOGLE_BOOKS_BASE}/volumes?q=isbn:${clean}`;
-  const res = await client.get(url, { headers: { "User-Agent": UA } });
-  if (res.status !== 200) throw new Error(`Google Books HTTP ${res.status}`);
-  const items = res.data.items;
+  const res = await request.json(url, { timeout: 15000 });
+  const items = res.items;
   if (!items || items.length === 0) return null;
 
   const v = items[0].volumeInfo;
@@ -152,9 +142,9 @@ export async function searchBookByTitle(title) {
 
   try {
     const url = `${OPENLIBRARY_BASE}/search.json?q=${encodeURIComponent(q)}&limit=5`;
-    const res = await client.get(url, { headers: { "User-Agent": UA } });
-    if (res.status === 200 && res.data.docs && res.data.docs.length > 0) {
-      const doc = res.data.docs[0];
+    const res = await request.json(url, { timeout: 15000 });
+    if (res.docs && res.docs.length > 0) {
+      const doc = res.docs[0];
       return {
         source: "OpenLibrary (Search)",
         title: doc.title || "-",
@@ -176,9 +166,9 @@ export async function searchBookByTitle(title) {
 
   try {
     const url = `${GOOGLE_BOOKS_BASE}/volumes?q=intitle:${encodeURIComponent(q)}&maxResults=5`;
-    const res = await client.get(url, { headers: { "User-Agent": UA } });
-    if (res.status === 200 && res.data.items && res.data.items.length > 0) {
-      const v = res.data.items[0].volumeInfo;
+    const res = await request.json(url, { timeout: 15000 });
+    if (res.items && res.items.length > 0) {
+      const v = res.items[0].volumeInfo;
       return {
         source: "Google Books (Search)",
         title: v.title || "-",

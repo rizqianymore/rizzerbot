@@ -1,4 +1,4 @@
-const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36";
+import { request } from "@/src/utils/request.js";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -12,12 +12,12 @@ function formatDate(dateStr) {
 }
 
 async function getJson(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": UA, ...(options.headers || {}) },
-    ...options,
-  });
-  if (!res.ok) throw new Error(`Roblox API HTTP ${res.status}`);
-  return res.json();
+  const { method = "GET", headers = {} } = options;
+  const merged = { Accept: "application/json", ...headers };
+  if (String(method).toUpperCase() === "POST") {
+    return request.post(url, options.body, { headers: merged, timeout: 15000 });
+  }
+  return request.json(url, { headers: merged, timeout: 15000 });
 }
 
 async function resolveUserId(input) {

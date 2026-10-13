@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 async function searchKodePos(query) {
   const clean = query.trim();
   const endpoints = [
@@ -7,26 +9,13 @@ async function searchKodePos(query) {
 
   let lastErr = null;
   for (const url of endpoints) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        },
-        signal: ctrl.signal,
-      });
-
-      if (!res.ok) continue;
-      const json = await res.json();
+      const json = await request.json(url, { timeout: 8000 });
       if (Array.isArray(json?.data)) {
         return json.data;
       }
     } catch (err) {
       lastErr = err;
-    } finally {
-      clearTimeout(timer);
     }
   }
 

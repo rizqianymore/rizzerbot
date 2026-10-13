@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 export function detectScheme(digits) {
   const d = String(digits || "");
   if (/^4/.test(d)) return { scheme: "Visa", lengths: [16], note: "Kartu kredit/debit internasional terpopuler." };
@@ -113,21 +115,11 @@ export async function getBinDetail(bin) {
   const cached = cacheGet(key);
   if (cached) return cached;
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
-    const res = await fetch(`${BINLIST_BASE}/${encodeURIComponent(key)}`, {
-      headers: { "Accept-Version": "3", Accept: "application/json", "User-Agent": "rizzerbot/1.0" },
-      signal: ctrl.signal,
+    const d = await request.json(`${BINLIST_BASE}/${encodeURIComponent(key)}`, {
+      headers: { "Accept-Version": "3", Accept: "application/json" },
+      timeout: 10000,
     });
-    if (res.status === 404) {
-      cacheSet(key, null);
-      return null;
-    }
-
-    if (res.status === 429) return null;
-    if (!res.ok) throw new Error(`BINLIST HTTP ${res.status}`);
-    const d = await res.json();
     const neat = (v) => {
       if (v === true) return true;
       if (v === false) return false;
@@ -147,8 +139,13 @@ export async function getBinDetail(bin) {
     };
     cacheSet(key, detail);
     return detail;
-  } finally {
-    clearTimeout(timer);
+  } catch (err) {
+    if (/HTTP 404\b/.test(err?.message || "")) {
+      cacheSet(key, null);
+      return null;
+    }
+    if (/HTTP 429\b/.test(err?.message || "")) return null;
+    throw err;
   }
 }
 

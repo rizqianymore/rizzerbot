@@ -1,6 +1,7 @@
 import { clean, cleanText } from "@/src/services/fetch/igdl/utils.js";
 import { downloadFromKolId } from "@/src/services/fetch/igdl/providers.js";
 import { sendImage, sendVideo } from "@/src/services/fetch/igdl/sender.js";
+import { request } from "@/src/utils/request.js";
 
 export default {
   name: "igdl",
@@ -34,15 +35,12 @@ await react("✨");
 
       if (!res) {
         try {
-          const resApi = await fetch(
+          const data = await request.json(
             `https://api.nexray.eu.cc/downloader/v2/instagram?url=${encodeURIComponent(input)}`,
-            { signal: AbortSignal.timeout(15000) }
+            { timeout: 15000 }
           );
-          if (resApi.ok) {
-            const data = await resApi.json();
-            if (data.status && data.result?.media?.length) {
-              res = data.result;
-            }
+          if (data.status && data.result?.media?.length) {
+            res = data.result;
           }
         } catch (_) {}
       }

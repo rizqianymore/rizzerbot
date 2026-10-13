@@ -1,8 +1,8 @@
+import { request } from "@/src/utils/request.js";
+
 const CRT_BASE = "https://crt.sh/";
 const OTX_BASE = "https://otx.alienvault.com/api/v1/indicators/domain/";
 const HT_BASE = "https://api.hackertarget.com/hostsearch/?q=";
-const UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 export function cleanDomain(input) {
   let d = String(input || "")
@@ -52,50 +52,37 @@ function certStatus(notAfter) {
 
 async function fetchCrtSh(domain) {
   const url = `${CRT_BASE}?q=%25.${encodeURIComponent(domain)}&output=json`;
-
-  let res = null;
-  let lastStatus = 0;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    res = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": UA },
-      signal: AbortSignal.timeout(25000),
-    });
-    lastStatus = res.status;
-    if (res.ok) break;
-    if (![429, 502, 503].includes(res.status) || attempt === 3) break;
-    await new Promise((r) => setTimeout(r, 2500 * attempt));
-    res = null;
+  let rows = null;
+  try {
+    rows = await request.json(url, { timeout: 25000, retries: 3 });
+  } catch (err) {
+    throw new Error(`crt.sh ${err?.message || "gagal terhubung"}`);
   }
-  if (!res || !res.ok) {
-    throw new Error(`crt.sh HTTP ${lastStatus || "gagal terhubung"}`);
-  }
-
-  const rows = await res.json().catch(() => null);
   if (!Array.isArray(rows)) throw new Error("Respons crt.sh tidak valid");
   return rows;
 }
 
 async function fetchOtx(domain) {
-  const res = await fetch(`${OTX_BASE}${encodeURIComponent(domain)}/passive_dns`, {
-    headers: { Accept: "application/json", "User-Agent": UA },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`OTX HTTP ${res.status}`);
-  const data = await res.json().catch(() => null);
+  let data = null;
+  try {
+    data = await request.json(`${OTX_BASE}${encodeURIComponent(domain)}/passive_dns`, { timeout: 20000 });
+  } catch (err) {
+    throw new Error(`OTX ${err?.message || "gagal terhubung"}`);
+  }
   const records = data?.passive_dns;
   if (!Array.isArray(records)) throw new Error("Respons OTX tidak valid");
   return records.map((r) => r.hostname).filter(Boolean);
 }
 
 async function fetchHackerTarget(domain) {
-  const res = await fetch(`${HT_BASE}${encodeURIComponent(domain)}`, {
-    headers: { "User-Agent": UA },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`Hackertarget HTTP ${res.status}`);
-  const text = await res.text();
-  if (/error|no records|limit/i.test(text.slice(0, 200))) throw new Error("Hackertarget tanpa hasil");
-  return text
+  let text = "";
+  try {
+    text = await request.text(`${HT_BASE}${encodeURIComponent(domain)}`, { timeout: 20000 });
+  } catch (err) {
+    throw new Error(`Hackertarget ${err?.message || "gagal terhubung"}`);
+  }
+  if (/error|no records|limit/i.test(String(text).slice(0, 200))) throw new Error("Hackertarget tanpa hasil");
+  return String(text)
     .split("\n")
     .map((line) => line.split(",")[0].trim().toLowerCase())
     .filter(Boolean);

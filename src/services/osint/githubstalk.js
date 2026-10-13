@@ -1,3 +1,5 @@
+import { request } from "@/src/utils/request.js";
+
 const GITHUB_API = "https://api.github.com/users";
 const GH_TTL_MS = 60 * 60 * 1000;
 const ghCache = new Map();
@@ -43,17 +45,11 @@ export async function getGithubProfile(username) {
   const cached = cacheGet(user.toLowerCase());
   if (cached) return cached;
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
-    const res = await fetch(`${GITHUB_API}/${encodeURIComponent(user)}`, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": "rizzerbot/1.0" },
-      signal: ctrl.signal,
+    const d = await request.json(`${GITHUB_API}/${encodeURIComponent(user)}`, {
+      headers: { Accept: "application/vnd.github+json" },
+      timeout: 10000,
     });
-    if (res.status === 404) return { notFound: true };
-    if (res.status === 403) throw new Error("limit API GitHub habis (60/jam), coba lagi nanti");
-    if (!res.ok) throw new Error(`GitHub HTTP ${res.status}`);
-    const d = await res.json();
     const neat = (v) => {
       const s = String(v ?? "").trim();
       return s || "-";
@@ -78,8 +74,12 @@ export async function getGithubProfile(username) {
     };
     cacheSet(user.toLowerCase(), detail);
     return detail;
-  } finally {
-    clearTimeout(timer);
+  } catch (err) {
+    if (/HTTP 404\b/.test(err?.message || "")) return { notFound: true };
+    if (/HTTP 403\b/.test(err?.message || "")) {
+      throw new Error("limit API GitHub habis (60/jam), coba lagi nanti");
+    }
+    throw err;
   }
 }
 

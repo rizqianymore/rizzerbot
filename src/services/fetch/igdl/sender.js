@@ -1,15 +1,11 @@
+import { request } from "@/src/utils/request.js";
+
 export async function toBuffer(src) {
   if (src.buffer) return src.buffer;
-  const r = await fetch(src.url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-      Referer: "https://www.instagram.com/",
-    },
-    signal: AbortSignal.timeout(20000),
+  return request.buffer(src.url, {
+    headers: { Referer: "https://www.instagram.com/" },
+    timeout: 20000,
   });
-  if (!r.ok) throw new Error(`Fetch media HTTP ${r.status}`);
-  return Buffer.from(await r.arrayBuffer());
 }
 
 export async function sendImage(sock, remoteJid, msg, target, cap) {
