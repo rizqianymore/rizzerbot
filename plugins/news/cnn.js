@@ -1,62 +1,29 @@
-import { searchCNNNews } from "@/src/services/news/cnn.js";
-import { fetchBuffer } from "@/src/services/network/scrape.js";
+import { searchCNNNews, getCnnLatestNews, getCnnArticle } from "@/src/services/news/cnn.js";
+import { runNewsCommand } from "@/src/services/news/runner.js";
 
 export default {
   name: "cnn",
   aliases: ["cnnnews", "beritacnn"],
-  description: "Cari berita internasional terkini dari CNN",
-  usage: "<topik berita>",
+  description: "Berita CNN: terkini, pencarian topik, dan baca artikel",
+  usage: "[topik] [jumlah] / [halaman N] / [link artikel]",
   premiumOnly: true,
   category: "News",
-  run: async (sock, msg, args, { reply, sendTyping }) => {
-    await sendTyping();
-
-    const query = args.join(" ").trim();
-    if (!query) {
-      return reply(
-        `🌐 *PANDUAN PENGGUNAAN BERITA CNN*\n\n` +
-          `• *.cnn [topik/kata kunci]*\n  _Mencari berita terkini dari CNN (Internasional)_\n\n` +
-          `💡 *Contoh:*\n` +
-          `*.cnn indonesia*\n` +
-          `*.cnn technology*`
-      );
-    }
-
-    await reply(`🔍 Mencari berita CNN terkait *"${query}"*...`);
-
-    try {
-      const { total, items } = await searchCNNNews(query, { size: 5 });
-
-      if (!items || items.length === 0) {
-        return reply(`❌ Tidak ditemukan berita dengan topik *"${query}"* di CNN.`);
-      }
-
-      const lines = [`🌐 *CNN International News Search*`, `_Topik: "${query}" | Ditemukan: ${total} berita_`, ""];
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        lines.push(`*${i + 1}. ${item.title}*`);
-        if (item.date) lines.push(`   _🕒 ${item.date}_`);
-        if (item.snippet) lines.push(`   ${item.snippet}`);
-        if (item.url) lines.push(`   • Link: ${item.url}`);
-        lines.push("");
-      }
-
-      lines.push(`💡 _Berita bersumber langsung dari CNN (edition.cnn.com)_`);
-
-      const caption = lines.join("\n").trim();
-      const firstThumbnail = items.find((it) => it.thumbnail)?.thumbnail;
-
-      if (firstThumbnail) {
-        try {
-          const imgBuffer = await fetchBuffer(firstThumbnail, { redirect: "follow" });
-          return await sock.sendMessage(msg.key.remoteJid, { image: imgBuffer, caption }, { quoted: msg });
-        } catch (_) {}
-      }
-
-      await reply(caption);
-    } catch (err) {
-      await reply(`❌ Gagal mengambil berita CNN: ${err.message}`);
-    }
-  },
+  run: async (sock, msg, args, ctx) =>
+    runNewsCommand({
+      sock,
+      msg,
+      args,
+      ctx,
+      config: {
+        command: "cnn",
+        label: "CNN",
+        latestTitle: "BERITA TERKINI CNN",
+        latestSubtitle: "Sumber: edition.cnn.com",
+        readingText: "📖 Mengambil isi lengkap artikel CNN...",
+        errorLabel: "Gagal mengambil berita CNN",
+        latest: async ({ limit }) => (await getCnnLatestNews(limit)).items,
+        search: async ({ query, limit, page }) => (await searchCNNNews(query, { size: limit, page })).items,
+        article: getCnnArticle,
+      },
+    }),
 };
