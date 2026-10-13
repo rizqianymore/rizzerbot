@@ -2,8 +2,15 @@ import axios from "axios";
 import sharp from "sharp";
 import { client, UA } from "./client.js";
 
-async function preprocessCaptcha(buffer) {
-  return sharp(buffer).grayscale().normalize().resize({ width: 480 }).threshold(165).png().toBuffer();
+export const CAPTCHA_LEN = 4;
+const WHITELIST = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+const clean = (t) => String(t || "").replace(/[^A-Za-z0-9]/g, "");
+
+async function preprocessCaptcha(buffer, threshold = 165) {
+  let pipe = sharp(buffer).grayscale().normalize().resize({ width: 480 });
+  if (threshold) pipe = pipe.threshold(threshold);
+  return pipe.png().toBuffer();
 }
 
 export async function solveCaptchaGemini(imageBuffer) {
@@ -18,10 +25,10 @@ export async function solveCaptchaGemini(imageBuffer) {
           {
             parts: [
               {
-                text: "Analyze this image containing a distorted 4-character CAPTCHA text. Output ONLY the 4 characters, in exact order, with no spaces, punctuation, or explanations.",
+                text: "This image shows a distorted 4-character CAPTCHA (letters and/or digits). Read it left to right. Reply with ONLY the 4 characters, nothing else.",
               },
               {
-                inline_data: {
+                inlineData: {
                   mime_type: "image/png",
                   data: b64,
                 },
@@ -34,30 +41,59 @@ export async function solveCaptchaGemini(imageBuffer) {
           maxOutputTokens: 10,
         },
       },
-      { timeout: 8000 }
+      { timeout: 12000 }
     );
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/[^a-zA-Z0-9]/g, "");
-    if (text && text.length === 4) return text;
+    const raw = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
+    const text = clean(raw);
+    if (text.length === CAPTCHA_LEN) return text;
   } catch (_) {}
   return null;
 }
 
-export async function solveCaptchaTesseractJs(imageBuffer) {
-  try {
-    const { createWorker } = await import("tesseract.js");
-    const pre = await preprocessCaptcha(imageBuffer);
-    const worker = await createWorker("eng");
-    const ret = await worker.recognize(pre);
-    await worker.terminate();
-    const clean = ret?.data?.text?.trim()?.replace(/[^A-Za-z0-9]/g, "");
-    return clean || null;
-  } catch (_) {
-    return null;
+let workerPromise = null;
+async function getWorker() {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+      await worker.setParameters({
+        tessedit_char_whitelist: WHITELIST,
+        tessedit_pageseg_mode: "8",
+      });
+      return worker;
+    })().catch((err) => {
+      workerPromise = null;
+      throw err;
+    });
   }
+  return workerPromise;
 }
 
+export async function solveCaptchaTesseractJs(imageBuffer) {
+  try {
+    const worker = await getWorker();
+    for (const threshold of [165, 0]) {
+      try {
+        const pre = await preprocessCaptcha(imageBuffer, threshold);
+        const ret = await worker.recognize(pre);
+        const text = clean(ret?.data?.text);
+        if (text.length === CAPTCHA_LEN) return text;
+      } catch (_) {}
+    }
+  } catch (_) {}
+  return null;
+}
+
+let ocrStatus = null;
 export async function isOcrAvailable() {
-  return true;
+  if (ocrStatus !== null) return ocrStatus;
+  try {
+    await getWorker();
+    ocrStatus = true;
+  } catch (_) {
+    ocrStatus = false;
+  }
+  return ocrStatus;
 }
 
 const OCRSPACE_URL = "https://api.ocr.space/parse/image";
@@ -83,37 +119,50 @@ export async function solveCaptchaRemote(imageBuffer, engine = "2") {
       timeout: 12000,
     });
     const text = res.data?.ParsedResults?.[0]?.ParsedText || "";
-    const clean = String(text).replace(/[^A-Za-z0-9]/g, "");
-    return clean || null;
+    const cleaned = clean(text);
+    return cleaned || null;
   } catch {
     return null;
   }
 }
 
+const VIA_RANK = { "gemini-ai": 0, "tesseract.js": 1 };
+
 export async function solveCaptcha(imageBuffer) {
-  const candidates = [];
+  const votes = new Map();
   const push = (g, via) => {
-    const clean = String(g || "").replace(/[^A-Za-z0-9]/g, "");
-    if (clean && !candidates.some((c) => c.guess === clean)) candidates.push({ guess: clean, via });
+    const guess = clean(g);
+    if (!guess || guess.length !== CAPTCHA_LEN) return;
+    const entry = votes.get(guess) || { count: 0, vias: [] };
+    entry.count += 1;
+    if (!entry.vias.includes(via)) entry.vias.push(via);
+    votes.set(guess, entry);
   };
 
-  // 1. Gemini Vision AI (highest accuracy)
-  const gemini = await solveCaptchaGemini(imageBuffer);
-  if (gemini) push(gemini, "gemini-ai");
+  const [gemini, tesseract] = await Promise.all([
+    solveCaptchaGemini(imageBuffer),
+    solveCaptchaTesseractJs(imageBuffer),
+  ]);
+  push(gemini, "gemini-ai");
+  push(tesseract, "tesseract.js");
 
-  // 2. Pure JS / WASM Tesseract.js (runs locally everywhere)
-  const tesseract = await solveCaptchaTesseractJs(imageBuffer);
-  if (tesseract) push(tesseract, "tesseract.js");
-
-  // 3. Remote OCR.space fallback
-  for (const engine of ["2", "1"]) {
-    const remote = await solveCaptchaRemote(imageBuffer, engine);
-    if (remote) push(remote, `remote-e${engine}`);
-    if (candidates.length >= 2) break;
+  if (votes.size < 2) {
+    for (const engine of ["2", "1"]) {
+      const remote = await solveCaptchaRemote(imageBuffer, engine);
+      push(remote, `remote-e${engine}`);
+      if (votes.size >= 2) break;
+    }
   }
 
-  candidates.sort((a, b) => Number(b.guess.length === 4) - Number(a.guess.length === 4));
-  if (!candidates.length) return { guess: null, via: null, alternates: [] };
-  const [first, ...rest] = candidates;
-  return { guess: first.guess, via: first.via, alternates: rest };
+  if (!votes.size) return { guess: null, via: null, alternates: [], confidence: "none" };
+  const ranked = [...votes.entries()]
+    .map(([guess, e]) => ({ guess, via: e.vias[0], count: e.count }))
+    .sort((a, b) => b.count - a.count || (VIA_RANK[a.via] ?? 9) - (VIA_RANK[b.via] ?? 9));
+  const [first, ...rest] = ranked;
+  return {
+    guess: first.guess,
+    via: first.via,
+    alternates: rest.map(({ guess, via }) => ({ guess, via })),
+    confidence: first.count >= 2 ? "high" : "low",
+  };
 }

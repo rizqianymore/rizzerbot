@@ -1,102 +1,98 @@
 import { cookieJar } from "./cookies.js";
 import { getRandomDevice } from "./devices.js";
 import { StealthBrowserCore } from "./browser-core.js";
+import { waitForClearance, findCustomHandler } from "./protection.js";
 
 export class StealthBrowserManager extends StealthBrowserCore {
-  async solveChallenge(targetUrl, { timeoutMs = 25000, preferredDevice = "desktop" } = {}) {
-    const page = await this.newPage();
-    const device = getRandomDevice(preferredDevice);
+  async preparePage(page, device) {
+    const d = device || getRandomDevice("desktop");
+    await page.setViewport(d.viewport || { width: 1280, height: 800 });
+    await page.setUserAgent(d.userAgent);
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, "webdriver", { get: () => undefined });
 
-    try {
-      await page.setViewport(device.viewport || { width: 1280, height: 800 });
-      await page.setUserAgent(device.userAgent);
+      window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
 
-      await page.evaluateOnNewDocument(() => {
-        Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-
-        window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
-
-        Object.defineProperty(navigator, "plugins", {
-          get: () => [1, 2, 3, 4, 5],
-        });
-
-        Object.defineProperty(navigator, "languages", {
-          get: () => ["id-ID", "id", "en-US", "en"],
-        });
+      Object.defineProperty(navigator, "plugins", {
+        get: () => [1, 2, 3, 4, 5],
       });
 
+      Object.defineProperty(navigator, "languages", {
+        get: () => ["id-ID", "id", "en-US", "en"],
+      });
+    });
+    return d;
+  }
+
+  restoreCookies(page, targetUrl) {
+    return (async () => {
       const existingCookieStr = cookieJar.getCookieString(targetUrl);
-      if (existingCookieStr) {
-        const u = new URL(targetUrl);
-        const pairs = existingCookieStr.split("; ");
-        const cookieObjects = pairs.map((pair) => {
-          const [name, ...rest] = pair.split("=");
-          return {
-            name: name.trim(),
-            value: rest.join("=").trim(),
-            domain: u.hostname,
-          };
-        });
-        await page.setCookie(...cookieObjects).catch(() => {});
-      }
-
-      await page.goto(targetUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: timeoutMs,
+      if (!existingCookieStr) return;
+      const u = new URL(targetUrl);
+      const cookieObjects = existingCookieStr.split("; ").map((pair) => {
+        const [name, ...rest] = pair.split("=");
+        return { name: name.trim(), value: rest.join("=").trim(), domain: u.hostname };
       });
+      await page.setCookie(...cookieObjects).catch(() => {});
+    })();
+  }
 
-      const startTime = Date.now();
-      let cleared = false;
-
-      while (Date.now() - startTime < timeoutMs) {
-        const title = (await page.title().catch(() => "")) || "";
-        const content = (await page.content().catch(() => "")) || "";
-
-        const isChallengeTitle =
-          title.includes("Just a moment...") ||
-          title.includes("Attention Required! | Cloudflare") ||
-          title.includes("Please Wait... | Cloudflare") ||
-          title.includes("DDOS-GUARD");
-
-        const hasTurnstile =
-          content.includes("cf-turnstile") ||
-          content.includes("challenges.cloudflare.com") ||
-          content.includes("cf-browser-verification");
-
-        if (!isChallengeTitle && !hasTurnstile) {
-          cleared = true;
-          break;
-        }
-
-        try {
-          const frames = page.frames();
-          for (const frame of frames) {
-            const checkbox = await frame.$("input[type=checkbox], .cf-turnstile-wrapper, #challenge-stage");
-            if (checkbox) {
-              await checkbox.click().catch(() => {});
-            }
-          }
-        } catch (_) {}
-
-        await new Promise((r) => setTimeout(r, 600));
-      }
-
-      const currentCookies = await page.cookies();
+  persistCookies(page, targetUrl) {
+    return (async () => {
+      const currentCookies = await page.cookies().catch(() => []);
       for (const c of currentCookies) {
         cookieJar.setCookie(targetUrl, c.name, c.value);
       }
+      return currentCookies;
+    })();
+  }
 
-      const pageTitle = await page.title().catch(() => "");
-      const pageContent = await page.content().catch(() => "");
-      const currentUrl = page.url();
+  async solveChallengeOnPage(page, targetUrl, { timeoutMs = 25000, preferredDevice = "desktop" } = {}) {
+    const device = getRandomDevice(preferredDevice);
+    await this.preparePage(page, device);
+    await this.restoreCookies(page, targetUrl);
 
-      return {
-        cleared,
-        title: pageTitle,
-        content: pageContent,
-        url: currentUrl,
-        cookies: currentCookies,
-      };
+    await page.goto(targetUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: timeoutMs,
+    });
+
+    const custom = findCustomHandler(new URL(targetUrl).hostname);
+    if (custom) {
+      try {
+        const handled = await custom.handler(page, targetUrl);
+        if (handled) {
+          const cookies = await this.persistCookies(page, targetUrl);
+          return {
+            cleared: true,
+            custom: true,
+            title: await page.title().catch(() => ""),
+            content: await page.content().catch(() => ""),
+            url: page.url(),
+            cookies,
+          };
+        }
+      } catch (_) {}
+    }
+
+    const verdict = await waitForClearance(page, { timeoutMs });
+    const cookies = await this.persistCookies(page, targetUrl);
+
+    return {
+      cleared: verdict.cleared,
+      custom: false,
+      type: verdict.type,
+      title: await page.title().catch(() => ""),
+      content: verdict.cleared ? await page.content().catch(() => "") : "",
+      url: page.url(),
+      cookies,
+    };
+  }
+
+  async solveChallenge(targetUrl, { timeoutMs = 25000, preferredDevice = "desktop" } = {}) {
+    const page = await this.newPage();
+    try {
+      return await this.solveChallengeOnPage(page, targetUrl, { timeoutMs, preferredDevice });
     } finally {
       await this.closePage(page);
     }
@@ -108,9 +104,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
     const origin = u.origin;
 
     try {
-      await this.solveChallenge(origin);
-
-      await page.goto(`${origin}/favicon.ico`, { waitUntil: "domcontentloaded", timeout: 15000 }).catch(() => {});
+      await this.solveChallengeOnPage(page, origin, { timeoutMs: 25000 });
 
       const result = await page.evaluate(
         async (fetchUrl, fetchOptions) => {

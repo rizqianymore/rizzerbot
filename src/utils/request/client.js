@@ -98,7 +98,7 @@ export async function smartRequest(url, options = {}) {
 
       if (isChallenge) {
         if (bypassCloudflare === false) {
-          throw new Error(`Cloudflare challenge detected (HTTP ${res.status}) and bypass is disabled.`);
+          throw new Error(`Protection challenge detected (HTTP ${res.status}) and bypass is disabled.`);
         }
 
         // 1. Coba gunakan Bright Data Web Unlocker jika API key tersedia (tanpa makan RAM browser)
@@ -123,7 +123,17 @@ export async function smartRequest(url, options = {}) {
         });
 
         if (!solved.cleared) {
-          throw new Error(`Cloudflare verification failed after timeout on ${url}`);
+          if (hasBrightData) {
+            try {
+              const bdLast = await brightDataRequest(url, {
+                format: responseType === "json" ? "json" : "raw",
+                timeout,
+              });
+              if (responseType === "buffer") return Buffer.from(bdLast);
+              return bdLast;
+            } catch (_) {}
+          }
+          throw new Error(`Protection challenge not cleared after timeout on ${url}`);
         }
 
         const refreshedCookies = cookieJar.getCookieString(url);

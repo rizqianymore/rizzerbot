@@ -99,26 +99,12 @@ class CookieJar {
   }
 }
 
+import { detectProtection, isSolvableType } from "./protection.js";
+
 export const cookieJar = new CookieJar();
 
 export function isCloudflareChallenge(status, headers = {}, body = "") {
-  if (status === 403 || status === 503 || status === 429) {
-    const h = JSON.stringify(headers).toLowerCase();
-    const b = (typeof body === "string" ? body : "").toLowerCase();
-    if (
-      h.includes("cf-ray") ||
-      h.includes("cf-mitigated") ||
-      h.includes("cloudflare") ||
-      b.includes("just a moment...") ||
-      b.includes("attention required! | cloudflare") ||
-      b.includes("cf-turnstile") ||
-      b.includes("cf-browser-verification") ||
-      b.includes("challenges.cloudflare.com") ||
-      b.includes("verifying you are human") ||
-      b.includes("checking your browser")
-    ) {
-      return true;
-    }
-  }
-  return false;
+  const det = detectProtection({ status, headers, html: body });
+  if (det.type === "rate-limit") return false;
+  return isSolvableType(det.type);
 }

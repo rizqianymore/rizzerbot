@@ -1,40 +1,13 @@
 import { stealthBrowser } from "@/src/utils/request.js";
+import { waitForClearance } from "@/src/utils/request/protection.js";
 import { BASE, SITEKEY, UA, TOKEN_TIMEOUT_MS } from "./constants.js";
+
+export async function solveTurnstileIfPresent(page, timeoutMs = 8000) {
+  await waitForClearance(page, { timeoutMs });
+}
 
 let tokenPagePromise = null;
 let tokenLock = Promise.resolve();
-
-export async function solveTurnstileIfPresent(page, timeoutMs = 8000) {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeoutMs) {
-    const title = (await page.title().catch(() => "")) || "";
-    const content = (await page.content().catch(() => "")) || "";
-
-    const hasChallenge =
-      title.includes("Just a moment") ||
-      title.includes("Attention Required! | Cloudflare") ||
-      title.includes("Please Wait... | Cloudflare") ||
-      content.includes("cf-turnstile") ||
-      content.includes("challenges.cloudflare.com") ||
-      content.includes("cf-browser-verification");
-
-    if (!hasChallenge) break;
-
-    try {
-      const frames = page.frames();
-      for (const frame of frames) {
-        const checkbox = await frame
-          .$("input[type=checkbox], .cf-turnstile-wrapper, #challenge-stage")
-          .catch(() => null);
-        if (checkbox) {
-          await checkbox.click().catch(() => {});
-        }
-      }
-    } catch (_) {}
-
-    await new Promise((r) => setTimeout(r, 600));
-  }
-}
 
 async function getTokenPage() {
   if (tokenPagePromise) {

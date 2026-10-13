@@ -27,7 +27,9 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
 
       const imgBuffer = Buffer.from(captchaB64, "base64");
       const { guess, alternates } = await solveCaptcha(imgBuffer);
-      const codeTries = [guess, ...(alternates || []).map((a) => a.guess)].filter(Boolean).slice(0, 2);
+      const codeTries = [guess, ...(alternates || []).map((a) => a.guess)]
+        .filter((g) => g && g.length === 4)
+        .slice(0, 2);
 
       if (!codeTries.length) continue;
 
