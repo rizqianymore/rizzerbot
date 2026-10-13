@@ -25,7 +25,6 @@ export default {
       return reply(check.error);
     }
 
-
     try {
       const videoBuffer = await createBratVideo(text, TEMPLATES.vermeil);
       await sendStickerBuffer(sock, msg, videoBuffer);

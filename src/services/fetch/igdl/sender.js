@@ -15,7 +15,7 @@ export async function toBuffer(src) {
 export async function sendImage(sock, remoteJid, msg, target, cap) {
   try {
     let buf = await toBuffer(target);
-    // WhatsApp image message tidak selalu mau terima webp langsung — konversi ke jpeg.
+
     const isWebp =
       buf.length > 12 &&
       buf[0] === 0x52 &&

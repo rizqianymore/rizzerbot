@@ -11,7 +11,6 @@ function normalize(s) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-/** GET JSON ke API PDDikti. Direct fetch dulu, fallback ke browser bila diblokir. */
 async function apiGet(path) {
   const url = `${BASE}${path}`;
   const cached = cacheGet(detailCache, path);
@@ -24,7 +23,7 @@ async function apiGet(path) {
     });
     if (res.ok) payload = await res.json();
   } catch (_) {
-    // lanjut ke fallback browser
+
   }
 
   if (!payload) {
@@ -59,7 +58,6 @@ function formatTanggalPanjang(value) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
-/** Kode semester PDDikti: {tahunAwal}{1=ganjil|2=genap}, urut terbaru dulu. */
 function semesterCandidates() {
   const now = new Date();
   const year = now.getFullYear();
@@ -89,7 +87,7 @@ async function getProdi(ptId) {
       const rows = Array.isArray(json?.data) ? json.data : [];
       if (rows.length) return rows;
     } catch (_) {
-      // coba semester berikutnya
+
     }
   }
   return [];

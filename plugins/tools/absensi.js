@@ -5,7 +5,7 @@ const LEMDIK_ID = 47;
 
 function getWibTimestamp() {
   const d = new Date();
-  // WIB (UTC+7)
+
   const utc = d.getTime() + d.getTimezoneOffset() * 60000;
   const wib = new Date(utc + 3600000 * 7);
 
@@ -27,7 +27,6 @@ export default {
     const currentPrefix = prefix || ".";
     const subCmd = (args[0] || "").toLowerCase();
 
-    // Terima 'datang', 'pulang', atau typo 'ulang'
     const isDatang = subCmd === "datang";
     const isPulang = subCmd === "pulang" || subCmd === "ulang";
 

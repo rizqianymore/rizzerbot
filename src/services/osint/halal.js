@@ -12,7 +12,6 @@ const client = axios.create({
   validateStatus: () => true,
 });
 
-// Search keys accepted by BPJPH (query params on /cari/sertifikat)
 const SEARCH_KEYS = {
   produk: "produk",
   pelaku: "pelaku_usaha",
@@ -34,7 +33,6 @@ function stripHtml(s) {
     .trim();
 }
 
-// Join Next.js RSC stream chunks (self.__next_f.push([1,"..."])) into one string.
 function joinRscPayload(html) {
   const chunks = [...html.matchAll(/self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g)].map((m) => {
     try {
@@ -46,9 +44,8 @@ function joinRscPayload(html) {
   return chunks.join("");
 }
 
-// Extract a balanced JSON array starting at index of `"data":[` using bracket matching.
 function extractBalancedArray(str, startIdx) {
-  // startIdx should point at the '[' — find it
+
   const open = str.indexOf("[", startIdx);
   if (open === -1) return null;
   let depth = 0;
@@ -91,7 +88,7 @@ function parsePagination(payload) {
 
 function normalizeItem(item) {
   const pabrik = Array.isArray(item.pabrik) ? item.pabrik : [];
-  // Prefer production facility (FAPAB), else first
+
   const prod = pabrik.find((p) => p.fasil_id === "FAPAB") || pabrik[0] || {};
   return {
     merekDagang: stripHtml(item.merek_dagang) || "-",
@@ -111,11 +108,6 @@ function normalizeItem(item) {
   };
 }
 
-/**
- * Search halal certificates.
- * @param {string} query - search text
- * @param {object} opts - { key: 'produk'|'pelaku'|'sertifikat', page: number }
- */
 export async function searchHalal(query, { key = "produk", page = 1 } = {}) {
   if (!query || query.trim().length < 2) {
     throw new Error("Query terlalu pendek (minimal 2 karakter)");
@@ -142,7 +134,7 @@ export async function searchHalal(query, { key = "produk", page = 1 } = {}) {
   const payload = joinRscPayload(res.data);
   const di = payload.indexOf('"data":');
   if (di === -1) {
-    // page may be a single-detail view; fall back to no_regis-style single parse
+
     return { data: [], totalItems: 0, pageSize: 10, totalPages: 1, currentPage: 1 };
   }
 

@@ -148,11 +148,6 @@ function strokeLine(ctx, line, x, y, size) {
 
 const MAX_JUSTIFY_GAP_RATIO = 1.6;
 
-/**
- * Hitung posisi final tiap kata per baris.
- * Hasilnya dipakai ulang untuk render statis DAN frame reveal video,
- * sehingga kata selalu muncul di posisi akhirnya (tidak ada pergeseran).
- */
 function buildLinePlans(ctx, lines, rect, size, align) {
   setFont(ctx, size);
   const spaceWidth = ctx.measureText(" ").width;
@@ -169,8 +164,7 @@ function buildLinePlans(ctx, lines, rect, size, align) {
 
     if (align === "justify" && !isLastLine && words.length > 1) {
       const justifyGap = (rect.w - wordsWidth) / (words.length - 1);
-      // Hanya perluas jangan pernah rapat: gap lebih kecil dari spasi = kata menempel.
-      // Gap terlalu besar = baris renggang, lebih rapi rata kiri saja.
+
       if (justifyGap >= spaceWidth && justifyGap <= size * MAX_JUSTIFY_GAP_RATIO) {
         gap = justifyGap;
       }
@@ -203,9 +197,6 @@ function drawLinePlans(ctx, linePlans, startY, lineHeight, size, useStroke, reve
   });
 }
 
-/**
- * Render layout ke canvas: mendukung subset kata (revealWords) untuk video.
- */
 export function renderLayout(ctx, layout, options = {}) {
   const revealWords = options.revealWords ?? Infinity;
   const useStroke = options.stroke ?? layout.stroke ?? false;
@@ -245,9 +236,7 @@ export function drawCenteredText(ctx, text, zone, options = {}) {
 
   ctx.fillStyle = options.color || TEXT_STYLE.color;
   ctx.textBaseline = "top";
-  // Stroke sengaja tidak dibaca dari `zone`: objek safeZone tidak pernah memuat
-  // properti stroke (template.stroke ada di objek template), jadi penggunanya
-  // wajib meneruskannya lewat options.stroke.
+
   drawLinePlans(
     ctx,
     linePlans,

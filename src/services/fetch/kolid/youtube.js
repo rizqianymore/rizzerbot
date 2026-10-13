@@ -25,7 +25,7 @@ export function pickYoutubeVideo(videos = [], maxQuality = "720p") {
   );
   if (!list.length) return null;
   const ceiling = rankOf(maxQuality);
-  // rank kecil = kualitas tinggi; ambil yang rank >= ceiling (720p atau lebih rendah)
+
   const inCeiling = list.filter((v) => {
     const r = rankOf(v.quality);
     return r === 99 || r >= ceiling;

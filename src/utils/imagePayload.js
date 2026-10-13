@@ -8,11 +8,6 @@ const BANNER_PATHS = [
   "assets/image/banner.png",
 ];
 
-/**
- * Susun payload gambar (url atau buffer) dari pengaturan bot, dengan
- * fallback ke banner default di assets/image/ bila tersedia.
- * Mengembalikan null bila tidak ada gambar yang bisa dipakai.
- */
 export async function resolveImagePayload(settings = {}) {
   const image = settings.image;
 
@@ -40,10 +35,6 @@ export async function resolveImagePayload(settings = {}) {
   return null;
 }
 
-/**
- * Kirim pesan teks ber-caption berdampingan dengan gambar (bila ada),
- * fallback ke pesan teks biasa bila gagal.
- */
 export async function sendWithImage(sock, remoteJid, imagePayload, caption, quoted) {
   if (imagePayload) {
     try {

@@ -133,7 +133,6 @@ export function autoCleanSessionCache(logger) {
   }
 }
 
-// File database kritis yang wajib disnapshot otomatis tiap jadwal.
 const SNAPSHOT_TARGETS = [
   { file: "users.json", prefix: "daily-snapshot" },
   { file: "database.json", prefix: "db-snapshot" },
@@ -142,7 +141,6 @@ const SNAPSHOT_TARGETS = [
   { file: "rentals.json", prefix: "rental-snapshot" },
 ];
 
-// Berapa hari snapshot dipertahankan sebelum dibuang (rotasi).
 const SNAPSHOT_RETENTION_DAYS = 7;
 
 function pruneOldSnapshots(backupDir, logger) {

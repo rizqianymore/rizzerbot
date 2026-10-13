@@ -51,5 +51,3 @@ export async function searchGoogleNews({ query = "", site = "", locale = "id", l
     ).slice(0, limit);
   });
 }
-
-

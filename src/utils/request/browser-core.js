@@ -60,7 +60,7 @@ export class StealthBrowserCore {
     if (this.idleTimer) clearTimeout(this.idleTimer);
 
     this.idleTimer = setTimeout(() => {
-      // Hanya auto-close jika tidak ada page yang sedang aktif
+
       if (this.activePages <= 0) {
         this.close();
       } else {
@@ -77,7 +77,7 @@ export class StealthBrowserCore {
       const browser = await this.getBrowser();
       return await browser.newPage();
     } catch (err) {
-      // Jika terjadi error Protocol error / target closed, reset browser dan coba ulang sekali
+
       if (/Target\.createTarget|target closed|Session closed|Connection closed/i.test(err.message)) {
         if (this.browser) {
           try {

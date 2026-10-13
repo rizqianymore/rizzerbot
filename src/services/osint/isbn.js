@@ -122,7 +122,6 @@ export async function searchIsbn(isbn) {
   let result = null;
   const errors = [];
 
-  // Try OpenLibrary first (free, no key, good coverage)
   try {
     result = await fetchOpenLibrary(clean);
     if (result) return { ...result, validation };
@@ -130,7 +129,6 @@ export async function searchIsbn(isbn) {
     errors.push(`OpenLibrary: ${err.message}`);
   }
 
-  // Fallback to Google Books
   try {
     result = await fetchGoogleBooks(clean);
     if (result) return { ...result, validation };
@@ -152,7 +150,6 @@ export async function searchBookByTitle(title) {
 
   const q = title.trim();
 
-  // Try OpenLibrary search
   try {
     const url = `${OPENLIBRARY_BASE}/search.json?q=${encodeURIComponent(q)}&limit=5`;
     const res = await client.get(url, { headers: { "User-Agent": UA } });
@@ -177,7 +174,6 @@ export async function searchBookByTitle(title) {
     console.warn("[ISBN] OpenLibrary search error:", err.message);
   }
 
-  // Fallback to Google Books search
   try {
     const url = `${GOOGLE_BOOKS_BASE}/volumes?q=intitle:${encodeURIComponent(q)}&maxResults=5`;
     const res = await client.get(url, { headers: { "User-Agent": UA } });

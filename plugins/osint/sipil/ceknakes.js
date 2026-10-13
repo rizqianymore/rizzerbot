@@ -9,7 +9,6 @@ import {
 
 const JENIS = { medis: "1", nakes: "2" };
 
-// Heuristic: does this look like a STR number? (letters+digits, has digits, len>=6)
 function looksLikeStr(s) {
   const t = s.trim();
   if (t.length < 6) return false;
@@ -58,7 +57,6 @@ export default {
       const parts = rawArgs.split(/\s+/);
       const first = parts[0].toLowerCase();
 
-      // ---- List profesi ----
       if (first === "profesi") {
         const jenisTerm = (parts[1] || "").toLowerCase();
         const jenis = ["medis", "dokter", "named", "1"].includes(jenisTerm) ? JENIS.medis : JENIS.nakes;
@@ -66,7 +64,6 @@ export default {
         return reply(formatProfesiList(list, jenis));
       }
 
-      // ---- Medis mode ----
       if (["medis", "dokter", "named"].includes(first)) {
         const rest = parts.slice(1);
         if (rest.length < 2) {
@@ -95,18 +92,15 @@ export default {
         return reply(formatResults(nama, result, details, { jenis: JENIS.medis, tipe: "nama" }));
       }
 
-      // ---- Nakes mode (default): nama or STR ----
-      // Split optional profesi (last token if it resolves to a profesi)
       let query = rawArgs;
       let profesiCode = "";
 
-      // Try to detect profesi as the last token (if more than one word)
       if (parts.length >= 2) {
         const maybeProfesi = parts[parts.length - 1];
         const resolved = await resolveProfesi(JENIS.nakes, maybeProfesi);
-        // Only treat as profesi filter if it resolves AND the remaining query is still meaningful
+
         if (resolved && parts.length - 1 >= 1) {
-          // Heuristic: if last token is a known profesi AND not the entire query, use as filter
+
           const candidateQuery = parts.slice(0, -1).join(" ");
           if (candidateQuery.length >= 2) {
             profesiCode = resolved;
@@ -133,7 +127,6 @@ export default {
   },
 };
 
-// Fetch detail for a limited number of rows (with delay to avoid hammering)
 async function fetchDetails(rows, jenis) {
   const details = [];
   for (const row of rows) {
@@ -142,7 +135,7 @@ async function fetchDetails(rows, jenis) {
       const d = await getDetail(row.id, jenis);
       details.push(d);
     } catch {
-      // skip failed detail, still show name
+
       details.push({
         nama: row.nama,
         kualifikasi: "-",
@@ -152,7 +145,7 @@ async function fetchDetails(rows, jenis) {
         sdmkUrl: "-",
       });
     }
-    // small delay between detail requests
+
     await new Promise((r) => setTimeout(r, 700));
   }
   return details;

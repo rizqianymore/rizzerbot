@@ -22,7 +22,6 @@ export default {
       );
     }
 
-
     try {
       const data = await mediafireDownload(url);
       const { downloadUrl, filename, filesize, mimetype } = data;

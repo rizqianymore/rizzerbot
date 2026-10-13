@@ -1,9 +1,5 @@
-// Mapping prefix nomor HP Indonesia ke operator (offline, tanpa API).
-// Catatan: hasil berdasarkan alokasi prefix, bukan HLR live.
-// Nomor portabilitas (pindah operator dengan nomor sama) tidak terdeteksi.
-
 const PREFIXES = [
-  // Telkomsel (kartuHalo, simPATI, Kartu As, by.U)
+
   { prefix: "0811", operator: "Telkomsel", brand: "kartuHalo" },
   { prefix: "0812", operator: "Telkomsel", brand: "simPATI" },
   { prefix: "0813", operator: "Telkomsel", brand: "simPATI" },
@@ -14,7 +10,6 @@ const PREFIXES = [
   { prefix: "0852", operator: "Telkomsel", brand: "Kartu As" },
   { prefix: "0853", operator: "Telkomsel", brand: "Kartu As" },
 
-  // Indosat Ooredoo Hutchison (IM3, Matrix, Mentari)
   { prefix: "0814", operator: "Indosat", brand: "Matrix / Mentari" },
   { prefix: "0815", operator: "Indosat", brand: "Matrix / Mentari" },
   { prefix: "0816", operator: "Indosat", brand: "Matrix / Mentari" },
@@ -23,7 +18,6 @@ const PREFIXES = [
   { prefix: "0857", operator: "Indosat", brand: "IM3" },
   { prefix: "0858", operator: "Indosat", brand: "IM3" },
 
-  // XL Axiata (termasuk EXCELCOM lama)
   { prefix: "0817", operator: "XL Axiata", brand: "XL" },
   { prefix: "0818", operator: "XL Axiata", brand: "XL" },
   { prefix: "0819", operator: "XL Axiata", brand: "XL" },
@@ -31,20 +25,17 @@ const PREFIXES = [
   { prefix: "0877", operator: "XL Axiata", brand: "XL" },
   { prefix: "0878", operator: "XL Axiata", brand: "XL" },
 
-  // AXIS (bagian dari XL Axiata)
   { prefix: "0831", operator: "AXIS", brand: "AXIS" },
   { prefix: "0832", operator: "AXIS", brand: "AXIS" },
   { prefix: "0833", operator: "AXIS", brand: "AXIS" },
   { prefix: "0838", operator: "AXIS", brand: "AXIS" },
 
-  // Tri (3 / Hutchison)
   { prefix: "0895", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0896", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0897", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0898", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0899", operator: "Tri", brand: "3 (Tri)" },
 
-  // Smartfren
   { prefix: "0881", operator: "Smartfren", brand: "Smartfren" },
   { prefix: "0882", operator: "Smartfren", brand: "Smartfren" },
   { prefix: "0883", operator: "Smartfren", brand: "Smartfren" },
@@ -56,7 +47,6 @@ const PREFIXES = [
   { prefix: "0889", operator: "Smartfren", brand: "Smartfren" },
 ];
 
-// Urutkan dari prefix terpanjang agar longest-match menang.
 const SORTED = [...PREFIXES].sort((a, b) => b.prefix.length - a.prefix.length);
 
 export function normalizeNumber(input) {

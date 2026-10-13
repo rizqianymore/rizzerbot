@@ -4,7 +4,7 @@ export function normalizeText(text) {
   return (
     String(text || "")
       .replace(/\r/g, "")
-      // spasi tak terlihat (copy-paste) dianggap spasi biasa agar wrapping tidak pecah
+
       .replace(/[\u00A0\u2007\u202F]/g, " ")
       .replace(/[ \t]+/g, " ")
       .replace(/\n{3,}/g, "\n\n")
@@ -20,12 +20,6 @@ export function tokenizeLine(line) {
     .filter(Boolean);
 }
 
-/**
- * Pemisahan kata yang SAMA PERSIS dengan yang dipakai layout (layout.js),
- * sehingga indeks kata pada frame reveal selalu sejajar dengan posisi kata
- * di canvas. Jangan diganti dengan tokenizer lain (mis. yang membuang tanda baca)
- * karena jumlah kata bisa berbeda dan reveal jadi meleset.
- */
 export function splitWords(line) {
   return String(line || "")
     .split(" ")
@@ -36,16 +30,8 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-/**
- * Susun frame reveal dari baris layout FINAL (hasil wrap).
- * Kata muncul pada posisi tetap sehingga teks tidak "meloncat" antar frame.
- *
- * @param {string[]} lines baris hasil wrap layout
- * @returns {{ revealedWords: number, duration: number, isLast: boolean }[]}
- */
 export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
-  // splitWords() = pemisahan kata yang sama persis dengan layout, sehingga
-  // revealedWords selalu sejajar dengan globalIndex di canvas.
+
   const wordLines = (Array.isArray(lines) ? lines : [])
     .map((line) => splitWords(line))
     .filter((tokens) => tokens.length > 0);
@@ -55,7 +41,6 @@ export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
   const maxSteps = Math.max(1, configObj.maxRevealSteps);
   const wordsPerStep = Math.max(1, Math.ceil(totalWords / maxSteps));
 
-  // Susun step: reveal bertambah kata per kata, selesai tepat di akhir teks.
   const steps = [];
   let revealed = 0;
   let pending = 0;
@@ -68,7 +53,7 @@ export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
         pending = 0;
       }
     }
-    // Beri jeda halus di akhir baris bila masih ada sisa kata.
+
     if (pending > 0 && revealed < totalWords) {
       steps.push({ revealedWords: revealed, endOfLine: true });
       pending = 0;
@@ -83,15 +68,13 @@ export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
   const maxFrame = Math.max(minFrame, configObj.maxFrameDuration || minFrame * 10);
   const pauseFactor = Math.max(1, configObj.linePauseFactor || 1);
 
-  // Frame terakhir hanya hold, sisanya frame bergerak. Frame jeda akhir baris
-  // lebih lama dari frame biasa, jadi bobotnya ikut dihitung saat membagi durasi.
   const movingSteps = steps.slice(0, -1);
   const pauseCount = movingSteps.filter((step) => step.endOfLine).length;
   const weightedSteps = Math.max(1, movingSteps.length - pauseCount + pauseCount * pauseFactor);
 
   const hasTarget = Number.isFinite(configObj.targetDuration) && configObj.targetDuration > lastDuration;
   const target = hasTarget ? configObj.targetDuration : null;
-  // Tanpa target durasi, frame bergerak diberi durasi maksimum.
+
   const budget = target ?? lastDuration + weightedSteps * maxFrame;
   const base = clamp((budget - lastDuration) / weightedSteps, minFrame, maxFrame);
 
@@ -104,8 +87,6 @@ export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
     return { revealedWords: step.revealedWords, duration, isLast };
   });
 
-  // Kunci total durasi: tidak boleh melebihi target, karena video yang lebih
-  // panjang dari batas potong stiker akan memotong kata-kata terakhir.
   if (target) {
     const total = frames.reduce((sum, frame) => sum + frame.duration, 0);
     if (total > target) {

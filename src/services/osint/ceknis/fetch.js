@@ -149,7 +149,6 @@ export async function fetchSiswaByNis(nis, mode = "nis", { retries = 1 } = {}) {
     }
   }
 
-  // Fallback Bright Data Web Unlocker jika GAS diblokir IP atau rate-limited
   try {
     const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
     if (getBrightDataConfig().apiKey) {

@@ -26,14 +26,12 @@ await react("✨");
     try {
       let res = null;
 
-      // 1. Coba provider kol.id (sesuai request.txt)
       try {
         res = await downloadFromKolId(input);
       } catch (kolErr) {
         logger?.warn?.(`[igdl kol.id] ${kolErr?.message || kolErr}`);
       }
 
-      // 2. Fallback Nexray API
       if (!res) {
         try {
           const resApi = await fetch(
@@ -146,7 +144,6 @@ await react("✨");
         }
       }
 
-      // Fallback terakhir: gunakan yt-dlp engine (Yoinks logic) jika API/scraper web gagal
       if (!res || !res.media?.length) {
         try {
           const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");

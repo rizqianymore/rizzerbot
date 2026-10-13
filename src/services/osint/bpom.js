@@ -21,7 +21,7 @@ async function ensureCsrfToken() {
 
   try {
     const res = await client.get(`${BASE}/all-produk`, {
-      params: { query: "test" }, // dummy query untuk trigger CSRF
+      params: { query: "test" },
       headers: { "User-Agent": UA, Accept: "text/html,*/*" },
     });
 
@@ -33,7 +33,7 @@ async function ensureCsrfToken() {
       cachedCookies = cookies.map((c) => c.split(";")[0]).join("; ");
     }
 
-    csrfExpiry = now + 55 * 60 * 1000; // cache 55 menit (token biasanya 1 jam)
+    csrfExpiry = now + 55 * 60 * 1000;
   } catch (err) {
     console.warn("[BPOM] Gagal refresh CSRF token:", err.message);
   }
@@ -53,7 +53,7 @@ export async function searchProduk(query) {
   const formData = new URLSearchParams();
   formData.append("draw", "1");
   formData.append("start", "0");
-  formData.append("length", "50"); // ambil lebih banyak
+  formData.append("length", "50");
   formData.append("search[value]", q);
   formData.append("query", q);
 
@@ -72,14 +72,14 @@ export async function searchProduk(query) {
     });
 
     if (res.status !== 200) {
-      // CSRF mungkin expired, coba refresh sekali
+
       if (res.status === 419 || res.status === 401) {
         cachedCsrf = null;
         cachedCookies = "";
         csrfExpiry = 0;
         await ensureCsrfToken();
         if (cachedCsrf && cachedCookies) {
-          return searchProduk(query); // retry sekali
+          return searchProduk(query);
         }
       }
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -90,7 +90,6 @@ export async function searchProduk(query) {
       throw new Error("Format respons tidak terduga");
     }
 
-    // Transform ke format yang lebih simpel
     return json.data.map((item) => ({
       tipe: item.CATEGORY || item.CLASS || "-",
       nomorRegistrasi: item.PRODUCT_REGISTER || "-",
@@ -104,7 +103,7 @@ export async function searchProduk(query) {
       tanggalTerbit: item.PRODUCT_DATE || "-",
       tanggalExpired: item.PRODUCT_EXPIRED || "-",
       status: item.STATUS || "-",
-      // Extra fields
+
       _raw: {
         productId: item.PRODUCT_ID,
         registrarAddress: item.REGISTRAR_ADD,

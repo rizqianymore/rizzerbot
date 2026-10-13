@@ -56,8 +56,7 @@ export function parseBratArgs(args, { allowVideo = false, allowGreen = false } =
   for (const token of tokens) {
     const lower = token.toLowerCase();
     if (VIDEO_FLAGS.has(lower)) {
-      // Flag video selalu dibuang, termasuk pada perintah video eksklusif,
-      // agar tidak ikut menjadi isi teks stiker.
+
       isVideo = allowVideo;
       continue;
     }

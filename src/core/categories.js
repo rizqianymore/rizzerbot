@@ -1,5 +1,3 @@
-// Urutan tampil kategori pada menu & daftar plugin.
-// Dipakai bersama oleh plugins/menu.js dan plugins/tools/util/listplugins.js
 export const CATEGORY_ORDER = [
   "Bug",
   "News",
@@ -17,7 +15,6 @@ export const CATEGORY_ORDER = [
   "General",
 ];
 
-// Alias input user -> kategori resmi (lowercase).
 export const CATEGORY_ALIASES = {
   bug: "Bug",
   bugs: "Bug",
@@ -57,10 +54,6 @@ export const CATEGORY_ALIASES = {
   intel: "OSINT",
 };
 
-/**
- * Kembalikan daftar key kategori terurut sesuai CATEGORY_ORDER.
- * Kategori tak dikenal diletakkan di akhir (prioritas 99).
- */
 export function sortCategoryKeys(keys) {
   return [...keys].sort((a, b) => {
     const ia = CATEGORY_ORDER.indexOf(a) === -1 ? 99 : CATEGORY_ORDER.indexOf(a);
@@ -69,10 +62,6 @@ export function sortCategoryKeys(keys) {
   });
 }
 
-/**
- * Resolve nama kategori dari input user (case-insensitive).
- * Mengembalikan null bila tidak dikenal.
- */
 export function resolveCategoryAlias(raw) {
   if (!raw) return null;
   return CATEGORY_ALIASES[raw.toLowerCase()] || null;

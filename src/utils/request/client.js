@@ -34,7 +34,7 @@ export async function smartRequest(url, options = {}) {
         });
         return bdData;
       } catch (_bdErr) {
-        // Jika Bright Data error, fallback ke stealth browser
+
       }
     }
 
@@ -101,7 +101,6 @@ export async function smartRequest(url, options = {}) {
           throw new Error(`Protection challenge detected (HTTP ${res.status}) and bypass is disabled.`);
         }
 
-        // 1. Coba gunakan Bright Data Web Unlocker jika API key tersedia (tanpa makan RAM browser)
         if (hasBrightData) {
           try {
             const bdResult = await brightDataRequest(url, {
@@ -113,7 +112,7 @@ export async function smartRequest(url, options = {}) {
             }
             return bdResult;
           } catch (_) {
-            // Bright Data gagal, fallback ke Puppeteer
+
           }
         }
 

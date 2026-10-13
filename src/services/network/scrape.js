@@ -161,7 +161,6 @@ export async function tiktokDownload(url) {
     }
   }
 
-  // Fallback Bright Data Web Unlocker untuk TikTok jika request direct gagal/terblokir
   try {
     const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
     if (getBrightDataConfig().apiKey) {

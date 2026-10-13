@@ -1,8 +1,5 @@
 import { stealthBrowser } from "@/src/utils/request.js";
 
-// Portal Dapodik (Kemendikdasmen) di balik WAF SafeLine sehingga fetch biasa
-// selalu 403. Semua request wajib lewat browser yang sudah lolos WAF,
-// lalu memakai token API dari /env.js (sama seperti yang dipakai UI resminya).
 export const BASE = "https://dapo.kemendikdasmen.go.id";
 export const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -45,10 +42,6 @@ async function resolveToken(page) {
   return tokenCache.value;
 }
 
-/**
- * Buka satu halaman browser (lolos WAF), lalu jalankan fetch JSON dari dalam
- * halaman itu. Satu halaman dipakai untuk banyak request agar hemat resource.
- */
 export async function withDapoPage(fn) {
   const page = await stealthBrowser.newPage();
   try {
@@ -79,7 +72,7 @@ export async function withDapoPage(fn) {
       );
 
       if (!result.ok) {
-        // Token kemungkinan dirotasi -> paksa ambil ulang pada request berikutnya.
+
         if (result.status === 401 || result.status === 403) tokenCache = { value: "", expires: 0 };
         throw new Error(result.error || `Dapodik HTTP ${result.status}${result.snippet ? `: ${result.snippet}` : ""}`);
       }

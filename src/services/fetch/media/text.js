@@ -2,7 +2,6 @@ import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import path from "path";
 
-// Daftarkan font lokal ArialNarrow jika ada
 const fontBratPath = path.join(process.cwd(), "assets", "brat", "ArialNarrow.ttf");
 if (fs.existsSync(fontBratPath)) {
   try {
@@ -70,7 +69,6 @@ function calculateTextFit(ctx, text, maxWidth, maxHeight) {
   let optimalLineHeight = 16;
   let optimalTotalHeight = 16;
 
-  // Coba ukuran font dari besar ke kecil agar teks pas dan tidak terpotong
   const startSize = Math.max(22, Math.floor(maxWidth / 8));
   for (let size = startSize; size >= 14; size -= 2) {
     ctx.font = `900 ${size}px ${FONT_FALLBACK}`;
@@ -87,7 +85,6 @@ function calculateTextFit(ctx, text, maxWidth, maxHeight) {
     }
   }
 
-  // Jika masih melebihi maxHeight pada size 14, batasi baris
   if (optimalLines.length === 0) {
     optimalSize = 14;
     ctx.font = `900 14px ${FONT_FALLBACK}`;

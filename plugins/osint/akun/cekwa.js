@@ -47,7 +47,6 @@ export default {
     await sendTyping();
     await reply(`Melacak nomor *+${number}*...`);
 
-    // 1. Cek terdaftar di WhatsApp
     let exists = false;
     let returnedJid = "";
     try {
@@ -59,7 +58,6 @@ export default {
       exists = false;
     }
 
-    // 2-4. Bio + foto + bisnis (paralel, masing-masing boleh gagal)
     const [statusRes, photoRes, bizRes] = await Promise.all([
       (async () => {
         try {

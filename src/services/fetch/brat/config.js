@@ -68,8 +68,7 @@ export const VIDEO_CONFIG = {
   fps: 15,
   width: 512,
   height: 512,
-  // Durasi total video. Harus selalu di bawah batas potong stiker, kalau tidak
-  // kata-kata terakhir tidak akan pernah muncul di stiker yang dikirim.
+
   targetDuration: STICKER_VIDEO_MAX_SECONDS - 0.5,
   maxRevealSteps: 20,
   minFrameDuration: 0.12,

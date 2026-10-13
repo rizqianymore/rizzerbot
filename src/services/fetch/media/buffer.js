@@ -60,17 +60,17 @@ export async function getMediaBuffer(sock, msg, opts = {}) {
 
 export function isVideoOrAnimated(buf) {
   if (!buf || buf.length < 12) return false;
-  // GIF
+
   if (buf.slice(0, 3).toString() === "GIF") return true;
-  // MP4 / MOV / 3GP
+
   const ftyp = buf.slice(4, 8).toString();
   if (ftyp === "ftyp" || ftyp === "moov") return true;
   if (buf.slice(0, 4).toString() === "\x00\x00\x00 ") return true;
-  // WebM / MKV
+
   if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return true;
-  // AVI
+
   if (buf.slice(0, 4).toString() === "RIFF" && buf.slice(8, 12).toString() === "AVI ") return true;
-  // Animated WebP
+
   if (buf.slice(0, 4).toString() === "RIFF" && buf.slice(8, 12).toString() === "WEBP") {
     if (buf.includes(Buffer.from("ANIM")) || buf.includes(Buffer.from("ANMF"))) return true;
   }

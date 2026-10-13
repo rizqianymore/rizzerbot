@@ -27,7 +27,7 @@ export default {
       try {
         info = await probe(url);
       } catch (_e) {
-        // jika gagal probe, lanjut coba download langsung
+
       }
 
       const { buffer } = await downloadMedia(url, {

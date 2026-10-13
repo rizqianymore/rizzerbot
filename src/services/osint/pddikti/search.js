@@ -19,7 +19,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
     try {
       const token = await getRecaptchaToken();
 
-      // 1. Direct fetch dengan token
       let data = null;
       try {
         const res = await fetchWithTimeout(searchUrl, {
@@ -41,7 +40,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         lastErr = fetchErr;
       }
 
-      // 2. Jika direct fetch gagal atau 403, coba via Bright Data Web Unlocker (jika ada key)
       if (!data && apiKey) {
         try {
           const bdRes = await brightDataRequest(searchUrl, {
@@ -59,7 +57,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         } catch (_) {}
       }
 
-      // 3. Fallback via inPageFetch di browser (karena browser sudah lolos WAF & Cloudflare)
       if (!data) {
         try {
           const inPageRes = await stealthBrowser.inPageFetch(searchUrl, {

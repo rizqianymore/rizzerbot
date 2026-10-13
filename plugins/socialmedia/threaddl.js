@@ -21,7 +21,6 @@ export default {
       );
     }
 
-
     const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
 
     const decodeEntities = (str = "") => {

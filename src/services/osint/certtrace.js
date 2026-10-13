@@ -1,6 +1,3 @@
-// Certificate Transparency lookup via crt.sh (gratis, tanpa API key).
-// Menemukan subdomain + riwayat sertifikat sebuah domain.
-
 const CRT_BASE = "https://crt.sh/";
 const OTX_BASE = "https://otx.alienvault.com/api/v1/indicators/domain/";
 const HT_BASE = "https://api.hackertarget.com/hostsearch/?q=";

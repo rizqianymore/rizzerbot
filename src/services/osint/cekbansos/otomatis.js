@@ -34,7 +34,7 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
       if (!codeTries.length) continue;
 
       for (const code of codeTries) {
-        // Clear & type inputs
+
         await page.evaluate(() => {
           const nikInput = document.querySelector("#cek_peserta_nik");
           const captchaInput = document.querySelector("#captcha");
@@ -52,7 +52,7 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
         const bodyText = await page.evaluate(() => document.body.innerText || "");
 
         if (/Kode Captcha salah/i.test(bodyText)) {
-          // Captcha salah, lanjut ke percobaan berikutnya
+
           continue;
         }
 
@@ -65,7 +65,6 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
         }
       }
 
-      // Reload captcha jika gagal
       await page
         .evaluate(() => {
           const reloadBtn = document.querySelector('button[onclick*="reload"], .btn-refresh, a[href*="reload"]');

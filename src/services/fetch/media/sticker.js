@@ -15,7 +15,6 @@ const execFileAsync = promisify(execFile);
 
 const { Image: WebpMuxImage } = webpmux;
 
-/** Batas durasi video yang dikirim sebagai stiker (detik). Konten setelah ini akan terpotong. */
 export const STICKER_VIDEO_MAX_SECONDS = 7;
 
 function toFfmpegTime(seconds) {
@@ -89,7 +88,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         "passthrough",
         "-s",
         "512:512",
-        // Kualitas encoding WebP (libwebp). Default ffmpeg hanya 75 -> buram.
+
         "-quality",
         "90",
         "-compression_level",
@@ -133,7 +132,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
       webpBuffer = buffer;
     }
   } else {
-    // Static Image
+
     let processedBuffer = buffer;
     if (hasText) {
       try {

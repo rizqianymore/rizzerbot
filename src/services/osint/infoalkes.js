@@ -43,7 +43,7 @@ function stripHtml(html) {
 }
 
 function extractNomorIzin(raw) {
-  // Extract clean nomor from HTML like: <b>AKL 21603712060</b><div>Terbit : 2029-12-31</div><div>Expired : 2029-12-31</div>
+
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nomor = match ? match[1].trim() : stripHtml(raw);
   const terbitMatch = raw?.match(/Terbit\s*:\s*([^<\n]+)/);
@@ -56,7 +56,7 @@ function extractNomorIzin(raw) {
 }
 
 function extractMerk(raw) {
-  // <b>LITHO Surgical Laser System</b><div>Peralatan Bedah</div><div>Laser surgical instrument...</div><span class="badge...">Elektromedik Non Radiasi</span>
+
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const typeMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -67,7 +67,7 @@ function extractMerk(raw) {
 }
 
 function extractTipe(raw) {
-  // <b>-</b><div>Kelas : C</div> or <b>FS 969H</b><div>Kelas : A</div>
+
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const tipe = match ? match[1].trim() : "-";
   const kelasMatch = raw?.match(/Kelas\s*:\s*([^<\n]+)/);
@@ -76,7 +76,7 @@ function extractTipe(raw) {
 }
 
 function extractPendaftar(raw) {
-  // <b>PT. I-TECH LAFACOS</b><div>Gedung indra centra Blok M-N, Jl. Jendral suprapto No. 60, Kel Cempaka Putih barat , Kec. Cempaka Putih</div>
+
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const addrMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -85,7 +85,7 @@ function extractPendaftar(raw) {
 }
 
 function extractProdusen(raw) {
-  // <b>QUANTA SYSTEM.</b><div>Italy</div><div></div><div></div><div></div>
+
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const negaraMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -94,7 +94,7 @@ function extractProdusen(raw) {
 }
 
 function extractStatus(raw) {
-  // <span class="badge py-3 px-4 fs-7 badge-light-success">Berlaku</span>
+
   const match = raw?.match(/badge-light-(\w+)">([^<]+)<\/span>/);
   if (match) return { status: match[2].trim(), class: match[1] };
   return { status: stripHtml(raw), class: "-" };
@@ -111,7 +111,7 @@ async function ensureCookies() {
     const cookies = res.headers["set-cookie"];
     if (cookies) {
       cachedCookies = cookies.map((c) => c.split(";")[0]).join("; ");
-      cookieExpiry = now + 55 * 60 * 1000; // 55 min
+      cookieExpiry = now + 55 * 60 * 1000;
     }
   } catch (err) {
     console.warn("[InfoAlkes] Gagal refresh cookies:", err.message);
@@ -220,7 +220,6 @@ export async function getDetail(produkId) {
   await ensureCookies();
   if (!cachedCookies) throw new Error("Gagal mendapatkan session");
 
-  // produkId from API is like "ie_ak|S-C01400090090626" -> need to base64 encode
   const encoded = Buffer.from(produkId).toString("base64");
   const url = `${DETAIL_URL}/${encoded}/detail`;
 
@@ -235,7 +234,7 @@ export async function getDetail(produkId) {
     });
 
     if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
-    return res.data; // HTML content for modal
+    return res.data;
   } catch (err) {
     throw new Error(`Gagal ambil detail: ${err.message}`);
   }
@@ -275,6 +274,6 @@ export function formatResults(query, result, startTime) {
 }
 
 function categoryLabel(_query) {
-  // Not used but kept for potential future use
+
   return "Semua";
 }

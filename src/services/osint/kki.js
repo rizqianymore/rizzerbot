@@ -18,7 +18,6 @@ const client = axios.create({
 let cachedCookies = "";
 let cookieExpiry = 0;
 
-// jenis: "1" = Tenaga Medis (named), "2" = Tenaga Kesehatan (nakes)
 const JENIS = { medis: "1", nakes: "2" };
 
 function stripHtml(html) {
@@ -47,7 +46,7 @@ async function ensureCookies(force = false) {
   const cookies = res.headers["set-cookie"];
   if (cookies && cookies.length) {
     cachedCookies = cookies.map((c) => c.split(";")[0]).join("; ");
-    cookieExpiry = now + 50 * 60 * 1000; // 50 min
+    cookieExpiry = now + 50 * 60 * 1000;
   }
 }
 
@@ -60,7 +59,7 @@ function buildSearchParams(query, { jenis, tipe, profesi, start, length }) {
   p.append("search[regex]", "false");
   p.append("order[0][column]", "0");
   p.append("order[0][dir]", "asc");
-  // Server expects 3 columns (#, Nama, Aksi)
+
   for (let i = 0; i < 3; i++) {
     p.append(`columns[${i}][data]`, String(i));
     p.append(`columns[${i}][name]`, "");
@@ -116,7 +115,7 @@ export async function searchNakes(
     res = await client.post(SEARCH_URL, params, { headers });
   } catch (err) {
     if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
-      // one retry on timeout
+
       await new Promise((r) => setTimeout(r, 1500));
       await ensureCookies(true);
       res = await client.post(SEARCH_URL, buildSearchParams(query.trim(), { jenis, tipe, profesi, start, length }), {
@@ -196,7 +195,6 @@ export function parseDetailHtml(html, _jenis) {
   const urlMatch = html.match(/href="(https:\/\/satusehat\.kemkes\.go\.id\/sdmk\/[^"]+)"/);
   if (urlMatch) out.sdmkUrl = urlMatch[1];
 
-  // Split info rows and extract label -> value
   const rows = html.split(/class="sdmk-info-row"/).slice(1);
   for (const row of rows) {
     const labelMatch = row.match(/sdmk-label"[^>]*>[\s\S]*?<\/i>\s*([^<]+)<\/div>/);
@@ -210,7 +208,6 @@ export function parseDetailHtml(html, _jenis) {
     else if (label.includes("status")) out.status = value || "-";
   }
 
-  // Determine STR status color from badge class
   const badgeMatch = html.match(/badge\s+(bg-\w+|badge-\w+)"[^>]*>([^<]+)<\/span>/);
   if (badgeMatch && out.status) {
     out.statusClass = badgeMatch[1];
@@ -218,8 +215,6 @@ export function parseDetailHtml(html, _jenis) {
 
   return out;
 }
-
-// ---- Profesi helpers ----
 
 const profesiCache = { 1: null, 2: null };
 let profesiExpiry = 0;
@@ -244,32 +239,26 @@ export async function getProfesi(jenis = JENIS.nakes) {
   const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
   const list = json.data || [];
   profesiCache[jenis] = list;
-  profesiExpiry = now + 60 * 60 * 1000; // 1 hour
+  profesiExpiry = now + 60 * 60 * 1000;
   return list;
 }
 
-// Resolve a profesi term (code or name) to a profesi code for given jenis.
 export async function resolveProfesi(jenis, term) {
   if (!term) return "";
   const list = await getProfesi(jenis);
   const t = String(term).trim().toLowerCase();
 
-  // direct code match
   const byCode = list.find((p) => String(p.kode) === t);
   if (byCode) return String(byCode.kode);
 
-  // exact name match
   const byName = list.find((p) => p.profesi.toLowerCase() === t);
   if (byName) return String(byName.kode);
 
-  // partial name match
   const byPartial = list.find((p) => p.profesi.toLowerCase().includes(t));
   if (byPartial) return String(byPartial.kode);
 
-  return null; // not found
+  return null;
 }
-
-// ---- Formatting ----
 
 function statusEmoji(status) {
   const s = (status || "").toLowerCase();
@@ -310,7 +299,6 @@ export function formatResults(query, result, details, opts = {}) {
     return text;
   }
 
-  // Show details for first N, list the rest
   const detailed = details || [];
   detailed.forEach((d, i) => {
     const se = statusEmoji(d.status);
@@ -325,7 +313,6 @@ export function formatResults(query, result, details, opts = {}) {
     text += `\n`;
   });
 
-  // Remaining names (no detail)
   if (data.length > detailed.length) {
     const rest = data.slice(detailed.length, 10);
     if (rest.length) {

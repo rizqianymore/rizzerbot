@@ -45,7 +45,7 @@ export default {
           author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
           duration = info.duration ? `${info.duration}s` : "";
         } catch (_scrapeErr) {
-          // Fallback ke engine yt-dlp
+
           const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
           const pInfo = await probe(url).catch(() => null);
           const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });

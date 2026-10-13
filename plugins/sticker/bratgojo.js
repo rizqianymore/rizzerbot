@@ -25,7 +25,6 @@ export default {
       return reply(check.error);
     }
 
-
     try {
       const imageBuffer = await createBratImage(text, TEMPLATES.gojo);
       await sendStickerBuffer(sock, msg, imageBuffer);

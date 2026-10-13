@@ -53,7 +53,6 @@ export async function getSekolahDetail(npsn) {
   return row || null;
 }
 
-/** Cari lalu detail dalam satu sesi browser (hemat resource). */
 async function searchThenDetail(query) {
   return withDapoPage(async (fetchJson) => {
     const searchJson = await fetchJson(`/api/detail-sekolah/search?q=${encodeURIComponent(query)}`);

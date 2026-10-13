@@ -21,7 +21,6 @@ export default {
       );
     }
 
-
     try {
       const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
       let data = null;
@@ -29,7 +28,7 @@ export default {
         const res = await axios.get(apiUrl, { timeout: 25000 });
         data = res.data;
       } catch (_) {
-        // Fallback via Bright Data Web Unlocker
+
         try {
           const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
           if (getBrightDataConfig().apiKey) {

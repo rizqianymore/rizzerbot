@@ -51,7 +51,6 @@ export default {
       );
     }
 
-    // Parse kategori dari akhir input jika angka 1-6
     let query = rawArgs;
     let category = "nomor_izin_edar";
     const parts = rawArgs.split(" ");

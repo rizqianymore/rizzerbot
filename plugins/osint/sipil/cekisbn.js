@@ -28,7 +28,6 @@ export default {
 
     await sendTyping();
 
-    // Check if input looks like ISBN
     const clean = input.replace(/[^0-9Xx]/g, "").toUpperCase();
     const isIsbn = (clean.length === 10 || clean.length === 13) && /^[0-9X]{10,13}$/.test(clean);
 

@@ -19,7 +19,6 @@ export default {
       let info = null;
       let viaKolId = false;
 
-      // 1. Coba kol.id dulu (cepat, tanpa dependensi lokal) untuk mode video
       if (!isAudio) {
         try {
           const { downloadYoutube } = await import("@/src/services/fetch/kolid.js");
@@ -45,16 +44,14 @@ export default {
         } catch (_) {}
       }
 
-      // 2. Fallback engine yt-dlp
       if (!buffer) {
-        // Ambil metadata video
+
         try {
           info = await probe(url);
         } catch (_e) {
-          // jika gagal probe, tetap lanjut coba download langsung
+
         }
 
-        // Download menggunakan engine yt-dlp
         const dl = await downloadMedia(url, {
           mode: isAudio ? "audio" : "video",
           quality: "720",

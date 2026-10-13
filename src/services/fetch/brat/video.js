@@ -57,7 +57,6 @@ async function encodeVideo(concatPath, outputPath, configObj) {
 export async function createBratVideo(text, template, options = {}) {
   await ensureFont();
 
-  // Layout dihitung sekali dari teks utuh (resolusi supersample) → frame reveal pakai posisi final.
   const layout = await prepareBratLayout(text, template);
   const frames = buildRevealFrames(layout.lines, VIDEO_CONFIG);
   if (!frames.length) {

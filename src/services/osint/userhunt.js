@@ -6,10 +6,6 @@ function bodyHas(body, ...needles) {
   return needles.some((n) => low.includes(String(n).toLowerCase()));
 }
 
-// confidence:
-// - HIGH: API resmi / pola status terverifikasi live (200 vs 404/400)
-// - MEDIUM: halaman publik dengan penanda kuat (og:title, JSON state)
-// - LOW: heuristik HTML, rawan false-positive/negative
 export const USERHUNT_PLATFORMS = [
   {
     key: "github",

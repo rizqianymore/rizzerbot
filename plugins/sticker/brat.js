@@ -27,7 +27,6 @@ export default {
       return reply(check.error);
     }
 
-
     try {
       if (isVideo) {
         const videoBuffer = await createBratVideo(text, TEMPLATES.classic, { bgColor });

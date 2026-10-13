@@ -21,7 +21,6 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
   const cached = cacheGet(detailCache, id);
   if (cached) return cached;
 
-  // 1. FAST PATH: API POST /api/detail/mhs dengan reCAPTCHA token (~200ms)
   try {
     const token = await getRecaptchaToken();
     const apiUrl = `${BASE}/api/detail/mhs`;
@@ -68,10 +67,9 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
       }
     }
   } catch (_) {
-    // Lanjut ke fallback
+
   }
 
-  // 2. Fallback via inPageFetch
   try {
     const token = await getRecaptchaToken();
     const inPageRes = await stealthBrowser.inPageFetch(`${BASE}/api/detail/mhs`, {
@@ -102,7 +100,6 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
     }
   } catch (_) {}
 
-  // 3. Fallback via stealth browser DOM rendering
   const page = await stealthBrowser.newPage();
   try {
     await page.setUserAgent(UA);

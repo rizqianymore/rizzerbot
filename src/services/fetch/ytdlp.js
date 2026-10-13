@@ -31,12 +31,6 @@ function commandWorks(cmd, args) {
 
 let ensurePromise = null;
 
-/**
- * Pastikan binary yt-dlp tersedia.
- * 1. Cek di PATH sistem
- * 2. Cek di local project `./bin/yt-dlp`
- * 3. Jika belum ada, download otomatis dari release GitHub resmi
- */
 export async function ensureYtDlp(onStatus = () => {}) {
   if (ensurePromise) return ensurePromise;
 
@@ -81,9 +75,6 @@ function cleanYtDlpError(stderr = "") {
   return last ? last.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, "") : "";
 }
 
-/**
- * Probe URL dan ambil metadata (mirip Yoinks probe)
- */
 export async function probe(url, options = {}) {
   const ytdlp = await ensureYtDlp(options.onStatus);
   return new Promise((resolve, reject) => {
@@ -108,12 +99,6 @@ export async function probe(url, options = {}) {
   });
 }
 
-/**
- * Unduh media langsung ke file temporary dan return path serta buffer
- * Mode:
- * - 'video': ambil video kualitas terbaik yang bersuara (atau merge video+audio mp4)
- * - 'audio': extract audio mp3
- */
 export async function downloadMedia(url, { mode = "video", quality = "720", onStatus = () => {}, signal } = {}) {
   const ytdlp = await ensureYtDlp(onStatus);
   const tmpDir = path.join(os.tmpdir(), "rizzerbot-ytdlp");
@@ -137,12 +122,11 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
   if (isAudio) {
     args.push("-f", "ba/b", "-x", "--audio-format", "mp3", "--audio-quality", "0");
   } else {
-    // Utamakan max resolution sesuai requested, fallback ke best available mp4
+
     const h = parseInt(quality) || 720;
     args.push("-f", `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`, "--merge-output-format", "mp4");
   }
 
-  // Tambahkan ffmpeg jika ada di system
   if (await commandWorks("ffmpeg", ["-version"])) {
     args.push("--ffmpeg-location", "ffmpeg");
   }
@@ -176,7 +160,7 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
       }
 
       if (!filepath) {
-        // cari baris stdout yang mencantumkan path
+
         const matches = stdout
           .split("\n")
           .map((l) => l.trim())
@@ -192,7 +176,7 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
 
       try {
         const buffer = await fs.readFile(filepath);
-        // hapus file temporary setelah dibaca ke memory
+
         await fs.unlink(filepath).catch(() => {});
         resolve({
           filepath,

@@ -33,7 +33,6 @@ export async function fetchFormSession() {
     }
   } catch (_) {}
 
-  // Fallback via stealth browser
   const page = await stealthBrowser.newPage();
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
@@ -72,7 +71,6 @@ export async function fetchCaptchaImage(session) {
     }
   } catch (_) {}
 
-  // Fallback via stealthBrowser
   const page = await stealthBrowser.newPage();
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
