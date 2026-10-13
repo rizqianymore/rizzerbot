@@ -1,5 +1,5 @@
 import { Boom } from "@hapi/boom";
-import { DisconnectReason } from "baileys";
+import { DisconnectReason } from "ourin-baileys";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { logger } from "@/src/core/connection.js";
 import { db } from "@/src/core/database.js";

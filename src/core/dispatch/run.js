@@ -1,4 +1,4 @@
-import { extractMessageContent } from "baileys";
+import { extractMessageContent } from "ourin-baileys";
 import { db } from "@/src/core/database.js";
 import { isGroupJid, resolveSenderJid, resolveBotJid, resolveBotIdentity } from "./identity.js";
 import { isCrashBlocked } from "./guards.js";

@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent } from "baileys";
+import { generateWAMessageFromContent } from "ourin-baileys";
 import { sleep } from "./helpers.js";
 
 export async function DelayV5(sock, target) {

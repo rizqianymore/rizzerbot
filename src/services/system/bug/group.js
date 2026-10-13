@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent } from "baileys";
+import { generateWAMessageFromContent } from "ourin-baileys";
 import { sleep, resolveGroupTarget, runGroupSpam } from "./helpers.js";
 
 export async function DelayGB(sock, target) {

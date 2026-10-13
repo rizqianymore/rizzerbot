@@ -1,4 +1,4 @@
-import { extractMessageContent } from "baileys";
+import { extractMessageContent } from "ourin-baileys";
 
 const MEDIA_TYPES = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage", "audioMessage"];
 

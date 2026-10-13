@@ -1,4 +1,4 @@
-import { downloadMediaMessage } from "baileys";
+import { downloadMediaMessage } from "ourin-baileys";
 
 export const DEFAULT_MAX_MEDIA_BYTES = 25 * 1024 * 1024;
 
