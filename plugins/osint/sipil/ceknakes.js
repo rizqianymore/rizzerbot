@@ -13,7 +13,7 @@ const JENIS = { medis: "1", nakes: "2" };
 function looksLikeStr(s) {
   const t = s.trim();
   if (t.length < 6) return false;
-  return /[0-9]/.test(t) && /^[A-Za-z0-9\-]+$/.test(t);
+  return /[0-9]/.test(t) && /^[A-Za-z0-9-]+$/.test(t);
 }
 
 export default {
