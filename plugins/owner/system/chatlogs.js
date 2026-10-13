@@ -9,7 +9,7 @@ export default {
   "usage": "[opsional: tanggal / download]",
   "ownerOnly": true,
   "category": "Owner",
-  "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, logger }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, isPrimarySuperOwner, isSubBot, _logger }) => {
 
     if (isSubBot || sock?.isSubBot) {
       return reply("❌ *Akses Ditolak!*\n\nLog pesan chat hanya dapat dibuka dan diakses melalui *Bot Utama*.");

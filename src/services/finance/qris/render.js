@@ -20,7 +20,7 @@ export async function generateQrisCard({
   amount = 0,
   merchantName = "Rizzer Cloud",
   merchantCity = "JAKARTA BARAT",
-  fee = 0,
+  _fee = 0,
   expiredMinutes = 15,
 }) {
 

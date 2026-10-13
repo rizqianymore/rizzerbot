@@ -27,7 +27,7 @@ export default {
           { image: { url: anime.image }, caption: text },
           { quoted: msg }
         );
-      } catch (err) {
+      } catch (_err) {
         await reply(`❌ Anime tidak ditemukan.`);
       }
     },

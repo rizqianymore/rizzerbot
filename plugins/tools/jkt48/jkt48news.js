@@ -32,7 +32,7 @@ function formatDate(dateStr) {
   }
 }
 
-function formatPrice(num) {
+function _formatPrice(num) {
   if (!num) return "belum ditentukan";
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -41,7 +41,7 @@ function formatPrice(num) {
   }).format(num);
 }
 
-function parseUserQuery(args, now = new Date()) {
+function _parseUserQuery(args, now = new Date()) {
   const raw = args.join(" ").trim().toLowerCase();
   if (!raw) {
     const y = now.getFullYear();

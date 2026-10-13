@@ -98,7 +98,7 @@ export async function getStockTicker(ticker, userCookie = "") {
 
   try {
     return await fetchFromBloomberg(cleanTicker, userCookie);
-  } catch (bbgErr) {
+  } catch (_bbgErr) {
 
     return await fetchFromYahooFinance(cleanTicker);
   }

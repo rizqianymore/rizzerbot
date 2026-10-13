@@ -1,9 +1,9 @@
 import { db } from "@/src/core/database.js";
 
-let primaryOnline = false;
+let _primaryOnline = false;
 
 export function setPrimaryOnline(v) {
-  primaryOnline = Boolean(v);
+  _primaryOnline = Boolean(v);
 }
 
 export async function notifyOwner(text) {

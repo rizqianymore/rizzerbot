@@ -45,7 +45,7 @@ export default {
             if (meta?.id) {
               channelJid = meta.id;
             }
-          } catch (e) {
+          } catch (_e) {
 
           }
         }

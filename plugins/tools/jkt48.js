@@ -76,7 +76,7 @@ export default {
         else if (socials.length > 2)
           socialJoin = `${socials.slice(0, -1).join(", ")}, serta ${socials[socials.length - 1]}`;
 
-        const socialText = socialJoin
+        const _socialText = socialJoin
           ? ` Penggemar dapat mengikuti aktivitas kesehariannya melalui media sosial resminya di ${socialJoin}.`
           : "";
 

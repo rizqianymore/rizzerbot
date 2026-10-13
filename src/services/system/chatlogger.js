@@ -17,7 +17,7 @@ function getDateString(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
-function getLogFilePath(date = new Date()) {
+function _getLogFilePath(date = new Date()) {
   return path.join(LOGS_DIR, `messages-${getDateString(date)}.json`);
 }
 

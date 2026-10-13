@@ -142,7 +142,7 @@ export default {
             { quoted: msg }
           );
           await sock.sendMessage(remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
-        } catch (ytdlpErr) {
+        } catch (_ytdlpErr) {
           await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
           reply(`❌ Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
         }

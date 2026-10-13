@@ -1,4 +1,4 @@
-export function parseTrxInput(rawText, quoted, getTargetJid) {
+export function parseTrxInput(rawText, quoted, _getTargetJid) {
   let item = "";
   let price = 0;
   let buyer = "";

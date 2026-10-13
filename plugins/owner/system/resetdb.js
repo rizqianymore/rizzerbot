@@ -3,7 +3,7 @@ import path from "path";
 
 const DB_DIR = path.join(process.cwd(), "database");
 const SUBBOTS_DIR = path.join(DB_DIR, "subbots");
-const BACKUPS_DIR = path.join(DB_DIR, "backups");
+const _BACKUPS_DIR = path.join(DB_DIR, "backups");
 const CHATLOGS_DIR = path.join(DB_DIR, "chat_logs");
 
 function countSubbotDbs() {

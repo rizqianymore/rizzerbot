@@ -179,7 +179,7 @@ export async function getDetail(id, jenis = JENIS.nakes) {
   return parseDetailHtml(html, jenis);
 }
 
-export function parseDetailHtml(html, jenis) {
+export function parseDetailHtml(html, _jenis) {
   const out = {
     nama: "-",
     kualifikasi: "-",
@@ -294,7 +294,7 @@ export function formatProfesiList(list, jenis) {
 
 export function formatResults(query, result, details, opts = {}) {
   const { jenis, tipe } = opts;
-  const { data, filtered, total } = result;
+  const { data, filtered } = result;
   const jenisLabel = jenis === JENIS.medis ? "Tenaga Medis" : "Tenaga Kesehatan";
   const tipeLabel = tipe === "str" ? "No. STR" : "Nama";
 

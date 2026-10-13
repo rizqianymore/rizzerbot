@@ -5,7 +5,7 @@ export default {
   "description": "Check bot speed",
   "usage": "",
   "category": "User",
-  "run": async (sock, msg, args, { reply, senderJid, sendTyping }) => {
+  "run": async (sock, msg, args, { _reply, _senderJid, sendTyping }) => {
       await sendTyping();
       const start = Date.now();
       await sock.sendMessage(msg.key.remoteJid, { text: "⚡ Ping..." }, { quoted: msg });

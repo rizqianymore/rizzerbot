@@ -274,7 +274,7 @@ export function formatResults(query, result, startTime) {
   return text;
 }
 
-function categoryLabel(query) {
+function categoryLabel(_query) {
   // Not used but kept for potential future use
   return "Semua";
 }

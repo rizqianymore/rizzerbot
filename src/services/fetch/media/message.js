@@ -40,7 +40,7 @@ export function findDownloadableTarget(msg) {
     return { ...msg, message: unwrapped };
   }
 
-  const { ctxInfo, quotedMsg, stanzaId, participant } = getQuotedMessage(msg);
+  const { quotedMsg, stanzaId, participant } = getQuotedMessage(msg);
   if (quotedMsg) {
     const unwrappedQuoted = unwrapMessageContent(quotedMsg) || {};
     const quotedType = Object.keys(unwrappedQuoted).find((k) => MEDIA_TYPES.includes(k));

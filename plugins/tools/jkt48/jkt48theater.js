@@ -1,7 +1,7 @@
 import { getShowroomSchedules } from "@/src/services/hiburan/jkt48.js";
 import { fetchBuffer } from "@/src/services/network/scrape.js";
 
-const JKT48_BASE = "https://jkt48.com";
+const _JKT48_BASE = "https://jkt48.com";
 
 const MONTH_NAMES = {
   januari: 1, jan: 1, january: 1,
@@ -33,7 +33,7 @@ function formatDate(dateStr) {
   }
 }
 
-function formatPrice(num) {
+function _formatPrice(num) {
   if (!num) return "belum ditentukan";
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -42,7 +42,7 @@ function formatPrice(num) {
   }).format(num);
 }
 
-function parseUserQuery(args, now = new Date()) {
+function _parseUserQuery(args, now = new Date()) {
   const raw = args.join(" ").trim().toLowerCase();
   if (!raw) {
     const y = now.getFullYear();

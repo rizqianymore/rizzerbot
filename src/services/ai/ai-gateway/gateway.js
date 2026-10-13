@@ -76,7 +76,7 @@ export async function askDeepSeek(prompt, { thinking = false, search = false, us
       source: "public-gateway",
       isFallback: true,
     };
-  } catch (err) {
+  } catch (_err) {
     throw new Error(
       "DeepSeek belum dikonfigurasi. Masukkan DEEPSEEK_COOKIE_TOKEN di .env untuk menggunakan DeepSeek Web resmi."
     );

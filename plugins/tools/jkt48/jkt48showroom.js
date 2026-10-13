@@ -8,7 +8,7 @@ export default {
   "usage": "",
   "premiumOnly": true,
   "category": "Tools",
-  "run": async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, _prefix }) => {
       await sendTyping();
       await reply("Memuat data leaderboard Showroom member JKT48...");
 

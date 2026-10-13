@@ -77,7 +77,7 @@ export function loadStoreFiles(dbPath, usersDbPath) {
     try {
       const raw = fs.readFileSync(dbPath, 'utf8');
       stored = raw ? JSON.parse(raw) : {};
-    } catch (error) {
+    } catch (_error) {
       const backupPath = `${dbPath}.corrupt-${Date.now()}`;
       try {
         fs.renameSync(dbPath, backupPath);
@@ -96,7 +96,7 @@ export function loadStoreFiles(dbPath, usersDbPath) {
           storedUsers = parsedUsers;
         }
       }
-    } catch (error) {
+    } catch (_error) {
       const backupUsersPath = `${usersDbPath}.corrupt-${Date.now()}`;
       try {
         fs.renameSync(usersDbPath, backupUsersPath);

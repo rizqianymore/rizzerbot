@@ -7,7 +7,7 @@ export default {
   "usage": "",
   "ownerOnly": true,
   "category": "Owner",
-  "run": async (sock, msg, args, { reply, isPrimarySuperOwner, isSubBot, botJid, senderJid }) => {
+  "run": async (sock, msg, args, { reply, isPrimarySuperOwner, _isSubBot, _botJid, senderJid }) => {
       const { getSubBotsList } = await import("@/src/services/system/subbot/subbot.js");
       const list = getSubBotsList();
 

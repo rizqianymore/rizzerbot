@@ -7,7 +7,7 @@ export default {
   "usage": "<nis, cth: 539241249>",
   "premiumOnly": true,
   "category": "OSINT",
-  "run": async (sock, msg, args, { reply, sendTyping, prefix, senderJid, isOwner, isAdmin, logger }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, prefix, _senderJid, _isOwner, _isAdmin, logger }) => {
       const currentPrefix = prefix || ".";
       const input = (args || []).join(" ").trim();
 

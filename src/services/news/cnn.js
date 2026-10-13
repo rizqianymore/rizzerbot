@@ -45,7 +45,7 @@ export async function searchCNNNews(query, options = {}) {
       headers,
       signal: AbortSignal.timeout(15000),
     });
-  } catch (netErr) {
+  } catch (_netErr) {
     res = null;
   }
 

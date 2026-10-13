@@ -50,7 +50,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
   deletedCount += rootClean.count;
   freedBytes += rootClean.bytes;
 
-  const isTempSessionFile = (name) => {
+  const isTempSessionFile = (_name) => {
     return false;
   };
 

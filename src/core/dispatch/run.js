@@ -72,7 +72,6 @@ async function dispatchInner(sock, msg, logger) {
   const botJid = botJidEarly || db.normalizeJid(sock.user?.id || "");
 
   const normalizedRawSender = resolveSenderJid(msg);
-  const rawSender = normalizedRawSender;
   const remoteNormalized = db.resolvePhoneJid(remoteJid);
 
   if (botJid) {

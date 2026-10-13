@@ -22,7 +22,7 @@ export default {
 
         try {
           const detail = await getJkt48ScheduleDetail(parsed.code);
-          const team = detail.jkt48_member_type ? `oleh *Tim ${detail.jkt48_member_type}*` : "oleh JKT48";
+          const _team = detail.jkt48_member_type ? `oleh *Tim ${detail.jkt48_member_type}*` : "oleh JKT48";
           const price = formatPrice(detail.default_price);
           const showDate = formatDate(detail.date);
           const showTime =
@@ -33,7 +33,7 @@ export default {
             ? `dengan waktu open gate mulai *${detail.reception_start_time.slice(0, 5)} WIB*`
             : "";
 
-          const memberNames =
+          const _memberNames =
             Array.isArray(detail.jkt48_member) && detail.jkt48_member.length > 0
               ? `Pertunjukan ini menampilkan *${detail.jkt48_member.length} member* yaitu ${detail.jkt48_member.map((m) => m.name).join(", ")}.`
               : "Daftar member penampil akan diumumkan kemudian.";

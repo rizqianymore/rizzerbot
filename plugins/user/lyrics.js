@@ -30,7 +30,7 @@ export default {
       try {
         const lyrics = await fetchLyrics(artist, title);
         await reply(`🎵 *Lirik: ${title}*\n\n${lyrics.slice(0, 3000)}`);
-      } catch (err) {
+      } catch (_err) {
         await reply(`❌ Lirik tidak ditemukan. Pastikan format: *penyair judul*`);
       }
     },

@@ -89,7 +89,7 @@ export default {
             { quoted: msg }
           );
         }
-      } catch (err) {
+      } catch (_err) {
         await reply(caption);
       }
 

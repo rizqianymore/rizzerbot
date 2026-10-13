@@ -116,7 +116,7 @@ export async function searchIsbn(isbn) {
 
   const clean = validation.clean;
   let result = null;
-  let errors = [];
+  const errors = [];
 
   // Try OpenLibrary first (free, no key, good coverage)
   try {
@@ -147,7 +147,6 @@ export async function searchBookByTitle(title) {
   }
 
   const q = title.trim();
-  let result = null;
 
   // Try OpenLibrary search
   try {

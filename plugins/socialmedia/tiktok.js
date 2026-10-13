@@ -1,4 +1,3 @@
-import axios from "axios";
 
 export default {
   "name": "tiktok",
@@ -32,7 +31,7 @@ export default {
           title = info.title || "";
           author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
           duration = info.duration ? `${info.duration}s` : "";
-        } catch (kolErr) {
+        } catch (_kolErr) {
           try {
             const { tiktokDownload, fetchBuffer } = await import("@/src/services/network/scrape.js");
             const info = await tiktokDownload(url);
@@ -45,7 +44,7 @@ export default {
             title = info.title || "";
             author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
             duration = info.duration ? `${info.duration}s` : "";
-          } catch (scrapeErr) {
+          } catch (_scrapeErr) {
             // Fallback ke engine yt-dlp
             const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
             const pInfo = await probe(url).catch(() => null);

@@ -12,7 +12,7 @@ const execFileAsync = promisify(execFile);
 export async function webpToImage(buffer) {
   try {
     return await sharp(buffer).png().toBuffer();
-  } catch (err) {
+  } catch (_err) {
     throw new Error("Gagal mengkonversi stiker ke gambar");
   }
 }
@@ -69,7 +69,7 @@ export async function upscaleImage(buffer, scale = 2) {
       .resize(width, height, { kernel: sharp.kernel.lanczos3 })
       .png()
       .toBuffer();
-  } catch (err) {
+  } catch (_err) {
     throw new Error("Gagal memproses gambar");
   }
 }

@@ -110,7 +110,7 @@ export async function probe(url, options = {}) {
       try {
         const info = JSON.parse(stdout);
         resolve(info);
-      } catch (err) {
+      } catch (_err) {
         reject(new Error("Gagal parsing response metadata yt-dlp"));
       }
     });

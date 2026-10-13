@@ -27,7 +27,7 @@ export default {
       let info = null;
       try {
         info = await probe(url);
-      } catch (e) {
+      } catch (_e) {
         // jika gagal probe, lanjut coba download langsung
       }
 

@@ -52,7 +52,7 @@ export default {
     }
 
     await sendTyping();
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       const parts = rawArgs.split(/\s+/);

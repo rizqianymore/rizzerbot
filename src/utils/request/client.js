@@ -33,7 +33,7 @@ export async function smartRequest(url, options = {}) {
           timeout,
         });
         return bdData;
-      } catch (bdErr) {
+      } catch (_bdErr) {
         // Jika Bright Data error, fallback ke stealth browser
       }
     }

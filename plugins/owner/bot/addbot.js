@@ -7,7 +7,7 @@ export default {
   "usage": "<nomor whatsapp>",
   "ownerOnly": true,
   "category": "Owner",
-  "run": async (sock, msg, args, { reply, sendTyping, senderJid, logger, getTargetJid }) => {
+  "run": async (sock, msg, args, { reply, sendTyping, senderJid, logger, _getTargetJid }) => {
       logger?.warn?.(`[OwnerCmd] addbot oleh ${senderJid} via ${db.normalizeJid(sock.user?.id)}`);
       await sendTyping();
 

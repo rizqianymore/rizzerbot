@@ -1,7 +1,7 @@
 function stripCodeComments(sourceCode) {
   let inString = false;
   let stringChar = "";
-  const inRegex = false;
+  const _inRegex = false;
   let inSingleComment = false;
   let inMultiComment = false;
   let output = "";
@@ -93,7 +93,7 @@ export default {
       );
     }
 
-    const isCodeblock = rawCode.startsWith("```");
+    const _isCodeblock = rawCode.startsWith("```");
     rawCode = rawCode.replace(/^```[a-zA-Z0-9_-]*\s*/i, "").replace(/```$/i, "").trim();
 
     await sendTyping();

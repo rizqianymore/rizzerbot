@@ -2,7 +2,7 @@ import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid } from "./identity.js";
 
-export async function resolveCommandAccess(sock, msg, { botJidEarly, botJid, isFromMe, normalizedRawSender, remoteNormalized, messageContent }) {
+export async function resolveCommandAccess(sock, msg, { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent }) {
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
   if (!messageContent.startsWith(prefix)) return { drop: true };

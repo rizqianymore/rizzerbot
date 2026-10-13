@@ -6,7 +6,7 @@ export default {
   "usage": "",
   "ownerOnly": true,
   "category": "Owner",
-  "run": async (sock, msg, args, { reply }) => {
+  "run": async (sock, msg, _args, { _reply }) => {
       await sock.groupLeave(msg.key.remoteJid);
     },
 };

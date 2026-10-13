@@ -1,4 +1,4 @@
-import { searchInfoAlkes, formatResults, getDetail } from "@/src/services/osint/infoalkes.js";
+import { searchInfoAlkes, formatResults } from "@/src/services/osint/infoalkes.js";
 
 const KATEGORI = {
   "1": "nomor_izin_edar",
@@ -9,7 +9,7 @@ const KATEGORI = {
   "6": "jenis_produk",
 };
 
-const KATEGORI_LABEL = {
+const _KATEGORI_LABEL = {
   nomor_izin_edar: "Nomor Izin Edar",
   nama_produk: "Nama Produk",
   pendaftar: "Pendaftar",

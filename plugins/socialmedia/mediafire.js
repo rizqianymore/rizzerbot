@@ -32,7 +32,7 @@ export default {
       if (filename) lines.push(`Nama: ${filename}`);
       if (filesize) lines.push(`Ukuran: ${filesize}`);
       if (downloadUrl) lines.push(`Link: ${downloadUrl}`);
-      const infoText = lines.join("\n");
+      const _infoText = lines.join("\n");
 
       const isLarge = /\b\d+\s*GB/i.test(filesize) || (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
 

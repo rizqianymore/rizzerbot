@@ -50,7 +50,7 @@ export default {
         // Ambil metadata video
         try {
           info = await probe(url);
-        } catch (e) {
+        } catch (_e) {
           // jika gagal probe, tetap lanjut coba download langsung
         }
 
