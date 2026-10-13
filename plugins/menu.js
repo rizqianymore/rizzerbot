@@ -3,6 +3,55 @@ import { db } from "@/src/core/database.js";
 import { sortCategoryKeys, resolveCategoryAlias } from "@/src/core/categories.js";
 import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 
+export const MENU_INTERACTIVE_MAX = 900;
+
+export function renderMenuHeader({ botName, prefix, role, totalCmds }) {
+  return (
+    `╭───「 *${botName}* 」\n` +
+    `│ • Prefix: [ ${prefix} ]\n` +
+    `│ • Role: ${role}\n` +
+    `│ • Total: ${totalCmds} Perintah\n` +
+    `╰───\n\n` +
+    `Pilih kategori di bawah.`
+  );
+}
+
+export function buildMenuButtons(catKeys, prefix) {
+  return [
+    {
+      name: "quick_reply",
+      buttonParamsJson: JSON.stringify({ display_text: "Semua Menu", id: `${prefix}menu all` }),
+    },
+    {
+      name: "single_select",
+      buttonParamsJson: JSON.stringify({
+        title: "Kategori",
+        sections: [
+          {
+            title: "Kategori",
+            rows: catKeys.map((k) => ({ title: k, id: `${prefix}menu ${k}` })),
+          },
+        ],
+      }),
+    },
+  ];
+}
+
+export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys }) {
+  return {
+    interactiveMessage: {
+      title: renderMenuHeader({ botName, prefix, role, totalCmds }),
+      footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
+      header: "Menu",
+      buttons: buildMenuButtons(catKeys, prefix),
+    },
+  };
+}
+
+export function shouldUseInteractive(bodyText) {
+  return typeof bodyText === "string" && bodyText.length > 0 && bodyText.length <= MENU_INTERACTIVE_MAX;
+}
+
 export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
   let text = "";
@@ -128,17 +177,53 @@ export default {
 
     const role = isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User";
     const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
-    const finalCaption = renderMenu({
-      botName: activeSettings.botName || "Rizzer Bot",
-      prefix,
-      role,
-      totalCmds,
-      categories,
-      catKeys,
-      targetCategory,
-    }).trim();
+    const jid = msg.key.remoteJid;
+    const botName = activeSettings.botName || "Rizzer Bot";
 
+    if (showAll) {
+      const finalCaption = renderMenu({
+        botName,
+        prefix,
+        role,
+        totalCmds,
+        categories,
+        catKeys,
+        targetCategory,
+      }).trim();
+      const imagePayload = await resolveImagePayload(activeSettings);
+      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
+    }
+
+    if (!targetCategory) {
+      // Menu utama: kompak + buton kategori (1 pesan, bisa diklik berkali-kali)
+      try {
+        return await sock.sendMessage(jid, buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys }), {
+          quoted: msg,
+        });
+      } catch (_) {}
+      const finalCaption = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
+      const imagePayload = await resolveImagePayload(activeSettings);
+      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
+    }
+
+    const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
+    if (shouldUseInteractive(body)) {
+      try {
+        return await sock.sendMessage(
+          jid,
+          {
+            interactiveMessage: {
+              title: body,
+              footer: `${targetCategory} • ${prefix}menu = kembali`,
+              header: "Menu",
+              buttons: buildMenuButtons(catKeys, prefix),
+            },
+          },
+          { quoted: msg }
+        );
+      } catch (_) {}
+    }
     const imagePayload = await resolveImagePayload(activeSettings);
-    await sendWithImage(sock, msg.key.remoteJid, imagePayload, finalCaption, msg);
+    await sendWithImage(sock, jid, imagePayload, body, msg);
   },
 };
