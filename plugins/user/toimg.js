@@ -15,17 +15,17 @@ export default {
       try {
         buffer = await getMediaBuffer(sock, targetMsg);
       } catch (err) {
-        return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+        return reply(`${err?.message || "Gagal membaca media."}`);
       }
     }
-    if (!buffer) return reply("❌ Balas stiker dengan perintah *.toimg* atau *.tovid*");
+    if (!buffer) return reply("Balas stiker dengan perintah *.toimg* atau *.tovid*");
 
     try {
       const vidBuffer = await webpToVideo(buffer);
       if (vidBuffer) {
         await sock.sendMessage(
           msg.key.remoteJid,
-          { video: vidBuffer, caption: "🎥 *HASIL KONVERSI STIKER KE VIDEO*" },
+          { video: vidBuffer, caption: "*HASIL KONVERSI STIKER KE VIDEO*" },
           { quoted: msg }
         );
         return;
@@ -34,11 +34,11 @@ export default {
       const png = await webpToImage(buffer);
       await sock.sendMessage(
         msg.key.remoteJid,
-        { image: png, caption: "🖼️ *HASIL KONVERSI STIKER KE GAMBAR*" },
+        { image: png, caption: "*HASIL KONVERSI STIKER KE GAMBAR*" },
         { quoted: msg }
       );
     } catch (err) {
-      await reply(`❌ Gagal mengkonversi: ${err.message}`);
+      await reply(`Gagal mengkonversi: ${err.message}`);
     }
   },
 };

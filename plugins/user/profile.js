@@ -14,7 +14,7 @@ export default {
 
     const isSelf = targetJid === senderJid;
     const targetUser = db.getUser(targetJid);
-    if (!targetUser) return reply("❌ Nomor target tidak valid.");
+    if (!targetUser) return reply("Nomor target tidak valid.");
 
     const targetAccess = db.getAccess(targetJid);
     const targetIsOwner = targetAccess.owner;

@@ -65,7 +65,7 @@ export default {
           lines.push(``, `• Penjualan: ${salesSummary}`);
         }
 
-        lines.push(``, `🔗 ${JKT48_BASE}/schedule/${detail.link || parsed.code}`);
+        lines.push(``, `${JKT48_BASE}/schedule/${detail.link || parsed.code}`);
 
         const text = lines.join("\n");
 
@@ -91,7 +91,7 @@ export default {
       const exactShows = schedules.filter((s) => s.date === targetDateStr);
 
       if (exactShows.length > 0) {
-        let text = `🎭 *JADWAL TEATER JKT48 (${formattedTargetDate})*\n\n`;
+        let text = `*JADWAL TEATER JKT48 (${formattedTargetDate})*\n\n`;
 
         exactShows.forEach((s, idx) => {
           const team = s.jkt48_member_type ? `[Tim ${s.jkt48_member_type}]` : "";
@@ -101,12 +101,12 @@ export default {
               : "Waktu menyesuaikan";
           const code = s.reference_code || s.link;
           text += `*${idx + 1}. ${s.title}* ${team}\n`;
-          text += `   _🕒 Waktu: ${time}_\n`;
-          text += `   🎫 Kode Show: *${code}*\n`;
-          text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
+          text += `   _Waktu: ${time}_\n`;
+          text += `   Kode Show: *${code}*\n`;
+          text += `   Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
         });
 
-        text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk melihat line-up member penampil.`;
+        text += `*Ketik:* \`${prefix}jktschedule <kode show>\` untuk melihat line-up member penampil.`;
 
         return await reply(text.trim());
       }
@@ -120,8 +120,8 @@ export default {
 
       const topAlternatives = sortedAlternatives.slice(0, 5);
 
-      let text = `ℹ️ Tidak ada show pada tanggal *${formattedTargetDate}*.\n\n`;
-      text += `🎭 *5 PILIHAN SHOW TERDEKAT:*\n\n`;
+      let text = `Tidak ada show pada tanggal *${formattedTargetDate}*.\n\n`;
+      text += `*5 PILIHAN SHOW TERDEKAT:*\n\n`;
 
       topAlternatives.forEach((s, idx) => {
         const tgl = formatDate(s.date);
@@ -129,12 +129,12 @@ export default {
         const time = s.start_time ? `${s.start_time.slice(0, 5)} WIB` : "";
         const code = s.reference_code || s.link;
         text += `*${idx + 1}. ${s.title}* ${team}\n`;
-        text += `   _📅 Tanggal: ${tgl} ${time}_\n`;
-        text += `   🎫 Kode Show: *${code}*\n`;
-        text += `   🔗 Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
+        text += `   _Tanggal: ${tgl} ${time}_\n`;
+        text += `   Kode Show: *${code}*\n`;
+        text += `   Link: ${JKT48_BASE}/schedule/${s.link}\n\n`;
       });
 
-      text += `💡 *Ketik:* \`${prefix}jktschedule <kode show>\` untuk memilih dan melihat rincian member.`;
+      text += `*Ketik:* \`${prefix}jktschedule <kode show>\` untuk memilih dan melihat rincian member.`;
 
       await reply(text.trim());
     } catch (err) {

@@ -13,7 +13,7 @@ export default {
 
     if (!targetMsg) {
       return reply(
-        "❌ Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
+        "Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
           "• *.sticker* — ubah jadi stiker (video/GIF tetap bergerak)\n" +
           "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)"
       );
@@ -23,11 +23,11 @@ export default {
     try {
       buffer = await getMediaBuffer(sock, targetMsg);
     } catch (err) {
-      return reply(`❌ ${err?.message || "Gagal membaca media."}`);
+      return reply(`${err?.message || "Gagal membaca media."}`);
     }
     if (!buffer)
       return reply(
-        "❌ Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker."
+        "Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker."
       );
 
     let topText = "";
@@ -47,7 +47,7 @@ export default {
       const stickerBuffer = await createSticker(buffer, { topText, bottomText });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer }, { quoted: msg });
     } catch (err) {
-      await reply(`❌ Gagal membuat stiker: ${err.message}`);
+      await reply(`Gagal membuat stiker: ${err.message}`);
     }
   },
 };

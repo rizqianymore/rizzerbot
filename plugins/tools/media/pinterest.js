@@ -12,10 +12,10 @@ export default {
     await sendTyping();
     const query = args.join(" ").trim();
     if (!query) {
-      return reply("❌ Masukkan kata kunci gambar! Contoh: *.pinterest anime aesthetic*");
+      return reply("Masukkan kata kunci gambar! Contoh: *.pinterest anime aesthetic*");
     }
 
-    await reply(`🔍 Mencari gambar Pinterest untuk *"${query}"*...`);
+    await reply(`Mencari gambar Pinterest untuk *"${query}"*...`);
 
     try {
       const results = await searchPinterest(query);
@@ -24,14 +24,14 @@ export default {
 
       const imgBuffer = await fetchBuffer(randomItem.image, { redirect: "follow" });
       const caption =
-        `📌 *PINTEREST SEARCH*\n\n` +
-        `🏷️ *Judul:* ${randomItem.title.trim()}\n` +
-        `👤 *Pinner:* ${randomItem.author}\n` +
-        `🔗 *Tautan:* ${randomItem.pin}`;
+        `*PINTEREST SEARCH*\n\n` +
+        `*Judul:* ${randomItem.title.trim()}\n` +
+        `*Pinner:* ${randomItem.author}\n` +
+        `*Tautan:* ${randomItem.pin}`;
 
       await sock.sendMessage(msg.key.remoteJid, { image: imgBuffer, caption }, { quoted: msg });
     } catch (err) {
-      await reply(`❌ Gagal mencari di Pinterest: ${err.message}`);
+      await reply(`Gagal mencari di Pinterest: ${err.message}`);
     }
   },
 };

@@ -13,7 +13,7 @@ export default {
     const currentPrefix = prefix || ".";
 
     const text =
-      `🏷️ *PRICELIST SEWA BOT & AKUN PREMIUM*\n\n` +
+      `*PRICELIST SEWA BOT & AKUN PREMIUM*\n\n` +
       `*PAKET SEWA BOT (MASUK GRUP):*\n` +
       `• 7 Hari: Rp 5.000\n` +
       `• 15 Hari: Rp 10.000\n` +
@@ -36,7 +36,7 @@ export default {
       `• QRIS All Payment (Dana, Ovo, Gopay, ShopeePay, Bank)\n` +
       `• Transfer Bank / E-Wallet\n\n` +
       `Minat sewa atau upgrade? Hubungi owner:\n` +
-      `📞 wa.me/${ownerNumber} _(${activeSettings.ownerName})_`;
+      `wa.me/${ownerNumber} _(${activeSettings.ownerName})_`;
 
     await reply(text);
   },

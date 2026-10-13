@@ -34,13 +34,13 @@ export default {
         typeof data.percentChange === "number" ? `${sign}${data.percentChange.toFixed(2)}%` : data.percentChange;
 
       const output =
-        `📊 *${data.name}* (\`${data.symbol || data.id}\`)\n` +
-        `💰 *${formattedPrice} ${data.currency}*\n` +
-        `📈 ${trend} ${formattedChange} (${formattedPercent})`;
+        `*${data.name}* (\`${data.symbol || data.id}\`)\n` +
+        `*${formattedPrice} ${data.currency}*\n` +
+        `${trend} ${formattedChange} (${formattedPercent})`;
 
       await reply(output);
     } catch (err) {
-      await reply(`❌ Gagal: ${err.message}`);
+      await reply(`Gagal: ${err.message}`);
     }
   },
 };

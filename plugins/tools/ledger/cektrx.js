@@ -11,12 +11,12 @@ export default {
     await sendTyping();
     const id = args[0];
     if (!id) {
-      return reply("❌ Masukkan ID Transaksi yang ingin dicek!\n*Contoh:* `.cektrx TRX-20260926-XXXX`");
+      return reply("Masukkan ID Transaksi yang ingin dicek!\n*Contoh:* `.cektrx TRX-20260926-XXXX`");
     }
 
     const trx = getTransaction(id);
     if (!trx) {
-      return reply(`❌ Transaksi dengan ID *"${id}"* tidak ditemukan.`);
+      return reply(`Transaksi dengan ID *"${id}"* tidak ditemukan.`);
     }
 
     const caption = formatTrxText(trx);

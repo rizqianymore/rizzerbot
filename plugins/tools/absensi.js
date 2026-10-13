@@ -33,7 +33,7 @@ export default {
 
     if (!isDatang && !isPulang) {
       return reply(
-        `📋 *CARA ABSEN:*\n\n` +
+        `*CARA ABSEN:*\n\n` +
           `• \`${currentPrefix}absensi datang\`\n` +
           `• \`${currentPrefix}absensi pulang\`\n\n` +
           `_ID (${ID}) & Lemdik (${LEMDIK_ID}) sudah otomatis terpasang._`
@@ -63,9 +63,9 @@ export default {
       });
 
       const caption =
-        `✅ *ABSENSI ${mode.toUpperCase()} BERHASIL*\n\n` +
-        `📌 *Tipe:* QR ${mode}\n` +
-        `🕒 *Waktu (WIB):* ${timestamp}\n\n` +
+        `*ABSENSI ${mode.toUpperCase()} BERHASIL*\n\n` +
+        `*Tipe:* QR ${mode}\n` +
+        `*Waktu (WIB):* ${timestamp}\n\n` +
         `_Silakan scan QR code di atas._`;
 
       await sock.sendMessage(
@@ -78,7 +78,7 @@ export default {
       );
     } catch (err) {
       console.error("Gagal generate QR Absensi:", err);
-      await reply(`❌ Gagal membuat QR Code absensi: ${err.message}`);
+      await reply(`Gagal membuat QR Code absensi: ${err.message}`);
     }
   },
 };

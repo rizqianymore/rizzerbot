@@ -11,12 +11,12 @@ export default {
     const currentPrefix = prefix || ".";
     const kind = parseSteamKind(args[0]);
     if (!kind) {
-      return reply(`❌ Kategori tidak dikenal.\n*Gunakan:* \`${currentPrefix}steam promo|top|new\``);
+      return reply(`Kategori tidak dikenal.\n*Gunakan:* \`${currentPrefix}steam promo|top|new\``);
     }
     await sendTyping();
     try {
       const deals = await getSteamDeals(kind.key, 8);
-      if (!deals.length) return reply("❌ Belum ada data promo saat ini, coba lagi nanti.");
+      if (!deals.length) return reply("Belum ada data promo saat ini, coba lagi nanti.");
       const text = fmtSteamDeals(kind.title, deals).trim();
       const img = await getSteamDealImage(deals).catch(() => null);
       if (img) {
@@ -28,7 +28,7 @@ export default {
       }
       return reply(text);
     } catch (err) {
-      return reply(`❌ Gagal memuat promo Steam: ${err.message}`);
+      return reply(`Gagal memuat promo Steam: ${err.message}`);
     }
   },
 };

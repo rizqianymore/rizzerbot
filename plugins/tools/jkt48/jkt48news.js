@@ -173,33 +173,33 @@ export default {
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
-    await reply("📰 Memuat pengumuman terbaru JKT48...");
+    await reply("Memuat pengumuman terbaru JKT48...");
 
     const limit = parseInt(args[0], 10) || 5;
 
     try {
       const newsList = await getJkt48News(limit);
       if (!Array.isArray(newsList) || newsList.length === 0) {
-        return reply("❌ Tidak ada pengumuman berita JKT48 saat ini.");
+        return reply("Tidak ada pengumuman berita JKT48 saat ini.");
       }
 
-      let text = `📢 *PENGUMUMAN RESMI TERBARU JKT48*\n\n`;
+      let text = `*PENGUMUMAN RESMI TERBARU JKT48*\n\n`;
 
       newsList.forEach((item, idx) => {
         const tgl = formatDate(item.valid_date_from);
         const cat = item.category ? `[${item.category}]` : "";
         const url = item.link ? `${JKT48_BASE}/news/${item.link}` : "-";
         text += `*${idx + 1}. ${cat} ${item.title}*\n`;
-        text += `   _🕒 Tanggal: ${tgl}_\n`;
-        text += `   🔗 Link: ${url}\n\n`;
+        text += `   _Tanggal: ${tgl}_\n`;
+        text += `   Link: ${url}\n\n`;
       });
 
-      text += `💡 _Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
+      text += `_Ketik \`.jkt48news <jumlah>\` untuk menampilkan lebih banyak berita._`;
 
       await reply(text.trim());
     } catch (err) {
       console.error("[JKT48 News Error]", err.message);
-      await reply(`❌ Gagal mengambil berita JKT48: ${err.message}`);
+      await reply(`Gagal mengambil berita JKT48: ${err.message}`);
     }
   },
 };

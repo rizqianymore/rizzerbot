@@ -11,7 +11,7 @@ export function renderMenu(data) {
   text += `│ • Prefix: [ ${prefix} ]\n`;
   text += `│ • Role: ${role}\n`;
   text += `│ • Total: ${totalCmds} Perintah\n`;
-  text += `╰──────────────────\n\n`;
+  text += `╰───\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory];
@@ -19,7 +19,7 @@ export function renderMenu(data) {
     for (const c of cmds) {
       text += `│ • ${prefix}${c.name}\n`;
     }
-    text += `╰──────────────────\n\n`;
+    text += `╰───\n\n`;
     text += `_Ketik ${prefix}menu <command> untuk panduan detail_`;
     return text;
   }
@@ -30,7 +30,7 @@ export function renderMenu(data) {
     for (const c of cmds) {
       text += `│ • ${prefix}${c.name}\n`;
     }
-    text += `╰──────────────────\n\n`;
+    text += `╰───\n\n`;
   }
 
   text += `_Ketik ${prefix}menu <command> untuk panduan detail perintah_`;

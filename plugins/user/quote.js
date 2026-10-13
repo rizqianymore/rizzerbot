@@ -23,6 +23,6 @@ export default {
       "You must be a broom, because you just swept me off my feet.",
       "Are you a star? Because you light up my night sky.",
     ];
-    await reply(`💘 _"${quotes[Math.floor(Math.random() * quotes.length)]}"_`);
+    await reply(`_"${quotes[Math.floor(Math.random() * quotes.length)]}"_`);
   },
 };

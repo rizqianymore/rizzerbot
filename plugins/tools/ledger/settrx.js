@@ -17,7 +17,7 @@ export default {
     await sendTyping();
     if (args.length < 2) {
       return reply(
-        `❌ Format salah!\n*Gunakan:* \`.settrx <ID_TRX> <lunas|pending|proses|batal>\`\n*Contoh:* \`.settrx TRX-20260926-XXXX lunas\``
+        `Format salah!\n*Gunakan:* \`.settrx <ID_TRX> <lunas|pending|proses|batal>\`\n*Contoh:* \`.settrx TRX-20260926-XXXX lunas\``
       );
     }
 
@@ -26,10 +26,10 @@ export default {
 
     const updated = updateTransaction(id, { status: newStatus });
     if (!updated) {
-      return reply(`❌ Transaksi dengan ID *"${id}"* tidak ditemukan.`);
+      return reply(`Transaksi dengan ID *"${id}"* tidak ditemukan.`);
     }
 
-    const caption = `✅ *STATUS TRANSAKSI DIPERBARUI!*\n\n` + formatTrxText(updated);
+    const caption = `*STATUS TRANSAKSI DIPERBARUI!*\n\n` + formatTrxText(updated);
     const remoteJid = msg.key.remoteJid;
 
     const activeSettings = db.getSettings();

@@ -96,14 +96,14 @@ export default {
   ownerOnly: true,
   run: async (sock, msg, args, { reply, sendTyping, prefix, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("❌ Fitur eksekusi kode Sandbox hanya diizinkan untuk SuperOwner Bot.");
+      return reply("Fitur eksekusi kode Sandbox hanya diizinkan untuk SuperOwner Bot.");
     }
     const currentPrefix = prefix || ".";
     const raw = args.join(" ").trim();
 
     if (!raw) {
       return reply(
-        `📦 *SANDBOX CODE RUNNER*\n\n` +
+        `*SANDBOX CODE RUNNER*\n\n` +
           `Jalankan potongan kode Javascript atau Python secara terisolasi & aman.\n\n` +
           `*Penggunaan:*\n` +
           `• JS: \`${currentPrefix}sandbox console.log(1 + 1)\`\n` +
@@ -131,42 +131,42 @@ export default {
       .trim();
 
     if (!code) {
-      return reply("❌ Masukkan kode yang ingin dijalankan!");
+      return reply("Masukkan kode yang ingin dijalankan!");
     }
 
     try {
       if (lang === "py") {
         const out = await runPythonSandbox(code);
-        let text = `🐍 *PYTHON SANDBOX*\n\n`;
+        let text = `*PYTHON SANDBOX*\n\n`;
         if (out.stdout) {
-          text += `📄 *Output:*\n\`\`\`\n${out.stdout.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
+          text += `*Output:*\n\`\`\`\n${out.stdout.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
         }
         if (out.stderr) {
-          text += `⚠️ *Stderr:*\n\`\`\`\n${out.stderr.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
+          text += `*Stderr:*\n\`\`\`\n${out.stderr.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
         }
         if (!out.stdout && !out.stderr) {
           text += `_Program selesai tanpa menghasilkan output._\n`;
         }
-        text += `⏱️ Execution Time: \`${out.latency} ms\``;
+        text += `Execution Time: \`${out.latency} ms\``;
         return reply(text.trim());
       } else {
         const out = runJsSandbox(code);
-        let text = `💛 *JAVASCRIPT SANDBOX*\n\n`;
+        let text = `*JAVASCRIPT SANDBOX*\n\n`;
         if (out.logs.length > 0) {
-          text += `📄 *Console Logs:*\n\`\`\`\n${out.logs.join("\n").slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
+          text += `*Console Logs:*\n\`\`\`\n${out.logs.join("\n").slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
         }
         if (out.result !== null) {
           const resStr = typeof out.result === "object" ? JSON.stringify(out.result, null, 2) : String(out.result);
-          text += `🎯 *Result Value:*\n\`\`\`\n${resStr.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
+          text += `*Result Value:*\n\`\`\`\n${resStr.slice(0, MAX_OUTPUT_LENGTH)}\n\`\`\`\n`;
         }
         if (out.logs.length === 0 && out.result === null) {
           text += `_Kode dieksekusi tanpa return value / log._\n`;
         }
-        text += `⏱️ Execution Time: \`${out.latency} ms\``;
+        text += `Execution Time: \`${out.latency} ms\``;
         return reply(text.trim());
       }
     } catch (err) {
-      return reply(`❌ *SANDBOX EXECUTION ERROR*\n\n` + `\`\`\`\n${err.message || String(err)}\n\`\`\``);
+      return reply(`*SANDBOX EXECUTION ERROR*\n\n` + `\`\`\`\n${err.message || String(err)}\n\`\`\``);
     }
   },
 };

@@ -25,16 +25,16 @@ export default {
           {
             image: qrBuffer,
             caption:
-              `🏪 *QRIS RESMI TOKO*\n` +
-              `🏢 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
-              `📍 *Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
-              `💳 *Tipe:* QRIS Statis (Nominal Bebas)\n\n` +
-              `💡 _Ingin nominal otomatis? Ketik: \`${prefix}qris <nominal>\` (Contoh: \`${prefix}qris 25000\`)_`,
+              `*QRIS RESMI TOKO*\n` +
+              `*Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
+              `*Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
+              `*Tipe:* QRIS Statis (Nominal Bebas)\n\n` +
+              `_Ingin nominal otomatis? Ketik: \`${prefix}qris <nominal>\` (Contoh: \`${prefix}qris 25000\`)_`,
           },
           { quoted: msg }
         );
       } catch (err) {
-        return reply(`❌ Gagal membuat QRIS: ${err.message}`);
+        return reply(`Gagal membuat QRIS: ${err.message}`);
       }
     }
 
@@ -46,7 +46,7 @@ export default {
     const amount = Number(cleanInput.replace(/[^0-9.]/g, ""));
 
     if (!amount || isNaN(amount) || amount <= 0) {
-      return reply(`❌ Masukkan nominal yang valid!\n*Contoh:* \`${prefix}qris 15000\` atau \`${prefix}qris 25k\``);
+      return reply(`Masukkan nominal yang valid!\n*Contoh:* \`${prefix}qris 15000\` atau \`${prefix}qris 25k\``);
     }
 
     try {
@@ -59,17 +59,17 @@ export default {
         {
           image: qrBuffer,
           caption:
-            `⚡ *QRIS DINAMIS SIAP BAYAR*\n` +
-            `🏢 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
-            `📍 *Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
-            `💰 *Total Nominal:* *${formatRupiah(amount)}*\n` +
-            `⏱️ *Kedaluwarsa:* 15 Menit\n\n` +
+            `*QRIS DINAMIS SIAP BAYAR*\n` +
+            `*Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
+            `*Kota:* ${parsed.merchantCity || activeSettings.qrisCity || "JAKARTA BARAT"}\n` +
+            `*Total Nominal:* *${formatRupiah(amount)}*\n` +
+            `*Kedaluwarsa:* 15 Menit\n\n` +
             `_Scan langsung dengan DANA, BCA, GoPay, OVO, ShopeePay, atau m-Banking Anda. Nominal otomatis terisi pas!_`,
         },
         { quoted: msg }
       );
     } catch (err) {
-      reply(`❌ Gagal memproses QRIS Dinamis: ${err.message}`);
+      reply(`Gagal memproses QRIS Dinamis: ${err.message}`);
     }
   },
 };

@@ -11,14 +11,14 @@ export default {
     await sendTyping();
     const id = args[0];
     if (!id) {
-      return reply("❌ Masukkan ID Transaksi yang ingin dihapus!\n*Contoh:* `.deltrx TRX-20260926-XXXX`");
+      return reply("Masukkan ID Transaksi yang ingin dihapus!\n*Contoh:* `.deltrx TRX-20260926-XXXX`");
     }
 
     const success = deleteTransaction(id);
     if (!success) {
-      return reply(`❌ Transaksi dengan ID *"${id}"* tidak ditemukan.`);
+      return reply(`Transaksi dengan ID *"${id}"* tidak ditemukan.`);
     }
 
-    await reply(`🗑️ Transaksi *"${id}"* berhasil dihapus dari sistem.`);
+    await reply(`Transaksi *"${id}"* berhasil dihapus dari sistem.`);
   },
 };

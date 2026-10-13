@@ -15,14 +15,14 @@ export default {
     const query = args.join(" ").trim();
 
     if (!query) {
-      await reply("📋 Memuat daftar member JKT48...");
+      await reply("Memuat daftar member JKT48...");
       try {
         const members = await getJkt48Members();
         if (!Array.isArray(members) || members.length === 0) {
-          return reply("❌ Data member tidak ditemukan.");
+          return reply("Data member tidak ditemukan.");
         }
 
-        let text = `👥 *DAFTAR MEMBER JKT48 (${members.length} Member)*\n\n`;
+        let text = `*DAFTAR MEMBER JKT48 (${members.length} Member)*\n\n`;
 
         members.slice(0, 20).forEach((m, idx) => {
           text += `${idx + 1}. *${m.name}* (ID: ${m.id || "-"})\n`;
@@ -32,13 +32,13 @@ export default {
           text += `_... dan ${members.length - 20} member lainnya._\n`;
         }
 
-        text += `💡 *Cara Pilih Member:*\n`;
+        text += `*Cara Pilih Member:*\n`;
         text += `Ketik: *${prefix}jkt48 <nama / ID>*\n`;
         text += `_Contoh: *${prefix}jkt48 ${members[0]?.name || "Freya"}*_`;
 
         await reply(text.trim());
       } catch (err) {
-        await reply(`❌ Gagal memuat daftar member: ${err.message}`);
+        await reply(`Gagal memuat daftar member: ${err.message}`);
       }
       return;
     }

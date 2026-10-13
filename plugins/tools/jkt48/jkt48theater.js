@@ -192,9 +192,9 @@ export default {
 
         let specialTag = "";
         if (item.isBirthdayShow && item.birthdayMember?.name) {
-          specialTag = ` 🎂 *Birthday Show ${item.birthdayMember.name}*`;
+          specialTag = ` *Birthday Show ${item.birthdayMember.name}*`;
         } else if (item.isGraduationShow && item.graduateMember?.name) {
-          specialTag = ` 🎓 *Graduation Show ${item.graduateMember.name}*`;
+          specialTag = ` *Graduation Show ${item.graduateMember.name}*`;
         }
 
         lines.push(`• *${setlistName}*${specialTag}`);

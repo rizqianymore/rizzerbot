@@ -19,7 +19,7 @@ export default {
     await sendTyping();
 
     if (!quoted) {
-      return reply("❌ Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*!");
+      return reply("Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*!");
     }
 
     const inner =
@@ -33,17 +33,17 @@ export default {
     const audioMsg = inner.audioMessage;
 
     if (!imageMsg && !videoMsg && !audioMsg) {
-      return reply("❌ Pesan yang dibalas bukan media View Once atau media gambar/video/audio!");
+      return reply("Pesan yang dibalas bukan media View Once atau media gambar/video/audio!");
     }
 
-    await reply("🔓 Membuka media sekali lihat...");
+    await reply("Membuka media sekali lihat...");
 
     try {
       if (imageMsg) {
         const stream = await downloadContentFromMessage(imageMsg, "image");
         const buffer = await streamToBuffer(stream);
 
-        let caption = "🔓 *View Once Image Unlocked*";
+        let caption = "*View Once Image Unlocked*";
         if (imageMsg.caption) {
           caption += `\n\n*Caption Asli:* ${imageMsg.caption}`;
         }
@@ -61,7 +61,7 @@ export default {
         const stream = await downloadContentFromMessage(videoMsg, "video");
         const buffer = await streamToBuffer(stream);
 
-        let caption = "🔓 *View Once Video Unlocked*";
+        let caption = "*View Once Video Unlocked*";
         if (videoMsg.caption) {
           caption += `\n\n*Caption Asli:* ${videoMsg.caption}`;
         }
@@ -90,7 +90,7 @@ export default {
         );
       }
     } catch (err) {
-      await reply(`❌ Gagal membuka View Once: ${err.message}`);
+      await reply(`Gagal membuka View Once: ${err.message}`);
     }
   },
 };

@@ -51,7 +51,7 @@ export default {
     });
 
     if (pluginsData.length === 0) {
-      return reply("❌ Tidak ada plugin yang ter-load.");
+      return reply("Tidak ada plugin yang ter-load.");
     }
 
     const categories = {};
@@ -71,12 +71,12 @@ export default {
       text += `┌───「 *${cat}* (${categories[cat].length}) 」\n`;
       for (const p of categories[cat]) {
         const badges = [];
-        if (p.ownerOnly) badges.push("🔒Owner");
-        if (p.adminOnly) badges.push("🛡️Admin");
-        if (p.premiumOnly) badges.push("⭐Premium");
-        if (p.groupOnly) badges.push("👥Group");
-        if (p.groupAdminOnly) badges.push("👑GAdmin");
-        if (p.botAdminOnly) badges.push("🤖BAdmin");
+        if (p.ownerOnly) badges.push("Owner");
+        if (p.adminOnly) badges.push("Admin");
+        if (p.premiumOnly) badges.push("Premium");
+        if (p.groupOnly) badges.push("Group");
+        if (p.groupAdminOnly) badges.push("GAdmin");
+        if (p.botAdminOnly) badges.push("BAdmin");
         const badgeStr = badges.length ? ` [${badges.join(", ")}]` : "";
         const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map((a) => `${prefix}${a}`).join(", ")}` : "";
         text += `│ • ${prefix}${p.name}${badgeStr}\n`;
@@ -88,7 +88,7 @@ export default {
       text += `└───\n\n`;
     }
 
-    text += `💡 _Gunakan \`${prefix}help <command>\` untuk info detail._`;
+    text += `_Gunakan \`${prefix}help <command>\` untuk info detail._`;
 
     const imagePayload = await resolveImagePayload(activeSettings);
     await sendWithImage(sock, msg.key.remoteJid, imagePayload, text, msg);

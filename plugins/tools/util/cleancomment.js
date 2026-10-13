@@ -83,7 +83,7 @@ export default {
 
     if (!rawCode) {
       return reply(
-        `🧹 *CODE COMMENT CLEANER*\n\n` +
+        `*CODE COMMENT CLEANER*\n\n` +
           `Hapus semua baris komentar (\`//\` dan \`/* ... */\`) tanpa merusak string URL atau isi kode.\n\n` +
           `*Cara Penggunaan:*\n` +
           `1. Langsung ketik kode:\n` +
@@ -105,17 +105,17 @@ export default {
       const cleaned = stripCodeComments(rawCode);
 
       if (!cleaned) {
-        return reply("⚠️ Kode hanya berisi komentar sehingga setelah dibersihkan menjadi kosong.");
+        return reply("Kode hanya berisi komentar sehingga setelah dibersihkan menjadi kosong.");
       }
 
       const diffCount = rawCode.length - cleaned.length;
-      let text = `✨ *BERHASIL MEMBERSIHKAN KOMENTAR*\n`;
-      text += `📊 Mengurangi: \`${diffCount} karakter\`\n\n`;
+      let text = `*BERHASIL MEMBERSIHKAN KOMENTAR*\n`;
+      text += `Mengurangi: \`${diffCount} karakter\`\n\n`;
       text += `\`\`\`\n${cleaned}\n\`\`\``;
 
       return reply(text);
     } catch (err) {
-      return reply(`❌ Gagal membersihkan komentar: ${err.message}`);
+      return reply(`Gagal membersihkan komentar: ${err.message}`);
     }
   },
 };

@@ -18,7 +18,7 @@ export default {
     const rawInput = args.join(" ").trim();
     if (!rawInput) {
       return reply(
-        `🛒 *CARA MENGGUNAKAN TRX / ORDER MAKER:*\n\n` +
+        `*CARA MENGGUNAKAN TRX / ORDER MAKER:*\n\n` +
           `*Format 1 (Garis Pemisah |):*\n` +
           `*.trx <barang> | <harga> | <buyer> | [metode] | [status] | [catatan]*\n\n` +
           `*Contoh:*\n` +
@@ -38,7 +38,7 @@ export default {
 
     if (!parsed.item || !parsed.price) {
       return reply(
-        `❌ Format tidak lengkap! Mohon cantumkan nama barang dan nominal harga.\n\n` +
+        `Format tidak lengkap! Mohon cantumkan nama barang dan nominal harga.\n\n` +
           `*Contoh:* .trx Diamond ML 86 | 20000 | @user | QRIS`
       );
     }
@@ -105,9 +105,9 @@ export default {
           {
             image: qrBuffer,
             caption:
-              `📱 *QRIS DINAMIS PEMBAYARAN*\n` +
-              `🏪 *Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
-              `💰 *Nominal Otomatis:* *${trx.formattedPrice}*\n` +
+              `*QRIS DINAMIS PEMBAYARAN*\n` +
+              `*Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
+              `*Nominal Otomatis:* *${trx.formattedPrice}*\n` +
               `🆔 *Ref Transaksi:* \`${trx.id}\`\n\n` +
               `_Scan QR di atas melalui BCA, Mandiri, BRI, BNI, DANA, GoPay, OVO, ShopeePay. Nominal sudah terisi otomatis!_`,
             mentions: trx.buyerJid ? [trx.buyerJid] : [],

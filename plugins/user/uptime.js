@@ -7,6 +7,6 @@ export default {
   category: "User",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
-    await reply(`⏳ *UPTIME:* ${getUptimeString()}`);
+    await reply(`*UPTIME:* ${getUptimeString()}`);
   },
 };
