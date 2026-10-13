@@ -205,7 +205,7 @@ export default {
     }
 
     if (!targetCategory) {
-      // Menu utama: banner + info kompak + buton kategori (1 pesan, bisa diklik berkali-kali)
+
       const image = await resolveMenuImage(activeSettings);
       try {
         return await sock.sendMessage(

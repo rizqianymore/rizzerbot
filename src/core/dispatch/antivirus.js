@@ -46,8 +46,7 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     }
 
     const m = msg.message || {};
-    // Tap buton valid (paramsJson id) setara ketik command manual — bukan crash.
-    // Crash (lahora dkk) tak punya id valid → tetap diblokir.
+
     const tapText = extractButtonText(m);
     const crashKey =
       m.groupStatusMessageV2 ||

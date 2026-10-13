@@ -1,5 +1,3 @@
-// Helper buton reusable: tap 1x di WA menonaktifkan buton pesan itu,
-// jadi tiap tap harus dibalas pesan buton BARU biar bisa klik berkali-kali.
 export function extractButtonText(message) {
   if (!message || typeof message !== "object") return "";
   const b = message.buttonsResponseMessage;
