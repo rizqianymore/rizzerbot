@@ -3,65 +3,6 @@ import { db } from "@/src/core/database.js";
 import { sortCategoryKeys, resolveCategoryAlias } from "@/src/core/categories.js";
 import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 
-export const MENU_INTERACTIVE_MAX = 900;
-
-export function renderMenuHeader({ botName, prefix, role, totalCmds }) {
-  return (
-    `╭───「 *${botName}* 」\n` +
-    `│ • Prefix: [ ${prefix} ]\n` +
-    `│ • Role: ${role}\n` +
-    `│ • Total: ${totalCmds} Perintah\n` +
-    `╰───\n\n` +
-    `Pilih kategori di bawah.`
-  );
-}
-
-export function buildMenuButtons(catKeys, prefix) {
-  return [
-    {
-      name: "quick_reply",
-      buttonParamsJson: JSON.stringify({ display_text: "Semua Menu", id: `${prefix}menu all` }),
-    },
-    {
-      name: "single_select",
-      buttonParamsJson: JSON.stringify({
-        title: "Kategori",
-        sections: [
-          {
-            title: "Kategori",
-            rows: catKeys.map((k) => ({ title: k, id: `${prefix}menu ${k}` })),
-          },
-        ],
-      }),
-    },
-  ];
-}
-
-export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }) {
-  const im = {
-    title: renderMenuHeader({ botName, prefix, role, totalCmds }),
-    footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
-    header: "Menu",
-    buttons: buildMenuButtons(catKeys, prefix),
-  };
-  if (image) im.image = image;
-  return { interactiveMessage: im };
-}
-
-async function resolveMenuImage(activeSettings = {}) {
-  try {
-    const p = await resolveImagePayload(activeSettings);
-    if (!p) return undefined;
-    if (Buffer.isBuffer(p)) return p;
-    if (p?.url) return { url: p.url };
-  } catch (_) {}
-  return undefined;
-}
-
-export function shouldUseInteractive(bodyText) {
-  return typeof bodyText === "string" && bodyText.length > 0 && bodyText.length <= MENU_INTERACTIVE_MAX;
-}
-
 export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
   let text = "";
@@ -187,53 +128,17 @@ export default {
 
     const role = isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User";
     const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
-    const jid = msg.key.remoteJid;
-    const botName = activeSettings.botName || "Rizzer Bot";
+    const finalCaption = renderMenu({
+      botName: activeSettings.botName || "Rizzer Bot",
+      prefix,
+      role,
+      totalCmds,
+      categories,
+      catKeys,
+      targetCategory,
+    }).trim();
 
-    if (showAll) {
-      const finalCaption = renderMenu({
-        botName,
-        prefix,
-        role,
-        totalCmds,
-        categories,
-        catKeys,
-        targetCategory,
-      }).trim();
-      const imagePayload = await resolveImagePayload(activeSettings);
-      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
-    }
-
-    if (!targetCategory) {
-      // Menu utama: banner + info kompak + buton kategori (1 pesan, bisa diklik berkali-kali)
-      const image = await resolveMenuImage(activeSettings);
-      try {
-        return await sock.sendMessage(
-          jid,
-          buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }),
-          { quoted: msg }
-        );
-      } catch (_) {}
-      const finalCaption = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
-      const imagePayload = await resolveImagePayload(activeSettings);
-      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
-    }
-
-    const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
-    if (shouldUseInteractive(body)) {
-      const image = await resolveMenuImage(activeSettings);
-      const im = {
-        title: body,
-        footer: `${targetCategory} • ${prefix}menu = kembali`,
-        header: "Menu",
-        buttons: buildMenuButtons(catKeys, prefix),
-      };
-      if (image) im.image = image;
-      try {
-        return await sock.sendMessage(jid, { interactiveMessage: im }, { quoted: msg });
-      } catch (_) {}
-    }
     const imagePayload = await resolveImagePayload(activeSettings);
-    await sendWithImage(sock, jid, imagePayload, body, msg);
+    await sendWithImage(sock, msg.key.remoteJid, imagePayload, finalCaption, msg);
   },
 };
