@@ -51,6 +51,10 @@ await ok("B2 rows kategori + id tap routing", () => {
   assert.equal(sel.sections[0].rows[0].id, ".menu Tools");
   assert.equal(resolveCategoryAlias("tools"), "Tools");
 });
+await ok("B4 buildMenuInteractive tanpa image = tanpa key image", () => {
+  const im = menu.buildMenuInteractive({ botName: "B", prefix: ".", role: "U", totalCmds: 1, catKeys: [] }).interactiveMessage;
+  assert.ok(!("image" in im));
+});
 await ok("B3 tap .menu all → path showAll", () => {
   assert.equal(JSON.parse(menu.buildMenuButtons([], ".")[0].buttonParamsJson).id, ".menu all");
 });
@@ -79,7 +83,7 @@ const baseCtx = () => ({
   activeSettings: { botName: "TestBot", prefix: ".", silentDeny: true },
 });
 
-await ok("R1 .menu → TEPAT 1 pesan interactive", async () => {
+await ok("R1 .menu → TEPAT 1 pesan interactive + banner", async () => {
   commands.set("aa", fakeCmd("aa", "Tools"));
   commands.set("bb", fakeCmd("bb", "General"));
   try {
@@ -90,6 +94,7 @@ await ok("R1 .menu → TEPAT 1 pesan interactive", async () => {
     const im = sends[0].interactiveMessage;
     assert.ok(im.title.includes("TestBot"));
     assert.equal(im.buttons.length, 2);
+    assert.ok(im.image, "banner harus nempel lagi");
   } finally {
     commands.delete("aa");
     commands.delete("bb");

@@ -37,15 +37,25 @@ export function buildMenuButtons(catKeys, prefix) {
   ];
 }
 
-export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys }) {
-  return {
-    interactiveMessage: {
-      title: renderMenuHeader({ botName, prefix, role, totalCmds }),
-      footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
-      header: "Menu",
-      buttons: buildMenuButtons(catKeys, prefix),
-    },
+export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }) {
+  const im = {
+    title: renderMenuHeader({ botName, prefix, role, totalCmds }),
+    footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
+    header: "Menu",
+    buttons: buildMenuButtons(catKeys, prefix),
   };
+  if (image) im.image = image;
+  return { interactiveMessage: im };
+}
+
+async function resolveMenuImage(activeSettings = {}) {
+  try {
+    const p = await resolveImagePayload(activeSettings);
+    if (!p) return undefined;
+    if (Buffer.isBuffer(p)) return p;
+    if (p?.url) return { url: p.url };
+  } catch (_) {}
+  return undefined;
 }
 
 export function shouldUseInteractive(bodyText) {
@@ -195,11 +205,14 @@ export default {
     }
 
     if (!targetCategory) {
-      // Menu utama: kompak + buton kategori (1 pesan, bisa diklik berkali-kali)
+      // Menu utama: banner + info kompak + buton kategori (1 pesan, bisa diklik berkali-kali)
+      const image = await resolveMenuImage(activeSettings);
       try {
-        return await sock.sendMessage(jid, buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys }), {
-          quoted: msg,
-        });
+        return await sock.sendMessage(
+          jid,
+          buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }),
+          { quoted: msg }
+        );
       } catch (_) {}
       const finalCaption = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
       const imagePayload = await resolveImagePayload(activeSettings);
@@ -208,19 +221,16 @@ export default {
 
     const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
     if (shouldUseInteractive(body)) {
+      const image = await resolveMenuImage(activeSettings);
+      const im = {
+        title: body,
+        footer: `${targetCategory} • ${prefix}menu = kembali`,
+        header: "Menu",
+        buttons: buildMenuButtons(catKeys, prefix),
+      };
+      if (image) im.image = image;
       try {
-        return await sock.sendMessage(
-          jid,
-          {
-            interactiveMessage: {
-              title: body,
-              footer: `${targetCategory} • ${prefix}menu = kembali`,
-              header: "Menu",
-              buttons: buildMenuButtons(catKeys, prefix),
-            },
-          },
-          { quoted: msg }
-        );
+        return await sock.sendMessage(jid, { interactiveMessage: im }, { quoted: msg });
       } catch (_) {}
     }
     const imagePayload = await resolveImagePayload(activeSettings);
