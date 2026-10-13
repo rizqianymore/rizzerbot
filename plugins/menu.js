@@ -41,7 +41,6 @@ export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys
   const im = {
     title: renderMenuHeader({ botName, prefix, role, totalCmds }),
     footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
-    header: "Menu",
     buttons: buildMenuButtons(catKeys, prefix),
   };
   if (image) im.image = image;
@@ -225,7 +224,6 @@ export default {
       const im = {
         title: body,
         footer: `${targetCategory} • ${prefix}menu = kembali`,
-        header: "Menu",
         buttons: buildMenuButtons(catKeys, prefix),
       };
       if (image) im.image = image;
