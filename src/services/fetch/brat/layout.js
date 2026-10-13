@@ -41,6 +41,7 @@ function wrapParagraph(ctx, paragraph, maxWidth) {
   const words = paragraph.split(" ").filter(Boolean);
   const lines = [];
   let current = "";
+  let split = false;
 
   for (const word of words) {
     const test = current ? `${current} ${word}` : word;
@@ -57,6 +58,7 @@ function wrapParagraph(ctx, paragraph, maxWidth) {
     if (ctx.measureText(word).width <= maxWidth) {
       current = word;
     } else {
+      split = true;
       const parts = splitLongWord(ctx, word, maxWidth);
       lines.push(...parts.slice(0, -1));
       current = parts.at(-1) || "";
@@ -66,35 +68,50 @@ function wrapParagraph(ctx, paragraph, maxWidth) {
   if (current) {
     lines.push(current);
   }
-  return lines;
+  return { lines, split };
 }
 
-function wrapText(ctx, text, maxWidth) {
-  return text.split("\n").flatMap((paragraph) => {
+function wrapTextInfo(ctx, text, maxWidth) {
+  let split = false;
+  const lines = text.split("\n").flatMap((paragraph) => {
     const clean = paragraph.trim();
     if (!clean) {
       return [""];
     }
-    return wrapParagraph(ctx, clean, maxWidth);
+    const wrapped = wrapParagraph(ctx, clean, maxWidth);
+    split ||= wrapped.split;
+    return wrapped.lines;
   });
+  return { lines, split };
+}
+
+function wrapText(ctx, text, maxWidth) {
+  return wrapTextInfo(ctx, text, maxWidth).lines;
 }
 
 function measureFit(ctx, text, rect, size) {
   setFont(ctx, size);
   const lineHeight = Math.ceil(size * TEXT_STYLE.lineHeight);
-  const lines = wrapText(ctx, text, rect.w);
+  const { lines, split } = wrapTextInfo(ctx, text, rect.w);
   const totalHeight = lines.length * lineHeight;
-  return { size, lines, lineHeight, totalHeight, fits: totalHeight <= rect.h };
+  return { size, lines, lineHeight, totalHeight, split, fits: totalHeight <= rect.h };
 }
 
 function fitText(ctx, text, rect) {
   let best = null;
+  let bestWithSplit = null;
   for (let size = TEXT_STYLE.minFontSize; size <= TEXT_STYLE.growMaxFontSize; size += 2) {
     const fit = measureFit(ctx, text, rect, size);
     if (!fit.fits) break;
-    best = fit;
+    if (fit.split) {
+      bestWithSplit ||= fit;
+    } else {
+      best = fit;
+    }
   }
+
   if (best) return best;
+  if (bestWithSplit) return bestWithSplit;
 
   const size = TEXT_STYLE.minFontSize;
   setFont(ctx, size);
@@ -128,6 +145,8 @@ function strokeLine(ctx, line, x, y, size) {
   ctx.restore();
 }
 
+const MAX_JUSTIFY_GAP_RATIO = 1.6;
+
 function drawJustifiedLine(ctx, line, x, y, maxWidth, useStroke, size) {
   const words = line.split(" ").filter(Boolean);
   if (words.length <= 1) {
@@ -138,6 +157,14 @@ function drawJustifiedLine(ctx, line, x, y, maxWidth, useStroke, size) {
   const widths = words.map((w) => ctx.measureText(w).width);
   const wordsWidth = widths.reduce((a, b) => a + b, 0);
   const gap = (maxWidth - wordsWidth) / (words.length - 1);
+
+  // Gap terlalu besar = baris terasa renggang/mengambang, lebih rapi rata kiri saja.
+  if (gap > size * MAX_JUSTIFY_GAP_RATIO) {
+    if (useStroke) strokeLine(ctx, line, x, y, size);
+    ctx.fillText(line, x, y);
+    return;
+  }
+
   let cx = x;
   for (let i = 0; i < words.length; i++) {
     if (useStroke) strokeLine(ctx, words[i], cx, y, size);
