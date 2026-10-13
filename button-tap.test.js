@@ -123,6 +123,13 @@ await ok("P4 testbutton tap → 1 kirim fresh (langsung reusable)", async () => 
   assert.ok(sent.interactiveMessage);
 });
 
+// --- wiring run.js (regresi: tap wajib diparse + dilog) ---
+await ok("W1 run.js pakai extractButtonText", async () => {
+  const src = fs.readFileSync(path.join(cwd, "src", "core", "dispatch", "run.js"), "utf8");
+  assert.ok(src.includes("extractButtonText(msg.message)"), "parser tap harus terpasang");
+  assert.ok(src.includes("[ButtonTap]"), "log tap harus ada");
+});
+
 for (const r of out) console.log(r);
 console.log(`\n${pass}/${total} lolos ${pass === total ? "— 100% BISA ✅" : "— BELUM 100% ❌"}`);
 process.exitCode = pass === total ? 0 : 1;

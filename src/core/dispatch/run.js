@@ -65,6 +65,9 @@ async function dispatchInner(sock, msg, logger) {
     extractButtonText(msg.message) ||
     "";
 
+  const tapText = extractButtonText(msg.message);
+  if (tapText) logger?.info?.(`[ButtonTap] ${remoteJid} -> ${tapText}`);
+
   if (await checkAntiCrash(sock, msg, logger, remoteJid, messageContent)) return;
 
   if (await checkAntilink(sock, msg, logger, remoteJid, messageContent)) return;
@@ -93,7 +96,10 @@ async function dispatchInner(sock, msg, logger) {
     remoteNormalized,
     messageContent,
   });
-  if (resolved.drop) return;
+  if (resolved.drop) {
+    if (tapText) logger?.info?.(`[ButtonTap] drop (unknown/blocked): ${tapText}`);
+    return;
+  }
   const { activeSettings, prefix, args, commandName, cmd, senderJid } = resolved;
   const { isOwner, isAdmin, isPremium } = resolved;
   let { access, user } = resolved;
