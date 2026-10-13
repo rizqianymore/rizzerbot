@@ -15,14 +15,13 @@ export default {
 
     if (!url || !/mediafire\.com/i.test(url)) {
       return reply(
-        `📁 *MEDIAFIRE DOWNLOADER*\n\n` +
+        `*MEDIAFIRE DOWNLOADER*\n\n` +
           `Masukkan URL MediaFire yang valid.\n\n` +
           `*Contoh:*\n` +
           `\`${currentPrefix}mediafire https://www.mediafire.com/file/xxxx/file\``
       );
     }
 
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     try {
       const data = await mediafireDownload(url);
@@ -39,7 +38,7 @@ export default {
         (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
 
       if (isLarge) {
-        return reply(`⚠️ File berukuran cukup besar (${filesize}). Silakan unduh langsung melalui link di atas.`);
+        return reply(`File berukuran cukup besar (${filesize}). Silakan unduh langsung melalui link di atas.`);
       }
 
       const fileBuffer = await fetchBuffer(downloadUrl);
@@ -50,13 +49,13 @@ export default {
           document: fileBuffer,
           fileName: filename,
           mimetype: mimetype || "application/octet-stream",
-          caption: `✅ Berhasil mengunduh *${filename}* (${filesize})`,
+          caption: `Berhasil mengunduh *${filename}* (${filesize})`,
         },
         { quoted: msg }
       );
     } catch (err) {
       console.error("[MediaFire DL Error]:", err);
-      reply(`❌ Gagal mendownload dari MediaFire: ${err.message}`);
+      reply(`Gagal mendownload dari MediaFire: ${err.message}`);
     }
   },
 };

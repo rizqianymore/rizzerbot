@@ -17,7 +17,7 @@ function normHeaders(headers = {}) {
   return out;
 }
 
-export function detectProtection({ status = 0, headers = {}, html = "", title = "", url = "" } = {}) {
+export function detectProtection({ status = 0, headers = {}, html = "", title = "", url: _url = "" } = {}) {
   const h = normHeaders(headers);
   const hBlob = Object.entries(h)
     .map(([k, v]) => `${k}: ${v}`)

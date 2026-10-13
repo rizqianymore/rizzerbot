@@ -14,11 +14,11 @@ export default {
     try {
       if (!query) {
         const list = await searchDrivers("", 10);
-        let text = `🏎️ *DAFTAR PEMBALAP F1 (10 pertama)*\n\n`;
+        let text = `*DAFTAR PEMBALAP F1 (10 pertama)*\n\n`;
         list.forEach((d, i) => {
           text += `${i + 1}. *${d.name} ${d.surname}* (\`${d.driverId}\`${d.shortName ? ` / ${d.shortName}` : ""})\n`;
         });
-        text += `\n💡 Cari: \`${currentPrefix}f1drivers alonso\` | Detail: \`${currentPrefix}f1drivers max_verstappen\``;
+        text += `\nCari: \`${currentPrefix}f1drivers alonso\` | Detail: \`${currentPrefix}f1drivers max_verstappen\``;
         return reply(text.trim());
       }
 
@@ -31,17 +31,17 @@ export default {
       const hits = await searchDrivers(query, 10);
       if (!hits.length)
         return reply(
-          `❌ Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``
+          `Pembalap "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1drivers alonso\` atau \`${currentPrefix}f1drivers VER\``
         );
       if (hits.length === 1) return replyDetail(sock, msg, reply, fmtDriver(hits[0]), hits[0].url);
-      let text = `🏎️ *HASIL "${query}" (${hits.length})*\n\n`;
+      let text = `*HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((d, i) => {
         text += `${i + 1}. *${d.name} ${d.surname}* (\`${d.driverId}\`${d.shortName ? ` / ${d.shortName}` : ""}) — ${d.nationality || "-"}\n`;
       });
-      text += `\n💡 Detail: \`${currentPrefix}f1drivers <driverId>\``;
+      text += `\nDetail: \`${currentPrefix}f1drivers <driverId>\``;
       return reply(text.trim());
     } catch (err) {
-      return reply(`❌ Gagal memuat data pembalap: ${err.message}`);
+      return reply(`Gagal memuat data pembalap: ${err.message}`);
     }
   },
 };

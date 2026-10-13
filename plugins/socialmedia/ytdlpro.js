@@ -10,10 +10,9 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
     const url = args[0];
-    if (!url) return reply("❌ Masukkan link YouTube! Contoh: *.ytdl https://youtu.be/xxx*");
+    if (!url) return reply("Masukkan link YouTube! Contoh: *.ytdl https://youtu.be/xxx*");
 
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     try {
       let buffer = null;
@@ -81,10 +80,8 @@ export default {
         { quoted: msg }
       );
 
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      await reply(`❌ Gagal mendownload: ${err.message}`);
+      await reply(`Gagal mendownload: ${err.message}`);
     }
   },
 };

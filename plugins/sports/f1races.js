@@ -24,17 +24,17 @@ export default {
     try {
       if (cmd === "f1next" || a0 === "next") {
         const data = await getCurrentNext();
-        return reply(`⏭️ *BALAPAN BERIKUTNYA*\n\n${fmtRaceDetail(data)}`);
+        return reply(`*BALAPAN BERIKUTNYA*\n\n${fmtRaceDetail(data)}`);
       }
       if (cmd === "f1last" || a0 === "last" || a0 === "terakhir") {
         const data = await getCurrentLast();
-        return reply(`⏮️ *BALAPAN TERAKHIR*\n\n${fmtRaceDetail(data)}`);
+        return reply(`*BALAPAN TERAKHIR*\n\n${fmtRaceDetail(data)}`);
       }
       const seasonRaw = a0 || "current";
       const season = parseSeasonParam(seasonRaw);
       if (season?.error) {
         return reply(
-          `❌ ${season.error}\n\nGunakan: \`${currentPrefix}f1races [tahun|current]\` | \`${currentPrefix}f1race <tahun> <round>\` | \`${currentPrefix}f1next\` | \`${currentPrefix}f1last\``
+          `${season.error}\n\nGunakan: \`${currentPrefix}f1races [tahun|current]\` | \`${currentPrefix}f1race <tahun> <round>\` | \`${currentPrefix}f1next\` | \`${currentPrefix}f1last\``
         );
       }
       if (a1 && /^\d+$/.test(a1)) {
@@ -43,10 +43,10 @@ export default {
       }
       const data = await getRacesByYear(season);
       let text = fmtRaceList(data);
-      text += `\n\n💡 Detail seri: \`${currentPrefix}f1race ${season === "current" ? "current" : season} <round>\` (cth: \`${currentPrefix}f1race 2024 1\`)`;
+      text += `\n\nDetail seri: \`${currentPrefix}f1race ${season === "current" ? "current" : season} <round>\` (cth: \`${currentPrefix}f1race 2024 1\`)`;
       return reply(text);
     } catch (err) {
-      return reply(`❌ Gagal memuat jadwal: ${err.message}`);
+      return reply(`Gagal memuat jadwal: ${err.message}`);
     }
   },
 };

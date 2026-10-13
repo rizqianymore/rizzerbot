@@ -34,7 +34,7 @@ export default {
       const season = parseSeasonParam(seasonRaw);
       if (season?.error) {
         return reply(
-          `❌ ${season.error}\n\nGunakan: \`${currentPrefix}f1standings [tahun|current] [drivers|constructors]\`\n` +
+          `${season.error}\n\nGunakan: \`${currentPrefix}f1standings [tahun|current] [drivers|constructors]\`\n` +
             `Contoh: \`${currentPrefix}f1standings 2024\`, \`${currentPrefix}f1standings current constructors\``
         );
       }
@@ -42,7 +42,7 @@ export default {
       const data = isConstructors ? await getConstructorsChampionship(season) : await getDriversChampionship(season);
       return reply(isConstructors ? fmtConstructorsStandings(data) : fmtDriversStandings(data));
     } catch (err) {
-      return reply(`❌ Gagal memuat klasemen: ${err.message}`);
+      return reply(`Gagal memuat klasemen: ${err.message}`);
     }
   },
 };

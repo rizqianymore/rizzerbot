@@ -14,11 +14,11 @@ export default {
     try {
       if (!query) {
         const list = await searchCircuits("", 10);
-        let text = `🔄 *DAFTAR SIRKUIT F1 (10 pertama)*\n\n`;
+        let text = `*DAFTAR SIRKUIT F1 (10 pertama)*\n\n`;
         list.forEach((c, i) => {
           text += `${i + 1}. *${c.circuitName}* (\`${c.circuitId}\`) — ${c.city || "-"}, ${c.country || "-"}\n`;
         });
-        text += `\n💡 Cari: \`${currentPrefix}f1circuits monza\``;
+        text += `\nCari: \`${currentPrefix}f1circuits monza\``;
         return reply(text.trim());
       }
       if (/^[a-z0-9_]+$/i.test(query) && !query.includes(" ")) {
@@ -29,16 +29,16 @@ export default {
       }
       const hits = await searchCircuits(query, 10);
       if (!hits.length)
-        return reply(`❌ Sirkuit "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1circuits monza\``);
+        return reply(`Sirkuit "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1circuits monza\``);
       if (hits.length === 1) return replyDetail(sock, msg, reply, fmtCircuit(hits[0]), hits[0].url);
-      let text = `🔄 *HASIL "${query}" (${hits.length})*\n\n`;
+      let text = `*HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((c, i) => {
         text += `${i + 1}. *${c.circuitName}* (\`${c.circuitId}\`) — ${c.country || "-"}\n`;
       });
-      text += `\n💡 Detail: \`${currentPrefix}f1circuits <circuitId>\``;
+      text += `\nDetail: \`${currentPrefix}f1circuits <circuitId>\``;
       return reply(text.trim());
     } catch (err) {
-      return reply(`❌ Gagal memuat data sirkuit: ${err.message}`);
+      return reply(`Gagal memuat data sirkuit: ${err.message}`);
     }
   },
 };

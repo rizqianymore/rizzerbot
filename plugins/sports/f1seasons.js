@@ -16,15 +16,15 @@ export default {
     try {
       const data = await getSeasons(limit, 0);
       const arr = data?.championships || [];
-      if (!arr.length) return reply("❌ Data musim tidak ditemukan.");
-      let text = `📅 *MUSIM F1 (${arr.length} terbaru)*\n\n`;
+      if (!arr.length) return reply("Data musim tidak ditemukan.");
+      let text = `*MUSIM F1 (${arr.length} terbaru)*\n\n`;
       arr.forEach((c) => {
         text += `• *${c.year}* — ${c.championshipName} (\`${c.championshipId}\`)\n`;
       });
-      text += `\n💡 Jadwal: \`${currentPrefix}f1races 2024\` | Klasemen: \`${currentPrefix}f1standings 2024\``;
+      text += `\nJadwal: \`${currentPrefix}f1races 2024\` | Klasemen: \`${currentPrefix}f1standings 2024\``;
       return reply(text.trim());
     } catch (err) {
-      return reply(`❌ Gagal memuat musim: ${err.message}`);
+      return reply(`Gagal memuat musim: ${err.message}`);
     }
   },
 };

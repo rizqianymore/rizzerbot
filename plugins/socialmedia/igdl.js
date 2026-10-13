@@ -20,7 +20,7 @@ export default {
       return reply(`Contoh:\n${currentPrefix}igdl https://instagram.com/...`);
     }
 
-    await react("✨");
+await react("✨");
     await sendTyping();
 
     try {
@@ -203,11 +203,11 @@ export default {
         await sendVideo(sock, remoteJid, msg, videos[i], images.length === 0 && i === 0 ? caption : "");
       }
 
-      await react("✅");
+await react("✅");
     } catch (e) {
       logger?.warn?.(`[igdl] ${e?.message || e}`);
-      await react("❌");
-      return reply(`❌ Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
+await react("❌");
+      return reply(`Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
     }
   },
 };

@@ -14,10 +14,10 @@ export default {
     const username = (args[0] || "").trim().replace(/^@/, "");
 
     if (!username) {
-      return reply(`❌ Masukkan username yang ingin dicek!\n` + `Contoh: \`${currentPrefix}stalksteam gaben\``);
+      return reply(`Masukkan username yang ingin dicek!\n` + `Contoh: \`${currentPrefix}stalksteam gaben\``);
     }
     if (!isValidUsername(username)) {
-      return reply("❌ Format username tidak valid (hanya huruf, angka, dot, strip, underscore, 3-30 karakter).");
+      return reply("Format username tidak valid (hanya huruf, angka, dot, strip, underscore, 3-30 karakter).");
     }
 
     await sendTyping();
@@ -25,9 +25,9 @@ export default {
 
     if (result.exists) {
       return reply(
-        `✅ Username *${username}* ditemukan di *${result.name}*!\n🔗 ${result.url}\n🎯 Akurasi: ${result.confidence}`
+        `Username *${username}* ditemukan di *${result.name}*!\n${result.url}\nAkurasi: ${result.confidence}`
       );
     }
-    return reply(`❌ Username *${username}* tidak ditemukan di *${result.name}*.`);
+    return reply(`Username *${username}* tidak ditemukan di *${result.name}*.`);
   },
 };

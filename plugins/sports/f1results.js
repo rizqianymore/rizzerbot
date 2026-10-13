@@ -48,17 +48,17 @@ export default {
         );
       }
       const season = parseSeasonParam(seasonRaw);
-      if (season?.error) return reply(`❌ ${season.error}`);
+      if (season?.error) return reply(`${season.error}`);
       const type = parseResultType(typeRaw);
       if (!type) {
         return reply(
-          `❌ Tipe sesi "${typeRaw}" tidak dikenal.\nPilih: race, qualy, fp1, fp2, fp3, sprint(=sprint/race), sq(=sprint/qualy)`
+          `Tipe sesi "${typeRaw}" tidak dikenal.\nPilih: race, qualy, fp1, fp2, fp3, sprint(=sprint/race), sq(=sprint/qualy)`
         );
       }
       const data = await getSessionResult(season, roundRaw, type, 20);
       return reply(fmtSessionResults(data));
     } catch (err) {
-      return reply(`❌ Gagal memuat hasil: ${err.message}`);
+      return reply(`Gagal memuat hasil: ${err.message}`);
     }
   },
 };

@@ -14,14 +14,13 @@ export default {
 
     if (!url || !/threads/i.test(url)) {
       return reply(
-        `🧵 *THREADS DOWNLOADER*\n\n` +
+        `*THREADS DOWNLOADER*\n\n` +
           `Masukkan link postingan Threads yang ingin diunduh.\n\n` +
           `*Contoh:*\n` +
           `\`${currentPrefix}tdl https://www.threads.net/@zuck/post/xxx\``
       );
     }
 
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
 
@@ -91,7 +90,7 @@ export default {
 
       if (res.status >= 300 || data.success !== true || mediaResults.length === 0) {
         return reply(
-          `⚠️ Gagal mengambil media dari Threads.\n` +
+          `Gagal mengambil media dari Threads.\n` +
             `Postingan mungkin bersifat privat, sudah dihapus, atau link tidak valid.\n` +
             `Detail: ${data.message || data.error || "Data kosong"}`
         );
@@ -134,12 +133,10 @@ export default {
         const pInfo = await probe(url).catch(() => null);
         const dl = await downloadMedia(url, { mode: "video" });
         const remoteJid = msg.key.remoteJid;
-        const caption = `🧵 *THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
+        const caption = `*THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
         await sock.sendMessage(remoteJid, { video: dl.buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
-        await sock.sendMessage(remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
       } catch (_ytdlpErr) {
-        await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-        reply(`❌ Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
+        reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
       }
     }
   },

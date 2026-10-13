@@ -59,7 +59,7 @@ export default {
 
     const react = (emoji) =>
       sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-    await react("🕕");
+await react("🕕");
 
     try {
       const userId = await resolveUserId(clean);
@@ -118,9 +118,9 @@ export default {
       } else {
         await reply(card);
       }
-      await react("✅");
+await react("✅");
     } catch (err) {
-      await react("❌");
+await react("❌");
       await reply(`*ROBLOX STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },

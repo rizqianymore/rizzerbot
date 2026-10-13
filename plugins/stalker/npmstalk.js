@@ -44,7 +44,7 @@ export default {
 
     const react = (emoji) =>
       sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-    await react("🕕");
+await react("🕕");
 
     try {
       const search = await getJson(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`);
@@ -90,9 +90,9 @@ export default {
       } catch {
         await reply(card);
       }
-      await react("✅");
+await react("✅");
     } catch (err) {
-      await react("❌");
+await react("❌");
       await reply(`*NPM STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },

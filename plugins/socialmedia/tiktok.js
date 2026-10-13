@@ -8,8 +8,7 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
     const url = args[0];
-    if (!url) return reply("❌ Masukkan link TikTok! Contoh: *.tiktok https://tiktok.com/@user/video/xxxx*");
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
+    if (!url) return reply("Masukkan link TikTok! Contoh: *.tiktok https://tiktok.com/@user/video/xxxx*");
     try {
       const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
       let buffer;
@@ -70,10 +69,8 @@ export default {
           : { audio: buffer, mimetype: "audio/mpeg", ptt: false },
         { quoted: msg }
       );
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      await reply(`❌ Gagal: ${err.message}`);
+      await reply(`Gagal: ${err.message}`);
     }
   },
 };

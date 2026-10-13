@@ -12,7 +12,7 @@ export default {
     const url = args[0]?.trim();
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
-        `⚡ *UNIVERSAL DOWNLOADER (YOINKS)*\n\n` +
+        `*UNIVERSAL DOWNLOADER (YOINKS)*\n\n` +
           `Mendukung: YouTube, Instagram, TikTok, X (Twitter), Facebook, Threads, Reddit, Vimeo, dll.\n\n` +
           `*Penggunaan:*\n` +
           `• \`${prefix || "."}dl <url>\` (Video)\n` +
@@ -21,7 +21,6 @@ export default {
     }
 
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     try {
       let info = null;
@@ -36,7 +35,7 @@ export default {
         quality: "720",
       });
 
-      const lines = ["📥 *DOWNLOADER*"];
+      const lines = ["*DOWNLOADER*"];
       if (info?.extractor_key) lines.push(`Platform: ${info.extractor_key}`);
       if (info?.title) lines.push(`Judul: ${info.title}`);
       if (info?.uploader || info?.channel) lines.push(`Author: ${info.uploader || info.channel}`);
@@ -53,10 +52,8 @@ export default {
         { quoted: msg }
       );
 
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "✅", key: msg.key } }).catch(() => {});
     } catch (err) {
-      await sock.sendMessage(msg.key.remoteJid, { react: { text: "❌", key: msg.key } }).catch(() => {});
-      await reply(`❌ Gagal mengunduh media: ${err.message}`);
+      await reply(`Gagal mengunduh media: ${err.message}`);
     }
   },
 };

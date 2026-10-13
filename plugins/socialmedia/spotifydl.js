@@ -14,14 +14,13 @@ export default {
 
     if (!text || !/open\.spotify\.com\/track/i.test(text)) {
       return reply(
-        `🎵 *SPOTIFY DOWNLOADER*\n\n` +
+        `*SPOTIFY DOWNLOADER*\n\n` +
           `Masukkan link track Spotify yang valid.\n\n` +
           `*Contoh:*\n` +
           `\`${currentPrefix}spdl https://open.spotify.com/track/3RY0NyQQXxuAiyk5eAS4fC\``
       );
     }
 
-    await sock.sendMessage(msg.key.remoteJid, { react: { text: "⏳", key: msg.key } }).catch(() => {});
 
     try {
       const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
@@ -40,7 +39,7 @@ export default {
       }
 
       if (!data || !data.status || !data.result || !data.result.url) {
-        return reply("⚠️ Gagal mengambil lagu. Server penyedia tidak memberikan tautan unduhan yang valid.");
+        return reply("Gagal mengambil lagu. Server penyedia tidak memberikan tautan unduhan yang valid.");
       }
 
       const { title, artist, url } = data.result;
@@ -59,7 +58,7 @@ export default {
       );
     } catch (error) {
       console.error("[Spotify DL Error]:", error.message);
-      reply(`❌ Terjadi kesalahan saat memproses tautan Spotify: ${error.message}`);
+      reply(`Terjadi kesalahan saat memproses tautan Spotify: ${error.message}`);
     }
   },
 };

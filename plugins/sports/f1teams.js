@@ -14,11 +14,11 @@ export default {
     try {
       if (!query) {
         const list = await searchTeams("", 10);
-        let text = `🏁 *DAFTAR TIM F1 (10 pertama)*\n\n`;
+        let text = `*DAFTAR TIM F1 (10 pertama)*\n\n`;
         list.forEach((t, i) => {
           text += `${i + 1}. *${t.teamName}* (\`${t.teamId}\`)\n`;
         });
-        text += `\n💡 Cari: \`${currentPrefix}f1teams ferrari\``;
+        text += `\nCari: \`${currentPrefix}f1teams ferrari\``;
         return reply(text.trim());
       }
       if (/^[a-z0-9_]+$/i.test(query) && !query.includes(" ")) {
@@ -28,16 +28,16 @@ export default {
         } catch (_) {}
       }
       const hits = await searchTeams(query, 10);
-      if (!hits.length) return reply(`❌ Tim "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1teams ferrari\``);
+      if (!hits.length) return reply(`Tim "${query}" tidak ditemukan.\nCoba: \`${currentPrefix}f1teams ferrari\``);
       if (hits.length === 1) return replyDetail(sock, msg, reply, fmtTeam(hits[0]), hits[0].url);
-      let text = `🏁 *HASIL "${query}" (${hits.length})*\n\n`;
+      let text = `*HASIL "${query}" (${hits.length})*\n\n`;
       hits.forEach((t, i) => {
         text += `${i + 1}. *${t.teamName}* (\`${t.teamId}\`) — ${t.teamNationality || "-"}\n`;
       });
-      text += `\n💡 Detail: \`${currentPrefix}f1teams <teamId>\``;
+      text += `\nDetail: \`${currentPrefix}f1teams <teamId>\``;
       return reply(text.trim());
     } catch (err) {
-      return reply(`❌ Gagal memuat data tim: ${err.message}`);
+      return reply(`Gagal memuat data tim: ${err.message}`);
     }
   },
 };
