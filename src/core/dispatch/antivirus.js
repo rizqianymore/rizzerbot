@@ -1,6 +1,7 @@
 import { db } from "@/src/core/database.js";
 import { isGroupJid } from "./identity.js";
 import { trackCrashSender } from "./guards.js";
+import { extractButtonText } from "@/src/utils/buttons.js";
 
 export async function checkAntiCrash(sock, msg, logger, remoteJid, messageContent) {
   const _s = db.getSettings();
@@ -45,9 +46,12 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     }
 
     const m = msg.message || {};
+    // Tap buton valid (paramsJson id) setara ketik command manual — bukan crash.
+    // Crash (lahora dkk) tak punya id valid → tetap diblokir.
+    const tapText = extractButtonText(m);
     const crashKey =
       m.groupStatusMessageV2 ||
-      m.interactiveResponseMessage ||
+      (!tapText && m.interactiveResponseMessage) ||
       m.viewOnceMessage?.message?.buttonsMessage ||
       m.viewOnceMessage?.message?.interactiveMessage;
 

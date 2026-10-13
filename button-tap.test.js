@@ -137,6 +137,41 @@ await ok("P4 testbutton tap → 1 kirim fresh (langsung reusable)", async () => 
   assert.ok(sent.interactiveMessage);
 });
 
+// --- antivirus: tap valid lolos, crash tetap diblokir ---
+await ok("V1 tap valid lolos anti-crash", async () => {
+  const { checkAntiCrash } = await import("./src/core/dispatch/antivirus.js");
+  const noSend = { sendMessage: async () => assert.fail("jangan hapus DM") };
+  const logger = { info: () => {}, warn: () => {}, error: () => {} };
+  const blocked = await checkAntiCrash(
+    noSend,
+    { key: { remoteJid: "1@s.whatsapp.net" }, message: tapMsg(".menu Tools").message },
+    logger,
+    "1@s.whatsapp.net",
+    ".menu Tools"
+  );
+  assert.equal(blocked, false);
+});
+await ok("V2 crash interactiveResponse tanpa id tetap diblokir", async () => {
+  const { checkAntiCrash } = await import("./src/core/dispatch/antivirus.js");
+  const logger = { info: () => {}, warn: () => {}, error: () => {} };
+  const blocked = await checkAntiCrash(
+    { sendMessage: async () => ({}) },
+    {
+      key: { remoteJid: "1@s.whatsapp.net" },
+      message: {
+        interactiveResponseMessage: {
+          body: { text: "x".repeat(100) },
+          nativeFlowResponseMessage: { buttons: [{}, {}, {}] },
+        },
+      },
+    },
+    logger,
+    "1@s.whatsapp.net",
+    ""
+  );
+  assert.equal(blocked, true);
+});
+
 // --- wiring run.js (regresi: tap wajib diparse + dilog) ---
 await ok("W1 run.js pakai extractButtonText", async () => {
   const src = fs.readFileSync(path.join(cwd, "src", "core", "dispatch", "run.js"), "utf8");
