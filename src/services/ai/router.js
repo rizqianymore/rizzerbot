@@ -1,13 +1,39 @@
 import { askGemini, isGeminiConfigured } from "./gemini.js";
 import { askGroq, isGroqConfigured } from "./groq.js";
 import { askOpenRouter, isOpenRouterConfigured } from "./openrouter.js";
+import { askCerebras, isCerebrasConfigured } from "./cerebras.js";
+import { askMistral, isMistralConfigured } from "./mistral.js";
+import { askGithubModels, isGithubModelsConfigured } from "./github-models.js";
+import { askNvidia, isNvidiaConfigured } from "./nvidia.js";
 import { askPollinations } from "./pollinations.js";
 import { askDuckDuckGo, getLiveFreeModels } from "./duckduckgo/client.js";
 import { ClaudeHaiku } from "./overchat.js";
 
-export const AI_SOURCES = ["gemini", "groq", "openrouter", "duckduckgo", "pollinations", "claude"];
+export const AI_SOURCES = [
+  "groq",
+  "cerebras",
+  "gemini",
+  "mistral",
+  "openrouter",
+  "github",
+  "nvidia",
+  "duckduckgo",
+  "pollinations",
+  "claude",
+];
 
-const ALIASES = { ddg: "duckduckgo", duck: "duckduckgo", or: "openrouter", polli: "pollinations", pl: "pollinations", gm: "gemini" };
+const ALIASES = {
+  ddg: "duckduckgo",
+  duck: "duckduckgo",
+  or: "openrouter",
+  polli: "pollinations",
+  pl: "pollinations",
+  gm: "gemini",
+  gq: "groq",
+  cb: "cerebras",
+  gh: "github",
+  nv: "nvidia",
+};
 
 export function normalizeSource(s) {
   if (!s) return null;
@@ -18,9 +44,34 @@ export function normalizeSource(s) {
 function keyedChain() {
   const chain = [];
   if (isGroqConfigured()) chain.push("groq");
+  if (isCerebrasConfigured()) chain.push("cerebras");
   if (isGeminiConfigured()) chain.push("gemini");
+  if (isMistralConfigured()) chain.push("mistral");
   if (isOpenRouterConfigured()) chain.push("openrouter");
+  if (isGithubModelsConfigured()) chain.push("github");
+  if (isNvidiaConfigured()) chain.push("nvidia");
   return chain;
+}
+
+async function runSource(source, clean, options) {
+  if (source === "gemini") return { ...(await askGemini(clean, options)), source };
+  if (source === "groq") return { ...(await askGroq(clean, options)), source };
+  if (source === "cerebras") return { ...(await askCerebras(clean, options)), source };
+  if (source === "mistral") return { ...(await askMistral(clean, options)), source };
+  if (source === "openrouter") return { ...(await askOpenRouter(clean, options)), source };
+  if (source === "github") return { ...(await askGithubModels(clean, options)), source };
+  if (source === "nvidia") return { ...(await askNvidia(clean, options)), source };
+  if (source === "duckduckgo") {
+    const r = await askDuckDuckGo(clean, { model: options.model || "gpt-5.4-mini" });
+    return { text: r.text, model: r.model, source };
+  }
+  if (source === "pollinations") return { ...(await askPollinations(clean, options)), source };
+  if (source === "claude") {
+    const r = await ClaudeHaiku(clean, options);
+    if (!r.status) throw new Error(r.error || "Claude gagal");
+    return { text: r.answer, model: r.model, source };
+  }
+  throw new Error(`Provider tidak dikenal: ${source}`);
 }
 
 export async function askAI(prompt, options = {}) {
@@ -36,19 +87,7 @@ export async function askAI(prompt, options = {}) {
 
   for (const source of chain) {
     try {
-      if (source === "gemini") return { ...(await askGemini(clean, options)), source: "gemini" };
-      if (source === "groq") return { ...(await askGroq(clean, options)), source: "groq" };
-      if (source === "openrouter") return { ...(await askOpenRouter(clean, options)), source: "openrouter" };
-      if (source === "duckduckgo") {
-        const r = await askDuckDuckGo(clean, { model: options.model || "gpt-5.4-mini" });
-        return { text: r.text, model: r.model, source: "duckduckgo" };
-      }
-      if (source === "pollinations") return { ...(await askPollinations(clean, options)), source: "pollinations" };
-      if (source === "claude") {
-        const r = await ClaudeHaiku(clean, options);
-        if (!r.status) throw new Error(r.error || "Claude gagal");
-        return { text: r.answer, model: r.model, source: "claude" };
-      }
+      return await runSource(source, clean, options);
     } catch (err) {
       errors[source] = err?.message || String(err);
     }
@@ -60,8 +99,12 @@ export async function askAI(prompt, options = {}) {
 export async function getAIStatus() {
   const status = {
     groq: isGroqConfigured() ? "key-ok" : "butuh GROQ_API_KEY (gratis: console.groq.com/keys)",
+    cerebras: isCerebrasConfigured() ? "key-ok" : "butuh CEREBRAS_API_KEY (gratis: cloud.cerebras.ai)",
     gemini: isGeminiConfigured() ? "key-ok" : "butuh GEMINI_API_KEY (gratis: aistudio.google.com/apikey)",
+    mistral: isMistralConfigured() ? "key-ok" : "butuh MISTRAL_API_KEY (gratis: console.mistral.ai)",
     openrouter: isOpenRouterConfigured() ? "key-ok" : "butuh OPENROUTER_API_KEY (gratis: openrouter.ai/keys)",
+    github: isGithubModelsConfigured() ? "key-ok" : "butuh GITHUB_TOKEN (gratis: github.com/settings/tokens)",
+    nvidia: isNvidiaConfigured() ? "key-ok" : "butuh NVIDIA_API_KEY (gratis: build.nvidia.com)",
     duckduckgo: "tanpa-key (scraping)",
     pollinations: "tanpa-key (legacy, 1 model)",
     claude: "tanpa-key (scraping)",

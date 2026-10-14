@@ -1,12 +1,32 @@
 import { askAI, getAIStatus, normalizeSource } from "@/src/services/ai/router.js";
 
-const FLAGS = ["--gemini", "--gm", "--groq", "--gq", "--or", "--openrouter", "--ddg", "--duck", "--polli", "--pl", "--claude", "--ch"];
+const FLAGS = [
+  "--groq",
+  "--gq",
+  "--cerebras",
+  "--cb",
+  "--gemini",
+  "--gm",
+  "--mistral",
+  "--openrouter",
+  "--or",
+  "--github",
+  "--gh",
+  "--nvidia",
+  "--nv",
+  "--ddg",
+  "--duck",
+  "--polli",
+  "--pl",
+  "--claude",
+  "--ch",
+];
 
 export default {
   name: "ai",
   aliases: ["gpt", "tanya", "chatai"],
   description: "Tanya AI gratis (auto fallback antar provider, tanpa key tetap jalan)",
-  usage: "<pertanyaan> [--groq/--gemini/--or/--ddg/--polli/--claude] | --models",
+  usage: "<pertanyaan> [--groq/--cerebras/--gemini/--mistral/--or/--github/--nvidia/--ddg/--polli/--claude] | --models",
   premiumOnly: true,
   category: "AI",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
@@ -18,7 +38,7 @@ export default {
         `*AI*\n\n` +
           `Penggunaan:\n` +
           `*${p}ai [pertanyaan]* (otomatis, tanpa key tetap jalan)\n` +
-          `*${p}ai --groq / --gemini / --or / --ddg / --polli / --claude [pertanyaan]*\n` +
+          `*${p}ai --groq / --cerebras / --gemini / --mistral / --or / --github / --nvidia / --ddg / --polli / --claude [pertanyaan]*\n` +
           `*${p}ai --models* (cek provider yang aktif)\n\n` +
           `Contoh: *${p}ai Jelaskan black hole dengan sederhana*`
       );
