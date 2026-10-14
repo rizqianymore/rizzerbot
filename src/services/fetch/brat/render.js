@@ -88,6 +88,9 @@ async function downscale(canvas, template) {
 }
 
 export async function createBratImage(text, template, options = {}) {
+  if (!String(text || "").trim()) {
+    throw new Error("Teks brat kosong");
+  }
   await ensureFont();
   const image = await loadTemplateImage(template);
   const canvas = await renderBratCanvas(image, text, template, options);

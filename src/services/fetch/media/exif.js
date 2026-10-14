@@ -71,7 +71,7 @@ export function injectExif(webpBuffer, exifBuffer) {
   header.writeUInt32LE(exifBuffer.length, 4);
   const pad = exifBuffer.length % 2 === 1 ? Buffer.alloc(1) : Buffer.alloc(0);
 
-  const out = Buffer.concat([webpBuffer.subarray(0, 12), header, exifBuffer, pad, body]);
+  const out = Buffer.concat([webpBuffer.subarray(0, 12), body, header, exifBuffer, pad]);
   out.writeUInt32LE(out.length - 8, 4);
 
   let offset = 12;
