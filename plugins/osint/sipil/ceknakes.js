@@ -6,6 +6,34 @@ import {
   formatResults,
   formatProfesiList,
 } from "@/src/services/osint/kki.js";
+import { request } from "@/src/utils/request.js";
+
+const IMAGE_CAPTION_MAX = 950;
+
+function isImageBuffer(buf) {
+  if (!buf || buf.length < 16) return false;
+  const isJpeg = buf[0] === 0xff && buf[1] === 0xd8;
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  const isWebp = buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46;
+  const isGif = buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46;
+  return isJpeg || isPng || isWebp || isGif;
+}
+
+async function sendNakesResult(sock, msg, reply, text, fotoUrl) {
+  if (fotoUrl && /^https?:\/\//i.test(String(fotoUrl))) {
+    try {
+      const buf = await request.buffer(fotoUrl, { timeout: 20000 });
+      if (isImageBuffer(buf)) {
+        if (text.length <= IMAGE_CAPTION_MAX) {
+          return await sock.sendMessage(msg.key.remoteJid, { image: buf, caption: text }, { quoted: msg });
+        }
+        await sock.sendMessage(msg.key.remoteJid, { image: buf, caption: "*CEK NAKES — KKI*" }, { quoted: msg });
+        return await reply(text);
+      }
+    } catch (_) {}
+  }
+  return reply(text);
+}
 
 const JENIS = { medis: "1", nakes: "2" };
 
@@ -89,7 +117,13 @@ export default {
           length: 10,
         });
         const details = await fetchDetails(result.data.slice(0, 3), JENIS.medis);
-        return reply(formatResults(nama, result, details, { jenis: JENIS.medis, tipe: "nama" }));
+        return sendNakesResult(
+          sock,
+          msg,
+          reply,
+          formatResults(nama, result, details, { jenis: JENIS.medis, tipe: "nama" }),
+          details[0]?.foto
+        );
       }
 
       let query = rawArgs;
@@ -120,7 +154,13 @@ export default {
       });
 
       const details = await fetchDetails(result.data.slice(0, 3), JENIS.nakes);
-      return reply(formatResults(query, result, details, { jenis: JENIS.nakes, tipe }));
+      return sendNakesResult(
+        sock,
+        msg,
+        reply,
+        formatResults(query, result, details, { jenis: JENIS.nakes, tipe }),
+        details[0]?.foto
+      );
     } catch (err) {
       return reply(`Gagal memeriksa: ${err.message}`);
     }

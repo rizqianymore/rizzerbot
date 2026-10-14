@@ -178,6 +178,34 @@ export async function getDetail(id, jenis = JENIS.nakes) {
   return parseDetailHtml(html, jenis);
 }
 
+function extractDetailPhoto(html) {
+  if (!html) return null;
+  const tags = [...String(html).matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)];
+  if (!tags.length) return null;
+  const BAD = /logo|icon|badge|banner|slide|blog|header|footer|sprite|placeholder|loading|pixel|track|ads/i;
+  const GOOD = /foto|photo|profil|profile|avatar|pasfoto|sdmk|dokter|nakes|person|user|picture|gambar/i;
+  const norm = (s) => {
+    if (!s || /^data:/i.test(s)) return null;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.startsWith("//")) return `https:${s}`;
+    if (s.startsWith("/")) return `${BASE}${s}`;
+    return `${BASE}/${s}`;
+  };
+  const cands = [];
+  for (const m of tags) {
+    const src = (m[1] || "").trim();
+    const tag = m[0].slice(0, 300);
+    if (!src || BAD.test(src) || BAD.test(tag)) continue;
+    const url = norm(src);
+    if (!url) continue;
+    const score =
+      (GOOD.test(`${src} ${tag}`) ? 2 : 0) + (/\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? 1 : 0);
+    cands.push({ url, score });
+  }
+  cands.sort((a, b) => b.score - a.score);
+  return cands.length ? cands[0].url : null;
+}
+
 export function parseDetailHtml(html, _jenis) {
   const out = {
     nama: "-",
@@ -186,6 +214,7 @@ export function parseDetailHtml(html, _jenis) {
     masaBerlaku: "-",
     status: "-",
     sdmkUrl: "-",
+    foto: extractDetailPhoto(html),
   };
   if (!html) return out;
 
