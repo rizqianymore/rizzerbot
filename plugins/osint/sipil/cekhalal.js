@@ -14,7 +14,7 @@ const KEYS = {
 
 export default {
   name: "cekhalal",
-  aliases: ["cekhalal", "halal", "ceksertifikathalal", "cekhalalproduk"],
+  aliases: ["halal", "ceksertifikathalal", "cekhalalproduk"],
   description: "Cek sertifikat halal produk di bpjph.halal.go.id (BPJPH Kemenag)",
   usage: "<nama produk|pelaku usaha|no sertifikat>",
   category: "OSINT",

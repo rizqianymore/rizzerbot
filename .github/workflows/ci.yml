@@ -29,5 +29,8 @@ jobs:
       - name: Run ESLint (tanpa warning menggagalkan build)
         run: npx eslint . --max-warnings=999
 
+      - name: Smoke test (190+ plugin, EXIF, util inti)
+        run: npm test
+
       - name: Security audit (high & critical)
         run: npm audit --audit-level=high

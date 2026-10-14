@@ -5,7 +5,8 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { db } from "@/src/core/database.js";
 import { getFfmpegPath } from "./ffmpeg.js";
-import { getSharp, getWebpmux } from "@/src/utils/native.js";
+import { getSharp } from "@/src/utils/native.js";
+import { buildStickerExif, injectExif, isWebP } from "./exif.js";
 import { isVideoOrAnimated } from "./buffer.js";
 
 const execFileAsync = promisify(execFile);
@@ -216,31 +217,8 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
   }
 
   try {
-    const webpmux = getWebpmux();
-    if (!webpmux) return webpBuffer;
-    const { Image: WebpMuxImage } = webpmux;
-    if (!WebpMuxImage) return webpBuffer;
-    const img = new WebpMuxImage();
-    await img.load(webpBuffer);
-
-    const json = JSON.stringify({
-      "sticker-pack-id": `rizzerbot-${Date.now()}`,
-      "sticker-pack-name": packName || "",
-      "sticker-pack-publisher": authorName || "",
-      emojis: [],
-    });
-
-    const exif = Buffer.concat([
-      Buffer.from([
-        0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x16, 0x00, 0x00, 0x00,
-      ]),
-      Buffer.from(json, "utf-8"),
-    ]);
-    exif.writeUIntLE(Buffer.byteLength(json), 14, 4);
-
-    img.exif = exif;
-    return await img.save(null);
+    if (!isWebP(webpBuffer)) return webpBuffer;
+    return injectExif(webpBuffer, buildStickerExif(packName || "", authorName || ""));
   } catch (_) {
     return webpBuffer;
   }

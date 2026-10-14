@@ -6,7 +6,6 @@ const require = createRequire(import.meta.url);
 const state = {
   sharp: undefined,
   canvas: undefined,
-  webpmux: undefined,
   warned: new Set(),
 };
 
@@ -73,26 +72,9 @@ export function requireCanvas() {
   return canvas;
 }
 
-export function getWebpmux() {
-  if (state.webpmux !== undefined) return state.webpmux;
-  try {
-    const mod = require("node-webpmux");
-    state.webpmux = mod && mod.default ? mod.default : mod;
-  } catch (err) {
-    state.webpmux = null;
-    warnOnce(
-      "webpmux",
-      `[native] node-webpmux tidak tersedia (${err?.code || err?.message}). ` +
-        `Metadata EXIF stiker dilewati (stiker tetap terkirim tanpa pack name).`
-    );
-  }
-  return state.webpmux;
-}
-
 export function nativeStatus() {
   return {
     sharp: !!getSharp(),
     canvas: !!getCanvas(),
-    webpmux: !!getWebpmux(),
   };
 }

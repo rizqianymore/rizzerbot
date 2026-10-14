@@ -58,7 +58,7 @@ dengan browser dimatikan (`BROWSER_DISABLED=1`) agar hemat RAM.
 
 Catatan Termux:
 
-- `sharp` / `node-webpmux` / `puppeteer` adalah dependensi **opsional**.
+- `sharp` / `puppeteer` adalah dependensi **opsional**.
   Bila tidak terinstall, bot tetap jalan dengan fallback otomatis:
   konversi gambar via `ffmpeg`, stiker tanpa metadata EXIF, dan error yang
   jelas untuk fitur yang memang butuh browser.
