@@ -1,6 +1,7 @@
 import fs from "fs";
 import fsp from "fs/promises";
 import { requireCanvas } from "@/src/utils/native.js";
+import { ensureEmojiFont } from "@/src/utils/emoji-font.js";
 import { request } from "@/src/utils/request.js";
 import {
   ASSETS_DIR,
@@ -74,6 +75,9 @@ export async function ensureFont() {
       }
       const { GlobalFonts } = requireCanvas();
       GlobalFonts.registerFromPath(BRAT_FONT_PATH, TEXT_STYLE.fontFamily);
+      try {
+        await ensureEmojiFont();
+      } catch (_) {}
     })().catch((err) => {
       fontReadyPromise = null;
       throw new Error(`Font brat tidak tersedia: ${err.message}`);

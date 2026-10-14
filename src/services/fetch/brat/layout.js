@@ -1,4 +1,5 @@
 import { requireCanvas } from "@/src/utils/native.js";
+import { emojiFontStack } from "@/src/utils/emoji-font.js";
 import { TEXT_STYLE } from "./config.js";
 import { splitWords } from "./text.js";
 
@@ -14,7 +15,7 @@ function getSafeRect(zone) {
 }
 
 function setFont(ctx, size) {
-  ctx.font = `${size}px ${TEXT_STYLE.fontFamily}`;
+  ctx.font = `${size}px ${emojiFontStack(TEXT_STYLE.fontFamily)}`;
 }
 
 function splitLongWord(ctx, word, maxWidth) {

@@ -65,6 +65,7 @@ temp/
 .npm
 assets/cache/*
 !assets/cache/.gitkeep
+assets/fonts/
 /cache/
 /*.png
 /*.webp

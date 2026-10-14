@@ -64,6 +64,8 @@ Catatan Termux:
   jelas untuk fitur yang memang butuh browser.
 - Binary `bin/yt-dlp` bawaan repo hanya untuk `x86_64` — di Termux (ARM)
   bot otomatis memakai `yt-dlp` dari `pkg`/`pip` atau `python3 -m yt_dlp`.
+- Emoji di stiker (brat & meme) butuh font Noto Color Emoji (~25 MB,
+  diunduh otomatis sekali ke `assets/fonts/` yang tidak ikut git).
 - Bila butuh fitur browser di Termux: `pkg install chromium`, isi
   `CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium` di `.env`,
   lalu jalankan dengan `npm run start:node`.

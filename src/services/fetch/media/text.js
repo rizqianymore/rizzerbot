@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { requireCanvas } from "@/src/utils/native.js";
+import { ensureEmojiFont } from "@/src/utils/emoji-font.js";
 
 const fontBratPath = path.join(process.cwd(), "assets", "brat", "ArialNarrow.ttf");
 let fontRegistered = false;
@@ -10,6 +11,15 @@ function ensureStickerFont() {
   if (!fs.existsSync(fontBratPath)) return;
   try {
     requireCanvas().GlobalFonts.registerFromPath(fontBratPath, "ArialNarrow");
+  } catch (_) {}
+}
+
+let emojiTried = false;
+async function ensureStickerEmoji() {
+  if (emojiTried) return;
+  emojiTried = true;
+  try {
+    await ensureEmojiFont();
   } catch (_) {}
 }
 
@@ -139,6 +149,7 @@ export async function createTextOverlayCanvas(width = 512, height = 512, { topTe
 
   const { createCanvas } = requireCanvas();
   ensureStickerFont();
+  await ensureStickerEmoji();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   const marginX = Math.floor(width * 0.05);
@@ -167,6 +178,7 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
 
   const { createCanvas, loadImage } = requireCanvas();
   ensureStickerFont();
+  await ensureStickerEmoji();
   const baseImage = await loadImage(buffer);
   const width = baseImage.width || 512;
   const height = baseImage.height || 512;
