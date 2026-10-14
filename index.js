@@ -96,6 +96,14 @@ startBot()
       const { startChatLogCron } = await import("./src/services/system/chatlogger.js");
       startChatLogCron(logger);
     } catch (_) {}
+    try {
+      const { startBackupCron } = await import("./src/services/system/backup-cron.js");
+      startBackupCron(logger);
+    } catch (_) {}
+    try {
+      const { startHealthServer } = await import("./src/services/system/health-server.js");
+      startHealthServer(logger);
+    } catch (_) {}
   })
   .catch((err) => {
     logger?.error?.("Fatal initialization error:", err);

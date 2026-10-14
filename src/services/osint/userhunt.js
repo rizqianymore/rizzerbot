@@ -1,5 +1,9 @@
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+const huntCache = createTtlCache({ ttlMs: 10 * 60 * 1000, max: 500 });
 
 function bodyHas(body, ...needles) {
   const low = body.toLowerCase();
@@ -168,6 +172,9 @@ export function isValidUsername(username) {
 
 export async function checkUsernameOn(platform, username) {
   const u = String(username || "").replace(/^@/, "");
+  const cacheKey = `${platform.key}:${u.toLowerCase()}`;
+  const hit = huntCache.get(cacheKey);
+  if (hit !== undefined) return hit;
   const checkUrl = platform.check(u);
   const profileUrl = platform.url(u);
   const confidence = platform.confidence || "LOW";
@@ -180,7 +187,9 @@ export async function checkUsernameOn(platform, username) {
     });
     const status = res.status;
     if (status === 404 || status === 410) {
-      return { name: platform.name, exists: false, confidence };
+      const result = { name: platform.name, exists: false, confidence };
+      huntCache.set(cacheKey, result);
+      return result;
     }
     const ctx = { location: res.headers.get("location") || "" };
     let body = "";
@@ -194,9 +203,11 @@ export async function checkUsernameOn(platform, username) {
     }
     const decide = platform.decide || ((s) => s === 200);
     const exists = !!decide(status, body, u, ctx);
-    return exists
+    const result = exists
       ? { name: platform.name, exists: true, url: profileUrl, confidence }
       : { name: platform.name, exists: false, confidence };
+    huntCache.set(cacheKey, result);
+    return result;
   } catch {
     return { name: platform.name, exists: false, confidence };
   }

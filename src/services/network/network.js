@@ -1,6 +1,19 @@
 import dns from "node:dns/promises";
 import net from "node:net";
 import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const dnsCache = createTtlCache({ ttlMs: 10 * 60 * 1000, max: 300 });
+const whoisCache = createTtlCache({ ttlMs: 60 * 60 * 1000, max: 200 });
+const subCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 200 });
+const ipCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 300 });
+
+export function clearNetworkCache() {
+  dnsCache.clear();
+  whoisCache.clear();
+  subCache.clear();
+  ipCache.clear();
+}
 
 export function cleanDomain(input) {
   let domain = input.trim().toLowerCase();
@@ -11,6 +24,8 @@ export function cleanDomain(input) {
 
 export async function getDnsRecords(rawDomain) {
   const domain = cleanDomain(rawDomain);
+  const hit = dnsCache.get(domain);
+  if (hit !== undefined) return hit;
   const [a, aaaa, mx, txt, ns, cname] = await Promise.allSettled([
     dns.resolve4(domain),
     dns.resolve6(domain),
@@ -20,7 +35,7 @@ export async function getDnsRecords(rawDomain) {
     dns.resolveCname(domain),
   ]);
 
-  return {
+  const result = {
     domain,
     a: a.status === "fulfilled" ? a.value : [],
     aaaa: aaaa.status === "fulfilled" ? aaaa.value : [],
@@ -29,6 +44,8 @@ export async function getDnsRecords(rawDomain) {
     ns: ns.status === "fulfilled" ? ns.value : [],
     cname: cname.status === "fulfilled" ? cname.value : [],
   };
+  dnsCache.set(domain, result);
+  return result;
 }
 
 function queryWhoisServer(query, server) {
@@ -50,6 +67,8 @@ function queryWhoisServer(query, server) {
 
 export async function getWhois(rawDomain) {
   const domain = cleanDomain(rawDomain);
+  const hit = whoisCache.get(domain);
+  if (hit !== undefined) return hit;
   let rawData = await queryWhoisServer(domain, "whois.iana.org");
 
   const referMatch = rawData.match(/refer:\s+([^\s]+)/i) || rawData.match(/whois:\s+([^\s]+)/i);
@@ -79,7 +98,7 @@ export async function getWhois(rawDomain) {
   const registrarWhois = extract(/Registrar WHOIS Server:\s*([^\r\n]+)/i);
   const abuseEmail = extract(/(?:Registrar Abuse Contact Email):\s*([^\r\n]+)/i);
 
-  return {
+  const result = {
     domain: domainName,
     registrar,
     registrarWhois,
@@ -89,10 +108,14 @@ export async function getWhois(rawDomain) {
     expiryDate,
     rawText: rawData.slice(0, 1500),
   };
+  whoisCache.set(domain, result);
+  return result;
 }
 
 export async function getSubdomains(rawDomain) {
   const domain = cleanDomain(rawDomain);
+  const hit = subCache.get(domain);
+  if (hit !== undefined) return hit;
   const url = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}`;
   const text = await request.text(url, { timeout: 15000 });
 
@@ -113,19 +136,24 @@ export async function getSubdomains(rawDomain) {
     }
   }
 
-  return {
+  const result = {
     domain,
     count: subdomains.length,
     subdomains,
   };
+  subCache.set(domain, result);
+  return result;
 }
 
 export async function getIpGeo(ipOrDomain) {
   const target = cleanDomain(ipOrDomain);
+  const hit = ipCache.get(target);
+  if (hit !== undefined) return hit;
   const url = `http://ip-api.com/json/${encodeURIComponent(target)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
   const data = await request.json(url, { timeout: 15000 });
   if (data.status !== "success") {
     throw new Error(data.message || "Failed to resolve IP details");
   }
+  ipCache.set(target, data);
   return data;
 }

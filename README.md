@@ -39,6 +39,14 @@ npm run pm2:restart
 npm run pm2:stop
 ```
 
+Agar log PM2 tidak membengkak, pasang rotasi sekali saja:
+
+```bash
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 5
+```
+
 ### Instalasi di Termux (Android)
 
 ```bash
@@ -89,6 +97,11 @@ Android membunuh aplikasi background saat layar mati. Lakukan ini:
 ## Variabel Lingkungan
 
 Salin `.env.example` menjadi `.env` lalu isi sesuai kebutuhan. Sebagian besar bersifat opsional — hanya isi yang fitur kamu pakai.
+
+Fitur sistem opt-in (default mati, lihat `.env.example`):
+
+- `BACKUP_TO_OWNER=1` — kirim arsip backup (sesi + database) ke chat owner tiap `BACKUP_INTERVAL_HOURS` (default 24 jam).
+- `HEALTH_PORT=3001` — endpoint `GET /health` (JSON: uptime, plugin, RAM) untuk UptimeRobot. Hanya listen di `HEALTH_HOST` (default localhost).
 
 ## Struktur Direktori
 
