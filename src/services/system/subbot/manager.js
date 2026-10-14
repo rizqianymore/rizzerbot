@@ -61,6 +61,7 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 60000,
     emitOwnEvents: true,
+    autoFollowNewsletterOnConnect: false,
   });
 
   sock.isSubBot = true;

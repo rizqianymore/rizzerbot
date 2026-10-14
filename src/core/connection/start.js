@@ -103,6 +103,7 @@ export async function startBot() {
       emitOwnEvents: true,
       fireInitQueries: true,
       retryRequestDelayMs: 250,
+      autoFollowNewsletterOnConnect: false,
     });
 
     connectionState.primarySock = sock;
