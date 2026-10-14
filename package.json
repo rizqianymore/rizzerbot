@@ -9,6 +9,8 @@
     "start:node": "node index.js",
     "start:termux": "BROWSER_DISABLED=1 node index.js",
     "setup:termux": "bash scripts/termux-setup.sh",
+    "termux:run": "bash scripts/termux-run.sh",
+    "update": "bash scripts/update.sh",
     "doctor": "node scripts/doctor.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop ecosystem.config.cjs",

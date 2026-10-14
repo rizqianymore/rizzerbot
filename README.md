@@ -45,8 +45,11 @@ npm run pm2:stop
 # Otomatis (disarankan)
 bash scripts/termux-setup.sh
 
-# Lalu jalankan
-npm run start:termux
+# Lalu jalankan (tetap hidup + auto-restart bila crash)
+npm run termux:run
+# Sekali jalan saja (tanpa loop): npm run start:termux
+# Cek kesehatan lingkungan: npm run doctor
+# Update bot: npm run update
 ```
 
 Setup Termux memasang `nodejs-lts`, `ffmpeg`, `python`, dan `yt-dlp` via `pkg`,
@@ -64,6 +67,22 @@ Catatan Termux:
 - Bila butuh fitur browser di Termux: `pkg install chromium`, isi
   `CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium` di `.env`,
   lalu jalankan dengan `npm run start:node`.
+
+### Agar bot tidak mati di Termux
+
+Android membunuh aplikasi background saat layar mati. Lakukan ini:
+
+1. `pkg install termux-api` (untuk `termux-wake-lock`; `npm run termux:run`
+   otomatis mengaktifkannya bila tersedia).
+2. Matikan optimasi baterai untuk Termux: Settings → Apps → Termux →
+   Battery → Unrestricted. Kunci Termux di recent-apps agar tidak di-swipe.
+3. Opsional autostart saat HP reboot: install `Termux:Boot` (F-Droid),
+   lalu buat `~/.termux/boot/rizzerbot.sh` berisi:
+   ```sh
+   #!/data/data/com.termux/files/usr/bin/sh
+   cd /path/ke/rizzerbot
+   bash scripts/termux-run.sh
+   ```
 
 ## Variabel Lingkungan
 
