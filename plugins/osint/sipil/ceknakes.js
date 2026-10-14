@@ -119,7 +119,7 @@ export default {
     const _startTime = Date.now();
 
     try {
-      const parts = rawArgs.split(/\s+/);
+      const parts = rawArgs.replace(/\s+/g, " ").trim().split(" ");
       const first = parts[0].toLowerCase();
 
       if (first === "profesi") {
@@ -140,7 +140,10 @@ export default {
           );
         }
         const profesiTerm = rest[rest.length - 1];
-        const nama = rest.slice(0, -1).join(" ");
+        const nama = rest.slice(0, -1).join(" ").replace(/\s+/g, " ").trim();
+        if (nama.length < 3) {
+          return reply(`Nama terlalu pendek. Minimal 3 huruf.\nContoh: \`${currentPrefix}ceknakes medis yudi dokter\``);
+        }
         const profesiCode = await resolveProfesi(JENIS.medis, profesiTerm);
         if (!profesiCode) {
           return reply(
@@ -154,16 +157,17 @@ export default {
           length: 10,
         });
         const details = await fetchDetails(result.data.slice(0, 3), JENIS.medis);
+        const bestFoto = details.find((d) => d.foto)?.foto;
         return sendNakesResult(
           sock,
           msg,
           reply,
           formatResults(nama, result, details, { jenis: JENIS.medis, tipe: "nama" }),
-          details[0]?.foto
+          bestFoto
         );
       }
 
-      let query = rawArgs;
+      let query = rawArgs.replace(/\s+/g, " ").trim();
       let profesiCode = "";
 
       if (parts.length >= 2) {
@@ -182,6 +186,9 @@ export default {
 
       const isStr = looksLikeStr(query) && !profesiCode;
       const tipe = isStr ? "str" : "nama";
+      if (!isStr && query.length < 3) {
+        return reply(`Nama terlalu pendek. Minimal 3 huruf.\nContoh: \`${currentPrefix}ceknakes JUNA\``);
+      }
 
       const result = await searchNakes(query, {
         jenis: JENIS.nakes,
@@ -191,12 +198,13 @@ export default {
       });
 
       const details = await fetchDetails(result.data.slice(0, 3), JENIS.nakes);
+      const bestFoto = details.find((d) => d.foto)?.foto;
       return sendNakesResult(
         sock,
         msg,
         reply,
         formatResults(query, result, details, { jenis: JENIS.nakes, tipe }),
-        details[0]?.foto
+        bestFoto
       );
     } catch (err) {
       return reply(`Gagal memeriksa: ${err.message}`);

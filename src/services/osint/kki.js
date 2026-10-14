@@ -135,7 +135,7 @@ export async function searchNakes(
   }
 
   const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
-  const rows = parseSearchRows(json);
+  const rows = rankByRelevance(parseSearchRows(json), query);
 
   return {
     data: rows,
@@ -320,16 +320,30 @@ export async function resolveProfesi(jenis, term) {
   return null;
 }
 
-function statusEmoji(status) {
+function statusTag(status) {
   const s = (status || "").toLowerCase();
-  if (s.includes("aktif") && !s.includes("tidak")) return "✅";
-  if (s.includes("tidak") || s.includes("non")) return "❌";
-  return "ℹ️";
+  if (s.includes("aktif") && !s.includes("tidak")) return "[AKTIF]";
+  if (s.includes("tidak") || s.includes("non")) return "[NONAKTIF]";
+  return "[INFO]";
+}
+
+export function rankByRelevance(rows, query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (!q || !Array.isArray(rows)) return rows;
+  const score = (nama) => {
+    const n = String(nama || "").toLowerCase();
+    if (n === q) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.split(/\s+/).some((w) => w === q)) return 2;
+    if (n.includes(q)) return 3;
+    return 4;
+  };
+  return [...rows].sort((a, b) => score(a.nama) - score(b.nama));
 }
 
 export function formatProfesiList(list, jenis) {
   const title = jenis === JENIS.medis ? "Tenaga Medis" : "Tenaga Kesehatan (Nakes)";
-  let text = `🩺 *DAFTAR PROFESI ${title.toUpperCase()}*\n\n`;
+  let text = `*DAFTAR PROFESI ${title.toUpperCase()}*\n\n`;
   list.forEach((p) => {
     text += `• \`${p.kode}\` — ${p.profesi}\n`;
   });
@@ -343,13 +357,13 @@ export function formatResults(query, result, details, opts = {}) {
   const jenisLabel = jenis === JENIS.medis ? "Tenaga Medis" : "Tenaga Kesehatan";
   const tipeLabel = tipe === "str" ? "No. STR" : "Nama";
 
-  let text = `🩺 *CEK NAKES — KONSIL KESEHATAN INDONESIA*\n\n`;
-  text += `🔍 Pencarian: \`${query}\` (${tipeLabel})\n`;
-  text += `👥 Jenis: ${jenisLabel}\n`;
-  text += `📊 Ditemukan: *${filtered.toLocaleString("id-ID")}* data\n\n`;
+  let text = `*CEK NAKES — KONSIL KESEHATAN INDONESIA*\n\n`;
+  text += `Pencarian: \`${query}\` (${tipeLabel})\n`;
+  text += `Jenis: ${jenisLabel}\n`;
+  text += `Ditemukan: *${filtered.toLocaleString("id-ID")}* data\n\n`;
 
   if (data.length === 0) {
-    text += `❌ *Tidak ditemukan data.*\n\n`;
+    text += `*Tidak ditemukan data.*\n\n`;
     if (tipe === "nama" && jenis === JENIS.nakes) {
       text += `_Pencarian nama nakes bersifat *persis* (exact). Pastikan ejaan nama sesuai yang terdaftar, atau gunakan pencarian No. STR._\n\n`;
     } else if (jenis === JENIS.medis) {
@@ -361,14 +375,14 @@ export function formatResults(query, result, details, opts = {}) {
 
   const detailed = details || [];
   detailed.forEach((d, i) => {
-    const se = statusEmoji(d.status);
+    const se = statusTag(d.status);
     text += `*${i + 1}. ${d.nama || data[i]?.nama || "-"}*\n`;
-    text += `   🎓 Kualifikasi: ${d.kualifikasi}\n`;
-    text += `   🪪 No. STR: ${d.nomorStr}\n`;
-    text += `   📅 Masa Berlaku: ${d.masaBerlaku}\n`;
+    text += `   Kualifikasi: ${d.kualifikasi}\n`;
+    text += `   No. STR: ${d.nomorStr}\n`;
+    text += `   Masa Berlaku: ${d.masaBerlaku}\n`;
     text += `   ${se} Status STR: ${d.status}\n`;
     if (d.sdmkUrl && d.sdmkUrl !== "-") {
-      text += `   🔗 Profil SDMK: ${d.sdmkUrl}\n`;
+      text += `   Profil SDMK: ${d.sdmkUrl}\n`;
     }
     text += `\n`;
   });
@@ -376,7 +390,7 @@ export function formatResults(query, result, details, opts = {}) {
   if (data.length > detailed.length) {
     const rest = data.slice(detailed.length, 10);
     if (rest.length) {
-      text += `📋 *Hasil lainnya:*\n`;
+      text += `*Hasil lainnya:*\n`;
       rest.forEach((r, i) => {
         text += `   ${detailed.length + i + 1}. ${r.nama}\n`;
       });
