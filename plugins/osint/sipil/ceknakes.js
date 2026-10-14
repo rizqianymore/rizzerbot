@@ -2,6 +2,7 @@ import {
   searchNakes,
   getDetail,
   getProfesi,
+  getSdmkPhoto,
   resolveProfesi,
   formatResults,
   formatProfesiList,
@@ -209,6 +210,12 @@ async function fetchDetails(rows, jenis) {
     if (!row.id) continue;
     try {
       const d = await getDetail(row.id, jenis);
+      if (!d.foto && d.sdmkUrl && d.sdmkUrl !== "-") {
+        try {
+          const sdmkFoto = await getSdmkPhoto(d.sdmkUrl);
+          if (sdmkFoto) d.foto = sdmkFoto;
+        } catch {}
+      }
       details.push(d);
     } catch {
 

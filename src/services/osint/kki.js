@@ -218,6 +218,25 @@ function extractDetailPhoto(html) {
   return cands.length ? cands[0].url : null;
 }
 
+export async function getSdmkPhoto(sdmkUrl) {
+  if (!sdmkUrl || !/^https?:\/\/satusehat\.kemkes\.go\.id\/sdmk\//i.test(String(sdmkUrl))) return null;
+  try {
+    const res = await client.get(String(sdmkUrl), {
+      headers: { "User-Agent": UA, Accept: "text/html,*/*" },
+      timeout: 30000,
+    });
+    if (res.status !== 200) return null;
+    const html = typeof res.data === "string" ? res.data : String(res.data);
+    const m = html.match(/data:image\/(jpeg|jpg|png|webp|gif);base64,([A-Za-z0-9+/=]+)/i);
+    if (!m) return null;
+    const b64 = m[2];
+    if (b64.length < 100 || b64.length > 15_000_000) return null;
+    return `data:image/${m[1].toLowerCase()};base64,${b64}`;
+  } catch {
+    return null;
+  }
+}
+
 export function parseDetailHtml(html, _jenis) {
   const out = {
     nama: "-",
