@@ -24,7 +24,11 @@ export default {
     try {
       const { stopSubBot } = await import("@/src/services/system/subbot/subbot.js");
       await stopSubBot(target);
-      reply(`Sub-bot *+${target}* berhasil dimatikan dan dihapus dari sesi.`);
+      reply(
+        `Sub-bot *+${target}* berhasil dimatikan dan dihapus dari sesi.\n` +
+          `_Catatan: database sub-bot (termasuk daftar owner bot itu) tetap tersimpan di server. ` +
+          `Nomor itu tidak bisa dipakai sebagai owner bot lain selama datanya masih ada._`
+      );
     } catch (err) {
       reply(`Gagal menghapus sub-bot: ${err.message}`);
     }

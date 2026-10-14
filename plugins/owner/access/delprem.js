@@ -6,13 +6,13 @@ export default {
   usage: "<nomor>",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply, getTargetJid }) => {
+  run: async (sock, msg, args, { reply, getTargetJid, senderJid }) => {
     const jid = getTargetJid(args);
     if (!jid) return reply("Balas pesan user atau masukkan nomor! Contoh: *.delprem 628xx*");
     if (db.isOwner(jid)) return reply("Owner tidak dapat kehilangan akses Premium.");
     if (db.isAdmin(jid)) return reply("Admin Bot otomatis memiliki akses Premium.");
 
-    db.setPremium(jid, false);
+    db.setPremium(jid, false, null, senderJid);
     reply(`Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`);
   },
 };

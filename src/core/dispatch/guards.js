@@ -61,3 +61,25 @@ export function isCrashBlocked(jid) {
   const rec = crashSenders.get(jid);
   return Boolean(rec && Date.now() < rec.blockedUntil);
 }
+
+// Owner tetap dibatasi (longgar) supaya sesi owner yang dibajak tidak bisa spam.
+// Nilai sengaja longgar supaya owner tetap bisa memakai bot seperti biasa.
+const ownerThrottles = new Map();
+const OWNER_WINDOW_MS = 10 * 1000;
+const OWNER_MAX = 10;
+
+export function registerOwnerCommand(jid) {
+  if (!jid) return false;
+  const now = Date.now();
+  let rec = ownerThrottles.get(jid);
+  if (!rec || now - rec.start > OWNER_WINDOW_MS) rec = { count: 0, start: now };
+  rec.count += 1;
+  ownerThrottles.set(jid, rec);
+
+  if (ownerThrottles.size > 500) {
+    for (const [key, value] of ownerThrottles.entries()) {
+      if (now - value.start > OWNER_WINDOW_MS * 2) ownerThrottles.delete(key);
+    }
+  }
+  return rec.count > OWNER_MAX;
+}

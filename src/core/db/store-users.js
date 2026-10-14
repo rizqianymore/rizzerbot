@@ -151,10 +151,11 @@ export class StoreUsers extends StoreBase {
     return this.ensureUser(resolvePhoneJid(jid));
   }
 
-  deleteUser(jid) {
+  deleteUser(jid, actor = "") {
     const normalized = resolvePhoneJid(jid);
     if (!normalized || !normalized.endsWith("@s.whatsapp.net")) return false;
     if (isPrimaryOwnerJid(normalized)) return false;
+    if (this.isConfigFileOwner(normalized)) return false;
     const had = Boolean(this.data.users[normalized]);
     delete this.data.users[normalized];
     for (const key of ["ownerNumbers", "adminNumbers", "premiumNumbers"]) {
@@ -164,7 +165,8 @@ export class StoreUsers extends StoreBase {
       }
     }
     this.refreshConfiguredJids();
-    auditPrivilege(this.isMain ? "main" : this.key, "deleteUser", normalized, false);
+    auditPrivilege(this.auditStoreKey(), "deleteUser", normalized, false, { actor });
+    this.syncPrivilegedUsers();
     this.save();
     return had;
   }

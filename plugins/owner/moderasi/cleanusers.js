@@ -54,7 +54,7 @@ export default {
     let deleted = 0;
     for (const jid of junk) {
       try {
-        if (db.deleteUser(jid)) deleted++;
+        if (db.deleteUser(jid, senderJid)) deleted++;
       } catch (_) {}
     }
     logger?.warn?.(

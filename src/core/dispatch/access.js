@@ -19,9 +19,23 @@ export async function resolveCommandAccess(
   if (!cmd) return { drop: true };
 
   const remoteJid = msg.key.remoteJid;
-  const senderJid = isFromMe ? botJid || normalizedRawSender : normalizedRawSender;
 
-  const isSenderOwner = isFromMe || db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
+  // Identitas pengirim:
+  // - Pesan biasa: pakai participant/remoteJid yang sudah di-resolve.
+  // - Pesan fromMe (dikirim akun bot sendiri): di DM, remoteJid adalah lawan bicara
+  //   (manusia) sehingga itu identitas yang benar. Kalau tidak ada / sama dengan JID bot
+  //   (mis. di grup atau DM ke diri sendiri), pengirim dianggap bot dan TIDAK punya hak owner.
+  const isSelfMessage = Boolean(isFromMe);
+  const senderIsBotItself = Boolean(isSelfMessage && botJid && db.sameUser(normalizedRawSender, botJid));
+  const senderJid = isSelfMessage ? normalizedRawSender || botJid : normalizedRawSender;
+
+  // Pesan yang benar-benar berasal dari akun bot sendiri (grup / DM ke diri sendiri)
+  // tidak pernah diproses sebagai perintah: mencegah echo loop dan mencegah
+  // JID bot yang kebetulan terdaftar sebagai owner ikut mendapat hak owner.
+  if (senderIsBotItself) return { drop: true };
+
+  // CATATAN KEAMANAN: fromMe tidak otomatis berstatus Owner.
+  const isSenderOwner = db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
 
   const access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);

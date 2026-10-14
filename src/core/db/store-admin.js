@@ -4,7 +4,7 @@ import { isPrimaryOwnerJid } from "./botids.js";
 import { StoreAccess } from "./store-access.js";
 
 export class Store extends StoreAccess {
-  setOwner(jid, enabled) {
+  setOwner(jid, enabled, actor = "") {
     const normalized = normalizeJid(jid);
     if (!normalized) return null;
 
@@ -33,13 +33,13 @@ export class Store extends StoreAccess {
       },
       { privileged: true }
     );
-    auditPrivilege(this.isMain ? "main" : this.key, "setOwner", normalized, enabled);
+    auditPrivilege(this.auditStoreKey(), "setOwner", normalized, enabled, { actor });
     this.syncPrivilegedUsers();
     this.save();
     return user;
   }
 
-  setAdmin(jid, enabled) {
+  setAdmin(jid, enabled, actor = "") {
     const normalized = normalizeJid(jid);
     if (!normalized) return null;
     if (enabled && !normalized.endsWith("@s.whatsapp.net")) return null;
@@ -63,13 +63,13 @@ export class Store extends StoreAccess {
       },
       { privileged: true }
     );
-    auditPrivilege(this.isMain ? "main" : this.key, "setAdmin", normalized, enabled);
+    auditPrivilege(this.auditStoreKey(), "setAdmin", normalized, enabled, { actor });
     this.syncPrivilegedUsers();
     this.save();
     return user;
   }
 
-  setPremium(jid, enabled, days = null) {
+  setPremium(jid, enabled, days = null, actor = "") {
     const normalized = normalizeJid(jid);
     if (!normalized) return null;
     if (enabled && !normalized.endsWith("@s.whatsapp.net")) return null;
@@ -97,25 +97,22 @@ export class Store extends StoreAccess {
       },
       { privileged: true }
     );
-    auditPrivilege(
-      this.isMain ? "main" : this.key,
-      "setPremium",
-      normalized,
-      enabled,
-      days ? { days: Number(days) } : {}
-    );
+    auditPrivilege(this.auditStoreKey(), "setPremium", normalized, enabled, {
+      actor,
+      ...(days ? { days: Number(days) } : {}),
+    });
     this.syncPrivilegedUsers();
     this.save();
     return user;
   }
 
-  setBanned(jid, enabled) {
+  setBanned(jid, enabled, actor = "") {
     const normalized = resolvePhoneJid(jid);
     if (!normalized || this.isOwner(normalized)) return this.data.users[normalized] || null;
 
     if (normalized.endsWith("@lid") && !this.data.users[normalized]) return null;
     const user = this.updateUser(normalized, { banned: toBoolean(enabled) }, { privileged: true });
-    auditPrivilege(this.isMain ? "main" : this.key, "setBanned", normalized, enabled);
+    auditPrivilege(this.auditStoreKey(), "setBanned", normalized, enabled, { actor });
     return user;
   }
 }

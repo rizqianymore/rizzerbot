@@ -17,7 +17,13 @@ export default {
     if (db.isPrimaryOwner(jid)) {
       return reply("Nomor tersebut adalah Primary Owner dan tidak dapat dihapus!");
     }
-    const ok = db.deleteUser(jid);
+    if (db.isConfigFileOwner(jid)) {
+      return reply(
+        `*${jid.split("@")[0]}* terdaftar di *config/settings.js* sehingga tidak bisa dihapus lewat chat.\n` +
+          `Hapus nomornya dari config lalu restart bot.`
+      );
+    }
+    const ok = db.deleteUser(jid, senderJid);
     if (!ok) return reply(`*${jid.split("@")[0]}* tidak ada di database.`);
     reply(`User *${jid.split("@")[0]}* dihapus permanen dari database.`);
   },

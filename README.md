@@ -7,6 +7,7 @@ Bot WhatsApp modular dan profesional yang dibangun dengan [Baileys](https://gith
 - **Arsitektur plugin** — 170+ perintah yang dimuat otomatis dari folder `plugins/`, dengan hot-reload via `fs.watch` (ubah file, langsung tanpa restart).
 - **Multi-bot** — dapat menjalankan beberapa sub-bot sekaligus dari satu instansi utama.
 - **Akses berjenjang** — pembatasan per perintah (`ownerOnly`, `adminOnly`, `premiumOnly`, `groupOnly`, dst).
+- **Owner berlapis** — SuperOwner (Primary Owner) mengatur owner global, owner tiap sub-bot dikelola terpisah, dan tiap perubahan hak tercatat di `database/privilege-audit.json` lengkap dengan pelaku.
 - **Penjagaan pesan** — rate-limit, anti-burst/spam, antilink, antibot, antivirus, dan filter kata.
 - **Backup & rotasi otomatis** — snapshot database terjadwal ke `database/backups/` dengan retensi 7 hari.
 

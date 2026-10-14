@@ -33,7 +33,7 @@ export default {
     for (const jid of banned) {
       try {
         await sock.updateBlockStatus(jid, "unblock").catch(() => {});
-        db.setBanned(jid, false);
+        db.setBanned(jid, false, senderJid);
         ok++;
       } catch (_) {}
     }

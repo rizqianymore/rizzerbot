@@ -2,7 +2,7 @@ import { extractMessageContent } from "ourin-baileys";
 import { extractButtonText } from "@/src/utils/buttons.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid, resolveSenderJid, resolveBotJid, resolveBotIdentity } from "./identity.js";
-import { isCrashBlocked } from "./guards.js";
+import { isCrashBlocked, registerOwnerCommand } from "./guards.js";
 import { isDuplicateMessage } from "./message.js";
 import { checkAntiCrash } from "./antivirus.js";
 import { checkAntilink } from "./antilink.js";
@@ -86,7 +86,7 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
-  if (checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent })) return;
+  if (checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent, botJid })) return;
 
   const resolved = await resolveCommandAccess(sock, msg, {
     botJidEarly,
@@ -140,6 +140,10 @@ async function dispatchInner(sock, msg, logger) {
 
   if (!isOwner) {
     if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid)) return;
+  } else if (registerOwnerCommand(senderJid)) {
+    logger?.warn?.(`[OwnerThrottle] ${senderJid} melebihi batas perintah owner via ${botJid}`);
+    await deny(`⏳ Terlalu banyak perintah owner. Tunggu 10 detik sebelum mengulangi.`);
+    return;
   }
 
   await executeCommand(sock, msg, logger, {

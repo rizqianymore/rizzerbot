@@ -6,7 +6,7 @@ export default {
   usage: "<nomor>",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply, getTargetJid, isPrimarySuperOwner }) => {
+  run: async (sock, msg, args, { reply, getTargetJid, senderJid, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
       return reply("Pengaturan Admin Bot hanya dapat diubah oleh SuperOwner Bot Utama.");
     }
@@ -15,7 +15,7 @@ export default {
     if (db.isOwner(jid)) return reply("Owner tidak dapat dihapus melalui perintah deladmin.");
     if (!db.isAdmin(jid)) return reply(`*${jid.split("@")[0]}* bukan Admin Bot.`);
 
-    db.setAdmin(jid, false);
+    db.setAdmin(jid, false, senderJid);
     reply(`Berhasil mencabut akses Admin Bot dari *${jid.split("@")[0]}*.`);
   },
 };

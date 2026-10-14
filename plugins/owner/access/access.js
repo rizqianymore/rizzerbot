@@ -9,8 +9,9 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply, getTargetJid, senderJid }) => {
     const jid = getTargetJid(args) || senderJid;
+    if (!jid) return reply("Nomor target tidak valid.");
     const access = db.getAccess(jid);
-    const user = db.getUser(jid);
+    const user = access.user || db.getUser(jid);
     if (!user) return reply("Nomor target tidak valid.");
     const until = user.premiumUntil ? new Date(user.premiumUntil).toLocaleDateString("id-ID") : "Tanpa batas waktu";
     reply(

@@ -6,12 +6,12 @@ export default {
   usage: "<nomor>",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply, getTargetJid }) => {
+  run: async (sock, msg, args, { reply, getTargetJid, senderJid }) => {
     const jid = getTargetJid(args);
     if (!jid) return reply("Balas pesan user atau masukkan nomor!");
     if (db.isOwner(jid)) return reply("Owner tidak dapat diblokir.");
     await sock.updateBlockStatus(jid, "block");
-    db.setBanned(jid, true);
+    db.setBanned(jid, true, senderJid);
     reply(`*${jid.split("@")[0]}* diblokir.`);
   },
 };

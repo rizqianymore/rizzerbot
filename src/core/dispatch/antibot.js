@@ -1,7 +1,7 @@
 import { db } from "@/src/core/database.js";
 import { looksLikeExternalBot } from "./message.js";
 
-export function checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent }) {
+export function checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent, botJid }) {
   const _g = db.getSettings();
   if (!isFromMe && _g.antiBotLuar !== false) {
     if (db.isExternalBotJid(normalizedRawSender)) {
@@ -9,9 +9,12 @@ export function checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender,
       return true;
     }
 
+    // Owner bot ini (termasuk owner khusus sub-bot) tidak boleh kena heuristik "bot luar".
+    const isKnownPrivileged =
+      db.isOwner(normalizedRawSender) || db.isAdmin(normalizedRawSender) || db.isBotOwner(botJid, normalizedRawSender);
+
     if (
-      !db.isOwner(normalizedRawSender) &&
-      !db.isAdmin(normalizedRawSender) &&
+      !isKnownPrivileged &&
       looksLikeExternalBot(msg, messageContent) &&
       messageContent.startsWith(_g.prefix || ".")
     ) {

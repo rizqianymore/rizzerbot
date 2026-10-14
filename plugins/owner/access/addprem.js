@@ -6,7 +6,7 @@ export default {
   usage: "<nomor> [hari]",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply, getTargetJid }) => {
+  run: async (sock, msg, args, { reply, getTargetJid, senderJid }) => {
     let jid = null;
     let durationDays = null;
 
@@ -67,7 +67,7 @@ export default {
     if (db.isOwner(jid)) return reply("Owner otomatis memiliki akses Premium selamanya.");
     if (db.isAdmin(jid)) return reply("Admin Bot otomatis memiliki akses Premium selamanya.");
 
-    db.setPremium(jid, true, durationDays);
+    db.setPremium(jid, true, durationDays, senderJid);
     reply(
       `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
     );

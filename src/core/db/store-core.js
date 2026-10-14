@@ -171,6 +171,10 @@ export class StoreBase {
     );
   }
 
+  auditStoreKey() {
+    return this.isMain ? "main" : this.key;
+  }
+
   getOwnerName() {
     return this.data?.settings?.ownerName || settings.ownerName || "Owner";
   }
