@@ -9,11 +9,18 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-  echo "[update] Ada perubahan lokal yang belum di-commit:"
-  git status --short | head -n 10
-  echo "Commit/stash dulu, atau jalankan: git stash -u && bash scripts/update.sh"
-  exit 1
+DIRTY="$(git status --porcelain)"
+if [ -n "$DIRTY" ]; then
+  OTHER="$(echo "$DIRTY" | grep -v "package-lock.json" || true)"
+  if [ -z "$OTHER" ]; then
+    echo "[update] Hanya package-lock.json yang kotor (hasil npm install lokal) — dibuang otomatis."
+    git checkout -- package-lock.json
+  else
+    echo "[update] Ada perubahan lokal yang belum di-commit:"
+    echo "$DIRTY" | head -n 10
+    echo "Commit/stash dulu, atau jalankan: git stash -u && bash scripts/update.sh"
+    exit 1
+  fi
 fi
 
 echo "[update] Menarik perubahan terbaru..."
