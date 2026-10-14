@@ -7,6 +7,9 @@
   "scripts": {
     "start": "bun run index.js",
     "start:node": "node index.js",
+    "start:termux": "BROWSER_DISABLED=1 node index.js",
+    "setup:termux": "bash scripts/termux-setup.sh",
+    "doctor": "node scripts/doctor.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",
@@ -31,16 +34,18 @@
     "@napi-rs/canvas": "^1.0.9",
     "axios": "^1.20.0",
     "baileys": "7.0.0-rc14",
-    "node-webpmux": "^3.1.0",
     "ourin-baileys": "^9.0.21",
     "parse5": "^8.0.1",
     "pino": "^10.4.0",
     "pino-pretty": "^13.1.1",
-    "puppeteer": "^25.9.0",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
-    "sharp": "^0.35.5",
     "tesseract.js": "^7.0.0"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.35.5",
+    "node-webpmux": "^3.1.0",
+    "puppeteer": "^25.9.0"
   },
   "overrides": {
     "axios": "^1.20.0",

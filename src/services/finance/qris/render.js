@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { getCanvas } from "@/src/utils/native.js";
 
 export async function generatePureQR(qrisPayload, options = {}) {
   return await QRCode.toBuffer(qrisPayload, {
@@ -34,6 +34,11 @@ export async function generateQrisCard({
     },
   });
 
+  const canvasApi = getCanvas();
+  if (!canvasApi) {
+    return await generatePureQR(qrisPayload);
+  }
+  const { createCanvas, loadImage } = canvasApi;
   const qrImage = await loadImage(qrImageBuffer);
 
   const width = 640;

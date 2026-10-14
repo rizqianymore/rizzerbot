@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
-import fs from "node:fs/promises";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { request } from "@/src/utils/request.js";
+import { isAndroid, isTermux, resolveFfmpegPath } from "@/src/utils/termux.js";
 
 const BIN_DIR = path.join(process.cwd(), "bin");
 const RELEASE_BASE = "https://github.com/yt-dlp/yt-dlp/releases/latest/download";
@@ -10,7 +12,8 @@ const RELEASE_BASE = "https://github.com/yt-dlp/yt-dlp/releases/latest/download"
 function ytDlpAssetName() {
   if (process.platform === "win32") return "yt-dlp.exe";
   if (process.platform === "darwin") return "yt-dlp_macos";
-  return process.arch === "arm64" ? "yt-dlp_linux_aarch64" : "yt-dlp_linux";
+  if (process.arch === "arm64" || process.arch === "arm") return "yt-dlp_linux_aarch64";
+  return "yt-dlp_linux";
 }
 
 function commandWorks(cmd, args) {
@@ -27,20 +30,69 @@ function commandWorks(cmd, args) {
   });
 }
 
+function localBinaryPath() {
+  return path.join(BIN_DIR, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+}
+
+async function removeBrokenBinary(p) {
+  try {
+    await fsp.unlink(p);
+  } catch (_) {}
+  try {
+    await fsp.unlink(`${p}.download`);
+  } catch (_) {}
+}
+
+let resolvedYtDlp = null;
 let ensurePromise = null;
 
+async function resolveCommand() {
+  if (process.env.YTDLP_PATH) {
+    const custom = process.env.YTDLP_PATH;
+    if (await commandWorks(custom, ["--version"])) return { cmd: custom, prefix: [] };
+  }
+
+  if (await commandWorks("yt-dlp", ["--version"])) return { cmd: "yt-dlp", prefix: [] };
+
+  if (await commandWorks("python3", ["-m", "yt_dlp", "--version"])) {
+    return { cmd: "python3", prefix: ["-m", "yt_dlp"] };
+  }
+  if (await commandWorks("python", ["-m", "yt_dlp", "--version"])) {
+    return { cmd: "python", prefix: ["-m", "yt_dlp"] };
+  }
+
+  return null;
+}
+
 export async function ensureYtDlp(onStatus = () => {}) {
+  if (resolvedYtDlp) return resolvedYtDlp.cmd;
   if (ensurePromise) return ensurePromise;
 
   ensurePromise = (async () => {
-    if (await commandWorks("yt-dlp", ["--version"])) return "yt-dlp";
+    const sys = await resolveCommand();
+    if (sys) {
+      resolvedYtDlp = sys;
+      return sys.cmd;
+    }
 
-    const localBinary = path.join(BIN_DIR, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+    const localBinary = localBinaryPath();
+    if (fs.existsSync(localBinary)) {
+      if (await commandWorks(localBinary, ["--version"])) {
+        resolvedYtDlp = { cmd: localBinary, prefix: [] };
+        return localBinary;
+      }
+      await removeBrokenBinary(localBinary);
+    }
 
-    if (await commandWorks(localBinary, ["--version"])) return localBinary;
+    if (isAndroid() || isTermux()) {
+      throw new Error(
+        "yt-dlp tidak ditemukan dan binary Linux tidak bisa jalan di Android. " +
+          "Di Termux jalankan: pkg install yt-dlp  ATAU  pip install -U yt-dlp, lalu coba lagi."
+      );
+    }
 
     onStatus("Mengunduh binary yt-dlp terbaru...");
-    await fs.mkdir(BIN_DIR, { recursive: true });
+    await fsp.mkdir(BIN_DIR, { recursive: true });
 
     const assetUrl = `${RELEASE_BASE}/${ytDlpAssetName()}`;
     const buf = await request.buffer(assetUrl, { timeout: 120000, retries: 1 });
@@ -49,10 +101,18 @@ export async function ensureYtDlp(onStatus = () => {}) {
     }
 
     const tmpPath = `${localBinary}.download`;
-    await fs.writeFile(tmpPath, buf);
-    await fs.chmod(tmpPath, 0o755);
-    await fs.rename(tmpPath, localBinary);
+    await fsp.writeFile(tmpPath, buf);
+    await fsp.chmod(tmpPath, 0o755);
+    await fsp.rename(tmpPath, localBinary);
 
+    if (!(await commandWorks(localBinary, ["--version"]))) {
+      await removeBrokenBinary(localBinary);
+      throw new Error(
+        "Binary yt-dlp yang diunduh tidak bisa dijalankan di perangkat ini. Coba install via pip: pip install -U yt-dlp"
+      );
+    }
+
+    resolvedYtDlp = { cmd: localBinary, prefix: [] };
     return localBinary;
   })();
 
@@ -62,6 +122,11 @@ export async function ensureYtDlp(onStatus = () => {}) {
     ensurePromise = null;
     throw err;
   }
+}
+
+function spawnYtDlp(args, options = {}) {
+  const { cmd, prefix } = resolvedYtDlp || { cmd: "yt-dlp", prefix: [] };
+  return spawn(cmd, [...prefix, ...args], options);
 }
 
 function cleanYtDlpError(stderr = "") {
@@ -74,9 +139,9 @@ function cleanYtDlpError(stderr = "") {
 }
 
 export async function probe(url, options = {}) {
-  const ytdlp = await ensureYtDlp(options.onStatus);
+  await ensureYtDlp(options.onStatus);
   return new Promise((resolve, reject) => {
-    const child = spawn(ytdlp, ["-J", "--no-playlist", "--no-warnings", url], { signal: options.signal });
+    const child = spawnYtDlp(["-J", "--no-playlist", "--no-warnings", url], { signal: options.signal });
     let stdout = "";
     let stderr = "";
 
@@ -98,9 +163,9 @@ export async function probe(url, options = {}) {
 }
 
 export async function downloadMedia(url, { mode = "video", quality = "720", onStatus = () => {}, signal } = {}) {
-  const ytdlp = await ensureYtDlp(onStatus);
+  await ensureYtDlp(onStatus);
   const tmpDir = path.join(os.tmpdir(), "rizzerbot-ytdlp");
-  await fs.mkdir(tmpDir, { recursive: true });
+  await fsp.mkdir(tmpDir, { recursive: true });
 
   const isAudio = mode === "audio";
   const outputTemplate = path.join(tmpDir, `dl-${Date.now()}-%(title).50s.%(ext)s`);
@@ -120,17 +185,19 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
   if (isAudio) {
     args.push("-f", "ba/b", "-x", "--audio-format", "mp3", "--audio-quality", "0");
   } else {
-
     const h = parseInt(quality) || 720;
     args.push("-f", `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`, "--merge-output-format", "mp4");
   }
 
-  if (await commandWorks("ffmpeg", ["-version"])) {
+  const ffmpegPath = resolveFfmpegPath();
+  if (ffmpegPath && ffmpegPath !== "ffmpeg") {
+    args.push("--ffmpeg-location", ffmpegPath);
+  } else if (await commandWorks("ffmpeg", ["-version"])) {
     args.push("--ffmpeg-location", "ffmpeg");
   }
 
   return new Promise((resolve, reject) => {
-    const child = spawn(ytdlp, args, { signal });
+    const child = spawnYtDlp(args, { signal });
     let stdout = "";
     let stderr = "";
     let filepath = "";
@@ -158,7 +225,6 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
       }
 
       if (!filepath) {
-
         const matches = stdout
           .split("\n")
           .map((l) => l.trim())
@@ -173,9 +239,8 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
       }
 
       try {
-        const buffer = await fs.readFile(filepath);
-
-        await fs.unlink(filepath).catch(() => {});
+        const buffer = await fsp.readFile(filepath);
+        await fsp.unlink(filepath).catch(() => {});
         resolve({
           filepath,
           buffer,

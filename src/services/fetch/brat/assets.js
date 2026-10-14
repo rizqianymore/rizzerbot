@@ -1,6 +1,6 @@
 import fs from "fs";
 import fsp from "fs/promises";
-import { loadImage, GlobalFonts } from "@napi-rs/canvas";
+import { requireCanvas } from "@/src/utils/native.js";
 import { request } from "@/src/utils/request.js";
 import {
   ASSETS_DIR,
@@ -72,6 +72,7 @@ export async function ensureFont() {
         const buf = await downloadValidated(BRAT_FONT_URL, isFontBuffer, "font brat");
         await fsp.writeFile(BRAT_FONT_PATH, buf);
       }
+      const { GlobalFonts } = requireCanvas();
       GlobalFonts.registerFromPath(BRAT_FONT_PATH, TEXT_STYLE.fontFamily);
     })().catch((err) => {
       fontReadyPromise = null;
@@ -88,7 +89,7 @@ export async function loadTemplateImage(template) {
     try {
       const local = await fsp.readFile(template.localPath);
       if (!isImageBuffer(local)) throw new Error("file template korup");
-      return await loadImage(local);
+      return await requireCanvas().loadImage(local);
     } catch {
       await fsp.unlink(template.localPath).catch(() => {});
     }
@@ -101,7 +102,7 @@ export async function loadTemplateImage(template) {
         await fsp.writeFile(template.localPath, buf);
       } catch (_) {}
     }
-    return await loadImage(buf);
+    return await requireCanvas().loadImage(buf);
   }
 
   throw new Error("Template gambar tidak ditemukan");

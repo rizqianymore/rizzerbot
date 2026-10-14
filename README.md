@@ -39,6 +39,32 @@ npm run pm2:restart
 npm run pm2:stop
 ```
 
+### Instalasi di Termux (Android)
+
+```bash
+# Otomatis (disarankan)
+bash scripts/termux-setup.sh
+
+# Lalu jalankan
+npm run start:termux
+```
+
+Setup Termux memasang `nodejs-lts`, `ffmpeg`, `python`, dan `yt-dlp` via `pkg`,
+menginstall dependensi Node tanpa modul opsional berat, dan menjalankan bot
+dengan browser dimatikan (`BROWSER_DISABLED=1`) agar hemat RAM.
+
+Catatan Termux:
+
+- `sharp` / `node-webpmux` / `puppeteer` adalah dependensi **opsional**.
+  Bila tidak terinstall, bot tetap jalan dengan fallback otomatis:
+  konversi gambar via `ffmpeg`, stiker tanpa metadata EXIF, dan error yang
+  jelas untuk fitur yang memang butuh browser.
+- Binary `bin/yt-dlp` bawaan repo hanya untuk `x86_64` — di Termux (ARM)
+  bot otomatis memakai `yt-dlp` dari `pkg`/`pip` atau `python3 -m yt_dlp`.
+- Bila butuh fitur browser di Termux: `pkg install chromium`, isi
+  `CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium` di `.env`,
+  lalu jalankan dengan `npm run start:node`.
+
 ## Variabel Lingkungan
 
 Salin `.env.example` menjadi `.env` lalu isi sesuai kebutuhan. Sebagian besar bersifat opsional — hanya isi yang fitur kamu pakai.

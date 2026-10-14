@@ -1,4 +1,4 @@
-import { createCanvas } from "@napi-rs/canvas";
+import { requireCanvas } from "@/src/utils/native.js";
 import { TEXT_STYLE } from "./config.js";
 import { splitWords } from "./text.js";
 
@@ -205,6 +205,7 @@ export function renderLayout(ctx, layout, options = {}) {
 }
 
 export function layoutText(text, template) {
+  const { createCanvas } = requireCanvas();
   const canvas = createCanvas(template.width || 512, template.height || 512);
   const ctx = canvas.getContext("2d");
   const rect = getSafeRect(template.safeZone);

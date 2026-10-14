@@ -69,21 +69,17 @@ async function runPythonSandbox(code, { restricted = false } = {}) {
   await fs.writeFile(tmpFile, code, "utf8");
 
   const timeout = restricted ? PUBLIC_TIMEOUT_MS : TIMEOUT_MS;
+  const termuxPrefix = process.env.PREFIX || "/data/data/com.termux/files/usr";
+  const sandboxPath = [process.env.PATH, `${termuxPrefix}/bin`, "/usr/bin", "/bin"].filter(Boolean).join(":");
   const [cmd, cmdArgs] = restricted
-    ? [
-        "bash",
-        [
-          "-c",
-          `ulimit -v 262144; ulimit -t 10; exec python3 -I -s '${POLICY_WRAPPER}' '${tmpFile}'`,
-        ],
-      ]
+    ? ["bash", ["-c", `ulimit -v 262144; ulimit -t 10; exec python3 -I -s '${POLICY_WRAPPER}' '${tmpFile}'`]]
     : ["python3", ["-I", "-s", tmpFile]];
 
   return new Promise((resolve, reject) => {
     const start = performance.now();
     const child = spawn(cmd, cmdArgs, {
       timeout,
-      env: { PYTHONIOENCODING: "utf-8", PATH: "/usr/bin:/bin" },
+      env: { PYTHONIOENCODING: "utf-8", PATH: sandboxPath },
     });
 
     let stdout = "";

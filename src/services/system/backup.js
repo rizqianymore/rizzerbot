@@ -1,11 +1,26 @@
 import fs from "fs";
 import path from "path";
 import { execFile } from "node:child_process";
+import { isTermux } from "@/src/utils/termux.js";
 
 const ROOT = process.cwd();
 const TMP_DIR = path.join(ROOT, "temp");
 
 const INCLUDE_PATHS = ["assets/sessions", "database/database.json", "database/users.json", "database/rentals.json"];
+
+function tarHint() {
+  return isTermux() ? "Di Termux jalankan: pkg install tar." : "Install tar di sistem lalu coba lagi.";
+}
+
+function execTar(args, options) {
+  return new Promise((resolve, reject) => {
+    execFile("tar", args, options, (err, stdout) => {
+      if (!err) return resolve(String(stdout || ""));
+      if (err.code === "ENOENT") return reject(new Error(`Perintah 'tar' tidak ditemukan. ${tarHint()}`));
+      reject(err);
+    });
+  });
+}
 
 export async function createBackup() {
   if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -13,11 +28,11 @@ export async function createBackup() {
   const file = path.join(TMP_DIR, `rizzerbot-backup-${stamp}.tar.gz`);
   const existing = INCLUDE_PATHS.filter((p) => fs.existsSync(path.join(ROOT, p)));
   if (!existing.length) throw new Error("Tidak ada data untuk dibackup");
-  await new Promise((resolve, reject) => {
-    execFile("tar", ["-czf", file, ...existing], { cwd: ROOT, timeout: 120000 }, (err) =>
-      err ? reject(new Error(`tar gagal: ${err.message}`)) : resolve()
-    );
-  });
+  try {
+    await execTar(["-czf", file, ...existing], { cwd: ROOT, timeout: 120000 });
+  } catch (err) {
+    throw new Error(`tar gagal: ${err.message}`);
+  }
   const stat = fs.statSync(file);
   return { file, size: stat.size };
 }
@@ -31,10 +46,8 @@ export async function restoreBackup(tarPath) {
   } catch (err) {
     throw new Error(`Path backup tidak valid: ${err.message}`);
   }
-  const list = await new Promise((resolve, reject) => {
-    execFile("tar", ["-tzf", tarPath], { timeout: 30000 }, (err, stdout) =>
-      err ? reject(new Error("File bukan arsip backup yang valid")) : resolve(String(stdout || ""))
-    );
+  const list = await execTar(["-tzf", tarPath], { timeout: 30000 }).catch(() => {
+    throw new Error("File bukan arsip backup yang valid");
   });
   const entries = list
     .split("\n")
@@ -63,11 +76,15 @@ export async function restoreBackup(tarPath) {
   const hasSessions = entries.some((e) => e.replace(/^\.\//, "").startsWith("assets/sessions"));
   const hasDb = entries.some((e) => e.replace(/^\.\//, "").startsWith("database/"));
   if (!hasSessions && !hasDb) throw new Error("Arsip tidak berisi data sesi/database rizzerbot");
-  await new Promise((resolve, reject) => {
-    execFile("tar", ["-xzf", tarPath, "-C", ROOT, "--no-same-owner"], { timeout: 120000 }, (err) =>
-      err ? reject(new Error(`Restore gagal: ${err.message}`)) : resolve()
-    );
-  });
+  try {
+    await execTar(["-xzf", tarPath, "-C", ROOT, "--no-same-owner"], { timeout: 120000 });
+  } catch (_) {
+    try {
+      await execTar(["-xzf", tarPath, "-C", ROOT], { timeout: 120000 });
+    } catch (err) {
+      throw new Error(`Restore gagal: ${err.message}`);
+    }
+  }
   return { entries: entries.length, hasSessions, hasDb };
 }
 

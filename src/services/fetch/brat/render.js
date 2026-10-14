@@ -1,10 +1,16 @@
-import sharp from "sharp";
-import { createCanvas } from "@napi-rs/canvas";
+import { requireCanvas, getSharp } from "@/src/utils/native.js";
+import { isLowMemoryDevice } from "@/src/utils/termux.js";
 import { TEXT_STYLE } from "./config.js";
 import { ensureFont, loadTemplateImage } from "./assets.js";
 import { drawCenteredText, renderLayout, layoutText, getSafeRect } from "./layout.js";
 
-const SUPERSAMPLE = Math.max(1, TEXT_STYLE.supersample || 1);
+function effectiveSupersample() {
+  const base = Math.max(1, TEXT_STYLE.supersample || 1);
+  if (isLowMemoryDevice() && base > 1) return 1;
+  return base;
+}
+
+const SUPERSAMPLE = effectiveSupersample();
 
 function scaleTemplate(template, factor) {
   if (factor === 1) return template;
@@ -23,6 +29,7 @@ function scaleTemplate(template, factor) {
 }
 
 function paintCanvas(image, template, bgColor) {
+  const { createCanvas } = requireCanvas();
   const width = template.width || 512;
   const height = template.height || 512;
   const canvas = createCanvas(width, height);
@@ -67,6 +74,10 @@ export async function renderBratFrame(image, template, layout, options = {}) {
 }
 
 async function downscale(canvas, template) {
+  const sharp = getSharp();
+  if (!sharp || SUPERSAMPLE === 1) {
+    return Buffer.from(await canvas.encode("png"));
+  }
   const png = await canvas.encode("png");
   return await sharp(png)
     .resize(template.width || 512, template.height || 512, {

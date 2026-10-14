@@ -15,7 +15,7 @@ try {
     try {
       fs.rmSync(symlinkPath, { recursive: true, force: true });
     } catch (_) {}
-    fs.symlinkSync(process.cwd(), symlinkPath, "junction");
+    fs.symlinkSync(process.cwd(), symlinkPath, process.platform === "win32" ? "junction" : "dir");
   }
 } catch (_) {}
 
@@ -41,15 +41,27 @@ if (fs.existsSync(envPath)) {
   } catch (_) {}
 }
 
+const termuxPrefix = process.env.PREFIX || "/data/data/com.termux/files/usr";
 const candidateFfmpegPaths = [
   process.env.FFMPEG_PATH,
-  path.join(process.cwd(), "bin", "ffmpeg"),
-  path.join(process.cwd(), "bin", "ffmpeg.exe"),
+  path.join(process.cwd(), "bin", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg"),
+  path.join(termuxPrefix, "bin", "ffmpeg"),
+  "/data/data/com.termux/files/usr/bin/ffmpeg",
   "/usr/bin/ffmpeg",
   "/usr/local/bin/ffmpeg",
+  "/opt/homebrew/bin/ffmpeg",
 ];
+function isExecutableFile(p) {
+  try {
+    if (!p || !fs.existsSync(p)) return false;
+    fs.accessSync(p, fs.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 for (const p of candidateFfmpegPaths) {
-  if (p && fs.existsSync(p)) {
+  if (p && isExecutableFile(p)) {
     process.env.FFMPEG_PATH = p;
     const dir = path.dirname(p);
     if (!process.env.PATH.split(path.delimiter).includes(dir)) {
@@ -60,6 +72,14 @@ for (const p of candidateFfmpegPaths) {
 }
 
 const { startBot, logger } = await import("./src/core/connection.js");
+
+try {
+  const { checkEnvironment, formatDoctorReport } = await import("./src/utils/doctor.js");
+  const report = checkEnvironment();
+  if (!report.coreOk) {
+    logger?.warn?.(`[Doctor] Ada dependensi inti yang hilang:\n${formatDoctorReport(report)}`);
+  }
+} catch (_) {}
 
 startBot()
   .then(async () => {

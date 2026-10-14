@@ -1,5 +1,5 @@
 import axios from "axios";
-import sharp from "sharp";
+import { getSharp } from "@/src/utils/native.js";
 import { client, UA } from "./client.js";
 
 export const CAPTCHA_LEN = 4;
@@ -8,6 +8,8 @@ const WHITELIST = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678
 const clean = (t) => String(t || "").replace(/[^A-Za-z0-9]/g, "");
 
 async function preprocessCaptcha(buffer, threshold = 165) {
+  const sharp = getSharp();
+  if (!sharp) return buffer;
   let pipe = sharp(buffer).grayscale().normalize().resize({ width: 480 });
   if (threshold) pipe = pipe.threshold(threshold);
   return pipe.png().toBuffer();

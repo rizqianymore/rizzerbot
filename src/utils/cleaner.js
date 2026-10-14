@@ -207,6 +207,7 @@ export function periodicDatabaseSnapshot(logger) {
 
 export function cleanOrphanChromeProcesses(logger) {
   try {
+    if (process.platform === "android" || process.env.TERMUX_VERSION) return;
     import("child_process")
       .then(({ exec }) => {
         exec("pkill -f 'chrome-linux64/chrome --type=renderer' || true", (err) => {

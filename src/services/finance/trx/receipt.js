@@ -1,7 +1,8 @@
-import { createCanvas } from "@napi-rs/canvas";
+import { requireCanvas } from "@/src/utils/native.js";
 import { getStatusBadge } from "./query.js";
 
 export async function generateReceiptCard(trx) {
+  const { createCanvas } = requireCanvas();
   const width = 640;
   const height = 880;
   const canvas = createCanvas(width, height);

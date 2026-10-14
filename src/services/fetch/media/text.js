@@ -1,11 +1,15 @@
-import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import fs from "fs";
 import path from "path";
+import { requireCanvas } from "@/src/utils/native.js";
 
 const fontBratPath = path.join(process.cwd(), "assets", "brat", "ArialNarrow.ttf");
-if (fs.existsSync(fontBratPath)) {
+let fontRegistered = false;
+function ensureStickerFont() {
+  if (fontRegistered) return;
+  fontRegistered = true;
+  if (!fs.existsSync(fontBratPath)) return;
   try {
-    GlobalFonts.registerFromPath(fontBratPath, "ArialNarrow");
+    requireCanvas().GlobalFonts.registerFromPath(fontBratPath, "ArialNarrow");
   } catch (_) {}
 }
 
@@ -133,6 +137,8 @@ export async function createTextOverlayCanvas(width = 512, height = 512, { topTe
   const bottom = bottomText.trim();
   if (!top && !bottom) return null;
 
+  const { createCanvas } = requireCanvas();
+  ensureStickerFont();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   const marginX = Math.floor(width * 0.05);
@@ -159,6 +165,8 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "" } =
   const bottom = bottomText.trim();
   if (!top && !bottom) return buffer;
 
+  const { createCanvas, loadImage } = requireCanvas();
+  ensureStickerFont();
   const baseImage = await loadImage(buffer);
   const width = baseImage.width || 512;
   const height = baseImage.height || 512;

@@ -1,19 +1,14 @@
-import sharp from "sharp";
 import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import webpmux from "node-webpmux";
 import { db } from "@/src/core/database.js";
 import { getFfmpegPath } from "./ffmpeg.js";
-import { createTextOverlayCanvas } from "./text.js";
-import { addTextToImage } from "./text.js";
+import { getSharp, getWebpmux } from "@/src/utils/native.js";
 import { isVideoOrAnimated } from "./buffer.js";
 
 const execFileAsync = promisify(execFile);
-
-const { Image: WebpMuxImage } = webpmux;
 
 export const STICKER_VIDEO_MAX_SECONDS = 7;
 
@@ -25,11 +20,59 @@ function toFfmpegTime(seconds) {
   return `${h}:${m}:${s}`;
 }
 
+async function ffmpegStaticToWebp(buffer) {
+  const cacheDir = path.join(process.cwd(), "assets", "cache");
+  if (!fs.existsSync(cacheDir)) {
+    try {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    } catch (_) {}
+  }
+  const tmpBase = path.join(cacheDir, `stkimg-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const inFile = `${tmpBase}.png`;
+  const outFile = `${tmpBase}.webp`;
+  await fsp.writeFile(inFile, buffer);
+  try {
+    await execFileAsync(
+      getFfmpegPath(),
+      [
+        "-y",
+        "-i",
+        inFile,
+        "-vf",
+        "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(512-iw)/2:(512-ih)/2:color=0x00000000,fps=15",
+        "-loop",
+        "0",
+        "-preset",
+        "picture",
+        "-an",
+        "-quality",
+        "90",
+        outFile,
+      ],
+      { timeout: 60000, maxBuffer: 10 * 1024 * 1024 }
+    );
+    return await fsp.readFile(outFile);
+  } finally {
+    await fsp.unlink(inFile).catch(() => {});
+    await fsp.unlink(outFile).catch(() => {});
+  }
+}
+
+async function createTextOverlay({ width, height, topText, bottomText }) {
+  try {
+    const { createTextOverlayCanvas } = await import("./text.js");
+    return await createTextOverlayCanvas(width, height, { topText, bottomText });
+  } catch (_) {
+    return null;
+  }
+}
+
 export async function createSticker(buffer, { pack, author, topText, bottomText } = {}) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
   const authorName = author === undefined ? activeSettings.stickerAuthor : author;
   const hasText = Boolean((topText && topText.trim()) || (bottomText && bottomText.trim()));
+  const sharp = getSharp();
 
   const isAnimatedWebp =
     buffer.length >= 12 &&
@@ -58,7 +101,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
     try {
       if (hasText) {
-        const overlayBuf = await createTextOverlayCanvas(512, 512, { topText, bottomText });
+        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
         if (overlayBuf) {
           await fsp.writeFile(overlayPng, overlayBuf);
           createdOverlay = true;
@@ -96,7 +139,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
         outWebp,
       ];
 
-      await execFileAsync(getFfmpegPath(), ffmpegArgs);
+      await execFileAsync(getFfmpegPath(), ffmpegArgs, { timeout: 90000, maxBuffer: 10 * 1024 * 1024 });
       webpBuffer = await fsp.readFile(outWebp);
     } catch (vidErr) {
       console.warn("[createSticker] video ffmpeg conversion error, fallback:", vidErr?.message || vidErr);
@@ -107,60 +150,76 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
       await fsp.unlink(outWebp).catch(() => {});
     }
   } else if (isAnimatedWebp) {
-    try {
-      let animSharp = sharp(buffer, { animated: true });
-      if (hasText) {
-        const overlayBuf = await createTextOverlayCanvas(512, 512, { topText, bottomText });
-        if (overlayBuf) {
-          animSharp = animSharp.composite([{ input: overlayBuf, tile: true }]);
-        }
-      }
-      webpBuffer = await animSharp
-        .resize(512, 512, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-          kernel: sharp.kernel.lanczos3,
-        })
-        .webp({
-          quality: 85,
-          smartSubsample: true,
-          effort: 5,
-        })
-        .toBuffer();
-    } catch (animErr) {
-      console.warn("[createSticker] animated webp processing warning:", animErr?.message || animErr);
+    if (!sharp) {
       webpBuffer = buffer;
+    } else {
+      try {
+        let animSharp = sharp(buffer, { animated: true });
+        if (hasText) {
+          const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
+          if (overlayBuf) {
+            animSharp = animSharp.composite([{ input: overlayBuf, tile: true }]);
+          }
+        }
+        webpBuffer = await animSharp
+          .resize(512, 512, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+            kernel: sharp.kernel.lanczos3,
+          })
+          .webp({
+            quality: 85,
+            smartSubsample: true,
+            effort: 5,
+          })
+          .toBuffer();
+      } catch (animErr) {
+        console.warn("[createSticker] animated webp processing warning:", animErr?.message || animErr);
+        webpBuffer = buffer;
+      }
     }
   } else {
-
     let processedBuffer = buffer;
     if (hasText) {
       try {
+        const { addTextToImage } = await import("./text.js");
         processedBuffer = await addTextToImage(buffer, { topText, bottomText });
       } catch (_) {
         processedBuffer = buffer;
       }
     }
 
-    try {
-      webpBuffer = await sharp(processedBuffer)
-        .resize(512, 512, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-          kernel: sharp.kernel.lanczos3,
-        })
-        .webp({
-          quality: 95,
-          smartSubsample: true,
-          effort: 6,
-        })
-        .toBuffer();
-    } catch (_) {
-      webpBuffer = processedBuffer;
+    if (sharp) {
+      try {
+        webpBuffer = await sharp(processedBuffer)
+          .resize(512, 512, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+            kernel: sharp.kernel.lanczos3,
+          })
+          .webp({
+            quality: 95,
+            smartSubsample: true,
+            effort: 6,
+          })
+          .toBuffer();
+      } catch (_) {
+        webpBuffer = processedBuffer;
+      }
+    } else {
+      try {
+        webpBuffer = await ffmpegStaticToWebp(processedBuffer);
+      } catch (_) {
+        webpBuffer = processedBuffer;
+      }
     }
   }
 
   try {
+    const webpmux = getWebpmux();
+    if (!webpmux) return webpBuffer;
+    const { Image: WebpMuxImage } = webpmux;
+    if (!WebpMuxImage) return webpBuffer;
     const img = new WebpMuxImage();
     await img.load(webpBuffer);
 
