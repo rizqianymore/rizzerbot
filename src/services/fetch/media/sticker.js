@@ -68,6 +68,52 @@ async function createTextOverlay({ width, height, topText, bottomText }) {
   }
 }
 
+function isGif(buffer) {
+  return buffer && buffer.length >= 3 && buffer.slice(0, 3).toString() === "GIF";
+}
+
+async function shrinkIfTooBig(webpBuffer, maxBytes = 950 * 1024) {
+  if (!webpBuffer || webpBuffer.length <= maxBytes) return webpBuffer;
+  const sharp = getSharp();
+  if (!sharp) return webpBuffer;
+  try {
+    const smaller = await sharp(webpBuffer, { animated: true }).webp({ quality: 70, effort: 4 }).toBuffer();
+    if (smaller.length < webpBuffer.length) return smaller;
+  } catch (_) {}
+  return webpBuffer;
+}
+
+async function gifFallback(buffer, { topText, bottomText, hasText }) {
+  const sharp = getSharp();
+  if (sharp && isGif(buffer)) {
+    try {
+      let pipe = sharp(buffer, { animated: true });
+      if (hasText) {
+        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
+        if (overlayBuf) {
+          pipe = pipe.composite([{ input: overlayBuf, gravity: "north" }]);
+        }
+      }
+      const out = await pipe
+        .resize(512, 512, {
+          fit: "contain",
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+          kernel: sharp.kernel.lanczos3,
+        })
+        .webp({ quality: 80, effort: 4 })
+        .toBuffer();
+      return await shrinkIfTooBig(out);
+    } catch (err) {
+      console.warn("[createSticker] gif sharp fallback gagal:", err?.message || err);
+    }
+  }
+  throw new Error(
+    "Gagal mengubah video/GIF menjadi stiker (ffmpeg tidak tersedia/gagal). " +
+      "Install ffmpeg lalu coba lagi. " +
+      (isGif(buffer) ? "" : "Untuk video, ffmpeg wajib terinstall.")
+  );
+}
+
 export async function createSticker(buffer, { pack, author, topText, bottomText } = {}) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
@@ -142,9 +188,10 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
       await execFileAsync(getFfmpegPath(), ffmpegArgs, { timeout: 90000, maxBuffer: 10 * 1024 * 1024 });
       webpBuffer = await fsp.readFile(outWebp);
+      webpBuffer = await shrinkIfTooBig(webpBuffer);
     } catch (vidErr) {
-      console.warn("[createSticker] video ffmpeg conversion error, fallback:", vidErr?.message || vidErr);
-      webpBuffer = buffer;
+      console.warn("[createSticker] video ffmpeg conversion error:", vidErr?.message || vidErr);
+      webpBuffer = await gifFallback(buffer, { topText, bottomText, hasText });
     } finally {
       await fsp.unlink(inVid).catch(() => {});
       if (createdOverlay) await fsp.unlink(overlayPng).catch(() => {});
