@@ -40,11 +40,7 @@ export default {
       if (!STYLE_PROMPTS[style]) style = "cinematic";
     }
     if (!promptText) return reply("Masukkan prompt gambar!");
-
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🎨");
-    await reply(`Menggambar "${promptText.slice(0, 100)}" (style: ${style})...`);
+await reply(`Menggambar "${promptText.slice(0, 100)}" (style: ${style})...`);
 
     try {
       const styleSuffix = STYLE_PROMPTS[style] ? `, ${STYLE_PROMPTS[style]}` : "";
@@ -59,10 +55,8 @@ await react("🎨");
         },
         { quoted: msg }
       );
-await react("✅");
-    } catch (err) {
-await react("❌");
-      await reply(`*TEXT TO IMAGE GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+} catch (err) {
+await reply(`*TEXT TO IMAGE GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

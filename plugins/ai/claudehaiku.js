@@ -19,25 +19,16 @@ export default {
       );
     }
 
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🕕");
-
     try {
       const result = await ClaudeHaiku(text);
 
       if (!result.status) {
-await react("☢");
-        return reply(`*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`);
+return reply(`*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`);
       }
-
-await react("✅");
-
-      const answer = `${result.answer}`;
+const answer = `${result.answer}`;
       await reply(answer.length > 4000 ? answer.slice(0, 4000) + "..." : answer);
     } catch (err) {
-await react("☢");
-      reply(`*CLAUDE HAIKU GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+reply(`*CLAUDE HAIKU GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

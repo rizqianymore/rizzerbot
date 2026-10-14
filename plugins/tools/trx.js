@@ -108,7 +108,7 @@ export default {
               `*QRIS DINAMIS PEMBAYARAN*\n` +
               `*Merchant:* ${parsed.merchantName || activeSettings.qrisMerchantName || "Rizzer Cloud"}\n` +
               `*Nominal Otomatis:* *${trx.formattedPrice}*\n` +
-              `🆔 *Ref Transaksi:* \`${trx.id}\`\n\n` +
+              `*Ref Transaksi:* \`${trx.id}\`\n\n` +
               `_Scan QR di atas melalui BCA, Mandiri, BRI, BNI, DANA, GoPay, OVO, ShopeePay. Nominal sudah terisi otomatis!_`,
             mentions: trx.buyerJid ? [trx.buyerJid] : [],
           },

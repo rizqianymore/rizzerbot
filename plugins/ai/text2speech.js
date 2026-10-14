@@ -22,18 +22,11 @@ export default {
     if (!teks) return reply("Masukkan teks yang mau diubah jadi suara!");
     lang = (lang || "id").toLowerCase().startsWith("en") ? "en" : "id-ID";
     if (teks.length > 200) teks = teks.slice(0, 200);
-
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🕕");
-
-    try {
+try {
       const audio = await textToSpeech(teks, lang);
       await sock.sendMessage(msg.key.remoteJid, { audio, mimetype: "audio/mpeg", ptt: true }, { quoted: msg });
-await react("✅");
-    } catch (err) {
-await react("❌");
-      await reply(`*TEXT TO SPEECH GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+} catch (err) {
+await reply(`*TEXT TO SPEECH GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

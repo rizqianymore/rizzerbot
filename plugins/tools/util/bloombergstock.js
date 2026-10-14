@@ -19,7 +19,7 @@ export default {
       const data = await getStockTicker(input);
 
       const isPositive = data.priceChange >= 0;
-      const trend = isPositive ? "▲" : "▼";
+      const trend = isPositive ? "^" : "v";
       const sign = isPositive ? "+" : "";
 
       const formattedPrice =

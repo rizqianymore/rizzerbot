@@ -77,7 +77,7 @@ export default {
 
     let text = `*INFORMASI GRUP*\n\n`;
     text += `*Nama Grup:* ${meta.subject}\n`;
-    text += `🆔 *ID Grup:* ${meta.id}\n`;
+    text += `*ID Grup:* ${meta.id}\n`;
     text += `*Pembuat Grup:* ${creator}\n`;
     text += `*Dibuat Pada:* ${creationDate}\n`;
     text += `*Total Member:* ${totalMembers}\n`;

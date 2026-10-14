@@ -11,9 +11,9 @@ export function buildBuronItems(buron) {
 }
 
 export function buildBuronText(buron) {
-  if (!buron.length) return "🚨 *DAFTAR BURON*\n\nBelum ada data buron.";
+  if (!buron.length) return "*DAFTAR BURON*\n\nBelum ada data buron.";
   return (
-    `🚨 *DAFTAR BURON* (${buron.length})\n\n` +
+    `*DAFTAR BURON* (${buron.length})\n\n` +
     buron.map((b, i) => `${i + 1}. *${b.nama}* — ${b.kasus} [${b.status}]`).join("\n")
   );
 }
@@ -38,7 +38,7 @@ export function buildBuronButtons(prefix = ".") {
 export function buildBuronInteractive(buron, prefix = ".") {
   return {
     interactiveMessage: {
-      title: "🚨 Daftar Buron Aktif",
+      title: "Daftar Buron Aktif",
       footer: `Total: ${buron.length} • RizzerBot`,
       header: "Pilih aksi",
       buttons: [
@@ -67,11 +67,11 @@ export function buildBuronResultContent(buron, full, prefix = ".") {
     id: `${prefix}buron ${b.nama}`,
   }));
   const body =
-    `🚨 *DAFTAR BURON* (${buron.length})\n\n` +
+    `*DAFTAR BURON* (${buron.length})\n\n` +
     buron.map((b, i) => `${i + 1}. *${b.nama}* — ${b.kasus} [${b.status}]`).join("\n");
   return {
     interactiveMessage: {
-      title: "🚨 Daftar Buron Aktif",
+      title: "Daftar Buron Aktif",
       footer: `Total: ${buron.length} • RizzerBot`,
       header: body,
       buttons: [
@@ -92,7 +92,7 @@ export async function sendBuronList(sock, jid, buron, quoted, prefix = ".") {
 
   if (typeof sock.sendList === "function") {
     return sock.sendList(jid, "DAFTAR BURON", buildBuronItems(buron), quoted, {
-      headerText: "🚨 List Buron Aktif",
+      headerText: "List Buron Aktif",
       footer: `Total: ${buron.length}`,
     });
   }

@@ -243,16 +243,11 @@ export default {
     const prompt = promptArr.join(" ").trim();
     const selected = MODELS.find((m) => String(m.id) === String(num));
     if (!selected || !prompt) return reply(modelList(prefix));
-
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🎨");
-    await reply(`Membuat gambar dengan *${selected.name}*...`);
+await reply(`Membuat gambar dengan *${selected.name}*...`);
 
     try {
       const imgs = await generateImage(prompt, selected);
-await react("✅");
-      for (const url of imgs) {
+for (const url of imgs) {
         await sock
           .sendMessage(
             msg.key.remoteJid,
@@ -262,8 +257,7 @@ await react("✅");
           .catch(() => reply(`Link gambar: ${url}`));
       }
     } catch (err) {
-await react("❌");
-      await reply(`*DREAM AI GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+await reply(`*DREAM AI GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

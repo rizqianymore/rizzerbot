@@ -43,12 +43,7 @@ export default {
         `*NPM STALKER*\n\n` + `Penggunaan: *${prefix}npmstalk <nama package>*\n` + `Contoh: *${prefix}npmstalk axios*`
       );
     }
-
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🕕");
-
-    try {
+try {
       const search = await getJson(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`);
       const hit = search?.objects?.[0]?.package;
       if (!hit?.name) throw new Error(`Package NPM "${query}" tidak ditemukan`);
@@ -92,10 +87,8 @@ await react("🕕");
       } catch {
         await reply(card);
       }
-await react("✅");
-    } catch (err) {
-await react("❌");
-      await reply(`*NPM STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+} catch (err) {
+await reply(`*NPM STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

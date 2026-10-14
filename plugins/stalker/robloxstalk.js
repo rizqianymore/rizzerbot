@@ -56,12 +56,7 @@ export default {
       .replace(/^https?:\/\/(www\.)?roblox\.com\/(users|player)\/(\d+)\/profile/i, "$3")
       .split("/")[0]
       .trim();
-
-    const react = (emoji) =>
-      sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
-await react("🕕");
-
-    try {
+try {
       const userId = await resolveUserId(clean);
       const [profile, followers, followings, friends, avatar, presence] = await Promise.all([
         getJson(`https://users.roblox.com/v1/users/${userId}`),
@@ -118,10 +113,8 @@ await react("🕕");
       } else {
         await reply(card);
       }
-await react("✅");
-    } catch (err) {
-await react("❌");
-      await reply(`*ROBLOX STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
+} catch (err) {
+await reply(`*ROBLOX STALKER GAGAL*\n${err?.message || "Terjadi kesalahan."}`);
     }
   },
 };

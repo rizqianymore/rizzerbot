@@ -33,7 +33,7 @@ export function buildTestButtons(prefix = ".") {
 export function buildTestButtonContent(prefix = ".") {
   return {
     interactiveMessage: {
-      title: "🔘 TEST BUTTON OURIN",
+      title: "TEST BUTTON OURIN",
       footer: "RizzerBot • ourin-baileys",
       header: "Demo button",
       buttons: buildTestButtons(prefix),
@@ -42,7 +42,7 @@ export function buildTestButtonContent(prefix = ".") {
 }
 
 export function buildTestButtonText() {
-  return "🔘 *TEST BUTTON*\n\n• Cek Buron\n• Website: https://example.com\n• Copy: BTN-2024\n\n(Buton tak didukung di sock ini — fallback teks)";
+  return "*TEST BUTTON*\n\n• Cek Buron\n• Website: https://example.com\n• Copy: BTN-2024\n\n(Buton tak didukung di sock ini — fallback teks)";
 }
 
 export async function sendTestButton(sock, jid, quoted, prefix = ".") {

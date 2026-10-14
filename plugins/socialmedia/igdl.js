@@ -13,16 +13,13 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const remoteJid = msg.key.remoteJid;
     const currentPrefix = prefix || ".";
-    const react = (emoji) => sock.sendMessage(remoteJid, { react: { text: emoji, key: msg.key } }).catch(() => {});
 
     const input = clean(args.join(" ") || args?.[0]);
 
     if (!input) {
       return reply(`Contoh:\n${currentPrefix}igdl https://instagram.com/...`);
     }
-
-await react("✨");
-    await sendTyping();
+await sendTyping();
 
     try {
       let res = null;
@@ -197,12 +194,9 @@ await react("✨");
       for (let i = 0; i < videos.length; i++) {
         await sendVideo(sock, remoteJid, msg, videos[i], images.length === 0 && i === 0 ? caption : "");
       }
-
-await react("✅");
-    } catch (e) {
+} catch (e) {
       logger?.warn?.(`[igdl] ${e?.message || e}`);
-await react("❌");
-      return reply(`Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
+return reply(`Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
     }
   },
 };
