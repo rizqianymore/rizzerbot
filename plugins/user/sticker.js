@@ -45,7 +45,7 @@ export default {
 
     try {
       const stickerBuffer = await createSticker(buffer, { topText, bottomText });
-      await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer }, { quoted: msg });
+      await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       await reply(`Gagal membuat stiker: ${err.message}`);
     }
