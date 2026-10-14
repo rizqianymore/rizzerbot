@@ -76,20 +76,36 @@ async function runSource(source, clean, options) {
   throw new Error(`Provider tidak dikenal: ${source}`);
 }
 
+export function withTimeout(promise, ms, label = "operasi") {
+  let timer = null;
+  const gate = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timeout ${ms}ms`)), ms);
+  });
+  return Promise.race([Promise.resolve(promise).finally(() => clearTimeout(timer)), gate]);
+}
+
 export async function askAI(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new Error("Prompt kosong.");
   const prefer = normalizeSource(options.prefer);
   const errors = {};
+  const sourceTimeout = Number(process.env.AI_SOURCE_TIMEOUT_MS) || 30000;
+  const chainTimeout = Number(process.env.AI_CHAIN_TIMEOUT_MS) || 120000;
 
   const chain = [];
   if (prefer) chain.push(prefer);
   for (const s of keyedChain()) if (!chain.includes(s)) chain.push(s);
   for (const s of ["duckduckgo", "pollinations", "claude"]) if (!chain.includes(s)) chain.push(s);
 
+  const deadline = Date.now() + chainTimeout;
   for (const source of chain) {
+    const remain = deadline - Date.now();
+    if (remain <= 0) {
+      errors._chain = `batas waktu rantai ${chainTimeout}ms tercapai`;
+      break;
+    }
     try {
-      return await runSource(source, clean, options);
+      return await withTimeout(runSource(source, clean, options), Math.min(sourceTimeout, remain), source);
     } catch (err) {
       errors[source] = err?.message || String(err);
     }

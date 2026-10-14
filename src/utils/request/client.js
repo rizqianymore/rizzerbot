@@ -1,9 +1,17 @@
 import axios from "axios";
+import http from "http";
+import https from "https";
 import { brightDataRequest, getBrightDataConfig } from "@/src/services/network/brightdata.js";
 import { getRandomDevice } from "./devices.js";
 import { buildScraperHeaders } from "./headers.js";
 import { cookieJar, isCloudflareChallenge } from "./cookies.js";
 import { stealthBrowser } from "./browser.js";
+
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
+
+const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_BUFFER_MAX_BYTES = 40 * 1024 * 1024;
 
 function isBrightDataEnabled() {
   if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
@@ -13,7 +21,14 @@ function isBrightDataEnabled() {
 function brightDataFirstHosts() {
   return String(process.env.BRIGHTDATA_FIRST_HOSTS || "")
     .split(",")
-    .map((h) => h.trim().toLowerCase().replace(/^https?:\/\//i, "").split("/")[0])
+    .map(
+      (h) =>
+        h
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//i, "")
+          .split("/")[0]
+    )
     .filter(Boolean);
 }
 
@@ -54,7 +69,7 @@ const TRANSIENT_STATUS = new Set([408, 429, 502, 503, 504]);
 export async function smartRequest(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const responseType = options.responseType || "json";
-  const timeout = options.timeout || 20000;
+  const timeout = options.timeout || DEFAULT_TIMEOUT_MS;
   const retries = options.retries !== undefined ? options.retries : 2;
   const bypassCloudflare = options.bypassCloudflare !== undefined ? options.bypassCloudflare : "auto";
   const preferredDevice = options.preferredDevice || "any";
@@ -110,9 +125,7 @@ export async function smartRequest(url, options = {}) {
         const bdData = await tryBrightData();
         report("brightdata");
         return bdData;
-      } catch (_bdErr) {
-
-      }
+      } catch (_bdErr) {}
     }
 
     if (responseType === "json") {
@@ -134,6 +147,8 @@ export async function smartRequest(url, options = {}) {
         method,
         headers,
         timeout,
+        httpAgent,
+        httpsAgent,
         responseType: "arraybuffer",
         validateStatus: () => true,
       });
@@ -168,9 +183,14 @@ export async function smartRequest(url, options = {}) {
         params: options.params,
         data: options.data,
         timeout,
+        httpAgent,
+        httpsAgent,
         responseType: responseType === "buffer" ? "arraybuffer" : responseType,
         validateStatus: () => true,
       };
+      if (responseType === "buffer") {
+        axiosConfig.maxContentLength = options.maxBytes || DEFAULT_BUFFER_MAX_BYTES;
+      }
 
       const res = await axios(axiosConfig);
 
@@ -193,9 +213,7 @@ export async function smartRequest(url, options = {}) {
               return Buffer.from(bdResult);
             }
             return bdResult;
-          } catch (_) {
-
-          }
+          } catch (_) {}
         }
 
         const solved = await stealthBrowser.solveChallenge(url, {
