@@ -189,33 +189,50 @@ export default {
     const jid = msg.key.remoteJid;
     const botName = activeSettings.botName || "Rizzer Bot";
 
-    if (showAll) {
-      const finalCaption = renderMenu({
+    if (showAll || !targetCategory) {
+      const body = renderMenu({
         botName,
         prefix,
         role,
         totalCmds,
         categories,
         catKeys,
-        targetCategory,
+        targetCategory: null,
       }).trim();
-      const imagePayload = await resolveImagePayload(activeSettings);
-      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
-    }
 
-    if (!targetCategory) {
+      if (shouldUseInteractive(body)) {
+        const image = await resolveMenuImage(activeSettings);
+        try {
+          await sock.sendMessage(
+            jid,
+            {
+              interactiveMessage: {
+                title: body,
+                footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
+                buttons: buildMenuButtons(catKeys, prefix),
+                ...(image ? { image } : {}),
+              },
+            },
+            { quoted: msg }
+          );
+        } catch (_) {
+          const imagePayload = await resolveImagePayload(activeSettings);
+          await sendWithImage(sock, jid, imagePayload, body, msg);
+        }
+      } else {
+        const imagePayload = await resolveImagePayload(activeSettings);
+        await sendWithImage(sock, jid, imagePayload, body, msg);
+      }
 
-      const image = await resolveMenuImage(activeSettings);
       try {
-        return await sock.sendMessage(
+        const navImage = await resolveMenuImage(activeSettings);
+        await sock.sendMessage(
           jid,
-          buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }),
+          buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image: navImage }),
           { quoted: msg }
         );
       } catch (_) {}
-      const finalCaption = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
-      const imagePayload = await resolveImagePayload(activeSettings);
-      return sendWithImage(sock, jid, imagePayload, finalCaption, msg);
+      return;
     }
 
     const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
