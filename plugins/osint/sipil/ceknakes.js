@@ -19,7 +19,7 @@ function isImageBuffer(buf) {
   return isJpeg || isPng || isWebp || isGif;
 }
 
-async function sendNakesResult(sock, msg, reply, text, fotoUrl) {
+export async function sendNakesResult(sock, msg, reply, text, fotoUrl) {
   if (fotoUrl && /^https?:\/\//i.test(String(fotoUrl))) {
     try {
       const buf = await request.buffer(fotoUrl, { timeout: 20000 });
