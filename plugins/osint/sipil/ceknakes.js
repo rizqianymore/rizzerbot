@@ -19,11 +19,47 @@ function isImageBuffer(buf) {
   return isJpeg || isPng || isWebp || isGif;
 }
 
+function decodeDataUri(foto) {
+  const m = foto.match(/^data:image\/(jpeg|jpg|png|webp|gif)(;charset=[^;,]+)?;base64,(.*)$/is);
+  if (!m) return null;
+  const b64 = (m[3] || "").replace(/\s/g, "");
+  if (b64.length < 100 || b64.length > 15_000_000) return null;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) return null;
+  try {
+    const buf = Buffer.from(b64, "base64");
+    if (buf.length < 200 || buf.length > 12_000_000) return null;
+    return buf;
+  } catch {
+    return null;
+  }
+}
+
+function decodeRawBase64(foto) {
+  const s = foto.replace(/\s/g, "");
+  if (s.length < 500 || s.length > 15_000_000) return null;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(s)) return null;
+  try {
+    const buf = Buffer.from(s, "base64");
+    if (!isImageBuffer(buf)) return null;
+    if (buf.length < 200 || buf.length > 12_000_000) return null;
+    return buf;
+  } catch {
+    return null;
+  }
+}
+
 export async function sendNakesResult(sock, msg, reply, text, fotoUrl) {
-  if (fotoUrl && /^https?:\/\//i.test(String(fotoUrl))) {
+  if (fotoUrl && typeof fotoUrl === "string") {
+    const foto = fotoUrl.trim();
     try {
-      const buf = await request.buffer(fotoUrl, { timeout: 20000 });
-      if (isImageBuffer(buf)) {
+      let buf = decodeDataUri(foto);
+      if (!buf && /^https?:\/\//i.test(foto)) {
+        buf = await request.buffer(foto, { timeout: 20000 });
+      }
+      if (!buf && !/^https?:\/\//i.test(foto) && !/^data:/i.test(foto)) {
+        buf = decodeRawBase64(foto);
+      }
+      if (buf && isImageBuffer(buf)) {
         if (text.length <= IMAGE_CAPTION_MAX) {
           return await sock.sendMessage(msg.key.remoteJid, { image: buf, caption: text }, { quoted: msg });
         }

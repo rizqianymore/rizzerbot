@@ -185,7 +185,15 @@ function extractDetailPhoto(html) {
   const BAD = /logo|icon|badge|banner|slide|blog|header|footer|sprite|placeholder|loading|pixel|track|ads/i;
   const GOOD = /foto|photo|profil|profile|avatar|pasfoto|sdmk|dokter|nakes|person|user|picture|gambar/i;
   const norm = (s) => {
-    if (!s || /^data:/i.test(s)) return null;
+    if (!s) return null;
+    const dm = s.match(/^data:image\/(jpeg|jpg|png|webp|gif)(;charset=[^;,]+)?;base64,(.*)$/is);
+    if (dm) {
+      const b64 = (dm[3] || "").replace(/\s/g, "");
+      if (b64.length < 100 || b64.length > 15_000_000) return null;
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) return null;
+      return s;
+    }
+    if (/^data:/i.test(s)) return null;
     if (/^https?:\/\//i.test(s)) return s;
     if (s.startsWith("//")) return `https:${s}`;
     if (s.startsWith("/")) return `${BASE}${s}`;
@@ -194,12 +202,16 @@ function extractDetailPhoto(html) {
   const cands = [];
   for (const m of tags) {
     const src = (m[1] || "").trim();
-    const tag = m[0].slice(0, 300);
-    if (!src || BAD.test(src) || BAD.test(tag)) continue;
+    if (!src) continue;
+    const isDataUri = /^data:image\//i.test(src);
+    const tagForCheck = m[0].replace(/base64,[A-Za-z0-9+/=\s]{20,}/is, "base64,...").slice(0, 500);
+    const checkStr = isDataUri ? tagForCheck : `${src.slice(0, 500)} ${tagForCheck}`;
+    if (BAD.test(checkStr)) continue;
     const url = norm(src);
     if (!url) continue;
     const score =
-      (GOOD.test(`${src} ${tag}`) ? 2 : 0) + (/\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? 1 : 0);
+      (GOOD.test(checkStr) ? 2 : 0) +
+      (isDataUri ? 1 : /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? 1 : 0);
     cands.push({ url, score });
   }
   cands.sort((a, b) => b.score - a.score);
