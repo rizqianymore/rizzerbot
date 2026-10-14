@@ -92,7 +92,7 @@ export class StoreUsers extends StoreBase {
       next.lastSeen = Number(updates.lastSeen);
     }
 
-    const EXTRA_SAFE = new Set(["energy", "energyLastRefill", "exp", "level", "crystals", "spinsWon"]);
+    const EXTRA_SAFE = new Set(["energy", "energyLastRefill", "exp", "level", "crystals", "spinsWon", "aiMemory"]);
     for (const key of EXTRA_SAFE) {
       if (updates[key] !== undefined) next[key] = updates[key];
     }

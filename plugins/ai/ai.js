@@ -1,4 +1,5 @@
 import { askAI, getAIStatus, normalizeSource } from "@/src/services/ai/router.js";
+import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
 
 const FLAGS = [
   "--groq",
@@ -29,7 +30,7 @@ export default {
   usage: "<pertanyaan> [--groq/--cerebras/--gemini/--mistral/--or/--github/--nvidia/--ddg/--polli/--claude] | --models",
   premiumOnly: true,
   category: "AI",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
     await sendTyping();
     const p = prefix || ".";
     let text = args.join(" ").trim();
@@ -70,7 +71,8 @@ export default {
 
     await reply("Memproses jawaban...");
     try {
-      const result = await askAI(text, { prefer });
+      const result = await askAI(text, { prefer, history: getHistory(senderJid) });
+      pushTurn(senderJid, text, result.text);
       const output = `*AI (${result.source})*\n\n${result.text}`;
       await reply(output.slice(0, 4000));
     } catch (err) {

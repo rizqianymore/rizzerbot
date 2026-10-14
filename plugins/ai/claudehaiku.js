@@ -1,4 +1,5 @@
 import { ClaudeHaiku } from "@/src/services/ai/overchat.js";
+import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
 
 export default {
   name: "claudehaiku",
@@ -7,7 +8,7 @@ export default {
   usage: "<pertanyaan>",
   premiumOnly: true,
   category: "AI",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
     await sendTyping();
 
     const text = args.join(" ").trim();
@@ -20,11 +21,12 @@ export default {
     }
 
     try {
-      const result = await ClaudeHaiku(text);
+      const result = await ClaudeHaiku(text, { history: getHistory(senderJid) });
 
       if (!result.status) {
 return reply(`*CLAUDE HAIKU GAGAL*\n${result.error || "Gagal mendapatkan respons"}`);
       }
+      pushTurn(senderJid, text, result.answer);
 const answer = `${result.answer}`;
       await reply(answer.length > 4000 ? answer.slice(0, 4000) + "..." : answer);
     } catch (err) {

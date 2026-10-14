@@ -1,4 +1,5 @@
 import { askDuckDuckGo, getLiveFreeModels } from "@/src/services/ai/duckduckgo/client.js";
+import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
 
 export default {
   name: "duckduckgo",
@@ -7,7 +8,7 @@ export default {
   usage: "<pertanyaan> [--claude / --mistral]",
   premiumOnly: true,
   category: "AI",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
     await sendTyping();
     const p = prefix || ".";
 
@@ -54,7 +55,12 @@ export default {
     await reply(`Memproses jawaban via ${selectedModel}...`);
 
     try {
-      const result = await askDuckDuckGo(text, { model: selectedModel });
+      const history = getHistory(senderJid);
+      const result = await askDuckDuckGo(
+        history.length ? [...history, { role: "user", content: text }] : text,
+        { model: selectedModel }
+      );
+      pushTurn(senderJid, text, result.text);
       const output = `*DUCKDUCKGO AI (${result.model})*\n\n${result.text}`;
       await reply(output.slice(0, 4000));
     } catch (err) {

@@ -1,4 +1,5 @@
 import { askGemini } from "@/src/services/ai/gemini.js";
+import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
 
 export default {
   name: "gemini",
@@ -7,7 +8,7 @@ export default {
   usage: "<pertanyaan>",
   premiumOnly: true,
   category: "AI",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
     await sendTyping();
     const text = args.join(" ").trim();
     if (!text) {
@@ -19,7 +20,8 @@ export default {
       );
     }
     try {
-      const result = await askGemini(text);
+      const result = await askGemini(text, { history: getHistory(senderJid) });
+      pushTurn(senderJid, text, result.text);
       const output = `*GEMINI AI (${result.model})*\n\n${result.text}`;
       await reply(output.slice(0, 4000));
     } catch (err) {

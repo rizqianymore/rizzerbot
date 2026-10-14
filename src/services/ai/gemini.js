@@ -16,12 +16,19 @@ export async function askGemini(prompt, options = {}) {
     options.system || "Jawab dengan bahasa yang sama seperti user, natural, singkat dan jelas.";
 
   const url = `https://generativelanguage.googleapis.com/${API_VERSION}/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const contents = [
+    ...(Array.isArray(options.history) ? options.history : []).map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(m.content || "").slice(0, 2000) }],
+    })),
+    { role: "user", parts: [{ text: clean }] },
+  ];
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: clean }] }],
+      contents,
       generationConfig: {
         temperature: options.temperature ?? 0.7,
         maxOutputTokens: options.maxTokens || 2048,

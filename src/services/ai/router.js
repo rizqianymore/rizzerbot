@@ -62,7 +62,9 @@ async function runSource(source, clean, options) {
   if (source === "github") return { ...(await askGithubModels(clean, options)), source };
   if (source === "nvidia") return { ...(await askNvidia(clean, options)), source };
   if (source === "duckduckgo") {
-    const r = await askDuckDuckGo(clean, { model: options.model || "gpt-5.4-mini" });
+    const hist = Array.isArray(options.history) ? options.history : [];
+    const input = hist.length ? [...hist, { role: "user", content: clean }] : clean;
+    const r = await askDuckDuckGo(input, { model: options.model || "gpt-5.4-mini" });
     return { text: r.text, model: r.model, source };
   }
   if (source === "pollinations") return { ...(await askPollinations(clean, options)), source };
