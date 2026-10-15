@@ -114,12 +114,12 @@ async function gifFallback(buffer, { topText, bottomText, hasText, textOpts = {}
   );
 }
 
-export async function createSticker(buffer, { pack, author, topText, bottomText, font, fontSize, maxSize, position, align } = {}) {
+export async function createSticker(buffer, { pack, author, topText, bottomText, font, fontSize, maxSize, wordsPerLine, position, align } = {}) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
   const authorName = author === undefined ? activeSettings.stickerAuthor : author;
   const hasText = Boolean((topText && topText.trim()) || (bottomText && bottomText.trim()));
-  const textOpts = { font, fontSize, maxSize, position, align };
+  const textOpts = { font, fontSize, maxSize, wordsPerLine, position, align };
   const sharp = getSharp();
 
   const isAnimatedWebp =

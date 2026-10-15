@@ -15,14 +15,16 @@ export default {
   name: "doksli",
   aliases: ["dokslisticker"],
   description: "Stiker Doksli + teks meme",
-  usage: "[--font=Nama --size=48 --tengah/--atas/--bawah --justify] [teks atas | bawah]",
+  usage: "[--font=Nama --size=48 --wrap=4 --tengah/--atas/--bawah --justify] [teks atas | bawah]",
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";
     let font = "";
     let fontSize = 0;
+    let wordsPerLine = 0;
     let position = "";
-    let align = "center";    const textArgs = [];
+    let align = "center";
+    const textArgs = [];
     for (const a of args) {
       const low = String(a || "").toLowerCase();
       if (low.startsWith("--font=")) {
@@ -32,6 +34,11 @@ export default {
       if (low.startsWith("--size=")) {
         const n = Number(String(a).slice(7));
         if (Number.isFinite(n) && n >= 12 && n <= 200) fontSize = Math.floor(n);
+        continue;
+      }
+      if (low.startsWith("--wrap=")) {
+        const n = Number(String(a).slice(7));
+        if (Number.isFinite(n) && n >= 1 && n <= 10) wordsPerLine = Math.floor(n);
         continue;
       }
       if (low === "--tengah" || low === "--middle" || low === "--center") {
@@ -56,7 +63,7 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? 0 : 56;
+    const maxSize = fontSize > 0 ? 0 : 72;
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ");
       if (fullText.includes("|")) {
@@ -78,7 +85,7 @@ export default {
       return reply("Gambar sumber Doksli belum ada di server. Owner: jalankan *git pull* lalu restart bot.");
     }
     try {
-      const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, maxSize, position, align });
+      const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, maxSize, wordsPerLine, position, align });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       logger?.error?.(`[Doksli] gagal: ${err?.message || err}`);

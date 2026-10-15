@@ -49,46 +49,55 @@ function splitWordIfTooLong(ctx, word, maxWidth) {
   return parts;
 }
 
-function wrapLine(ctx, lineText, maxWidth) {
+function wrapLine(ctx, lineText, maxWidth, maxWords = 0) {
   const words = lineText.split(" ").filter(Boolean);
   const result = [];
   let cur = "";
+  let curCount = 0;
+
+  const flush = () => {
+    if (cur) result.push(cur);
+    cur = "";
+    curCount = 0;
+  };
 
   for (const word of words) {
+    if (maxWords > 0 && curCount >= maxWords) flush();
     const test = cur ? `${cur} ${word}` : word;
     if (ctx.measureText(test).width <= maxWidth) {
       cur = test;
+      curCount++;
       continue;
     }
-    if (cur) {
-      result.push(cur);
-      cur = "";
-    }
+    if (cur) flush();
     if (ctx.measureText(word).width <= maxWidth) {
       cur = word;
+      curCount = 1;
     } else {
       const parts = splitWordIfTooLong(ctx, word, maxWidth);
       result.push(...parts.slice(0, -1));
       cur = parts.at(-1) || "";
+      curCount = cur ? 1 : 0;
     }
   }
   if (cur) result.push(cur);
   return result;
 }
 
-function wrapText(ctx, text, maxWidth) {
+function wrapText(ctx, text, maxWidth, maxWords = 0) {
   return text.split("\n").flatMap((line) => {
     const clean = line.trim();
-    return clean ? wrapLine(ctx, clean, maxWidth) : [""];
+    return clean ? wrapLine(ctx, clean, maxWidth, maxWords) : [""];
   });
 }
 
-function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize = 0, maxSize = 0 } = {}) {
+function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize = 0, maxSize = 0, wordsPerLine = 0 } = {}) {
   const fixed = Number(fontSize);
+  const perLine = Number.isFinite(Number(wordsPerLine)) && Number(wordsPerLine) >= 1 ? Math.floor(Number(wordsPerLine)) : 0;
   if (Number.isFinite(fixed) && fixed >= 12 && fixed <= 200) {
     const size = Math.floor(fixed);
     ctx.font = fontStack(size, font);
-    const lines = wrapText(ctx, text, maxWidth);
+    const lines = wrapText(ctx, text, maxWidth, perLine);
     const lineHeight = Math.ceil(size * 1.15);
     const maxAllowedLines = Math.max(1, Math.floor(maxHeight / lineHeight));
     const kept = lines.slice(0, maxAllowedLines);
@@ -106,13 +115,11 @@ function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize 
   let optimalLineHeight = 16;
   let optimalTotalHeight = 16;
 
-  const startSize = Math.min(
-    Math.max(22, Math.floor(maxWidth / 8)),
-    Number.isFinite(Number(maxSize)) && Number(maxSize) >= 14 ? Math.floor(Number(maxSize)) : 999
-  );
+  const cap = Number.isFinite(Number(maxSize)) && Number(maxSize) >= 14 ? Math.floor(Number(maxSize)) : 0;
+  const startSize = cap > 0 ? Math.min(cap, 200) : Math.max(22, Math.floor(maxWidth / 8));
   for (let size = startSize; size >= 14; size -= 2) {
     ctx.font = fontStack(size, font);
-    const lines = wrapText(ctx, text, maxWidth);
+    const lines = wrapText(ctx, text, maxWidth, perLine);
     const lineHeight = Math.ceil(size * 1.15);
     const totalHeight = lines.length * lineHeight;
 
@@ -128,7 +135,7 @@ function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize 
   if (optimalLines.length === 0) {
     optimalSize = 14;
     ctx.font = fontStack(14, font);
-    const lines = wrapText(ctx, text, maxWidth);
+    const lines = wrapText(ctx, text, maxWidth, perLine);
     optimalLineHeight = Math.ceil(14 * 1.15);
     const maxAllowedLines = Math.max(1, Math.floor(maxHeight / optimalLineHeight));
     optimalLines = lines.slice(0, maxAllowedLines);
@@ -193,12 +200,12 @@ function drawFittedText(ctx, text, maxWidth, maxHeight, centerX, startY, opts = 
   return fit;
 }
 
-function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
+function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "", fontSize = 0, maxSize = 0, wordsPerLine = 0, position = "", align = "center" } = {}) {
   const marginX = Math.floor(width * 0.05);
   const maxTextWidth = width - marginX * 2;
   const paddingY = Math.max(10, Math.floor(height * 0.03));
   const sectionHeight = Math.floor(height * 0.4);
-  const opts = { font, fontSize, maxSize, align };
+  const opts = { font, fontSize, maxSize, wordsPerLine, align };
   const pos = String(position || "").toLowerCase();
   const box = { maxWidth: maxTextWidth, align, font };
 
@@ -230,7 +237,7 @@ function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "
   }
 }
 
-export async function createTextOverlayCanvas(width = 512, height = 512, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
+export async function createTextOverlayCanvas(width = 512, height = 512, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, wordsPerLine = 0, position = "", align = "center" } = {}) {
   const top = topText.trim();
   const bottom = bottomText.trim();
   if (!top && !bottom) return null;
@@ -240,12 +247,12 @@ export async function createTextOverlayCanvas(width = 512, height = 512, { topTe
   await ensureStickerEmoji();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
-  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, position, align });
+  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, wordsPerLine, position, align });
 
   return canvas.toBuffer("image/png");
 }
 
-export async function addTextToImage(buffer, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
+export async function addTextToImage(buffer, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, wordsPerLine = 0, position = "", align = "center" } = {}) {
   const top = topText.trim();
   const bottom = bottomText.trim();
   if (!top && !bottom) return buffer;
@@ -260,7 +267,7 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "", fo
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(baseImage, 0, 0, width, height);
-  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, position, align });
+  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, wordsPerLine, position, align });
 
   return canvas.toBuffer("image/png");
 }

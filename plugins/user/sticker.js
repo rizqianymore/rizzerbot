@@ -4,7 +4,7 @@ export default {
   name: "sticker",
   aliases: ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
   description: "Convert image/video to sticker (support meme teks atas | bawah)",
-  usage: "[--font=Nama --size=48 --tengah/--atas/--bawah --justify] [teks atas | bawah] (reply/kirim gambar atau video)",
+  usage: "[--font=Nama --size=48 --wrap=4 --tengah/--atas/--bawah --justify] [teks atas | bawah] (reply/kirim gambar atau video)",
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
@@ -35,6 +35,7 @@ export default {
 
     let font = "";
     let fontSize = 0;
+    let wordsPerLine = 0;
     let position = "";
     let align = "center";
     const textArgs = [];
@@ -47,6 +48,11 @@ export default {
       if (low.startsWith("--size=")) {
         const n = Number(String(a).slice(7));
         if (Number.isFinite(n) && n >= 12 && n <= 200) fontSize = Math.floor(n);
+        continue;
+      }
+      if (low.startsWith("--wrap=")) {
+        const n = Number(String(a).slice(7));
+        if (Number.isFinite(n) && n >= 1 && n <= 10) wordsPerLine = Math.floor(n);
         continue;
       }
       if (low === "--tengah" || low === "--middle" || low === "--center") {
@@ -82,7 +88,7 @@ export default {
     }
 
     try {
-      const stickerBuffer = await createSticker(buffer, { topText, bottomText, font, fontSize, position, align });
+      const stickerBuffer = await createSticker(buffer, { topText, bottomText, font, fontSize, wordsPerLine, position, align });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       await reply(`Gagal membuat stiker: ${err.message}`);
