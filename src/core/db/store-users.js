@@ -13,7 +13,8 @@ export class StoreUsers extends StoreBase {
     }
     if (!this.data.users[normalized]) {
       this.data.users[normalized] = this.createUser(normalized);
-      this.save();
+      // Jalur panas (tiap pengirim baru): tunda tulis disk, jangan blokir event loop.
+      this.saveSoon();
       return this.data.users[normalized];
     }
     this.applyConfiguredAccess(normalized, this.data.users[normalized]);
@@ -25,7 +26,7 @@ export class StoreUsers extends StoreBase {
     const next = this.normalizeUser(jid, user);
     const changed = before !== JSON.stringify(next);
     if (changed) this.data.users[jid] = next;
-    if (changed && persist) this.save();
+    if (changed && persist) this.saveSoon();
     return changed;
   }
 
@@ -143,7 +144,11 @@ export class StoreUsers extends StoreBase {
     next.role = getRole(next);
 
     this.data.users[normalized] = next;
-    this.save();
+    // Dipanggil di jalur panas (update nama tiap pesan): tulis disk ditunda
+    // 1.5 detik agar event loop tidak tersumbat JSON.stringify + fs sync.
+    // Aksi privilegi (owner/admin/premium/ban) tetap memakai save() sinkron
+    // di pemanggilnya masing-masing.
+    this.saveSoon();
     return next;
   }
 

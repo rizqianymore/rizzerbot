@@ -14,6 +14,46 @@ function getTaskBotJid(sock) {
 
 const chatQueues = new Map();
 const QUEUE_DELAY_MS = 0;
+// Maksimal perintah yang diproses BERSAMAAN per chat. Sebelumnya antrean
+// strictly serial: 1 stiker video (ffmpeg ~10 detik) memblokir semua perintah
+// berikutnya di chat yang sama sehingga bot terasa "slow banget".
+const MAX_CONCURRENT_PER_CHAT = 3;
+
+async function runTask(key, task, logger) {
+  const { sock, msg } = task;
+  try {
+    await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
+  } catch (err) {
+    if (logger) {
+      logger.error(`[Queue Error] Failed to handle message in ${key}:`, err);
+    } else {
+      console.error(`[Queue Error] Failed to handle message in ${key}:`, err);
+    }
+  }
+}
+
+function pumpQueue(key, logger) {
+  const queue = chatQueues.get(key);
+  if (!queue) return;
+  while (queue.active < MAX_CONCURRENT_PER_CHAT && queue.tasks.length > 0) {
+    const task = queue.tasks.shift();
+    queue.active += 1;
+    runTask(key, task, logger).finally(() => {
+      const q = chatQueues.get(key);
+      if (!q) return;
+      q.active -= 1;
+      if (q.tasks.length > 0) {
+        if (QUEUE_DELAY_MS > 0) {
+          setTimeout(() => pumpQueue(key, logger), QUEUE_DELAY_MS);
+        } else {
+          pumpQueue(key, logger);
+        }
+      } else if (q.active <= 0) {
+        chatQueues.delete(key);
+      }
+    });
+  }
+}
 
 function getSockIdentity(sock) {
   try {
@@ -29,35 +69,6 @@ function getQueueKey(sock, remoteJid) {
   return `${getSockIdentity(sock)}::${remoteJid}`;
 }
 
-async function processQueue(key, logger) {
-  const queue = chatQueues.get(key);
-  if (!queue || queue.processing) return;
-
-  queue.processing = true;
-
-  while (queue.tasks.length > 0) {
-    const { sock, msg } = queue.tasks[0];
-
-    try {
-      await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
-    } catch (err) {
-      if (logger) {
-        logger.error(`[Queue Error] Failed to handle message in ${key}:`, err);
-      } else {
-        console.error(`[Queue Error] Failed to handle message in ${key}:`, err);
-      }
-    }
-
-    queue.tasks.shift();
-
-    if (queue.tasks.length > 0) {
-      await new Promise((resolve) => setTimeout(resolve, QUEUE_DELAY_MS));
-    }
-  }
-
-  chatQueues.delete(key);
-}
-
 const MAX_QUEUE_PER_CHAT = 50;
 
 export function enqueueMessage(sock, msg, logger) {
@@ -68,7 +79,7 @@ export function enqueueMessage(sock, msg, logger) {
   if (!chatQueues.has(key)) {
     chatQueues.set(key, {
       tasks: [],
-      processing: false,
+      active: 0,
     });
   }
 
@@ -84,7 +95,5 @@ export function enqueueMessage(sock, msg, logger) {
 
   queue.tasks.push({ sock, msg });
 
-  processQueue(key, logger).catch((err) => {
-    console.error(`[Queue Fatal] Loop crash for ${key}:`, err);
-  });
+  pumpQueue(key, logger);
 }

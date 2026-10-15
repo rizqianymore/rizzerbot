@@ -53,7 +53,20 @@ export function registerBotJid(jid) {
   activeBotJids.add(normalized);
 }
 
+// Daftar sub-bot dibaca dari disk (readdirSync) — tanpa cache, fungsi ini
+// dipanggil berkali-kali PER PESAN (isAnyBotJid dipakai untuk tiap partisipan
+// grup + tiap pengirim), sehingga event loop tersumbat I/O sinkron.
+// Daftar sub-bot jarang berubah, jadi cache 30 detik sudah cukup.
+const SUB_DIGITS_TTL_MS = 30_000;
+let _subDigitsCache = { at: 0, value: [] };
+
+export function invalidateSubDigitsCache() {
+  _subDigitsCache.at = 0;
+}
+
 export function getKnownSubDigits() {
+  const now = Date.now();
+  if (now - _subDigitsCache.at < SUB_DIGITS_TTL_MS) return [..._subDigitsCache.value];
   const stores = _providers.getStores ? _providers.getStores() : null;
   const out = new Set(stores ? stores.keys() : []);
   out.delete(MAIN_KEY);
@@ -65,6 +78,7 @@ export function getKnownSubDigits() {
       }
     }
   } catch (_) {}
+  _subDigitsCache = { at: now, value: [...out] };
   return [...out];
 }
 

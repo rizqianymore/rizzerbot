@@ -25,7 +25,7 @@ function shouldSkipBeforeQueue(msg) {
 
   try {
     const ts = Number(msg.messageTimestamp);
-    if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) return true;
+    if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 5 * 60 * 1000) return true;
   } catch (_) {}
   return false;
 }

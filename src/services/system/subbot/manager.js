@@ -117,6 +117,9 @@ export async function stopSubBot(identifier) {
     } catch (_) {}
   }
   subBots.delete(botId);
+  try {
+    db.invalidateSubDigitsCache();
+  } catch (_) {}
 
   const sessionDir = path.join(baseSessionsDir, botId);
   try {

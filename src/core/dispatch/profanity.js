@@ -1,7 +1,7 @@
+import { checkProfanity } from "@/src/utils/filter.js";
 import { getUniversalContextInfo } from "./message.js";
 
 export async function checkProfanityInput(sock, msg, logger, { remoteJid, senderJid, args }) {
-  const { checkProfanity } = await import("@/src/utils/filter.js");
   const uniCtxQ = getUniversalContextInfo(msg.message) || {};
   const quotedMsgQ = uniCtxQ.quotedMessage || {};
   const quotedText =

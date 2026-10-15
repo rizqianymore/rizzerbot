@@ -142,7 +142,7 @@ export function attachMessageHandler(sock) {
         }
         try {
           const ts = Number(msg.messageTimestamp);
-          if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 2 * 60 * 1000) continue;
+          if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 5 * 60 * 1000) continue;
         } catch (_) {}
 
         if (db.getSettings().autoRead) {

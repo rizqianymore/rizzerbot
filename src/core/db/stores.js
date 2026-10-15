@@ -3,7 +3,7 @@ import path from "path";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { isRecord, normalizeJid, normalizePhone, phoneDigitsOfPhoneJid, toBoolean } from "./utils.js";
 import { normalizeSettings } from "./settings.js";
-import { MAIN_KEY, SUBBOTS_DIR, isMainBotJid, registerBotJid } from "./botids.js";
+import { MAIN_KEY, SUBBOTS_DIR, invalidateSubDigitsCache, isMainBotJid, registerBotJid } from "./botids.js";
 import { Store } from "./store-admin.js";
 
 export const botAls = new AsyncLocalStorage();
@@ -115,7 +115,7 @@ export function ensureSubStore(botJid, seed = {}) {
 
   const s = new Store(key, false, dbPath, usersDbPath);
   s.data.settings = normalizeSettings({ ...s.data.settings, ...initial });
-
+  invalidateSubDigitsCache();
   if (!normalizeJid(s.data.settings.ownerNumber)) {
     s.data.settings.ownerNumber = `${key}@s.whatsapp.net`;
   }

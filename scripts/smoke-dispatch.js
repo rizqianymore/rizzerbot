@@ -80,15 +80,24 @@ function makeSock(botJid = OWNER_JID) {
   return attachEchoTracker(sock);
 }
 
-const logger = { info: () => {}, warn: () => {}, error: () => {} };
+const logLines = [];
+const logger = {
+  info: (...a) => void logLines.push(["info", a.map(String).join(" ")]),
+  warn: (...a) => void logLines.push(["warn", a.map(String).join(" ")]),
+  error: (...a) => void logLines.push(["error", a.map(String).join(" ")]),
+};
 
-async function dispatch(sock, { text, remoteJid, fromMe = false, participant }) {
+function logHas(...needles) {
+  return logLines.some(([, line]) => needles.every((n) => line.includes(n)));
+}
+
+async function dispatch(sock, { text, remoteJid, fromMe = false, participant, ageSec = 0 }) {
   const before = sock.sent.length;
   await dispatchMessage(
     sock,
     {
       key: { remoteJid, fromMe, id: `IN${++seq}`, participant },
-      messageTimestamp: Math.floor(Date.now() / 1000),
+      messageTimestamp: Math.floor(Date.now() / 1000) - ageSec,
       pushName: fromMe ? "~" : "User",
       message: { conversation: text },
     },
@@ -198,6 +207,55 @@ clearSentMessageCache();
   const sent = sock.sent.slice(before);
   assert(!sent.some((s) => s.content?.delete), "tap tombol menu tidak dihapus sebagai crash");
   assert(sent.length > 0, "tap tombol menu dijawab");
+}
+
+// 10. Pesan basi (>5 menit, mis. antrean offline) dibuang dengan jejak log,
+//     bukan hilang misterius.
+{
+  clearSentMessageCache();
+  logLines.length = 0;
+  const sock = makeSock();
+  const sent = await dispatch(sock, { text: ".ping", remoteJid: USER_JID, ageSec: 6 * 60 });
+  assert(sent.length === 0, "pesan basi 6 menit dibuang");
+  assert(logHas("[Stale]"), "pesan basi meninggalkan jejak log [Stale]");
+}
+
+// 11. Setiap penolakan perintah tercatat di log beserta alasannya.
+{
+  clearSentMessageCache();
+  logLines.length = 0;
+  const sock = makeSock();
+  await dispatch(sock, { text: ".perintahngawur", remoteJid: USER_JID });
+  assert(logHas("perintah tidak dikenal"), "perintah tak dikenal tercatat di log");
+
+  logLines.length = 0;
+  await dispatch(sock, { text: ".tagall", remoteJid: USER_JID });
+  assert(logHas("mode private"), "blokir private tercatat di log");
+}
+
+// 12. Owner yang spam tetap DIBALAS (bypass silentDeny) — dulu keheningan total.
+{
+  clearSentMessageCache();
+  const { db } = await import("@/src/core/database.js");
+  db.updateSettings({ silentDeny: true });
+  const sock = makeSock();
+  let throttled = null;
+  for (let i = 0; i < 12; i++) {
+    const sent = await dispatch(sock, { text: ".ping", remoteJid: OWNER_JID, fromMe: true });
+    const hit = sent.find((s) => /Terlalu banyak perintah owner/.test(s.content?.text || ""));
+    if (hit) throttled = hit;
+  }
+  assert(Boolean(throttled), "owner throttle tetap dibalas walau silentDeny=true");
+}
+
+// 13. File gambar di-cache di memori (tanpa baca ulang file tiap .menu).
+{
+  const { resolveImagePayload, clearImagePayloadCache } = await import("@/src/utils/imagePayload.js");
+  clearImagePayloadCache();
+  fs.writeFileSync(path.join(process.cwd(), "tmp-banner.bin"), Buffer.from("BANNER-DUMMY"));
+  const a = await resolveImagePayload({ image: "tmp-banner.bin" });
+  const b = await resolveImagePayload({ image: "tmp-banner.bin" });
+  assert(Buffer.isBuffer(a) && a === b, "gambar .menu diambil dari cache memori");
 }
 
 console.log(failures === 0 ? "  OK   simulasi dispatch bersih" : `  GAGAL ${failures} skenario dispatch`);

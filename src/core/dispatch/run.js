@@ -22,7 +22,10 @@ async function dispatchInner(sock, msg, logger) {
 
   const botJidEarly = resolveBotJid(sock);
   const botIdentity = resolveBotIdentity(sock);
-  if (isDuplicateMessage(botIdentity, msg.key)) return;
+  if (isDuplicateMessage(botIdentity, msg.key)) {
+    logger?.info?.(`[Dedup] pesan duplikat diabaikan: ${msg.key?.id || "?"}`);
+    return;
+  }
 
   const rawTypeKeys = msg.message ? Object.keys(msg.message) : [];
   if (
@@ -41,7 +44,12 @@ async function dispatchInner(sock, msg, logger) {
 
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || remoteJid === "status@broadcast") return;
-  if (isCrashBlocked(msg.key.participant || remoteJid)) return;
+  if (isCrashBlocked(msg.key.participant || remoteJid)) {
+    logger?.warn?.(
+      `[CrashBlock] ${msg.key.participant || remoteJid} sedang diblokir (payload sebelumnya mencurigakan)`
+    );
+    return;
+  }
 
   if (remoteJid.endsWith("@newsletter") || remoteJid.endsWith("@broadcast")) return;
 
@@ -49,7 +57,13 @@ async function dispatchInner(sock, msg, logger) {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
       const ageMs = Date.now() - ts * 1000;
-      if (ageMs > 2 * 60 * 1000) return;
+      // 5 menit: cukup longgar untuk antrean offline / jam HP miring, tapi tetap
+      // membuang riwayat basi saat reconnect. Dulu 2 menit tanpa log sehingga
+      // perintah yang telat sampai hilang tanpa jejak ("ga ada respons").
+      if (ageMs > 5 * 60 * 1000) {
+        logger?.info?.(`[Stale] pesan basi diabaikan (umur ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
+        return;
+      }
 
       if (ageMs < -5 * 60 * 1000) return;
     }
@@ -95,9 +109,16 @@ async function dispatchInner(sock, msg, logger) {
     normalizedRawSender,
     remoteNormalized,
     messageContent,
+    logger,
   });
   if (resolved.drop) {
     if (tapText) logger?.info?.(`[ButtonTap] drop (unknown/blocked): ${tapText}`);
+    else if (resolved.reason && !resolved.silent) {
+      logger?.info?.(
+        `[Drop] ${remoteJid} <- ${msg.pushName || "?"}: ${resolved.reason}` +
+          (resolved.commandName ? ` (cmd: ${resolved.commandName})` : "")
+      );
+    }
     return;
   }
   const { activeSettings, prefix, args, commandName, cmd, senderJid } = resolved;
@@ -108,7 +129,10 @@ async function dispatchInner(sock, msg, logger) {
 
   const isSubBotSock = sock.isSubBot === true;
   if (isGroup && !isFromMe) {
-    if (await routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock, commandName, senderJid })) return;
+    if (await routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock, commandName, senderJid })) {
+      logger?.info?.(`[Route] ditahan multi-bot (bot lain merespons): ${commandName} di ${remoteJid}`);
+      return;
+    }
   }
 
   if (isOwner && access.user && (!access.user.owner || !access.user.premium)) {
@@ -125,14 +149,20 @@ async function dispatchInner(sock, msg, logger) {
     user = access.user;
   }
 
-  if (user.banned && !isOwner) return;
+  if (user.banned && !isOwner) {
+    logger?.warn?.(`[Banned] perintah ${commandName} dari ${senderJid} ditolak (banned)`);
+    return;
+  }
 
   if (!isOwner) {
     if (await checkProfanityInput(sock, msg, logger, { remoteJid, senderJid, args })) return;
   }
 
   const deny = async (text) => {
-    if (activeSettings.silentDeny !== false) return;
+    if (activeSettings.silentDeny !== false) {
+      logger?.info?.(`[Deny-silent] ${commandName} <- ${senderJid}: ${String(text).slice(0, 80)}`);
+      return;
+    }
     await sock.sendMessage(remoteJid, { text }, { quoted: msg });
   };
 
@@ -141,8 +171,17 @@ async function dispatchInner(sock, msg, logger) {
   if (!isOwner) {
     if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid)) return;
   } else if (registerOwnerCommand(senderJid)) {
+    // Throttle owner SELALU dibalas (bypass silentDeny): pesannya untuk owner
+    // sendiri, bukan spam ke orang lain. Dulu owner yang spam test malah
+    // dapat keheningan total dan mengira bot mati.
     logger?.warn?.(`[OwnerThrottle] ${senderJid} melebihi batas perintah owner via ${botJid}`);
-    await deny(`⏳ Terlalu banyak perintah owner. Tunggu 10 detik sebelum mengulangi.`);
+    await sock
+      .sendMessage(
+        remoteJid,
+        { text: `⏳ Terlalu banyak perintah owner. Tunggu 10 detik sebelum mengulangi.` },
+        { quoted: msg }
+      )
+      .catch(() => {});
     return;
   }
 

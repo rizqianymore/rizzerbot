@@ -96,6 +96,8 @@ export async function executeCommand(sock, msg, logger, env) {
     await cmd.run(sock, msg, args, context);
   } catch (err) {
     logger?.error?.(`[Command Error] ${cmd.name}:`, err);
-    context.reply(`❌ Error: ${err.message}`);
+    try {
+      await context.reply(`❌ Error: ${err.message}`);
+    } catch (_) {}
   }
 }

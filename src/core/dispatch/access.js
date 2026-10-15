@@ -37,16 +37,27 @@ function isWhitelistedCommand(commandName, cmd, activeSettings) {
 export async function resolveCommandAccess(
   sock,
   msg,
-  { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent }
+  { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent, logger }
 ) {
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
   const remoteJid = msg.key.remoteJid;
-  if (!messageContent.startsWith(prefix)) return { drop: true };
+
+  // Setiap drop diberi alasan supaya bisa dilacak dari `pm2 logs` — dulu semua
+  // penolakan diam-diam sehingga tidak bisa dibedakan dari bot yang offline.
+  // `silent=true` untuk trafik normal yang memang bukan perintah / echo bot
+  // sendiri (volumenya besar, tidak perlu memenuhi log).
+  let commandName = "";
+  const drop = (reason, { silent = false } = {}) => {
+    if (!silent) logger?.info?.(`[Access] drop: ${reason} | prefix=${prefix} bot=${botJid || "?"}`);
+    return { drop: true, reason, commandName, silent };
+  };
+
+  if (!messageContent.startsWith(prefix)) return drop("bukan perintah (prefix tidak cocok)", { silent: true });
 
   const args = messageContent.slice(prefix.length).trim().split(/ +/).filter(Boolean);
-  const commandName = args.shift()?.toLowerCase() || "";
-  if (!commandName) return { drop: true };
+  commandName = args.shift()?.toLowerCase() || "";
+  if (!commandName) return drop("perintah kosong", { silent: true });
 
   const cmd = commands.get(commandName);
   if (!cmd) {
@@ -59,7 +70,7 @@ export async function resolveCommandAccess(
         )
         .catch(() => {});
     }
-    return { drop: true };
+    return drop(`perintah tidak dikenal: ${commandName}`);
   }
 
   // Identitas pengirim:
@@ -75,7 +86,7 @@ export async function resolveCommandAccess(
   // berflag fromMe. Buang HANYA echo (balasan bot sendiri yang dipantulkan
   // kembali); perintah yang diketik manual oleh pemilik akun bot tetap jalan.
   if (senderIsBotItself && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
-    return { drop: true };
+    return drop("echo balasan bot sendiri", { silent: true });
   }
 
   // CATATAN KEAMANAN: fromMe tidak otomatis berstatus Owner.
@@ -99,7 +110,7 @@ export async function resolveCommandAccess(
         )
         .catch(() => {});
     }
-    return { drop: true };
+    return drop(`mode private, ${commandName} bukan whitelist`);
   }
 
   if (activeSettings.maintenance === true && !isOwner) {
@@ -107,11 +118,11 @@ export async function resolveCommandAccess(
       const mtext = String(activeSettings.maintenanceMessage || "🔧 Bot sedang maintenance. Coba lagi nanti.");
       await sock.sendMessage(remoteJid, { text: mtext }, { quoted: msg }).catch(() => {});
     }
-    return { drop: true };
+    return drop("mode maintenance");
   }
 
   if (!isRegistered && !isWhitelisted && !isGroupJid(remoteJid)) {
-    return { drop: true };
+    return drop("pengirim belum terdaftar (DM, bukan whitelist)");
   }
 
   const user = access.user || {

@@ -113,6 +113,7 @@ export class Store extends StoreAccess {
     if (normalized.endsWith("@lid") && !this.data.users[normalized]) return null;
     const user = this.updateUser(normalized, { banned: toBoolean(enabled) }, { privileged: true });
     auditPrivilege(this.auditStoreKey(), "setBanned", normalized, enabled, { actor });
+    this.save();
     return user;
   }
 }

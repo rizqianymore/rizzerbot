@@ -8,8 +8,38 @@ const BANNER_PATHS = [
   "assets/image/banner.png",
 ];
 
+// Buffer banner di-cache di memori: sebelumnya setiap `.menu` membaca ulang
+// file ~95KB secara sinkron (fs.readFileSync) sehingga event loop tersumbat
+// di jalur panas. Cache diinvalidasi otomatis bila file berubah (mtime/size).
+let _bannerCache = { key: "", mtimeMs: 0, size: 0, buf: null };
+
+function readCachedFile(absPath) {
+  try {
+    const stat = fs.statSync(absPath);
+    if (
+      _bannerCache.buf &&
+      _bannerCache.key === absPath &&
+      _bannerCache.mtimeMs === stat.mtimeMs &&
+      _bannerCache.size === stat.size
+    ) {
+      return _bannerCache.buf;
+    }
+    const buf = fs.readFileSync(absPath);
+    _bannerCache = { key: absPath, mtimeMs: stat.mtimeMs, size: stat.size, buf };
+    return buf;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function clearImagePayloadCache() {
+  _bannerCache = { key: "", mtimeMs: 0, size: 0, buf: null };
+}
+
 export async function resolveImagePayload(settings = {}) {
   const image = settings.image;
+
+  if (Buffer.isBuffer(image)) return image;
 
   if (image) {
     if (typeof image === "string" && /^(https?):\/\//i.test(image)) {
@@ -18,7 +48,7 @@ export async function resolveImagePayload(settings = {}) {
     try {
       const localPath = path.resolve(process.cwd(), image);
       if (fs.existsSync(localPath)) {
-        return fs.readFileSync(localPath);
+        return readCachedFile(localPath);
       }
     } catch (_) {}
   }
@@ -26,9 +56,8 @@ export async function resolveImagePayload(settings = {}) {
   for (const rel of BANNER_PATHS) {
     const abs = path.resolve(process.cwd(), rel);
     if (fs.existsSync(abs)) {
-      try {
-        return fs.readFileSync(abs);
-      } catch (_) {}
+      const buf = readCachedFile(abs);
+      if (buf) return buf;
     }
   }
 
