@@ -14,9 +14,7 @@ function getTaskBotJid(sock) {
 
 const chatQueues = new Map();
 const QUEUE_DELAY_MS = 0;
-// Maksimal perintah yang diproses BERSAMAAN per chat. Sebelumnya antrean
-// strictly serial: 1 stiker video (ffmpeg ~10 detik) memblokir semua perintah
-// berikutnya di chat yang sama sehingga bot terasa "slow banget".
+
 const MAX_CONCURRENT_PER_CHAT = 3;
 
 async function runTask(key, task, logger) {

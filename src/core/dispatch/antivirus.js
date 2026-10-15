@@ -48,10 +48,7 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const m = msg.message || {};
 
     const tapText = extractButtonText(m);
-    // `interactiveResponseMessage` adalah balasan pengguna saat menekan tombol
-    // pada kartu menu. Formatnya kecil dan sah, sehingga tidak boleh dianggap
-    // payload crash (dulu tap yang id-nya gagal dibaca ikut dihapus + pengirim
-    // ditandai crash).
+
     const unparsedButtonTap = Boolean(m.interactiveResponseMessage) && !tapText;
     if (unparsedButtonTap) {
       logger?.warn?.(`[Anti-Crash] Balasan tombol tanpa id terbaca, diteruskan sebagai teks biasa`);

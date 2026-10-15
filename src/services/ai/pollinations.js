@@ -1,10 +1,6 @@
 const OPENAI_URL = "https://text.pollinations.ai/openai";
 const TIMEOUT_MS = 30000;
 
-// Hasil riset Okt 2026: endpoint legacy text.pollinations.ai hanya
-// menerima model "openai" tanpa key. Model lain (openai-fast, mistral,
-// dsb) mengembalikan {} kosong, dan endpoint baru gen.pollinations.ai
-// sudah wajib API key. Jadi client ini POST-only model "openai".
 const WORKING_MODEL = "openai";
 
 export async function askPollinations(prompt, options = {}) {

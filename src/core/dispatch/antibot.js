@@ -9,7 +9,6 @@ export function checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender,
       return true;
     }
 
-    // Owner bot ini (termasuk owner khusus sub-bot) tidak boleh kena heuristik "bot luar".
     const isKnownPrivileged =
       db.isOwner(normalizedRawSender) || db.isAdmin(normalizedRawSender) || db.isBotOwner(botJid, normalizedRawSender);
 

@@ -40,8 +40,6 @@ export async function checkRateLimit(activeSettings, senderJid, sock, msg, remot
   const cooldownMs = Number.isFinite(configuredCooldown) && configuredCooldown >= 0 ? configuredCooldown : 3000;
   const now = Date.now();
 
-  // `cooldownTime: 0` berarti cooldown dimatikan (sebelumnya `|| 3000` membuat
-  // nilai 0 ikut jadi 3 detik sehingga setting itu tidak pernah berlaku).
   if (cooldownMs > 0) {
     const lastTime = userCooldowns.get(senderJid) || 0;
     const diff = now - lastTime;

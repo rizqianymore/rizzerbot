@@ -75,8 +75,6 @@ export default {
       return reply(`Berhasil menambahkan *${jid.split("@")[0]}* sebagai ${via}.`);
     }
 
-    // Bot utama: hanya SuperOwner yang boleh menambah owner global
-    // (owner tambahan otomatis mewarisi akses owner di semua sub-bot).
     if (!isPrimarySuperOwner) {
       logger?.warn?.(`[OwnerCmd] addowner bot utama DITOLAK (bukan superowner): ${senderJid}`);
       return reply("Menambah Owner Bot Utama hanya dapat dilakukan oleh SuperOwner (Primary Owner).");

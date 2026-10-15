@@ -1,17 +1,3 @@
-/**
- * Pelacak echo (balasan bot sendiri).
- *
- * Kebutuhan: pada deployment ini nomor bot = nomor owner (pairing memakai
- * `pairingNumber`), sehingga pesan yang diketik owner sendiri sampai ke bot
- * dengan flag `fromMe: true` dan pengirim = JID bot. Versi lama memblokir
- * SEMUA pesan seperti itu, sehingga owner tidak bisa memakai bot sama sekali
- * (`.menu` -> diam total).
- *
- * Solusi: catat setiap pesan yang dikirim bot (id pesan + teksnya), lalu saat
- * pesan `fromMe` masuk, hanya yang TERDAFTAR sebagai echo yang dibuang.
- * Perintah yang diketik manual oleh pemilik akun bot tetap diproses.
- */
-
 const ID_TTL_MS = 5 * 60 * 1000;
 const TEXT_TTL_MS = 20 * 1000;
 const MAX_IDS = 2000;
@@ -88,10 +74,6 @@ export function clearSentMessageCache() {
   sentTexts.clear();
 }
 
-/**
- * Bungkus `sock.sendMessage` supaya setiap pesan keluar ikut tercatat.
- * Aman dipanggil berkali-kali pada socket yang sama.
- */
 export function attachEchoTracker(sock) {
   if (!sock || sock.__echoTrackerAttached) return sock;
 

@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * Fast non-bug: audit + auto-apply mode cepat & stay-on untuk SEMUA plugin
- * kecuali plugins/bug (disentuh? TIDAK — bug dibiarkan apa adanya).
- *
- * - --dry-run (default): hanya audit, tanpa ubah database.
- * - --apply: set database responseDelay=0, cooldownTime=0, autoOnline=true.
- *
- * Contoh: node scripts/fast-nonbug.js --dry-run | --apply
- */
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

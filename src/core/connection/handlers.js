@@ -35,8 +35,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       try {
         const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
         setPrimaryOnline(false);
-        // Notifikasi logout hanya kalau perangkat memang pernah terdaftar;
-        // 401 saat belum pair bukan logout (bisa jadi pairing ditolak/rate limit).
+
         if (!shouldReconnect && wasRegistered) {
           notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => {});
         }
@@ -54,14 +53,9 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         return;
       }
 
-      // 401 sebelum perangkat selesai di-pair BUKAN logout: itu pairing yang
-      // ditolak (kode kedaluwarsa / kena rate limit). Menghapus folder sesi di
-      // sini justru memperburuk — ephemeral pairing key ikut hilang dan percobaan
-      // pairing berulang membuat WA makin menolak. Sesi justru dipertahankan.
       if (!sock.authState?.creds?.registered) {
         connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
-        // Makin sering pairing ditolak, makin jauh jeda: mencoba connect
-        // berulang hanya memperburuk rate limit dari WhatsApp.
+
         const waitMs = connectionState.unregisteredFailures >= 3 ? 15 * 60 * 1000 : 120 * 1000;
         logger.warn(
           `Belum terdaftar: koneksi ditolak sebelum pairing selesai (status ${statusCode || "?"}). ` +
@@ -119,8 +113,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
 }
 
 export function attachMessageHandler(sock) {
-  // Catat semua pesan keluar supaya echo (balasan bot sendiri) bisa dibuang
-  // tanpa ikut memblokir perintah yang diketik manual oleh pemilik akun bot.
+
   attachEchoTracker(sock);
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {

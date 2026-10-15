@@ -125,8 +125,7 @@ export async function startBot() {
       if (!phoneNumber) {
         logger.error("Pairing phone number is missing or invalid in database/settings.js!");
       } else {
-        // Backoff naik saat pairing ditolak: percobaan beruntun membuat WA
-        // memblokir pairing sehingga bot tidak akan pernah berhasil.
+
         const RETRY_STEPS = [5000, 15000, 30000, 60000];
         let pairingAttempts = 0;
 

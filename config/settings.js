@@ -8,14 +8,14 @@ export const settings = {
   adminNumbers: [],
   usePairingCode: true,
 
-  public: false,
+  public: true,
   maintenance: false,
   maintenanceMessage: "🔧 Bot sedang maintenance. Coba lagi nanti.",
   prefix: ".",
 
   publicCommands: ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
 
-  silentDeny: true,
+  silentDeny: false,
 
   autoRead: false,
   autoOnline: true,

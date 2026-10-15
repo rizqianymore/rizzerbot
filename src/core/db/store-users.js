@@ -13,7 +13,7 @@ export class StoreUsers extends StoreBase {
     }
     if (!this.data.users[normalized]) {
       this.data.users[normalized] = this.createUser(normalized);
-      // Jalur panas (tiap pengirim baru): tunda tulis disk, jangan blokir event loop.
+
       this.saveSoon();
       return this.data.users[normalized];
     }
@@ -144,10 +144,7 @@ export class StoreUsers extends StoreBase {
     next.role = getRole(next);
 
     this.data.users[normalized] = next;
-    // Dipanggil di jalur panas (update nama tiap pesan): tulis disk ditunda
-    // 1.5 detik agar event loop tidak tersumbat JSON.stringify + fs sync.
-    // Aksi privilegi (owner/admin/premium/ban) tetap memakai save() sinkron
-    // di pemanggilnya masing-masing.
+
     this.saveSoon();
     return next;
   }

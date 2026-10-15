@@ -57,9 +57,7 @@ async function dispatchInner(sock, msg, logger) {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
       const ageMs = Date.now() - ts * 1000;
-      // 5 menit: cukup longgar untuk antrean offline / jam HP miring, tapi tetap
-      // membuang riwayat basi saat reconnect. Dulu 2 menit tanpa log sehingga
-      // perintah yang telat sampai hilang tanpa jejak ("ga ada respons").
+
       if (ageMs > 5 * 60 * 1000) {
         logger?.info?.(`[Stale] pesan basi diabaikan (umur ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
         return;
@@ -171,9 +169,7 @@ async function dispatchInner(sock, msg, logger) {
   if (!isOwner) {
     if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid)) return;
   } else if (registerOwnerCommand(senderJid)) {
-    // Throttle owner SELALU dibalas (bypass silentDeny): pesannya untuk owner
-    // sendiri, bukan spam ke orang lain. Dulu owner yang spam test malah
-    // dapat keheningan total dan mengira bot mati.
+
     logger?.warn?.(`[OwnerThrottle] ${senderJid} melebihi batas perintah owner via ${botJid}`);
     await sock
       .sendMessage(

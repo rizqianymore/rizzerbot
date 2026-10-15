@@ -1,10 +1,5 @@
 #!/usr/bin/env node
-/**
- * Turbo trafik & latency (non-bug): audit jalur HTTP, antrean, dan watchdog.
- * Read-only — tidak mengubah database maupun file.
- *
- * Contoh: node scripts/turbo-traffic.js
- */
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

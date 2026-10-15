@@ -179,9 +179,6 @@ export default {
         targetCategory: null,
       }).trim();
 
-      // Satu perintah = satu pesan. Sebelumnya menu lengkap dikirim lalu
-      // disusul kartu navigasi kedua dengan header + tombol yang sama,
-      // sehingga hasilnya terlihat dobel.
       if (shouldUseInteractive(body)) {
         const image = await resolveMenuImage(activeSettings);
         try {

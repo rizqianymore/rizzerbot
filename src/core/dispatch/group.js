@@ -41,9 +41,7 @@ export async function getGroupAccessError(sock, remoteJid, senderJid, cmd, acces
 }
 
 export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
-  // Jalur cepat: tidak ada sub-bot yang dikenal -> tidak mungkin ada bot lain
-  // di grup ini, jadi langsung solo TANPA fetch groupMetadata via jaringan.
-  // Sebelumnya setiap perintah grup menunggu 1 RTT metadata (~200-500ms).
+
   try {
     if (db.getKnownSubDigits().length === 0) {
       return { mode: "solo", botsInGroup: botJid ? [botJid] : [] };

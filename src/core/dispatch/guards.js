@@ -62,8 +62,6 @@ export function isCrashBlocked(jid) {
   return Boolean(rec && Date.now() < rec.blockedUntil);
 }
 
-// Owner tetap dibatasi (longgar) supaya sesi owner yang dibajak tidak bisa spam.
-// Nilai sengaja longgar supaya owner tetap bisa memakai bot seperti biasa.
 const ownerThrottles = new Map();
 const OWNER_WINDOW_MS = 10 * 1000;
 const OWNER_MAX = 10;

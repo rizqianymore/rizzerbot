@@ -8,9 +8,6 @@ const BANNER_PATHS = [
   "assets/image/banner.png",
 ];
 
-// Buffer banner di-cache di memori: sebelumnya setiap `.menu` membaca ulang
-// file ~95KB secara sinkron (fs.readFileSync) sehingga event loop tersumbat
-// di jalur panas. Cache diinvalidasi otomatis bila file berubah (mtime/size).
 let _bannerCache = { key: "", mtimeMs: 0, size: 0, buf: null };
 
 function readCachedFile(absPath) {

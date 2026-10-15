@@ -2,10 +2,6 @@ import { generateWAMessageFromContent } from "ourin-baileys";
 import { sleep } from "./helpers.js";
 import { BUG_DELAY_MS } from "./progress.js";
 
-// Payload 500rb tombol dibangun SEKALI dan dipakai ulang. Sebelumnya setiap
-// relayMessage membangun ulang Array 500k (~10-50ms + GC pressure) sehingga
-// 35 loop x double-hit x 50 relay = ribuan alokasi raksasa yang membuat
-// interval delay tidak tepat dan event loop tersendat.
 const BIG_BUTTONS = Array.from({ length: 500000 }, () => ({}));
 
 export async function DelayV5(sock, target) {

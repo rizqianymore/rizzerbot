@@ -26,7 +26,6 @@ export default {
       return reply("Nomor tersebut adalah nomor bot (sesi bot lain), bukan Owner.");
     }
 
-    // Owner yang berasal dari config/settings.js tidak bisa dicabut lewat chat.
     if (db.isConfigFileOwner(jid)) {
       return reply(
         `*${jid.split("@")[0]}* terdaftar di *config/settings.js* (ownerNumber/pairingNumber/ownerNumbers).\n` +
@@ -74,7 +73,6 @@ export default {
 
     db.setOwner(jid, false, senderJid);
 
-    // Anti "berhasil palsu": kalau status Owner masih aktif, laporkan apa adanya.
     if (db.isOwner(jid)) {
       logger?.error?.(`[OwnerCmd] delowner GAGAL melepas ${jid} (masih owner, kemungkinan sumber config)`);
       return reply(

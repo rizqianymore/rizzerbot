@@ -140,11 +140,6 @@ export class StoreAccess extends StoreUsers {
     return this.premiumJids.has(normalizeJid(jid));
   }
 
-  /**
-   * True bila status Owner jid ini berasal dari config/settings.js
-   * (ownerNumber / pairingNumber / ownerNumbers). Sumber config tidak bisa
-   * dicabut lewat perintah chat, jadi pemanggil harus memberi tahu user.
-   */
   isConfigFileOwner(jid) {
     const normalized = resolvePhoneJid(jid);
     if (!normalized) return false;

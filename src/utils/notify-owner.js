@@ -1,15 +1,5 @@
 import { db } from "@/src/core/database.js";
 
-/**
- * Notifikasi ke Primary Owner saat ada perubahan hak akses sensitif
- * (tambah/cabut owner, transfer owner, reset db, dll).
- *
- * Prinsip:
- * - gagal kirim tidak boleh menggagalkan perintah aslinya (selalu try/catch),
- * - tidak pernah mengirim notifikasi ke akun pelaku sendiri,
- * - ada cooldown per kombinasi aksi supaya tidak jadi spam.
- */
-
 const COOLDOWN_MS = 60 * 1000;
 const lastSent = new Map();
 

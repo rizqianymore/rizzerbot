@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * Simulasi dispatch tanpa socket WhatsApp sungguhan.
- *
- * Dijalankan oleh `scripts/smoke.js` dengan `cwd` = folder sementara berisi
- * `database/database.json` buatan, sehingga file database asli tidak tersentuh.
- *
- * Skenario mengikuti kondisi produksi: nomor bot = nomor owner (pairing memakai
- * `pairingNumber`), jadi pesan owner sendiri sampai ke bot dengan flag fromMe.
- */
+
 import fs from "fs";
 import path from "path";
 
@@ -114,14 +106,12 @@ function bodyOf(sent) {
 
 clearSentMessageCache();
 
-// 1. Owner mengetik .menu di DM dengan akun botnya sendiri (fromMe = true).
 {
   const sock = makeSock();
   const sent = await dispatch(sock, { text: ".menu", remoteJid: OWNER_JID, fromMe: true });
   assert(sent.length > 0, "owner (fromMe) tetap dapat .menu di DM sendiri");
   assert(sent.length === 1, "`.menu` hanya mengirim 1 pesan (tanpa duplikat)", `terkirim ${sent.length} pesan`);
 
-  // 2. Balasan bot sendiri yang dipantulkan balik harus diabaikan (anti loop).
   for (const out of sent) {
     const text = out.content?.text || out.content?.caption || "";
     if (!text) continue;
@@ -130,7 +120,6 @@ clearSentMessageCache();
   }
 }
 
-// 3. Owner di grup tetap dilayani.
 {
   clearSentMessageCache();
   const sock = makeSock();
@@ -143,7 +132,6 @@ clearSentMessageCache();
   assert(sent.length > 0, "owner (fromMe) tetap dilayani di grup");
 }
 
-// 4. Bot private: perintah whitelisted tetap terbuka untuk user biasa.
 {
   clearSentMessageCache();
   const sock = makeSock();
@@ -152,7 +140,6 @@ clearSentMessageCache();
   assert(sent.length === 1, "`.menu` user biasa juga 1 pesan", `terkirim ${sent.length} pesan`);
 }
 
-// 5. Bot private: perintah non-whitelist tetap diblokir diam-diam.
 {
   clearSentMessageCache();
   const sock = makeSock();
@@ -160,7 +147,6 @@ clearSentMessageCache();
   assert(sent.length === 0, "perintah non-whitelist tetap diblokir saat private");
 }
 
-// 6. silentDeny = false: penolakan private diberi penjelasan, bukan diam.
 {
   clearSentMessageCache();
   const { db } = await import("@/src/core/database.js");
@@ -170,12 +156,10 @@ clearSentMessageCache();
   const sent = await dispatch(sock, { text: ".tagall", remoteJid: USER_JID });
   assert(/private/i.test(bodyOf(sent)), "private mode memberi penjelasan saat silentDeny=false");
 
-  // 7. Perintah tidak dikenal juga diberi feedback.
   const unknown = await dispatch(sock, { text: ".perintahngawur", remoteJid: USER_JID });
   assert(/tidak dikenal/i.test(bodyOf(unknown)), "perintah tidak dikenal diberi feedback");
 }
 
-// 8. Ganti akun bot (bukan nomor owner) -> pesan owner normal tetap jalan.
 {
   clearSentMessageCache();
   const otherBot = "628111111111@s.whatsapp.net";
@@ -184,8 +168,6 @@ clearSentMessageCache();
   assert(sent.length > 0, "user biasa bisa .ping (whitelist) dengan akun bot lain");
 }
 
-// 9. Tap tombol pada kartu menu (interactiveResponseMessage) harus dijalankan
-//    sebagai perintah, bukan dianggap payload crash lalu dihapus.
 {
   clearSentMessageCache();
   const sock = makeSock();
@@ -209,8 +191,6 @@ clearSentMessageCache();
   assert(sent.length > 0, "tap tombol menu dijawab");
 }
 
-// 10. Pesan basi (>5 menit, mis. antrean offline) dibuang dengan jejak log,
-//     bukan hilang misterius.
 {
   clearSentMessageCache();
   logLines.length = 0;
@@ -220,7 +200,6 @@ clearSentMessageCache();
   assert(logHas("[Stale]"), "pesan basi meninggalkan jejak log [Stale]");
 }
 
-// 11. Setiap penolakan perintah tercatat di log beserta alasannya.
 {
   clearSentMessageCache();
   logLines.length = 0;
@@ -233,7 +212,6 @@ clearSentMessageCache();
   assert(logHas("mode private"), "blokir private tercatat di log");
 }
 
-// 12. Owner yang spam tetap DIBALAS (bypass silentDeny) — dulu keheningan total.
 {
   clearSentMessageCache();
   const { db } = await import("@/src/core/database.js");
@@ -248,7 +226,6 @@ clearSentMessageCache();
   assert(Boolean(throttled), "owner throttle tetap dibalas walau silentDeny=true");
 }
 
-// 13. File gambar di-cache di memori (tanpa baca ulang file tiap .menu).
 {
   const { resolveImagePayload, clearImagePayloadCache } = await import("@/src/utils/imagePayload.js");
   clearImagePayloadCache();

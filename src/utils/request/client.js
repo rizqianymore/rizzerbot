@@ -66,9 +66,6 @@ function toBrightDataOptions(url, { method, headers, data, params, timeout, resp
 
 const TRANSIENT_STATUS = new Set([408, 429, 502, 503, 504]);
 
-// Singleflight: request GET identik yang datang bersamaan berbagi 1 promise
-// sehingga trafik duplikat (mis. 10 user .bola bareng) tidak menghantam API
-// 10x. Hanya untuk GET json/text tanpa body; kunci mencakup opsi routing.
 const inflight = new Map();
 function dedupKey(url, { responseType, via, bypassCloudflare, country, state, city, params }) {
   let full = String(url);

@@ -53,10 +53,6 @@ export function registerBotJid(jid) {
   activeBotJids.add(normalized);
 }
 
-// Daftar sub-bot dibaca dari disk (readdirSync) — tanpa cache, fungsi ini
-// dipanggil berkali-kali PER PESAN (isAnyBotJid dipakai untuk tiap partisipan
-// grup + tiap pengirim), sehingga event loop tersumbat I/O sinkron.
-// Daftar sub-bot jarang berubah, jadi cache 30 detik sudah cukup.
 const SUB_DIGITS_TTL_MS = 30_000;
 let _subDigitsCache = { at: 0, value: [] };
 
