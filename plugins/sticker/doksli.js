@@ -63,15 +63,25 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? 0 : 72;
+    const maxSize = fontSize > 0 ? 0 : 80;
+
     if (textArgs.length > 0) {
-      const fullText = textArgs.join(" ");
+      const fullText = textArgs.join(" ").trim();
       if (fullText.includes("|")) {
         const parts = fullText.split("|");
         topText = parts[0]?.trim() || "";
         bottomText = parts.slice(1).join("|")?.trim() || "";
       } else {
-        bottomText = fullText.trim();
+        const words = fullText.split(/\s+/).filter(Boolean);
+        // Jika teks cukup panjang (>= 3 kata atau > 14 karakter), otomatis bagi menjadi 2 baris (ATAS & BAWAH)
+        // agar font tetap besar, tebal, dan proporsional di stiker
+        if (words.length >= 3 || fullText.length > 14) {
+          const mid = Math.ceil(words.length / 2);
+          topText = words.slice(0, mid).join(" ");
+          bottomText = words.slice(mid).join(" ");
+        } else {
+          bottomText = fullText;
+        }
       }
     }
     if (!topText && !bottomText) {
