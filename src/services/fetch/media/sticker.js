@@ -59,10 +59,10 @@ async function ffmpegStaticToWebp(buffer) {
   }
 }
 
-async function createTextOverlay({ width, height, topText, bottomText }) {
+async function createTextOverlay({ width, height, topText, bottomText, textOpts = {} }) {
   try {
     const { createTextOverlayCanvas } = await import("./text.js");
-    return await createTextOverlayCanvas(width, height, { topText, bottomText });
+    return await createTextOverlayCanvas(width, height, { topText, bottomText, ...textOpts });
   } catch (_) {
     return null;
   }
@@ -83,13 +83,13 @@ async function shrinkIfTooBig(webpBuffer, maxBytes = 950 * 1024) {
   return webpBuffer;
 }
 
-async function gifFallback(buffer, { topText, bottomText, hasText }) {
+async function gifFallback(buffer, { topText, bottomText, hasText, textOpts = {} }) {
   const sharp = getSharp();
   if (sharp && isGif(buffer)) {
     try {
       let pipe = sharp(buffer, { animated: true });
       if (hasText) {
-        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
+        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText, textOpts });
         if (overlayBuf) {
           pipe = pipe.composite([{ input: overlayBuf, gravity: "north" }]);
         }
@@ -114,11 +114,12 @@ async function gifFallback(buffer, { topText, bottomText, hasText }) {
   );
 }
 
-export async function createSticker(buffer, { pack, author, topText, bottomText } = {}) {
+export async function createSticker(buffer, { pack, author, topText, bottomText, font, fontSize, position, align } = {}) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
   const authorName = author === undefined ? activeSettings.stickerAuthor : author;
   const hasText = Boolean((topText && topText.trim()) || (bottomText && bottomText.trim()));
+  const textOpts = { font, fontSize, position, align };
   const sharp = getSharp();
 
   const isAnimatedWebp =
@@ -148,7 +149,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
 
     try {
       if (hasText) {
-        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
+        const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText, textOpts });
         if (overlayBuf) {
           await fsp.writeFile(overlayPng, overlayBuf);
           createdOverlay = true;
@@ -191,7 +192,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
       webpBuffer = await shrinkIfTooBig(webpBuffer);
     } catch (vidErr) {
       console.warn("[createSticker] video ffmpeg conversion error:", vidErr?.message || vidErr);
-      webpBuffer = await gifFallback(buffer, { topText, bottomText, hasText });
+      webpBuffer = await gifFallback(buffer, { topText, bottomText, hasText, textOpts });
     } finally {
       await fsp.unlink(inVid).catch(() => {});
       if (createdOverlay) await fsp.unlink(overlayPng).catch(() => {});
@@ -204,7 +205,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
       try {
         let animSharp = sharp(buffer, { animated: true });
         if (hasText) {
-          const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText });
+          const overlayBuf = await createTextOverlay({ width: 512, height: 512, topText, bottomText, textOpts });
           if (overlayBuf) {
             animSharp = animSharp.composite([{ input: overlayBuf, tile: true }]);
           }
@@ -231,7 +232,7 @@ export async function createSticker(buffer, { pack, author, topText, bottomText 
     if (hasText) {
       try {
         const { addTextToImage } = await import("./text.js");
-        processedBuffer = await addTextToImage(buffer, { topText, bottomText });
+        processedBuffer = await addTextToImage(buffer, { topText, bottomText, ...textOpts });
       } catch (_) {
         processedBuffer = buffer;
       }

@@ -4,7 +4,7 @@ export default {
   name: "sticker",
   aliases: ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
   description: "Convert image/video to sticker (support meme teks atas | bawah)",
-  usage: "[teks atas | bawah] (reply/kirim gambar atau video)",
+  usage: "[--font=Nama --size=48 --tengah/--atas/--bawah --justify] [teks atas | bawah] (reply/kirim gambar atau video)",
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
@@ -15,7 +15,10 @@ export default {
       return reply(
         "Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
           "• *.sticker* — ubah jadi stiker (video/GIF tetap bergerak)\n" +
-          "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)"
+          "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)\n" +
+          "• 1 teks saja otomatis di tengah, kecuali pakai --atas / --bawah\n" +
+          "• Flag: *--font=Nama --size=48 --tengah/--atas/--bawah --justify*\n" +
+          "  Contoh: *.sticker --size=64 --tengah Halo | Dunia*"
       );
     }
 
@@ -30,10 +33,45 @@ export default {
         "Gagal membaca media. Pastikan mengirim atau membalas media berupa gambar, video, GIF, atau stiker."
       );
 
+    let font = "";
+    let fontSize = 0;
+    let position = "";
+    let align = "center";
+    const textArgs = [];
+    for (const a of args) {
+      const low = String(a || "").toLowerCase();
+      if (low.startsWith("--font=")) {
+        font = String(a).slice(7).trim();
+        continue;
+      }
+      if (low.startsWith("--size=")) {
+        const n = Number(String(a).slice(7));
+        if (Number.isFinite(n) && n >= 12 && n <= 200) fontSize = Math.floor(n);
+        continue;
+      }
+      if (low === "--tengah" || low === "--middle" || low === "--center") {
+        position = "tengah";
+        continue;
+      }
+      if (low === "--atas" || low === "--top") {
+        position = "atas";
+        continue;
+      }
+      if (low === "--bawah" || low === "--bottom") {
+        position = "bawah";
+        continue;
+      }
+      if (low === "--justify" || low === "--rata") {
+        align = "justify";
+        continue;
+      }
+      textArgs.push(a);
+    }
+
     let topText = "";
     let bottomText = "";
-    if (args.length > 0) {
-      const fullText = args.join(" ");
+    if (textArgs.length > 0) {
+      const fullText = textArgs.join(" ");
       if (fullText.includes("|")) {
         const parts = fullText.split("|");
         topText = parts[0]?.trim() || "";
@@ -44,7 +82,7 @@ export default {
     }
 
     try {
-      const stickerBuffer = await createSticker(buffer, { topText, bottomText });
+      const stickerBuffer = await createSticker(buffer, { topText, bottomText, font, fontSize, position, align });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       await reply(`Gagal membuat stiker: ${err.message}`);
