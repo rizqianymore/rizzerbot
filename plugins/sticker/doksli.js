@@ -17,7 +17,7 @@ export default {
   description: "Stiker Doksli + teks meme",
   usage: "[--font=Nama --size=48 --tengah/--atas/--bawah --justify] [teks atas | bawah]",
   category: "Sticker",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";
     let font = "";
     let fontSize = 0;
@@ -73,11 +73,15 @@ export default {
     }
 
     await sendTyping();
+    if (!fs.existsSync(BASE_PATH)) {
+      return reply("Gambar sumber Doksli belum ada di server. Owner: jalankan *git pull* lalu restart bot.");
+    }
     try {
       const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, position, align });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
-      await reply(`Gagal membuat stiker doksli: ${err?.message || "coba lagi"}`);
+      logger?.error?.(`[Doksli] gagal: ${err?.message || err}`);
+      await reply("Gagal membuat stiker doksli, coba lagi nanti.");
     }
   },
 };
