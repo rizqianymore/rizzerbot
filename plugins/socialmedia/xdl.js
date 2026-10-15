@@ -1,5 +1,6 @@
 export default {
   name: "xdl",
+  cooldownMs: 30000,
   aliases: ["twitterdl", "twtdl", "xdown", "twdl"],
   description: "Download video/music dari X/Twitter",
   usage: "<url> [mp3]",

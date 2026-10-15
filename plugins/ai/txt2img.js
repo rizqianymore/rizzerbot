@@ -14,6 +14,7 @@ const STYLE_PROMPTS = {
 
 export default {
   name: "txt2img",
+  cooldownMs: 30000,
   aliases: ["txt2imgv2", "text2img", "gambarai"],
   description: "Generate gambar dari teks (gratis, tanpa API key)",
   usage: "<prompt> [--style <nama_style>]",

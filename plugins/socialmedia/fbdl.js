@@ -1,5 +1,6 @@
 export default {
   name: "fbdl",
+  cooldownMs: 30000,
   aliases: ["facebookdl", "fbdown", "fbvideo"],
   description: "Download video dari Facebook (postingan, reels, watch)",
   usage: "<url> [mp3]",

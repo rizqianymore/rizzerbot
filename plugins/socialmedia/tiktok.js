@@ -1,5 +1,6 @@
 export default {
   name: "tiktok",
+  cooldownMs: 30000,
   aliases: ["tt", "tikdl", "ttdl"],
   description: "Download TikTok video/music (tanpa watermark)",
   usage: "<url> [mp3]",

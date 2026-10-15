@@ -3,6 +3,7 @@ import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 export default {
   name: "mediafire",
+  cooldownMs: 30000,
   aliases: ["mf", "mfdl"],
   description: "Download file langsung dari MediaFire (tanpa API pihak ketiga)",
   usage: "<url>",

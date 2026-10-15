@@ -1,5 +1,7 @@
 import { isBurstMuted, registerBurst, userCooldowns } from "./guards.js";
 
+const cmdCooldowns = new Map();
+
 export async function checkPermits(cmd, { isOwner, isAdmin, isPremium }, deny) {
   if (cmd.ownerOnly && !isOwner) {
     await deny("❌ Fitur ini hanya untuk Owner!");
@@ -18,7 +20,8 @@ export async function checkPermits(cmd, { isOwner, isAdmin, isPremium }, deny) {
   return false;
 }
 
-export async function checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid) {
+export async function checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid, cmd) {
+  const now = Date.now();
   if (activeSettings.antiBurst !== false) {
     const mutedUntil = isBurstMuted(senderJid);
     if (mutedUntil) {
@@ -36,9 +39,29 @@ export async function checkRateLimit(activeSettings, senderJid, sock, msg, remot
       return true;
     }
   }
+  const perCmdMs = Number(cmd?.cooldownMs);
+  if (Number.isFinite(perCmdMs) && perCmdMs > 0) {
+    const key = `${senderJid}::${cmd.name}`;
+    const lastCmd = cmdCooldowns.get(key) || 0;
+    const diffCmd = now - lastCmd;
+    if (diffCmd < perCmdMs) {
+      const waitSec = ((perCmdMs - diffCmd) / 1000).toFixed(0);
+      await sock.sendMessage(
+        remoteJid,
+        { text: `⏳ *Tunggu ${waitSec} detik* sebelum memakai *${cmd.name}* lagi!` },
+        { quoted: msg }
+      );
+      return true;
+    }
+    cmdCooldowns.set(key, now);
+    if (cmdCooldowns.size > 2000) {
+      for (const [k, t] of cmdCooldowns.entries()) {
+        if (now - t > perCmdMs * 2) cmdCooldowns.delete(k);
+      }
+    }
+  }
   const configuredCooldown = Number(activeSettings.cooldownTime);
   const cooldownMs = Number.isFinite(configuredCooldown) && configuredCooldown >= 0 ? configuredCooldown : 3000;
-  const now = Date.now();
 
   if (cooldownMs > 0) {
     const lastTime = userCooldowns.get(senderJid) || 0;

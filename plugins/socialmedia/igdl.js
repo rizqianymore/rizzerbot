@@ -5,6 +5,7 @@ import { request } from "@/src/utils/request.js";
 
 export default {
   name: "igdl",
+  cooldownMs: 30000,
   aliases: ["ig", "instagram", "instagramdl", "ig3", "igdl3", "instagram3"],
   description: "Download video/foto Instagram",
   usage: "<url>",

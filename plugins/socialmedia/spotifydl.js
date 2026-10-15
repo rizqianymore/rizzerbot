@@ -2,6 +2,7 @@ import axios from "axios";
 
 export default {
   name: "spotifydl",
+  cooldownMs: 30000,
   aliases: ["spdl", "spotify", "spotdl", "spotify-dl"],
   description: "Unduh lagu dari Spotify",
   usage: "<url>",

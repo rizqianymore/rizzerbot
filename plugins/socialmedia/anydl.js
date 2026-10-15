@@ -2,6 +2,7 @@ import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
 
 export default {
   name: "anydl",
+  cooldownMs: 30000,
   aliases: ["yoink", "dl", "down", "get"],
   description: "Universal Downloader (YouTube, IG, TikTok, X/Twitter, FB, Reddit, dll) via engine Yoinks (yt-dlp)",
   usage: "<url> [mp3]",

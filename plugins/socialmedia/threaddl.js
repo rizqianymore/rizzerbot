@@ -2,6 +2,7 @@ import axios from "axios";
 
 export default {
   name: "threaddl",
+  cooldownMs: 30000,
   aliases: ["tdl", "threads", "threadsdl"],
   description: "Download foto dan video dari postingan Threads",
   usage: "<url>",

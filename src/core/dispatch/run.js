@@ -173,7 +173,7 @@ async function dispatchInner(sock, msg, logger) {
   if (await checkPermits(cmd, { isOwner, isAdmin, isPremium }, deny)) return;
 
   if (!isOwner) {
-    if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid)) return;
+    if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid, cmd)) return;
   } else if (registerOwnerCommand(senderJid)) {
 
     logger?.warn?.(`[OwnerThrottle] ${senderJid} melebihi batas perintah owner via ${botJid}`);

@@ -2,6 +2,7 @@ import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
 
 export default {
   name: "ytdlpro",
+  cooldownMs: 30000,
   aliases: ["ytdl", "yt"],
   description: "Download video/audio YouTube menggunakan engine yt-dlp",
   usage: "<url> [mp3]",

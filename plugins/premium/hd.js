@@ -2,6 +2,7 @@ import { getMediaBuffer, upscaleImage, findDownloadableTarget } from "@/src/serv
 
 export default {
   name: "hd",
+  cooldownMs: 30000,
   description: "Upscale image to HD (2x)",
   usage: "(reply gambar)",
   premiumOnly: true,

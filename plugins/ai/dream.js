@@ -229,6 +229,7 @@ function modelList(prefix) {
 
 export default {
   name: "dream",
+  cooldownMs: 30000,
   aliases: ["dreamai", "dreamimg"],
   description: "Generate gambar AI multi-model (tanpa API key)",
   usage: "<nomor_model> <prompt>",
