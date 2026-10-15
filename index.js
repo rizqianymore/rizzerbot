@@ -101,6 +101,10 @@ startBot()
       startBackupCron(logger);
     } catch (_) {}
     try {
+      const { startActiveCheck } = await import("./src/services/system/active-check.js");
+      startActiveCheck(logger);
+    } catch (_) {}
+    try {
       const { startHealthServer } = await import("./src/services/system/health-server.js");
       startHealthServer(logger);
     } catch (_) {}

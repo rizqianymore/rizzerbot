@@ -54,7 +54,17 @@ function flushLogs() {
     try {
       const existing = readLogFile(filePath);
       const combined = existing.concat(newLogs);
-      fs.writeFileSync(filePath, JSON.stringify(combined, null, 2), "utf-8");
+      const serialized = JSON.stringify(combined, null, 2);
+      const temporaryPath = `${filePath}.${process.pid}.tmp`;
+      try {
+        fs.writeFileSync(temporaryPath, serialized, "utf-8");
+        fs.renameSync(temporaryPath, filePath);
+      } catch (_) {
+        fs.writeFileSync(filePath, serialized, "utf-8");
+        try {
+          fs.rmSync(temporaryPath, { force: true });
+        } catch (_) {}
+      }
     } catch (_) {}
   }
 }
@@ -66,7 +76,6 @@ export function recordMessage(sock, msg) {
     if (!remoteJid || remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter")) return;
 
     const rawSender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
-    // Samakan dengan dispatch: utamakan nomor HP hasil peta LID, fallback mentah bila belum terpetakan.
     const sender =
       db.pickPhoneJid(
         msg.key.participantAlt,

@@ -65,17 +65,12 @@ export async function resolveCommandAccess(
   }
 
   const isSelfMessage = Boolean(isFromMe);
-  // Pesan fromMe selalu ditulis akun bot itu sendiri.
-  // - Grup: penulis = participant (sudah di-resolve).
-  // - DM: remoteJid adalah lawan bicara, jadi pengirim = bot.
   const senderJid = isSelfMessage
     ? isGroupJid(remoteJid)
       ? normalizedRawSender || botJid
       : botJid || normalizedRawSender
     : normalizedRawSender;
 
-  // Echo = gema event dari pesan yang baru dikirim bot (emitOwnEvents).
-  // Berlaku untuk semua fromMe, bukan hanya saat sender == bot.
   if (isSelfMessage && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
     return drop("echo balasan bot sendiri", { silent: true });
   }

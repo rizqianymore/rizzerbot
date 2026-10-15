@@ -162,8 +162,6 @@ async function dispatchInner(sock, msg, logger) {
     if (await checkProfanityInput(sock, msg, logger, { remoteJid, senderJid, args })) return;
   }
 
-  // Balasan penolakan hanya dikirim saat silentDeny eksplisit false.
-  // Selain itu cukup catat agar DM nomor lain tidak diam tanpa jejak.
   const deny = async (text) => {
     if (activeSettings.silentDeny === false) {
       await sock.sendMessage(remoteJid, { text }, { quoted: msg });
