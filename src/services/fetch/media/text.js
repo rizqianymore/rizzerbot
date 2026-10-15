@@ -228,12 +228,12 @@ function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "
   const single = top || bottom;
   if (!single) return;
   const fit = calculateTextFit(ctx, single, maxTextWidth, sectionHeight, opts);
-  if (pos === "atas" || pos === "top") {
-    renderTextLines(ctx, fit, width / 2, paddingY, box);
-  } else if (pos === "bawah" || pos === "bottom") {
-    renderTextLines(ctx, fit, width / 2, height - paddingY - fit.totalHeight, box);
-  } else {
+  if (pos === "tengah" || pos === "middle" || pos === "center") {
     renderTextLines(ctx, fit, width / 2, Math.round((height - fit.totalHeight) / 2), box);
+  } else if (pos === "atas" || pos === "top") {
+    renderTextLines(ctx, fit, width / 2, paddingY, box);
+  } else {
+    renderTextLines(ctx, fit, width / 2, height - paddingY - fit.totalHeight, box);
   }
 }
 

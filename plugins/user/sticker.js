@@ -16,7 +16,7 @@ export default {
         "Kirim atau balas gambar/video/GIF/stiker dengan caption:\n" +
           "• *.sticker* — ubah jadi stiker (video/GIF tetap bergerak)\n" +
           "• *.sticker Teks Atas | Teks Bawah* — stiker meme (bisa gambar & video)\n" +
-          "• 1 teks saja otomatis di tengah, kecuali pakai --atas / --bawah\n" +
+          "• 1 teks saja otomatis di bawah, pakai --tengah / --atas buat pindah\n" +
           "• Flag: *--font=Nama --size=48 --tengah/--atas/--bawah --justify*\n" +
           "  Contoh: *.sticker --size=64 --tengah Halo | Dunia*"
       );
