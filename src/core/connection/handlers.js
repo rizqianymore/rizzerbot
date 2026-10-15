@@ -31,10 +31,13 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       );
 
       connectionState.lastDisconnectAt = Date.now();
+      const wasRegistered = Boolean(sock.authState?.creds?.registered);
       try {
         const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
         setPrimaryOnline(false);
-        if (!shouldReconnect) {
+        // Notifikasi logout hanya kalau perangkat memang pernah terdaftar;
+        // 401 saat belum pair bukan logout (bisa jadi pairing ditolak/rate limit).
+        if (!shouldReconnect && wasRegistered) {
           notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => {});
         }
       } catch (_) {}
@@ -48,23 +51,53 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
             logger.error("Failed to restart primary bot:", err);
           });
         }, 5000);
-      } else {
-        logger.error("Log out detected. Cleaning up primary session files...");
-        try {
-          deleteFolderRecursive(authDir);
-        } catch (e) {
-          logger.error("Failed to delete corrupted primary session:", e.message);
-        }
-        logger.info("Re-initializing bot connection with fresh state in 3 seconds...");
+        return;
+      }
+
+      // 401 sebelum perangkat selesai di-pair BUKAN logout: itu pairing yang
+      // ditolak (kode kedaluwarsa / kena rate limit). Menghapus folder sesi di
+      // sini justru memperburuk — ephemeral pairing key ikut hilang dan percobaan
+      // pairing berulang membuat WA makin menolak. Sesi justru dipertahankan.
+      if (!sock.authState?.creds?.registered) {
+        connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
+        // Makin sering pairing ditolak, makin jauh jeda: mencoba connect
+        // berulang hanya memperburuk rate limit dari WhatsApp.
+        const waitMs = connectionState.unregisteredFailures >= 3 ? 15 * 60 * 1000 : 120 * 1000;
+        logger.warn(
+          `Belum terdaftar: koneksi ditolak sebelum pairing selesai (status ${statusCode || "?"}). ` +
+            `Percobaan ke-${connectionState.unregisteredFailures}, sesi dipertahankan, coba lagi dalam ${waitMs / 1000} detik...` +
+            (connectionState.pairingHintSent
+              ? ""
+              : " Pairing belum selesai — masukkan kode pairing di WhatsApp → Perangkat Tertaut.")
+        );
+        connectionState.pairingHintSent = true;
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;
           restart().catch((err) => {
-            logger.error("Failed to restart primary bot with fresh state:", err);
+            logger.error("Failed to restart primary bot:", err);
           });
-        }, 3000);
+        }, waitMs);
+        return;
       }
+      connectionState.unregisteredFailures = 0;
+
+      logger.error("Log out detected. Cleaning up primary session files...");
+      try {
+        deleteFolderRecursive(authDir);
+      } catch (e) {
+        logger.error("Failed to delete corrupted primary session:", e.message);
+      }
+      logger.info("Re-initializing bot connection with fresh state in 3 seconds...");
+      if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
+      connectionState.reconnectTimer = setTimeout(() => {
+        connectionState.reconnectTimer = null;
+        restart().catch((err) => {
+          logger.error("Failed to restart primary bot with fresh state:", err);
+        });
+      }, 3000);
     } else if (connection === "open") {
+      connectionState.unregisteredFailures = 0;
       logger.info("Primary Rizzer Bot successfully connected and is now online!");
       try {
         const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");

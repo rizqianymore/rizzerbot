@@ -5,6 +5,8 @@ export const connectionState = {
   isStarting: false,
   reconnectTimer: null,
   lastDisconnectAt: 0,
+  pairingHintSent: false,
+  unregisteredFailures: 0,
 };
 
 export function getPrimarySock() {

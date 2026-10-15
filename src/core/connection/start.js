@@ -116,16 +116,29 @@ export async function startBot() {
       if (!phoneNumber) {
         logger.error("Pairing phone number is missing or invalid in database/settings.js!");
       } else {
+        // Backoff naik saat pairing ditolak: percobaan beruntun membuat WA
+        // memblokir pairing sehingga bot tidak akan pernah berhasil.
+        const RETRY_STEPS = [5000, 15000, 30000, 60000];
+        let pairingAttempts = 0;
+
         const requestPairing = async () => {
           try {
             logger.info(`Requesting pairing code for primary bot: ${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
+            pairingAttempts = 0;
             console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
+            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Hubungkan dengan nomor ini.\n`);
+            console.log(`\x1b[0m   Kode berlaku singkat; kode baru diminta otomatis 3 menit lagi.\n`);
             console.log(`\x1b[36m====================================\x1b[0m\n`);
+            timers.pairingTimeout = setTimeout(requestPairing, 180000);
           } catch (err) {
-            logger.error(`Failed to request pairing code: ${err.message || err}. Retrying in 5 seconds...`);
-            timers.pairingTimeout = setTimeout(requestPairing, 5000);
+            pairingAttempts += 1;
+            const wait = RETRY_STEPS[Math.min(pairingAttempts - 1, RETRY_STEPS.length - 1)];
+            logger.error(
+              `Failed to request pairing code: ${err.message || err}. Retrying in ${wait / 1000} seconds...`
+            );
+            timers.pairingTimeout = setTimeout(requestPairing, wait);
           }
         };
         timers.pairingTimeout = setTimeout(requestPairing, 3000);
