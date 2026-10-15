@@ -1,0 +1,83 @@
+import fs from "fs";
+import path from "path";
+import { createSticker } from "@/src/services/fetch/media.js";
+
+const BASE_PATH = path.join(process.cwd(), "assets", "brat", "Doksli.png");
+let baseCache = null;
+
+function getBase() {
+  if (baseCache) return baseCache;
+  baseCache = fs.readFileSync(BASE_PATH);
+  return baseCache;
+}
+
+export default {
+  name: "doksli",
+  aliases: ["dokslisticker"],
+  description: "Stiker Doksli + teks meme",
+  usage: "[--font=Nama --size=48 --tengah/--atas/--bawah --justify] [teks atas | bawah]",
+  category: "Sticker",
+  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+    const currentPrefix = prefix || ".";
+    let font = "";
+    let fontSize = 0;
+    let position = "";
+    let align = "center";
+    const textArgs = [];
+    for (const a of args) {
+      const low = String(a || "").toLowerCase();
+      if (low.startsWith("--font=")) {
+        font = String(a).slice(7).trim();
+        continue;
+      }
+      if (low.startsWith("--size=")) {
+        const n = Number(String(a).slice(7));
+        if (Number.isFinite(n) && n >= 12 && n <= 200) fontSize = Math.floor(n);
+        continue;
+      }
+      if (low === "--tengah" || low === "--middle" || low === "--center") {
+        position = "tengah";
+        continue;
+      }
+      if (low === "--atas" || low === "--top") {
+        position = "atas";
+        continue;
+      }
+      if (low === "--bawah" || low === "--bottom") {
+        position = "bawah";
+        continue;
+      }
+      if (low === "--justify" || low === "--rata") {
+        align = "justify";
+        continue;
+      }
+      textArgs.push(a);
+    }
+
+    let topText = "";
+    let bottomText = "";
+    if (textArgs.length > 0) {
+      const fullText = textArgs.join(" ");
+      if (fullText.includes("|")) {
+        const parts = fullText.split("|");
+        topText = parts[0]?.trim() || "";
+        bottomText = parts.slice(1).join("|")?.trim() || "";
+      } else {
+        bottomText = fullText.trim();
+      }
+    }
+    if (!topText && !bottomText) {
+      return reply(
+        `*DOKSLI STIKER*\n\nContoh:\n• ${currentPrefix}doksli GASKEUN\n• ${currentPrefix}doksli ATAS | BAWAH\n• ${currentPrefix}doksli --size=64 --tengah HALO`
+      );
+    }
+
+    await sendTyping();
+    try {
+      const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, position, align });
+      await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
+    } catch (err) {
+      await reply(`Gagal membuat stiker doksli: ${err?.message || "coba lagi"}`);
+    }
+  },
+};
