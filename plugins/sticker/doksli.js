@@ -22,8 +22,7 @@ export default {
     let font = "";
     let fontSize = 0;
     let position = "";
-    let align = "center";
-    const textArgs = [];
+    let align = "center";    const textArgs = [];
     for (const a of args) {
       const low = String(a || "").toLowerCase();
       if (low.startsWith("--font=")) {
@@ -56,6 +55,8 @@ export default {
 
     let topText = "";
     let bottomText = "";
+    if (!position) position = "bawah";
+    const maxSize = fontSize > 0 ? 0 : 40;
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ");
       if (fullText.includes("|")) {
@@ -77,7 +78,7 @@ export default {
       return reply("Gambar sumber Doksli belum ada di server. Owner: jalankan *git pull* lalu restart bot.");
     }
     try {
-      const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, position, align });
+      const stickerBuffer = await createSticker(getBase(), { topText, bottomText, font, fontSize, maxSize, position, align });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       logger?.error?.(`[Doksli] gagal: ${err?.message || err}`);

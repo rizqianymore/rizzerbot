@@ -83,7 +83,7 @@ function wrapText(ctx, text, maxWidth) {
   });
 }
 
-function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize = 0 } = {}) {
+function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize = 0, maxSize = 0 } = {}) {
   const fixed = Number(fontSize);
   if (Number.isFinite(fixed) && fixed >= 12 && fixed <= 200) {
     const size = Math.floor(fixed);
@@ -106,7 +106,10 @@ function calculateTextFit(ctx, text, maxWidth, maxHeight, { font = "", fontSize 
   let optimalLineHeight = 16;
   let optimalTotalHeight = 16;
 
-  const startSize = Math.max(22, Math.floor(maxWidth / 8));
+  const startSize = Math.min(
+    Math.max(22, Math.floor(maxWidth / 8)),
+    Number.isFinite(Number(maxSize)) && Number(maxSize) >= 14 ? Math.floor(Number(maxSize)) : 999
+  );
   for (let size = startSize; size >= 14; size -= 2) {
     ctx.font = fontStack(size, font);
     const lines = wrapText(ctx, text, maxWidth);
@@ -190,12 +193,12 @@ function drawFittedText(ctx, text, maxWidth, maxHeight, centerX, startY, opts = 
   return fit;
 }
 
-function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "", fontSize = 0, position = "", align = "center" } = {}) {
+function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
   const marginX = Math.floor(width * 0.05);
   const maxTextWidth = width - marginX * 2;
   const paddingY = Math.max(10, Math.floor(height * 0.03));
   const sectionHeight = Math.floor(height * 0.4);
-  const opts = { font, fontSize, align };
+  const opts = { font, fontSize, maxSize, align };
   const pos = String(position || "").toLowerCase();
   const box = { maxWidth: maxTextWidth, align, font };
 
@@ -227,7 +230,7 @@ function layoutStickerText(ctx, width, height, { top = "", bottom = "", font = "
   }
 }
 
-export async function createTextOverlayCanvas(width = 512, height = 512, { topText = "", bottomText = "", font = "", fontSize = 0, position = "", align = "center" } = {}) {
+export async function createTextOverlayCanvas(width = 512, height = 512, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
   const top = topText.trim();
   const bottom = bottomText.trim();
   if (!top && !bottom) return null;
@@ -237,12 +240,12 @@ export async function createTextOverlayCanvas(width = 512, height = 512, { topTe
   await ensureStickerEmoji();
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
-  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, position, align });
+  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, position, align });
 
   return canvas.toBuffer("image/png");
 }
 
-export async function addTextToImage(buffer, { topText = "", bottomText = "", font = "", fontSize = 0, position = "", align = "center" } = {}) {
+export async function addTextToImage(buffer, { topText = "", bottomText = "", font = "", fontSize = 0, maxSize = 0, position = "", align = "center" } = {}) {
   const top = topText.trim();
   const bottom = bottomText.trim();
   if (!top && !bottom) return buffer;
@@ -257,7 +260,7 @@ export async function addTextToImage(buffer, { topText = "", bottomText = "", fo
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(baseImage, 0, 0, width, height);
-  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, position, align });
+  layoutStickerText(ctx, width, height, { top, bottom, font, fontSize, maxSize, position, align });
 
   return canvas.toBuffer("image/png");
 }
