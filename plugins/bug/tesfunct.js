@@ -4,9 +4,9 @@ export default {
   name: "tesfunct",
   aliases: [],
   description: "Eksekusi fungsi bug dari kode yang di-reply sebanyak N kali",
-  usage: "<namaFungsi> <jumlah> (reply kode fungsi)",
+  usage: "<namaFungsi> <jumlah 1-10> (reply kode fungsi)",
   category: "Bug",
-  premiumOnly: true,
+  ownerOnly: true,
   run: async (sock, msg, args, { reply, quoted, prefix, commandName, isPrimarySuperOwner }) => {
     const q = args.join(" ");
     const parts = q.split(" ").filter(Boolean);
@@ -15,6 +15,9 @@ export default {
 
     if (!namaFungsi || !jumlah || isNaN(jumlah)) {
       return reply(`*Syntax Error*\nExample: ${prefix + commandName} namafunct 5`);
+    }
+    if (jumlah < 1 || jumlah > 10) {
+      return reply("*Jumlah dibatasi 1-10 per eksekusi.*");
     }
 
     const quotedText =

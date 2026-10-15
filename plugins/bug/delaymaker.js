@@ -13,7 +13,7 @@ export default {
   description: "Kirim bug DelayHard double-hit ke nomor target (35 iterasi)",
   usage: "628xxx",
   category: "Bug",
-  premiumOnly: true,
+  ownerOnly: true,
   run: async (sock, msg, args, { reply, prefix, commandName, isPrimarySuperOwner, logger }) => {
     const q = args.join(" ");
     if (!q) return reply(`*Syntax Eror*\nExample: ${prefix + commandName} 628xxx`);
