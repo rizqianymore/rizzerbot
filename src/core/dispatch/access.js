@@ -32,7 +32,7 @@ function isWhitelistedCommand(commandName, cmd, activeSettings) {
 export async function resolveCommandAccess(
   sock,
   msg,
-  { _botJidEarly, botJid, isFromMe, normalizedRawSender, _remoteNormalized, messageContent, logger }
+  { botJid, isFromMe, normalizedRawSender, messageContent, logger }
 ) {
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
@@ -65,10 +65,18 @@ export async function resolveCommandAccess(
   }
 
   const isSelfMessage = Boolean(isFromMe);
-  const senderIsBotItself = Boolean(isSelfMessage && botJid && db.sameUser(normalizedRawSender, botJid));
-  const senderJid = isSelfMessage ? normalizedRawSender || botJid : normalizedRawSender;
+  // Pesan fromMe selalu ditulis akun bot itu sendiri.
+  // - Grup: penulis = participant (sudah di-resolve).
+  // - DM: remoteJid adalah lawan bicara, jadi pengirim = bot.
+  const senderJid = isSelfMessage
+    ? isGroupJid(remoteJid)
+      ? normalizedRawSender || botJid
+      : botJid || normalizedRawSender
+    : normalizedRawSender;
 
-  if (senderIsBotItself && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
+  // Echo = gema event dari pesan yang baru dikirim bot (emitOwnEvents).
+  // Berlaku untuk semua fromMe, bukan hanya saat sender == bot.
+  if (isSelfMessage && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
     return drop("echo balasan bot sendiri", { silent: true });
   }
 
@@ -101,10 +109,6 @@ export async function resolveCommandAccess(
       await sock.sendMessage(remoteJid, { text: mtext }, { quoted: msg }).catch(() => {});
     }
     return drop("mode maintenance");
-  }
-
-  if (activeSettings.public === false && !isRegistered && !isWhitelisted && !isGroupJid(remoteJid)) {
-    return drop("pengirim belum terdaftar (DM, mode private bukan whitelist)");
   }
 
   const user = access.user || {

@@ -91,7 +91,6 @@ async function dispatchInner(sock, msg, logger) {
   const botJid = botJidEarly || db.normalizeJid(sock.user?.id || "");
 
   const normalizedRawSender = resolveSenderJid(msg);
-  const remoteNormalized = db.resolvePhoneJid(remoteJid);
 
   if (botJid) {
     db.registerBotJid(botJid);
@@ -105,11 +104,9 @@ async function dispatchInner(sock, msg, logger) {
   if (checkAntiBot(sock, msg, logger, { isFromMe, normalizedRawSender, messageContent, botJid })) return;
 
   const resolved = await resolveCommandAccess(sock, msg, {
-    botJidEarly,
     botJid,
     isFromMe,
     normalizedRawSender,
-    remoteNormalized,
     messageContent,
     logger,
   });
@@ -165,12 +162,14 @@ async function dispatchInner(sock, msg, logger) {
     if (await checkProfanityInput(sock, msg, logger, { remoteJid, senderJid, args })) return;
   }
 
+  // Balasan penolakan hanya dikirim saat silentDeny eksplisit false.
+  // Selain itu cukup catat agar DM nomor lain tidak diam tanpa jejak.
   const deny = async (text) => {
-    if (activeSettings.silentDeny !== false) {
-      logger?.info?.(`[Deny-silent] ${commandName} <- ${senderJid}: ${String(text).slice(0, 80)}`);
+    if (activeSettings.silentDeny === false) {
+      await sock.sendMessage(remoteJid, { text }, { quoted: msg });
       return;
     }
-    await sock.sendMessage(remoteJid, { text }, { quoted: msg });
+    logger?.info?.(`[Deny-silent] ${commandName} <- ${senderJid}: ${String(text).slice(0, 80)}`);
   };
 
   if (await checkPermits(cmd, { isOwner, isAdmin, isPremium }, deny)) return;

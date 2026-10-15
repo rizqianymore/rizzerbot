@@ -135,7 +135,17 @@ export function attachMessageHandler(sock) {
         }
         try {
           const ts = Number(msg.messageTimestamp);
-          if (Number.isFinite(ts) && ts > 0 && Date.now() - ts * 1000 > 5 * 60 * 1000) continue;
+          if (Number.isFinite(ts) && ts > 0) {
+            const ageMs = Date.now() - ts * 1000;
+            if (ageMs > 5 * 60 * 1000) {
+              logger.info?.(`[Stale] pesan basi pra-antrean diabaikan: ${msg.key?.id || "?"}`);
+              continue;
+            }
+            if (ageMs < -5 * 60 * 1000) {
+              logger.info?.(`[Stale] timestamp masa depan pra-antrean diabaikan: ${msg.key?.id || "?"}`);
+              continue;
+            }
+          }
         } catch (_) {}
 
         if (db.getSettings().autoRead) {

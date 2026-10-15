@@ -23,8 +23,10 @@ export async function executeCommand(sock, msg, logger, env) {
 
   const groupAccessError = await getGroupAccessError(sock, remoteJid, senderJid, cmd, access);
   if (groupAccessError) {
-    if (activeSettings.silentDeny !== false) return;
-    return sock.sendMessage(remoteJid, { text: groupAccessError }, { quoted: msg });
+    if (activeSettings.silentDeny === false) {
+      return sock.sendMessage(remoteJid, { text: groupAccessError }, { quoted: msg });
+    }
+    return;
   }
 
   logger?.info?.(

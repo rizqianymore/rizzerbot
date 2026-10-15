@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { db } from "@/src/core/database.js";
 
 const LOGS_DIR = path.join(process.cwd(), "database", "chat_logs");
 const RETENTION_MS = 3 * 24 * 60 * 60 * 1000;
@@ -64,19 +65,16 @@ export function recordMessage(sock, msg) {
     const remoteJid = msg.key.remoteJid;
     if (!remoteJid || remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter")) return;
 
-    const toPhoneJid = (j) => {
-      if (!j || typeof j !== "string") return "";
-      const at = j.indexOf("@");
-      if (at < 0 || j.slice(at + 1).toLowerCase() !== "s.whatsapp.net") return "";
-      let d = j.slice(0, at).split(":")[0].replace(/\D/g, "");
-      if (d.startsWith("00")) d = d.slice(2);
-      if (d.startsWith("0")) d = `62${d.slice(1)}`;
-      else if (d.startsWith("8")) d = `62${d}`;
-      return d.length >= 8 ? `${d}@s.whatsapp.net` : "";
-    };
     const rawSender = msg.key.participant || (msg.key.fromMe ? sock?.user?.id : remoteJid) || remoteJid;
+    // Samakan dengan dispatch: utamakan nomor HP hasil peta LID, fallback mentah bila belum terpetakan.
     const sender =
-      toPhoneJid(msg.key.participantAlt) || toPhoneJid(msg.key.remoteJidAlt) || toPhoneJid(rawSender) || rawSender;
+      db.pickPhoneJid(
+        msg.key.participantAlt,
+        msg.key.remoteJidAlt,
+        msg.key.participantPn,
+        msg.key.senderPn,
+        rawSender
+      ) || rawSender;
     const isGroup = remoteJid.endsWith("@g.us");
 
     const m = msg.message;
