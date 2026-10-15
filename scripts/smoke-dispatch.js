@@ -110,6 +110,7 @@ clearSentMessageCache();
   const sock = makeSock();
   const sent = await dispatch(sock, { text: ".menu", remoteJid: OWNER_JID, fromMe: true });
   assert(sent.length > 0, "owner (fromMe) tetap dapat .menu di DM sendiri");
+  assert(sent.length === 1, "`.menu` hanya mengirim 1 pesan (tanpa duplikat)", `terkirim ${sent.length} pesan`);
 
   // 2. Balasan bot sendiri yang dipantulkan balik harus diabaikan (anti loop).
   for (const out of sent) {
@@ -139,6 +140,7 @@ clearSentMessageCache();
   const sock = makeSock();
   const sent = await dispatch(sock, { text: ".menu", remoteJid: USER_JID });
   assert(sent.length > 0, "user biasa bisa .menu walau bot private");
+  assert(sent.length === 1, "`.menu` user biasa juga 1 pesan", `terkirim ${sent.length} pesan`);
 }
 
 // 5. Bot private: perintah non-whitelist tetap diblokir diam-diam.

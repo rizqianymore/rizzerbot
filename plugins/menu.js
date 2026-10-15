@@ -5,17 +5,6 @@ import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js"
 
 export const MENU_INTERACTIVE_MAX = 900;
 
-export function renderMenuHeader({ botName, prefix, role, totalCmds }) {
-  return (
-    `╭───「 *${botName}* 」\n` +
-    `│ • Prefix: [ ${prefix} ]\n` +
-    `│ • Role: ${role}\n` +
-    `│ • Total: ${totalCmds} Perintah\n` +
-    `╰───\n\n` +
-    `Pilih kategori di bawah.`
-  );
-}
-
 export function buildMenuButtons(catKeys, prefix) {
   return [
     {
@@ -35,16 +24,6 @@ export function buildMenuButtons(catKeys, prefix) {
       }),
     },
   ];
-}
-
-export function buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image }) {
-  const im = {
-    title: renderMenuHeader({ botName, prefix, role, totalCmds }),
-    footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
-    buttons: buildMenuButtons(catKeys, prefix),
-  };
-  if (image) im.image = image;
-  return { interactiveMessage: im };
 }
 
 async function resolveMenuImage(activeSettings = {}) {
@@ -200,10 +179,13 @@ export default {
         targetCategory: null,
       }).trim();
 
+      // Satu perintah = satu pesan. Sebelumnya menu lengkap dikirim lalu
+      // disusul kartu navigasi kedua dengan header + tombol yang sama,
+      // sehingga hasilnya terlihat dobel.
       if (shouldUseInteractive(body)) {
         const image = await resolveMenuImage(activeSettings);
         try {
-          await sock.sendMessage(
+          return await sock.sendMessage(
             jid,
             {
               interactiveMessage: {
@@ -217,22 +199,12 @@ export default {
           );
         } catch (_) {
           const imagePayload = await resolveImagePayload(activeSettings);
-          await sendWithImage(sock, jid, imagePayload, body, msg);
+          return await sendWithImage(sock, jid, imagePayload, body, msg);
         }
-      } else {
-        const imagePayload = await resolveImagePayload(activeSettings);
-        await sendWithImage(sock, jid, imagePayload, body, msg);
       }
 
-      try {
-        const navImage = await resolveMenuImage(activeSettings);
-        await sock.sendMessage(
-          jid,
-          buildMenuInteractive({ botName, prefix, role, totalCmds, catKeys, image: navImage }),
-          { quoted: msg }
-        );
-      } catch (_) {}
-      return;
+      const imagePayload = await resolveImagePayload(activeSettings);
+      return await sendWithImage(sock, jid, imagePayload, body, msg);
     }
 
     const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
