@@ -179,45 +179,12 @@ export default {
         targetCategory: null,
       }).trim();
 
-      if (shouldUseInteractive(body)) {
-        const image = await resolveMenuImage(activeSettings);
-        try {
-          return await sock.sendMessage(
-            jid,
-            {
-              interactiveMessage: {
-                title: body,
-                footer: `Total: ${totalCmds} perintah • ${prefix}menu all = semua`,
-                buttons: buildMenuButtons(catKeys, prefix),
-                ...(image ? { image } : {}),
-              },
-            },
-            { quoted: msg }
-          );
-        } catch (_) {
-          const imagePayload = await resolveImagePayload(activeSettings);
-          return await sendWithImage(sock, jid, imagePayload, body, msg);
-        }
-      }
-
       const imagePayload = await resolveImagePayload(activeSettings);
       return await sendWithImage(sock, jid, imagePayload, body, msg);
     }
 
     const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
-    if (shouldUseInteractive(body)) {
-      const image = await resolveMenuImage(activeSettings);
-      const im = {
-        title: body,
-        footer: `${targetCategory} • ${prefix}menu = kembali`,
-        buttons: buildMenuButtons(catKeys, prefix),
-      };
-      if (image) im.image = image;
-      try {
-        return await sock.sendMessage(jid, { interactiveMessage: im }, { quoted: msg });
-      } catch (_) {}
-    }
     const imagePayload = await resolveImagePayload(activeSettings);
-    await sendWithImage(sock, jid, imagePayload, body, msg);
+    return await sendWithImage(sock, jid, imagePayload, body, msg);
   },
 };
