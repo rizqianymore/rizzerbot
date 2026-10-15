@@ -1,6 +1,38 @@
 import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid } from "./identity.js";
+import { isBotEchoMessage } from "./echo.js";
+
+function collectInvokedNames(commandName, cmd) {
+  const names = new Set();
+  const push = (value) => {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (normalized) names.add(normalized);
+  };
+  push(commandName);
+  push(cmd?.name);
+  for (const alias of cmd?.aliases || []) push(alias);
+  return names;
+}
+
+/**
+ * Perintah whitelisted (mis. menu/help/ping) tetap boleh dipakai walaupun bot
+ * sedang private. Tanpa ini, `publicCommands` jadi kode mati karena semua
+ * non-owner sudah ditolak lebih dulu oleh gate `public === false`.
+ */
+function isWhitelistedCommand(commandName, cmd, activeSettings) {
+  const allowed = new Set(
+    (Array.isArray(activeSettings?.publicCommands) ? activeSettings.publicCommands : []).map((c) =>
+      String(c || "")
+        .trim()
+        .toLowerCase()
+    )
+  );
+  if (allowed.size === 0) return false;
+  return [...collectInvokedNames(commandName, cmd)].some((name) => allowed.has(name));
+}
 
 export async function resolveCommandAccess(
   sock,
@@ -9,6 +41,7 @@ export async function resolveCommandAccess(
 ) {
   const activeSettings = db.getBotSettings(botJid);
   const prefix = activeSettings.prefix || ".";
+  const remoteJid = msg.key.remoteJid;
   if (!messageContent.startsWith(prefix)) return { drop: true };
 
   const args = messageContent.slice(prefix.length).trim().split(/ +/).filter(Boolean);
@@ -16,9 +49,18 @@ export async function resolveCommandAccess(
   if (!commandName) return { drop: true };
 
   const cmd = commands.get(commandName);
-  if (!cmd) return { drop: true };
-
-  const remoteJid = msg.key.remoteJid;
+  if (!cmd) {
+    if (activeSettings.silentDeny === false) {
+      await sock
+        .sendMessage(
+          remoteJid,
+          { text: `⚠️ Perintah *${commandName}* tidak dikenal.\nKetik ${prefix}menu untuk daftar perintah.` },
+          { quoted: msg }
+        )
+        .catch(() => {});
+    }
+    return { drop: true };
+  }
 
   // Identitas pengirim:
   // - Pesan biasa: pakai participant/remoteJid yang sudah di-resolve.
@@ -29,10 +71,12 @@ export async function resolveCommandAccess(
   const senderIsBotItself = Boolean(isSelfMessage && botJid && db.sameUser(normalizedRawSender, botJid));
   const senderJid = isSelfMessage ? normalizedRawSender || botJid : normalizedRawSender;
 
-  // Pesan yang benar-benar berasal dari akun bot sendiri (grup / DM ke diri sendiri)
-  // tidak pernah diproses sebagai perintah: mencegah echo loop dan mencegah
-  // JID bot yang kebetulan terdaftar sebagai owner ikut mendapat hak owner.
-  if (senderIsBotItself) return { drop: true };
+  // Nomor bot pada pairing ini = nomor owner, jadi pesan owner sendiri ikut
+  // berflag fromMe. Buang HANYA echo (balasan bot sendiri yang dipantulkan
+  // kembali); perintah yang diketik manual oleh pemilik akun bot tetap jalan.
+  if (senderIsBotItself && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
+    return { drop: true };
+  }
 
   // CATATAN KEAMANAN: fromMe tidak otomatis berstatus Owner.
   const isSenderOwner = db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
@@ -43,7 +87,18 @@ export async function resolveCommandAccess(
   const isPremium = Boolean(isOwner || isAdmin || access.premium);
   const isRegistered = Boolean(isOwner || isAdmin || isPremium);
 
-  if (activeSettings.public === false && !isOwner) {
+  const isWhitelisted = isWhitelistedCommand(commandName, cmd, activeSettings);
+
+  if (activeSettings.public === false && !isOwner && !isWhitelisted) {
+    if (activeSettings.silentDeny === false) {
+      await sock
+        .sendMessage(
+          remoteJid,
+          { text: "🔒 Bot sedang dalam mode private. Perintah ini hanya untuk Owner/Admin/Premium." },
+          { quoted: msg }
+        )
+        .catch(() => {});
+    }
     return { drop: true };
   }
 
@@ -55,17 +110,8 @@ export async function resolveCommandAccess(
     return { drop: true };
   }
 
-  if (!isRegistered && !isGroupJid(remoteJid)) {
-    const allowed = Array.isArray(activeSettings.publicCommands)
-      ? activeSettings.publicCommands.map((c) => String(c || "").toLowerCase())
-      : [];
-    const invoked = new Set(
-      [commandName, cmd.name?.toLowerCase(), ...(cmd.aliases || []).map((a) => String(a || "").toLowerCase())].filter(
-        Boolean
-      )
-    );
-    const isPublicCommand = [...invoked].some((n) => allowed.includes(n));
-    if (!isPublicCommand) return { drop: true };
+  if (!isRegistered && !isWhitelisted && !isGroupJid(remoteJid)) {
+    return { drop: true };
   }
 
   const user = access.user || {

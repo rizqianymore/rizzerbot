@@ -3,6 +3,7 @@ import { DisconnectReason } from "ourin-baileys";
 import qrcode from "qrcode-terminal";
 import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";
+import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
 import { recordMessage } from "@/src/services/system/chatlogger.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
@@ -85,6 +86,10 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
 }
 
 export function attachMessageHandler(sock) {
+  // Catat semua pesan keluar supaya echo (balasan bot sendiri) bisa dibuang
+  // tanpa ikut memblokir perintah yang diketik manual oleh pemilik akun bot.
+  attachEchoTracker(sock);
+
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
 

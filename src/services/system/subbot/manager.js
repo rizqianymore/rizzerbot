@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { logger } from "@/src/core/connection.js";
 import { db } from "@/src/core/database.js";
+import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots, baseSessionsDir } from "./store.js";
 import { setupSubBotEvents } from "./events.js";
@@ -66,6 +67,7 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
 
   sock.isSubBot = true;
   sock.subBotNumber = cleanNumber;
+  attachEchoTracker(sock);
 
   const botEntry = {
     id: botId,

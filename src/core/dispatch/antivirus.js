@@ -48,9 +48,17 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const m = msg.message || {};
 
     const tapText = extractButtonText(m);
+    // `interactiveResponseMessage` adalah balasan pengguna saat menekan tombol
+    // pada kartu menu. Formatnya kecil dan sah, sehingga tidak boleh dianggap
+    // payload crash (dulu tap yang id-nya gagal dibaca ikut dihapus + pengirim
+    // ditandai crash).
+    const unparsedButtonTap = Boolean(m.interactiveResponseMessage) && !tapText;
+    if (unparsedButtonTap) {
+      logger?.warn?.(`[Anti-Crash] Balasan tombol tanpa id terbaca, diteruskan sebagai teks biasa`);
+    }
+
     const crashKey =
       m.groupStatusMessageV2 ||
-      (!tapText && m.interactiveResponseMessage) ||
       m.viewOnceMessage?.message?.buttonsMessage ||
       m.viewOnceMessage?.message?.interactiveMessage;
 
@@ -59,10 +67,18 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const extLen = m.extendedTextMessage?.text?.length || 0;
     const btns = m.interactiveMessage?.nativeFlowMessage?.buttons;
     const btnCount = Array.isArray(btns) ? btns.length : 0;
+    const tapPayloadTooBig = unparsedButtonTap && rawStr.length > LIMIT.rawScan;
     const flood = rawStr.length > LIMIT.rawScan && /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/.test(rawStr);
-    if (crashKey || flood || vcardLen > LIMIT.vcard || extLen > LIMIT.extText || btnCount > LIMIT.buttons) {
+    if (
+      crashKey ||
+      flood ||
+      tapPayloadTooBig ||
+      vcardLen > LIMIT.vcard ||
+      extLen > LIMIT.extText ||
+      btnCount > LIMIT.buttons
+    ) {
       logger?.warn?.(
-        `[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`
+        `[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} tap=${tapPayloadTooBig} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`
       );
       await dropInGroup();
       trackCrashSender(msg.key.participant || remoteJid);

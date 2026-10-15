@@ -9,7 +9,8 @@ export function extractButtonText(message) {
   const p = message.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson;
   if (typeof p === "string" && p) {
     try {
-      const id = JSON.parse(p)?.id;
+      const parsed = JSON.parse(p);
+      const id = parsed?.id ?? parsed?.selectedId ?? parsed?.rowId;
       if (id) return String(id);
     } catch (_) {}
   }

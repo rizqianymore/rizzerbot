@@ -1,0 +1,202 @@
+#!/usr/bin/env node
+/**
+ * Simulasi dispatch tanpa socket WhatsApp sungguhan.
+ *
+ * Dijalankan oleh `scripts/smoke.js` dengan `cwd` = folder sementara berisi
+ * `database/database.json` buatan, sehingga file database asli tidak tersentuh.
+ *
+ * Skenario mengikuti kondisi produksi: nomor bot = nomor owner (pairing memakai
+ * `pairingNumber`), jadi pesan owner sendiri sampai ke bot dengan flag fromMe.
+ */
+import fs from "fs";
+import path from "path";
+
+const OWNER_JID = "6287847566690@s.whatsapp.net";
+const USER_JID = "628999888777@s.whatsapp.net";
+const GROUP_JID = "120363000000000000@g.us";
+
+const dbDir = path.join(process.cwd(), "database");
+fs.mkdirSync(dbDir, { recursive: true });
+
+const settings = {
+  botName: "Rizzer Bot",
+  ownerNumber: "6287847566690",
+  ownerNumbers: [],
+  adminNumbers: [],
+  premiumNumbers: [],
+  prefix: ".",
+  public: false,
+  maintenance: false,
+  silentDeny: true,
+  cooldownTime: 0,
+  antiBurst: true,
+  publicCommands: ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
+};
+
+const users = {
+  [OWNER_JID]: { name: "Owner", owner: true, admin: true, premium: true, banned: false },
+};
+
+fs.writeFileSync(path.join(dbDir, "database.json"), JSON.stringify({ schemaVersion: 2, settings, users }, null, 2));
+fs.writeFileSync(path.join(dbDir, "users.json"), JSON.stringify(users, null, 2));
+
+const { loadPlugins } = await import("@/src/core/loader.js");
+const { dispatchMessage } = await import("@/src/core/dispatch/run.js");
+const { attachEchoTracker, clearSentMessageCache } = await import("@/src/core/dispatch/echo.js");
+
+await loadPlugins();
+
+let failures = 0;
+let seq = 0;
+
+function assert(cond, label, extra = "") {
+  if (cond) console.log(`  OK   ${label}`);
+  else {
+    failures++;
+    console.log(`  FAIL ${label}${extra ? ` — ${extra}` : ""}`);
+  }
+}
+
+function makeSock(botJid = OWNER_JID) {
+  const sent = [];
+  const sock = {
+    sent,
+    user: { id: `${botJid.split("@")[0]}:5@s.whatsapp.net`, name: "~" },
+    isSubBot: false,
+    async sendMessage(jid, content) {
+      const id = `OUT${++seq}`;
+      sent.push({ jid, content, id });
+      return { key: { id, remoteJid: jid, fromMe: true } };
+    },
+    sendPresenceUpdate: async () => {},
+    groupMetadata: async () => ({
+      id: GROUP_JID,
+      participants: [
+        { id: botJid, admin: "superadmin" },
+        { id: USER_JID, admin: null },
+      ],
+    }),
+  };
+  return attachEchoTracker(sock);
+}
+
+const logger = { info: () => {}, warn: () => {}, error: () => {} };
+
+async function dispatch(sock, { text, remoteJid, fromMe = false, participant }) {
+  const before = sock.sent.length;
+  await dispatchMessage(
+    sock,
+    {
+      key: { remoteJid, fromMe, id: `IN${++seq}`, participant },
+      messageTimestamp: Math.floor(Date.now() / 1000),
+      pushName: fromMe ? "~" : "User",
+      message: { conversation: text },
+    },
+    logger
+  );
+  return sock.sent.slice(before);
+}
+
+function bodyOf(sent) {
+  return sent
+    .map((s) => s.content?.text || s.content?.caption || s.content?.interactiveMessage?.title || "")
+    .join("\n");
+}
+
+clearSentMessageCache();
+
+// 1. Owner mengetik .menu di DM dengan akun botnya sendiri (fromMe = true).
+{
+  const sock = makeSock();
+  const sent = await dispatch(sock, { text: ".menu", remoteJid: OWNER_JID, fromMe: true });
+  assert(sent.length > 0, "owner (fromMe) tetap dapat .menu di DM sendiri");
+
+  // 2. Balasan bot sendiri yang dipantulkan balik harus diabaikan (anti loop).
+  for (const out of sent) {
+    const text = out.content?.text || out.content?.caption || "";
+    if (!text) continue;
+    const echo = await dispatch(sock, { text, remoteJid: out.jid, fromMe: true });
+    assert(echo.length === 0, `echo balasan bot diabaikan ("${text.slice(0, 24)}")`);
+  }
+}
+
+// 3. Owner di grup tetap dilayani.
+{
+  clearSentMessageCache();
+  const sock = makeSock();
+  const sent = await dispatch(sock, {
+    text: ".ping",
+    remoteJid: GROUP_JID,
+    fromMe: true,
+    participant: OWNER_JID,
+  });
+  assert(sent.length > 0, "owner (fromMe) tetap dilayani di grup");
+}
+
+// 4. Bot private: perintah whitelisted tetap terbuka untuk user biasa.
+{
+  clearSentMessageCache();
+  const sock = makeSock();
+  const sent = await dispatch(sock, { text: ".menu", remoteJid: USER_JID });
+  assert(sent.length > 0, "user biasa bisa .menu walau bot private");
+}
+
+// 5. Bot private: perintah non-whitelist tetap diblokir diam-diam.
+{
+  clearSentMessageCache();
+  const sock = makeSock();
+  const sent = await dispatch(sock, { text: ".tagall", remoteJid: USER_JID });
+  assert(sent.length === 0, "perintah non-whitelist tetap diblokir saat private");
+}
+
+// 6. silentDeny = false: penolakan private diberi penjelasan, bukan diam.
+{
+  clearSentMessageCache();
+  const { db } = await import("@/src/core/database.js");
+  db.updateSettings({ silentDeny: false });
+
+  const sock = makeSock();
+  const sent = await dispatch(sock, { text: ".tagall", remoteJid: USER_JID });
+  assert(/private/i.test(bodyOf(sent)), "private mode memberi penjelasan saat silentDeny=false");
+
+  // 7. Perintah tidak dikenal juga diberi feedback.
+  const unknown = await dispatch(sock, { text: ".perintahngawur", remoteJid: USER_JID });
+  assert(/tidak dikenal/i.test(bodyOf(unknown)), "perintah tidak dikenal diberi feedback");
+}
+
+// 8. Ganti akun bot (bukan nomor owner) -> pesan owner normal tetap jalan.
+{
+  clearSentMessageCache();
+  const otherBot = "628111111111@s.whatsapp.net";
+  const sock = makeSock(otherBot);
+  const sent = await dispatch(sock, { text: ".ping", remoteJid: USER_JID });
+  assert(sent.length > 0, "user biasa bisa .ping (whitelist) dengan akun bot lain");
+}
+
+// 9. Tap tombol pada kartu menu (interactiveResponseMessage) harus dijalankan
+//    sebagai perintah, bukan dianggap payload crash lalu dihapus.
+{
+  clearSentMessageCache();
+  const sock = makeSock();
+  const before = sock.sent.length;
+  await dispatchMessage(
+    sock,
+    {
+      key: { remoteJid: GROUP_JID, fromMe: false, id: `TAP${++seq}`, participant: USER_JID },
+      messageTimestamp: Math.floor(Date.now() / 1000),
+      pushName: "User",
+      message: {
+        interactiveResponseMessage: {
+          nativeFlowResponseMessage: { paramsJson: JSON.stringify({ title: "Umum", id: ".menu umum" }) },
+        },
+      },
+    },
+    logger
+  );
+  const sent = sock.sent.slice(before);
+  assert(!sent.some((s) => s.content?.delete), "tap tombol menu tidak dihapus sebagai crash");
+  assert(sent.length > 0, "tap tombol menu dijawab");
+}
+
+console.log(failures === 0 ? "  OK   simulasi dispatch bersih" : `  GAGAL ${failures} skenario dispatch`);
+process.exit(failures === 0 ? 0 : 1);

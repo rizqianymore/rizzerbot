@@ -25,7 +25,7 @@ function pluginFiles(dir) {
   return out;
 }
 
-console.log("[1/4] Semua plugin ter-import & valid...");
+console.log("[1/5] Semua plugin ter-import & valid...");
 const files = pluginFiles(path.join(ROOT, "plugins"));
 const seen = new Map();
 const dupes = [];
@@ -57,7 +57,7 @@ for (const f of files) {
 assert(dupes.length === 0, `tanpa nama/alias duplikat (${seen.size} command)`, dupes.slice(0, 5).join("; "));
 console.log(`  INFO ${files.length} file plugin dicek`);
 
-console.log("[2/4] Modul util inti termuat...");
+console.log("[2/5] Modul util inti termuat...");
 try {
   await import("../src/utils/termux.js");
   await import("../src/utils/native.js");
@@ -69,7 +69,7 @@ try {
   assert(false, "termux/native/doctor tanpa crash", err.message);
 }
 
-console.log("[3/4] EXIF stiker JS murni valid...");
+console.log("[3/5] EXIF stiker JS murni valid...");
 try {
   const { isWebP, injectExif, getExifChunk, buildStickerExif } = await import("../src/services/fetch/media/exif.js");
   const sharp = (await import("../src/utils/native.js").then((m) => m.getSharp())) || null;
@@ -96,12 +96,44 @@ try {
   assert(false, "EXIF stiker JS murni valid", err.message);
 }
 
-console.log("[4/4] Service tanpa native (userhunt) termuat...");
+console.log("[4/5] Service tanpa native (userhunt) termuat...");
 try {
   const { USERHUNT_PLATFORMS } = await import("../src/services/osint/userhunt.js");
   assert(USERHUNT_PLATFORMS.length >= 18, `${USERHUNT_PLATFORMS.length} platform userhunt`);
 } catch (err) {
   assert(false, "userhunt termuat", err.message);
+}
+
+console.log("[5/5] Simulasi dispatch perintah (proses terpisah, db dummy)...");
+try {
+  const os = await import("os");
+  const { execFileSync } = await import("child_process");
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rizzer-smoke-dispatch-"));
+  try {
+    execFileSync(process.execPath, [path.join(ROOT, "scripts", "smoke-dispatch.js")], {
+      cwd: tmpDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+      .split("\n")
+      .filter((line) => /^\s+(OK|FAIL|GAGAL)/.test(line))
+      .forEach((line) => console.log(line));
+    assert(true, "simulasi dispatch tanpa error");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+} catch (err) {
+  for (const line of `${err.stdout || ""}`.split("\n")) {
+    if (/^\s+(OK|FAIL|GAGAL)/.test(line)) console.log(line);
+  }
+  assert(
+    false,
+    "simulasi dispatch tanpa error",
+    String(err.stderr || err.message)
+      .trim()
+      .split("\n")
+      .slice(-1)[0]
+  );
 }
 
 console.log(failures === 0 ? "\nSMOKE OK" : `\nSMOKE GAGAL (${failures})`);

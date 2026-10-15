@@ -36,21 +36,27 @@ export async function checkRateLimit(activeSettings, senderJid, sock, msg, remot
       return true;
     }
   }
-  const cooldownMs = Number(activeSettings.cooldownTime) || 3000;
+  const configuredCooldown = Number(activeSettings.cooldownTime);
+  const cooldownMs = Number.isFinite(configuredCooldown) && configuredCooldown >= 0 ? configuredCooldown : 3000;
   const now = Date.now();
-  const lastTime = userCooldowns.get(senderJid) || 0;
-  const diff = now - lastTime;
 
-  if (diff < cooldownMs) {
-    const waitSec = ((cooldownMs - diff) / 1000).toFixed(1);
-    await sock.sendMessage(
-      remoteJid,
-      { text: `⏳ *Mohon tunggu ${waitSec} detik* sebelum menggunakan perintah berikutnya!` },
-      { quoted: msg }
-    );
-    return true;
+  // `cooldownTime: 0` berarti cooldown dimatikan (sebelumnya `|| 3000` membuat
+  // nilai 0 ikut jadi 3 detik sehingga setting itu tidak pernah berlaku).
+  if (cooldownMs > 0) {
+    const lastTime = userCooldowns.get(senderJid) || 0;
+    const diff = now - lastTime;
+
+    if (diff < cooldownMs) {
+      const waitSec = ((cooldownMs - diff) / 1000).toFixed(1);
+      await sock.sendMessage(
+        remoteJid,
+        { text: `⏳ *Mohon tunggu ${waitSec} detik* sebelum menggunakan perintah berikutnya!` },
+        { quoted: msg }
+      );
+      return true;
+    }
+    userCooldowns.set(senderJid, now);
   }
-  userCooldowns.set(senderJid, now);
 
   if (userCooldowns.size > 1000) {
     for (const [jid, time] of userCooldowns.entries()) {
