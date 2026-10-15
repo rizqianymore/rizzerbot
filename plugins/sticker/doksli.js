@@ -56,7 +56,7 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? 0 : 40;
+    const maxSize = fontSize > 0 ? 0 : 56;
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ");
       if (fullText.includes("|")) {
