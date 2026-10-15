@@ -63,7 +63,10 @@ async function dispatchInner(sock, msg, logger) {
         return;
       }
 
-      if (ageMs < -5 * 60 * 1000) return;
+      if (ageMs < -5 * 60 * 1000) {
+        logger?.info?.(`[Stale] timestamp masa depan diabaikan (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
+        return;
+      }
     }
   } catch (_) {}
 
@@ -95,6 +98,7 @@ async function dispatchInner(sock, msg, logger) {
   }
 
   if (!isFromMe && db.isAnyBotJid(normalizedRawSender)) {
+    logger?.info?.(`[Drop] sender dianggap bot luar: ${normalizedRawSender} di ${remoteJid}`);
     return;
   }
 
@@ -114,6 +118,11 @@ async function dispatchInner(sock, msg, logger) {
     else if (resolved.reason && !resolved.silent) {
       logger?.info?.(
         `[Drop] ${remoteJid} <- ${msg.pushName || "?"}: ${resolved.reason}` +
+          (resolved.commandName ? ` (cmd: ${resolved.commandName})` : "")
+      );
+    } else if (resolved.reason && resolved.silent) {
+      logger?.info?.(
+        `[Drop-silent] ${remoteJid} <- ${msg.pushName || "?"} (${normalizedRawSender}, fromMe=${isFromMe}): ${resolved.reason}` +
           (resolved.commandName ? ` (cmd: ${resolved.commandName})` : "")
       );
     }
