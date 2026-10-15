@@ -63,22 +63,26 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? 0 : 80;
+    // Naikkan ukuran maksimum teks agar font besar, tebal, dan jelas
+    const maxSize = fontSize > 0 ? 0 : 100;
 
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ").trim();
       if (fullText.includes("|")) {
+        // Jika ada tanda '|', user sengaja minta format ATAS | BAWAH
         const parts = fullText.split("|");
         topText = parts[0]?.trim() || "";
         bottomText = parts.slice(1).join("|")?.trim() || "";
       } else {
+        // Teks tetap di posisi BAWAH (kecuali user set --atas atau --tengah)
         const words = fullText.split(/\s+/).filter(Boolean);
-        // Jika teks cukup panjang (>= 3 kata atau > 14 karakter), otomatis bagi menjadi 2 baris (ATAS & BAWAH)
-        // agar font tetap besar, tebal, dan proporsional di stiker
+        // Jika teks panjang (>= 3 kata atau > 14 karakter), otomatis bagi menjadi 2 baris di bawah
+        // menggunakan newline (\n). Ini mencegah font mengecil karena menyamping.
         if (words.length >= 3 || fullText.length > 14) {
           const mid = Math.ceil(words.length / 2);
-          topText = words.slice(0, mid).join(" ");
-          bottomText = words.slice(mid).join(" ");
+          const line1 = words.slice(0, mid).join(" ");
+          const line2 = words.slice(mid).join(" ");
+          bottomText = `${line1}\n${line2}`;
         } else {
           bottomText = fullText;
         }
