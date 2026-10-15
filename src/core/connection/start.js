@@ -10,6 +10,7 @@ import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
 import { attachConnectionEvents, attachMessageHandler } from "./handlers.js";
+import { startKeepAlive, startStabilityWatchdog } from "./keepalive.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,14 @@ export async function startBot() {
     } catch (_) {}
     connectionState.primarySock = null;
   }
+  try {
+    connectionState.keepAliveStop?.();
+  } catch (_) {}
+  connectionState.keepAliveStop = null;
+  try {
+    connectionState.stabilityStop?.();
+  } catch (_) {}
+  connectionState.stabilityStop = null;
 
   try {
     const activeSettings = db.getSettings();
@@ -149,6 +158,10 @@ export async function startBot() {
 
     sock.isSubBot = false;
     attachMessageHandler(sock);
+    connectionState.keepAliveStop = startKeepAlive(sock, { logger, restart: () => startBot() });
+    if (!connectionState.stabilityStop) {
+      connectionState.stabilityStop = startStabilityWatchdog({ logger });
+    }
 
     connectionState.isStarting = false;
     return sock;

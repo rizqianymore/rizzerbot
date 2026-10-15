@@ -66,6 +66,26 @@ function toBrightDataOptions(url, { method, headers, data, params, timeout, resp
 
 const TRANSIENT_STATUS = new Set([408, 429, 502, 503, 504]);
 
+// Singleflight: request GET identik yang datang bersamaan berbagi 1 promise
+// sehingga trafik duplikat (mis. 10 user .bola bareng) tidak menghantam API
+// 10x. Hanya untuk GET json/text tanpa body; kunci mencakup opsi routing.
+const inflight = new Map();
+function dedupKey(url, { responseType, via, bypassCloudflare, country, state, city, params }) {
+  let full = String(url);
+  try {
+    const u = new URL(full);
+    if (params && typeof params === "object") {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null) u.searchParams.set(k, String(v));
+      }
+    }
+    full = u.toString();
+  } catch (_) {}
+  return [via || "auto", bypassCloudflare || "auto", responseType, country || "", state || "", city || "", full].join(
+    "|"
+  );
+}
+
 export async function smartRequest(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const responseType = options.responseType || "json";
@@ -172,122 +192,156 @@ export async function smartRequest(url, options = {}) {
   let attempt = 0;
   let lastError = null;
 
-  while (attempt <= retries) {
-    attempt++;
-    report("direct");
-    try {
-      const axiosConfig = {
-        url,
-        method,
-        headers,
+  const canDedup =
+    method === "GET" &&
+    (responseType === "json" || responseType === "text") &&
+    options.dedup !== false &&
+    options.data === undefined &&
+    bypassCloudflare === "auto" &&
+    via !== "brightdata";
+  const key = canDedup
+    ? dedupKey(url, {
+        responseType,
+        via,
+        bypassCloudflare,
+        country: options.country,
+        state: options.state,
+        city: options.city,
         params: options.params,
-        data: options.data,
-        timeout,
-        httpAgent,
-        httpsAgent,
-        responseType: responseType === "buffer" ? "arraybuffer" : responseType,
-        validateStatus: () => true,
-      };
-      if (responseType === "buffer") {
-        axiosConfig.maxContentLength = options.maxBytes || DEFAULT_BUFFER_MAX_BYTES;
-      }
+      })
+    : null;
+  if (key && inflight.has(key)) return inflight.get(key);
 
-      const res = await axios(axiosConfig);
-
-      if (res.headers && res.headers["set-cookie"]) {
-        cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
-      }
-
-      const isChallenge = isCloudflareChallenge(res.status, res.headers, typeof res.data === "string" ? res.data : "");
-
-      if (isChallenge) {
-        if (bypassCloudflare === false) {
-          throw new Error(`Protection challenge detected (HTTP ${res.status}) and bypass is disabled.`);
+  const run = (async () => {
+    while (attempt <= retries) {
+      attempt++;
+      report("direct");
+      try {
+        const axiosConfig = {
+          url,
+          method,
+          headers,
+          params: options.params,
+          data: options.data,
+          timeout,
+          httpAgent,
+          httpsAgent,
+          responseType: responseType === "buffer" ? "arraybuffer" : responseType,
+          validateStatus: () => true,
+        };
+        if (responseType === "buffer") {
+          axiosConfig.maxContentLength = options.maxBytes || DEFAULT_BUFFER_MAX_BYTES;
         }
 
-        if (hasBrightData && via !== "direct") {
-          try {
-            const bdResult = await tryBrightData();
-            report("brightdata");
-            if (responseType === "buffer") {
-              return Buffer.from(bdResult);
-            }
-            return bdResult;
-          } catch (_) {}
+        const res = await axios(axiosConfig);
+
+        if (res.headers && res.headers["set-cookie"]) {
+          cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
         }
 
-        const solved = await stealthBrowser.solveChallenge(url, {
-          timeoutMs: timeout,
-          preferredDevice,
-        });
+        const isChallenge = isCloudflareChallenge(
+          res.status,
+          res.headers,
+          typeof res.data === "string" ? res.data : ""
+        );
 
-        if (!solved.cleared) {
+        if (isChallenge) {
+          if (bypassCloudflare === false) {
+            throw new Error(`Protection challenge detected (HTTP ${res.status}) and bypass is disabled.`);
+          }
+
           if (hasBrightData && via !== "direct") {
             try {
-              const bdLast = await tryBrightData();
+              const bdResult = await tryBrightData();
               report("brightdata");
-              if (responseType === "buffer") return Buffer.from(bdLast);
-              return bdLast;
+              if (responseType === "buffer") {
+                return Buffer.from(bdResult);
+              }
+              return bdResult;
             } catch (_) {}
           }
-          throw new Error(`Protection challenge not cleared after timeout on ${url}`);
+
+          const solved = await stealthBrowser.solveChallenge(url, {
+            timeoutMs: timeout,
+            preferredDevice,
+          });
+
+          if (!solved.cleared) {
+            if (hasBrightData && via !== "direct") {
+              try {
+                const bdLast = await tryBrightData();
+                report("brightdata");
+                if (responseType === "buffer") return Buffer.from(bdLast);
+                return bdLast;
+              } catch (_) {}
+            }
+            throw new Error(`Protection challenge not cleared after timeout on ${url}`);
+          }
+
+          const refreshedCookies = cookieJar.getCookieString(url);
+          headers.Cookie = refreshedCookies;
+
+          if (responseType === "json") {
+            try {
+              const inPage = await stealthBrowser.inPageFetch(url, {
+                method,
+                headers: options.headers,
+                body: options.data,
+              });
+              report("browser");
+              return inPage;
+            } catch (_) {}
+          }
+
+          const secondRes = await axios({
+            ...axiosConfig,
+            headers,
+          });
+
+          if (responseType === "buffer") {
+            return Buffer.from(secondRes.data);
+          }
+          return secondRes.data;
         }
 
-        const refreshedCookies = cookieJar.getCookieString(url);
-        headers.Cookie = refreshedCookies;
-
-        if (responseType === "json") {
-          try {
-            const inPage = await stealthBrowser.inPageFetch(url, {
-              method,
-              headers: options.headers,
-              body: options.data,
-            });
-            report("browser");
-            return inPage;
-          } catch (_) {}
+        if (res.status >= 400) {
+          const errBody = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data).slice(0, 300);
+          throw new Error(`HTTP ${res.status}: ${errBody}`);
         }
-
-        const secondRes = await axios({
-          ...axiosConfig,
-          headers,
-        });
 
         if (responseType === "buffer") {
-          return Buffer.from(secondRes.data);
+          return Buffer.from(res.data);
         }
-        return secondRes.data;
-      }
+        return res.data;
+      } catch (err) {
+        lastError = err;
+        const statusMatch = String(err?.message || "").match(/HTTP (\d{3})/);
+        const statusCode = statusMatch ? Number(statusMatch[1]) : 0;
+        const isTransient =
+          err.code === "ECONNRESET" ||
+          err.code === "ETIMEDOUT" ||
+          err.code === "ECONNABORTED" ||
+          err.message?.includes("timeout") ||
+          TRANSIENT_STATUS.has(statusCode);
 
-      if (res.status >= 400) {
-        const errBody = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data).slice(0, 300);
-        throw new Error(`HTTP ${res.status}: ${errBody}`);
+        if (isTransient && attempt <= retries) {
+          await new Promise((r) => setTimeout(r, 800 * attempt));
+          continue;
+        }
+        break;
       }
-
-      if (responseType === "buffer") {
-        return Buffer.from(res.data);
-      }
-      return res.data;
-    } catch (err) {
-      lastError = err;
-      const statusMatch = String(err?.message || "").match(/HTTP (\d{3})/);
-      const statusCode = statusMatch ? Number(statusMatch[1]) : 0;
-      const isTransient =
-        err.code === "ECONNRESET" ||
-        err.code === "ETIMEDOUT" ||
-        err.code === "ECONNABORTED" ||
-        err.message?.includes("timeout") ||
-        TRANSIENT_STATUS.has(statusCode);
-
-      if (isTransient && attempt <= retries) {
-        await new Promise((r) => setTimeout(r, 800 * attempt));
-        continue;
-      }
-      break;
     }
-  }
 
-  throw lastError;
+    throw lastError;
+  })();
+
+  if (!key) return run;
+  inflight.set(key, run);
+  try {
+    return await run;
+  } finally {
+    if (inflight.get(key) === run) inflight.delete(key);
+  }
 }
 
 export const request = smartRequest;

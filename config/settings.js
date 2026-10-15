@@ -18,7 +18,7 @@ export const settings = {
   silentDeny: true,
 
   autoRead: false,
-  autoOnline: false,
+  autoOnline: true,
   cooldownTime: 0,
   responseDelay: 0,
 

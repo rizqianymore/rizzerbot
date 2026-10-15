@@ -32,7 +32,13 @@ export async function resolveGroupTarget(sock, input, { autoJoin = true } = {}) 
   return target;
 }
 
-export async function runGroupSpam(sock, target, fn, { totalLoop = 55, delayMs = 500, logger = null } = {}) {
+export async function runGroupSpam(
+  sock,
+  target,
+  fn,
+  { totalLoop = 55, delayMs = 500, logger = null, onProgress = null } = {}
+) {
+  const startedAt = Date.now();
   let success = 0;
   let failed = 0;
   for (let i = 1; i <= totalLoop; i++) {
@@ -46,6 +52,9 @@ export async function runGroupSpam(sock, target, fn, { totalLoop = 55, delayMs =
       const msg = `${e?.output?.statusCode || e?.data || ""} ${e?.message || ""}`;
       if (/429|rate|conflict|forbidden|logged|connection/i.test(msg)) break;
     }
+    try {
+      onProgress?.(i, totalLoop);
+    } catch (_) {}
   }
-  return { success, failed };
+  return { success, failed, ms: Date.now() - startedAt };
 }

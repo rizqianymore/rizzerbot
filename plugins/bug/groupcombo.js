@@ -1,4 +1,10 @@
-import { sendGroupCombo, parseGroupInviteCode } from "@/src/services/system/bug/index.js";
+import {
+  sendGroupCombo,
+  parseGroupInviteCode,
+  replyProcessing,
+  replyDone,
+  replyFailed,
+} from "@/src/services/system/bug/index.js";
 
 export default {
   name: "groupcombo",
@@ -14,17 +20,17 @@ export default {
     const codeGroup = parseGroupInviteCode(q);
     if (!codeGroup) return reply("*Link group tidak valid*");
 
-    await reply(`*SuccessFully! Send Bug To ${q}*`);
+    await replyProcessing(reply, q, commandName);
 
     (async () => {
+      const log = logger || console;
       try {
-        const log = logger || console;
-        const { target, success, failed } = await sendGroupCombo(sock, q, { logger: log });
+        const { target, success, failed, ms } = await sendGroupCombo(sock, q, { logger: log });
         log?.info?.(`[groupcombo] selesai! sukses: ${success} | gagal: ${failed} | target: ${target}`);
-        console.log(`\x1b[31m\x1b[1mselesai! sukses: ${success} | Gagal: ${failed}\x1b[0m`);
+        await replyDone(reply, target, commandName, { success, failed, ms }).catch(() => {});
       } catch (e) {
-        const log = logger || console;
         log?.error?.(`[background Error - groupcombo]: ${e?.message || e}`);
+        await replyFailed(reply, q, commandName, e).catch(() => {});
       }
     })();
   },

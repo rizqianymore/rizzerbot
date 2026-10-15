@@ -4,6 +4,8 @@ export const connectionState = {
   primarySock: null,
   isStarting: false,
   reconnectTimer: null,
+  keepAliveStop: null,
+  stabilityStop: null,
   lastDisconnectAt: 0,
   pairingHintSent: false,
   unregisteredFailures: 0,

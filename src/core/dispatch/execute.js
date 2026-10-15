@@ -93,7 +93,13 @@ export async function executeCommand(sock, msg, logger, env) {
   };
 
   try {
+    const t0 = Date.now();
     await cmd.run(sock, msg, args, context);
+    const tookMs = Date.now() - t0;
+    const slowMs = Number(process.env.SLOW_CMD_MS) || 3000;
+    if (tookMs >= slowMs) {
+      logger?.warn?.(`[SlowCommand] ${cmd.name} memakan ${tookMs}ms dari ${senderJid} di ${remoteJid}`);
+    }
   } catch (err) {
     logger?.error?.(`[Command Error] ${cmd.name}:`, err);
     try {

