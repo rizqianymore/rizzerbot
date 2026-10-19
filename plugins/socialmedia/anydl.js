@@ -8,7 +8,7 @@ export default {
   usage: "<url> [mp3]",
   premiumOnly: true,
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args[0]?.trim();
     if (!url || !/^https?:\/\//i.test(url)) {
@@ -24,17 +24,17 @@ export default {
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
 
     try {
-      let info = null;
-      try {
-        info = await probe(url);
-      } catch (_e) {
-
-      }
-
-      const { buffer } = await downloadMedia(url, {
-        mode: isAudio ? "audio" : "video",
-        quality: "720",
-      });
+      const [info, dl] = await Promise.all([
+        probe(url, { timeoutMs: 20000 }).catch((err) => {
+          logger?.warn?.(`[anydl probe] ${err?.message || err}`);
+          return null;
+        }),
+        downloadMedia(url, {
+          mode: isAudio ? "audio" : "video",
+          quality: "720",
+        }),
+      ]);
+      const { buffer } = dl;
 
       const lines = ["*DOWNLOADER*"];
       if (info?.extractor_key) lines.push(`Platform: ${info.extractor_key}`);
@@ -52,7 +52,6 @@ export default {
         isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
-
     } catch (err) {
       await reply(`Gagal mengunduh media: ${err.message}`);
     }

@@ -10,14 +10,16 @@ export default {
     await sendTyping();
     const url = args[0];
     if (!url) return reply("Masukkan link X/Twitter! Contoh: *.xdl https://x.com/user/status/xxxx*");
-    if (!/(^|\.)(twitter\.com|x\.com)\//i.test(url)) {
+    if (!/(?:^|\.|\/\/)(twitter\.com|x\.com)\//i.test(url)) {
       return reply("Link harus dari Twitter/X (twitter.com atau x.com).");
     }
     try {
       const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
       const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-      const pInfo = await probe(url).catch(() => null);
-      const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
+      const [pInfo, dl] = await Promise.all([
+        probe(url, { timeoutMs: 20000 }).catch(() => null),
+        downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
+      ]);
       const lines = ["*X/TWITTER DOWNLOADER*"];
       const title = pInfo?.title || "";
       const author = pInfo?.uploader || "";

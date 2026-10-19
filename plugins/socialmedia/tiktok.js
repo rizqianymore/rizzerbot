@@ -6,7 +6,7 @@ export default {
   usage: "<url> [mp3]",
   premiumOnly: true,
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping }) => {
+  run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
     const url = args[0];
     if (!url) return reply("Masukkan link TikTok! Contoh: *.tiktok https://tiktok.com/@user/video/xxxx*");
@@ -31,7 +31,8 @@ export default {
         title = info.title || "";
         author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
         duration = info.duration ? `${info.duration}s` : "";
-      } catch (_kolErr) {
+      } catch (kolErr) {
+        logger?.warn?.(`[tiktok kol.id] ${kolErr?.message || kolErr}`);
         try {
           const { tiktokDownload, fetchBuffer } = await import("@/src/services/network/scrape.js");
           const info = await tiktokDownload(url);
@@ -45,11 +46,13 @@ export default {
           title = info.title || "";
           author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
           duration = info.duration ? `${info.duration}s` : "";
-        } catch (_scrapeErr) {
-
+        } catch (scrapeErr) {
+          logger?.warn?.(`[tiktok snaptik] ${scrapeErr?.message || scrapeErr}`);
           const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-          const pInfo = await probe(url).catch(() => null);
-          const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
+          const [pInfo, dl] = await Promise.all([
+            probe(url, { timeoutMs: 20000 }).catch(() => null),
+            downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
+          ]);
           buffer = dl.buffer;
           title = pInfo?.title || "";
           author = pInfo?.uploader || "";

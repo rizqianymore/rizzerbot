@@ -1,7 +1,7 @@
 import { downloadInstagram } from "@/src/services/fetch/kolid.js";
 
-export async function downloadFromKolId(targetUrl) {
-  const res = await downloadInstagram(targetUrl);
+export async function downloadFromKolId(targetUrl, opts = {}) {
+  const res = await downloadInstagram(targetUrl, opts);
   if (!res) return null;
   return {
     username: res.username,

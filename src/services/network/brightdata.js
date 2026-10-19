@@ -9,6 +9,23 @@ export function getBrightDataConfig() {
   return { apiKey, zone };
 }
 
+export function getBrightDataProxy() {
+  const direct = (process.env.BRIGHTDATA_PROXY || "").trim();
+  if (direct) return direct;
+  const customer = (process.env.BRIGHTDATA_CUSTOMER || "").trim();
+  const password = (process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
+  const { zone } = getBrightDataConfig();
+  if (customer && password && zone) {
+    return `http://brd-customer-${customer}-zone-${zone}:${password}@brd.superproxy.io:44445`;
+  }
+  return "";
+}
+
+export function isBrightDataEnabled() {
+  if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
+  return Boolean(getBrightDataConfig().apiKey);
+}
+
 export async function brightDataRequest(targetUrl, options = {}) {
   const { apiKey, zone: defaultZone } = getBrightDataConfig();
   if (!apiKey) {
@@ -21,6 +38,7 @@ export async function brightDataRequest(targetUrl, options = {}) {
   const {
     zone = defaultZone,
     format = "raw",
+    binary = false,
     method = "GET",
     headers: reqHeaders,
     data: reqData,
@@ -50,15 +68,25 @@ export async function brightDataRequest(targetUrl, options = {}) {
   if (asn) body.asn = asn;
   if (ip) body.ip = ip;
 
-  const { data } = await axios.post(BRIGHTDATA_API_URL, body, {
+  const { data, status } = await axios.post(BRIGHTDATA_API_URL, body, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
     timeout,
-    responseType: format === "raw" ? "text" : "json",
+    responseType: binary ? "arraybuffer" : format === "raw" ? "text" : "json",
     validateStatus: () => true,
   });
+
+  if (binary) {
+    if (status >= 400) {
+      const detail = Buffer.from(data || [])
+        .toString("utf8")
+        .slice(0, 300);
+      throw new Error(`Bright Data error (HTTP ${status})${detail ? `: ${detail}` : ""}`);
+    }
+    return Buffer.from(data || []);
+  }
 
   if (data && typeof data === "object" && (data.error || data.statusCode >= 400)) {
     throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data).slice(0, 500));
@@ -78,4 +106,6 @@ export default {
   fetchViaUnlocker,
   testBrightDataConnection,
   getBrightDataConfig,
+  getBrightDataProxy,
+  isBrightDataEnabled,
 };

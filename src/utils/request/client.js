@@ -1,7 +1,7 @@
 import axios from "axios";
 import http from "http";
 import https from "https";
-import { brightDataRequest, getBrightDataConfig } from "@/src/services/network/brightdata.js";
+import { brightDataRequest, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
 import { getRandomDevice } from "./devices.js";
 import { buildScraperHeaders } from "./headers.js";
 import { cookieJar, isCloudflareChallenge } from "./cookies.js";
@@ -12,11 +12,6 @@ const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, keepAliveM
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_BUFFER_MAX_BYTES = 40 * 1024 * 1024;
-
-function isBrightDataEnabled() {
-  if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
-  return Boolean(getBrightDataConfig().apiKey);
-}
 
 function brightDataFirstHosts() {
   return String(process.env.BRIGHTDATA_FIRST_HOSTS || "")
@@ -53,6 +48,7 @@ function toBrightDataOptions(url, { method, headers, data, params, timeout, resp
   }
   const opts = {
     format: responseType === "json" ? "json" : "raw",
+    binary: responseType === "buffer",
     method,
     timeout,
   };
@@ -109,6 +105,7 @@ export async function smartRequest(url, options = {}) {
   };
 
   const hasBrightData = isBrightDataEnabled();
+  let brightDataTried = false;
 
   const tryBrightData = async () => {
     const envCountry = String(process.env.BRIGHTDATA_COUNTRY || "").trim() || undefined;
@@ -128,7 +125,8 @@ export async function smartRequest(url, options = {}) {
     return bdResult;
   };
 
-  if (via === "brightdata" && hasBrightData && responseType !== "buffer") {
+  if (via === "brightdata" && hasBrightData) {
+    brightDataTried = true;
     try {
       const bdFirst = await tryBrightData();
       report("brightdata");
@@ -137,7 +135,8 @@ export async function smartRequest(url, options = {}) {
   }
 
   if (bypassCloudflare === true) {
-    if (hasBrightData && responseType !== "buffer") {
+    if (hasBrightData) {
+      brightDataTried = true;
       try {
         const bdData = await tryBrightData();
         report("brightdata");
@@ -248,6 +247,7 @@ export async function smartRequest(url, options = {}) {
           }
 
           if (hasBrightData && via !== "direct") {
+            brightDataTried = true;
             try {
               const bdResult = await tryBrightData();
               report("brightdata");
@@ -265,6 +265,7 @@ export async function smartRequest(url, options = {}) {
 
           if (!solved.cleared) {
             if (hasBrightData && via !== "direct") {
+              brightDataTried = true;
               try {
                 const bdLast = await tryBrightData();
                 report("brightdata");
@@ -324,6 +325,17 @@ export async function smartRequest(url, options = {}) {
         if (isTransient && attempt <= retries) {
           await new Promise((r) => setTimeout(r, 800 * attempt));
           continue;
+        }
+
+        if (hasBrightData && via !== "direct" && bypassCloudflare !== false && !brightDataTried) {
+          brightDataTried = true;
+          try {
+            const bdFallback = await tryBrightData();
+            report("brightdata");
+            return bdFallback;
+          } catch (bdErr) {
+            lastError = bdErr;
+          }
         }
         break;
       }

@@ -8,7 +8,7 @@ export default {
   usage: "<url>",
   premiumOnly: true,
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args[0]?.trim();
     const currentPrefix = prefix || ".";
@@ -50,7 +50,7 @@ export default {
 
     try {
       const res = await axios.get(BASE_URL, {
-        timeout: 60000,
+        timeout: 20000,
         validateStatus: () => true,
         params: { url, action: "info" },
         headers: {
@@ -127,16 +127,18 @@ export default {
         }
       }
     } catch (err) {
-      console.error("[ThreadsDL Error]:", err.message);
+      logger?.warn?.(`[threaddl] ${err.message}`);
       try {
         const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-        const pInfo = await probe(url).catch(() => null);
-        const dl = await downloadMedia(url, { mode: "video" });
+        const [pInfo, dl] = await Promise.all([
+          probe(url, { timeoutMs: 20000 }).catch(() => null),
+          downloadMedia(url, { mode: "video" }),
+        ]);
         const remoteJid = msg.key.remoteJid;
         const caption = `*THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
         await sock.sendMessage(remoteJid, { video: dl.buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
       } catch (_ytdlpErr) {
-        reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
+        await reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
       }
     }
   },

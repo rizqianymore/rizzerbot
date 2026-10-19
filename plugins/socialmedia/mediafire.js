@@ -9,7 +9,7 @@ export default {
   usage: "<url>",
   premiumOnly: true,
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args[0]?.trim();
     const currentPrefix = prefix || ".";
@@ -23,6 +23,20 @@ export default {
       );
     }
 
+    const MAX_INLINE_MB = 40;
+    const MAX_INLINE_BYTES = MAX_INLINE_MB * 1024 * 1024;
+
+    const sizeInMb = (size = "") => {
+      const text = String(size || "");
+      const gb = text.match(/([\d.]+)\s*GB/i);
+      if (gb) return parseFloat(gb[1]) * 1024;
+      const mb = text.match(/([\d.]+)\s*MB/i);
+      if (mb) return parseFloat(mb[1]);
+      const kb = text.match(/([\d.]+)\s*KB/i);
+      if (kb) return parseFloat(kb[1]) / 1024;
+      return 0;
+    };
+
     try {
       const data = await mediafireDownload(url);
       const { downloadUrl, filename, filesize, mimetype } = data;
@@ -31,17 +45,15 @@ export default {
       if (filename) lines.push(`Nama: ${filename}`);
       if (filesize) lines.push(`Ukuran: ${filesize}`);
       if (downloadUrl) lines.push(`Link: ${downloadUrl}`);
-      const _infoText = lines.join("\n");
+      const infoText = lines.join("\n");
 
-      const isLarge =
-        /\b\d+\s*GB/i.test(filesize) ||
-        (/(\d+)\s*MB/i.test(filesize) && parseInt(filesize.match(/(\d+)\s*MB/i)[1], 10) > 95);
-
-      if (isLarge) {
-        return reply(`File berukuran cukup besar (${filesize}). Silakan unduh langsung melalui link di atas.`);
+      if (sizeInMb(filesize) > MAX_INLINE_MB) {
+        return reply(
+          `${infoText}\n\nFile berukuran cukup besar (${filesize}). Silakan unduh langsung melalui link di atas.`
+        );
       }
 
-      const fileBuffer = await fetchBuffer(downloadUrl);
+      const fileBuffer = await fetchBuffer(downloadUrl, {}, MAX_INLINE_BYTES);
 
       await sock.sendMessage(
         msg.key.remoteJid,
@@ -54,8 +66,8 @@ export default {
         { quoted: msg }
       );
     } catch (err) {
-      console.error("[MediaFire DL Error]:", err);
-      reply(`Gagal mendownload dari MediaFire: ${err.message}`);
+      logger?.warn?.(`[mediafire] ${err.message}`);
+      await reply(`Gagal mendownload dari MediaFire: ${err.message}`);
     }
   },
 };

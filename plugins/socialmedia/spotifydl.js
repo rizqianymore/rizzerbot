@@ -8,7 +8,7 @@ export default {
   usage: "<url>",
   premiumOnly: true,
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const text = args[0]?.trim();
     const currentPrefix = prefix || ".";
@@ -28,8 +28,8 @@ export default {
       try {
         const res = await axios.get(apiUrl, { timeout: 25000 });
         data = res.data;
-      } catch (_) {
-
+      } catch (err) {
+        logger?.warn?.(`[spotifydl nexray] ${err?.message || err}`);
         try {
           const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
           if (getBrightDataConfig().apiKey) {
@@ -57,8 +57,8 @@ export default {
         { quoted: msg }
       );
     } catch (error) {
-      console.error("[Spotify DL Error]:", error.message);
-      reply(`Terjadi kesalahan saat memproses tautan Spotify: ${error.message}`);
+      logger?.warn?.(`[spotifydl] ${error.message}`);
+      await reply(`Terjadi kesalahan saat memproses tautan Spotify: ${error.message}`);
     }
   },
 };

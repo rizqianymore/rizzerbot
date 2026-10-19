@@ -178,12 +178,13 @@ export async function tiktokDownload(url) {
   throw new Error(lastError?.response?.data?.error || lastError?.message || "Gagal mengambil data TikTok");
 }
 
-export async function fetchBuffer(url, customHeaders = {}) {
+export async function fetchBuffer(url, customHeaders = {}, maxBytes) {
   if (!/^https?:\/\//i.test(String(url || ""))) {
     throw new Error("URL tidak valid (harus http/https)");
   }
   return await request.buffer(url, {
     headers: customHeaders,
     bypassCloudflare: "auto",
+    ...(Number(maxBytes) > 0 ? { maxBytes: Number(maxBytes) } : {}),
   });
 }

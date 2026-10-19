@@ -10,14 +10,16 @@ export default {
     await sendTyping();
     const url = args[0];
     if (!url) return reply("Masukkan link Facebook! Contoh: *.fbdl https://www.facebook.com/reel/xxxx*");
-    if (!/(^|\.)(facebook\.com|fb\.com|fb\.watch)\//i.test(url)) {
+    if (!/(?:^|\.|\/\/)(facebook\.com|fb\.com|fb\.watch)\//i.test(url)) {
       return reply("Link harus dari Facebook (facebook.com, fb.com, atau fb.watch).");
     }
     try {
       const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
       const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-      const pInfo = await probe(url).catch(() => null);
-      const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video" });
+      const [pInfo, dl] = await Promise.all([
+        probe(url, { timeoutMs: 20000 }).catch(() => null),
+        downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
+      ]);
       const lines = ["*FACEBOOK DOWNLOADER*"];
       const title = pInfo?.title || "";
       const author = pInfo?.uploader || "";

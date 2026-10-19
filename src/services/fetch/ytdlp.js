@@ -4,6 +4,7 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { request } from "@/src/utils/request.js";
+import { getBrightDataProxy } from "@/src/services/network/brightdata.js";
 import { isAndroid, isTermux, resolveFfmpegPath } from "@/src/utils/termux.js";
 
 const BIN_DIR = path.join(process.cwd(), "bin");
@@ -138,23 +139,72 @@ function cleanYtDlpError(stderr = "") {
   return last ? last.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, "") : "";
 }
 
+const PROBE_TIMEOUT_MS = 60000;
+const DOWNLOAD_TIMEOUT_MS = 300000;
+
+function proxyArgs() {
+  const proxy = getBrightDataProxy();
+  return proxy ? ["--proxy", proxy] : [];
+}
+
+function guardedSpawn(args, timeoutMs, externalSignal) {
+  const controller = new AbortController();
+  const forwardAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) controller.abort();
+    else externalSignal.addEventListener("abort", forwardAbort, { once: true });
+  }
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (timer.unref) timer.unref();
+
+  let child = null;
+  let spawnError = null;
+  try {
+    child = spawnYtDlp(args, { signal: controller.signal, killSignal: "SIGKILL" });
+  } catch (err) {
+    spawnError = err;
+  }
+
+  const cleanup = () => {
+    clearTimeout(timer);
+    externalSignal?.removeEventListener?.("abort", forwardAbort);
+  };
+  const timedOut = () => controller.signal.aborted && !externalSignal?.aborted;
+
+  return { child, spawnError, cleanup, timedOut, timeoutError: new Error("Proses yt-dlp melebihi batas waktu") };
+}
+
 export async function probe(url, options = {}) {
   await ensureYtDlp(options.onStatus);
+  const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : PROBE_TIMEOUT_MS;
+  const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(
+    ["-J", "--no-playlist", "--no-warnings", ...proxyArgs(), url],
+    timeoutMs,
+    options.signal
+  );
+  if (spawnError) {
+    cleanup();
+    throw spawnError;
+  }
+
   return new Promise((resolve, reject) => {
-    const child = spawnYtDlp(["-J", "--no-playlist", "--no-warnings", url], { signal: options.signal });
     let stdout = "";
     let stderr = "";
 
     child.stdout.on("data", (chunk) => (stdout += chunk));
     child.stderr.on("data", (chunk) => (stderr += chunk));
-    child.on("error", reject);
+    child.on("error", (err) => {
+      cleanup();
+      reject(timedOut() ? timeoutError : err);
+    });
     child.on("close", (code) => {
+      cleanup();
+      if (timedOut()) return reject(timeoutError);
       if (code !== 0) {
         return reject(new Error(cleanYtDlpError(stderr) || `yt-dlp keluar dengan kode ${code}`));
       }
       try {
-        const info = JSON.parse(stdout);
-        resolve(info);
+        resolve(JSON.parse(stdout));
       } catch (_err) {
         reject(new Error("Gagal parsing response metadata yt-dlp"));
       }
@@ -162,7 +212,10 @@ export async function probe(url, options = {}) {
   });
 }
 
-export async function downloadMedia(url, { mode = "video", quality = "720", onStatus = () => {}, signal } = {}) {
+export async function downloadMedia(
+  url,
+  { mode = "video", quality = "720", onStatus = () => {}, signal, timeoutMs } = {}
+) {
   await ensureYtDlp(onStatus);
   const tmpDir = path.join(os.tmpdir(), "rizzerbot-ytdlp");
   await fsp.mkdir(tmpDir, { recursive: true });
@@ -178,6 +231,7 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
     "--print",
     "after_move:filepath",
     "--no-simulate",
+    ...proxyArgs(),
     "-o",
     outputTemplate,
   ];
@@ -196,11 +250,21 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
     args.push("--ffmpeg-location", "ffmpeg");
   }
 
+  const limit = Number(timeoutMs) > 0 ? Number(timeoutMs) : DOWNLOAD_TIMEOUT_MS;
+  const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(args, limit, signal);
+  if (spawnError) {
+    cleanup();
+    throw spawnError;
+  }
+
   return new Promise((resolve, reject) => {
-    const child = spawnYtDlp(args, { signal });
     let stdout = "";
     let stderr = "";
     let filepath = "";
+
+    const discard = () => {
+      if (filepath) fsp.unlink(filepath).catch(() => {});
+    };
 
     child.stdout.on("data", (chunk) => {
       const text = chunk.toString();
@@ -218,9 +282,18 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
       stderr += chunk.toString();
     });
 
-    child.on("error", reject);
+    child.on("error", (err) => {
+      cleanup();
+      reject(timedOut() ? timeoutError : err);
+    });
     child.on("close", async (code) => {
+      cleanup();
+      if (timedOut()) {
+        discard();
+        return reject(timeoutError);
+      }
       if (code !== 0) {
+        discard();
         return reject(new Error(cleanYtDlpError(stderr) || `Download gagal (yt-dlp exit code ${code})`));
       }
 
@@ -247,6 +320,7 @@ export async function downloadMedia(url, { mode = "video", quality = "720", onSt
           isAudio,
         });
       } catch (err) {
+        discard();
         reject(err);
       }
     });

@@ -100,7 +100,7 @@ export async function submitJob(kind, targetUrl, session) {
   };
 }
 
-export async function pollJob(kind, requestId, session, { timeoutMs = 120000, intervalMs = 0 } = {}) {
+export async function pollJob(kind, requestId, session, { timeoutMs = 45000, intervalMs = 0 } = {}) {
   const s = session || (await createSession(kind));
   const statusUrl = `${BASE}/api/v2/downloader/status/${requestId}`;
   const started = Date.now();
@@ -139,7 +139,7 @@ export async function kolIdJob(kind, targetUrl, opts = {}) {
   const submitted = await submitJob(kind, targetUrl, opts.session);
   if (submitted.done) return submitted.data;
   return pollJob(kind, submitted.requestId, submitted.session, {
-    timeoutMs: opts.timeoutMs || 120000,
+    timeoutMs: opts.timeoutMs || 45000,
     intervalMs: submitted.pollAfterMs,
   });
 }

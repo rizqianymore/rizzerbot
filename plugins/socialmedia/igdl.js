@@ -20,13 +20,13 @@ export default {
     if (!input) {
       return reply(`Contoh:\n${currentPrefix}igdl https://instagram.com/...`);
     }
-await sendTyping();
+    await sendTyping();
 
     try {
       let res = null;
 
       try {
-        res = await downloadFromKolId(input);
+        res = await downloadFromKolId(input, { timeoutMs: 25000 });
       } catch (kolErr) {
         logger?.warn?.(`[igdl kol.id] ${kolErr?.message || kolErr}`);
       }
@@ -40,7 +40,9 @@ await sendTyping();
           if (data.status && data.result?.media?.length) {
             res = data.result;
           }
-        } catch (_) {}
+        } catch (nexrayErr) {
+          logger?.warn?.(`[igdl nexray] ${nexrayErr?.message || nexrayErr}`);
+        }
       }
 
       if (!res) {
@@ -93,7 +95,7 @@ await sendTyping();
             await page.type("#search-form-input", input);
             await page.click("button.search-form__button");
 
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 15; i++) {
               if (captured) break;
               await new Promise((r) => setTimeout(r, 400));
             }
@@ -195,9 +197,9 @@ await sendTyping();
       for (let i = 0; i < videos.length; i++) {
         await sendVideo(sock, remoteJid, msg, videos[i], images.length === 0 && i === 0 ? caption : "");
       }
-} catch (e) {
+    } catch (e) {
       logger?.warn?.(`[igdl] ${e?.message || e}`);
-return reply(`Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
+      return reply(`Gagal mengunduh Instagram: ${e?.message || "Media tidak ditemukan atau akun privat."}`);
     }
   },
 };

@@ -24,7 +24,7 @@ export default {
         try {
           const { downloadYoutube } = await import("@/src/services/fetch/kolid.js");
           const { fetchBuffer } = await import("@/src/services/network/scrape.js");
-          const yt = await downloadYoutube(url, { maxQuality: "720" });
+          const yt = await downloadYoutube(url, { maxQuality: "720p" });
           if (yt?.videoUrl && yt.hasAudio) {
             const buf = await fetchBuffer(yt.videoUrl, {
               "User-Agent":
@@ -46,17 +46,14 @@ export default {
       }
 
       if (!buffer) {
-
-        try {
-          info = await probe(url);
-        } catch (_e) {
-
-        }
-
-        const dl = await downloadMedia(url, {
-          mode: isAudio ? "audio" : "video",
-          quality: "720",
-        });
+        const [meta, dl] = await Promise.all([
+          probe(url, { timeoutMs: 20000 }).catch(() => null),
+          downloadMedia(url, {
+            mode: isAudio ? "audio" : "video",
+            quality: "720",
+          }),
+        ]);
+        info = meta;
         buffer = dl.buffer;
       }
 
@@ -77,7 +74,6 @@ export default {
         isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
-
     } catch (err) {
       await reply(`Gagal mendownload: ${err.message}`);
     }
