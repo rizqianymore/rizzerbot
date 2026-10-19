@@ -17,7 +17,7 @@ export default {
     const isValid = /^[a-zA-Z0-9_.-]{3,30}$/.test(username);
 
     if (!isValid) {
-      return reply(`❌ *Format username tidak valid!*\n\n\`${username}\`\n\n✅ Format yang benar:\n• 3-30 karakter\n• Huruf, angka, underscore (_), strip (.), dash (-)\n• Contoh: `github`, `john_doe`, `john-doe``);
+      return reply(`❌ *Format username tidak valid!*\n\n\`${username}\`\n\n✅ Format yang benar:\n• 3-30 karakter\n• Huruf, angka, underscore (_), strip (.), dash (-)\n• Contoh: "github", "john_doe", "john-doe"`);
     }
 
     // Username valid - tampilkan pesan sukses
