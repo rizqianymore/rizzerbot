@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Mapping koin umum agar user bisa ketik btc, eth, sol, doge, xrp, dll
 const COIN_ALIASES = {
   btc: "bitcoin",
   bitcoin: "bitcoin",
@@ -41,7 +40,6 @@ export default {
     const currentPrefix = prefix || ".";
     const query = (args[0] || "").toLowerCase().trim();
 
-    // Jika tidak ada argumen, tampilkan ringkasan top coins
     if (!query) {
       try {
         const topCoins = ["bitcoin", "ethereum", "solana", "binancecoin", "ripple", "dogecoin"];
@@ -84,7 +82,6 @@ export default {
     const coinId = COIN_ALIASES[query] || query;
 
     try {
-      // Fetch data koin spesifik
       const res = await axios.get("https://api.coingecko.com/api/v3/simple/price", {
         params: {
           ids: coinId,
@@ -112,7 +109,9 @@ export default {
       const icon = change24 >= 0 ? "🟢" : "🔴";
       const formattedUsd = Number(coinData.usd).toLocaleString("en-US", { maximumFractionDigits: 6 });
       const formattedIdr = Number(coinData.idr).toLocaleString("id-ID");
-      const volUsd = coinData.usd_24h_vol ? Number(coinData.usd_24h_vol).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "-";
+      const volUsd = coinData.usd_24h_vol
+        ? Number(coinData.usd_24h_vol).toLocaleString("en-US", { maximumFractionDigits: 0 })
+        : "-";
 
       let out = `*${icon} CRYPTO PRICE: ${coinId.toUpperCase()}*\n\n`;
       out += `• *Harga USD* : $${formattedUsd}\n`;

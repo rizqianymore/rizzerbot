@@ -27,7 +27,6 @@ function __makeHtmlElement(tag) {
     offsetHeight: 20, offsetWidth: 100, offsetTop: 8, offsetLeft: 8,
     scrollHeight: 20, scrollWidth: 100, scrollTop: 0, scrollLeft: 0,
     clientHeight: 20, clientWidth: 100,
-    // Elemen terlihat di browser nyata punya offsetParent (body); tiru itu.
     offsetParent: (function(){ try { return (typeof __body !== "undefined" && __body) || null; } catch (_e) { return null; } })(),
     textContent: '', innerText: '',
     getBoundingClientRect: function(){ return __makeDomRect(); },

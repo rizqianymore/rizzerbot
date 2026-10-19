@@ -3,7 +3,8 @@ import axios from "axios";
 export default {
   name: "geocode",
   aliases: ["alamat", "geolokasi", "lokasi", "coordinates", "coord"],
-  description: "Konversi alamat atau nama tempat menjadi koordinat geolokasi (Latitude & Longitude) dan kirim lokasi pin map",
+  description:
+    "Konversi alamat atau nama tempat menjadi koordinat geolokasi (Latitude & Longitude) dan kirim lokasi pin map",
   usage: "<nama tempat atau alamat lengkap> (contoh: .geocode Monas Jakarta)",
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
@@ -61,7 +62,6 @@ export default {
         `🔗 *Google Maps*   : ${mapsLink}\n` +
         `🌐 *OpenStreetMap* : ${osmLink}`;
 
-      // Coba kirimkan WhatsApp native interactive location pin jika sock mendukung
       if (sock && msg?.key?.remoteJid) {
         try {
           await sock.sendMessage(
