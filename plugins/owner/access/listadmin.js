@@ -9,8 +9,11 @@ export default {
   category: "Owner",
   run: async (sock, msg, args, { reply }) => {
     const settings = db.getSettings();
-    const adminList = Array.isArray(settings.adminNumbers) ? settings.adminNumbers : [];
-    const uniqueAdmins = [...new Set(adminList.map((j) => db.normalizeJid(j)))].filter((j) => !db.isOwner(j));
+    const source = [
+      ...(Array.isArray(settings.adminNumbers) ? settings.adminNumbers : []),
+      ...(Array.isArray(settings.admins) ? settings.admins : []),
+    ];
+    const uniqueAdmins = [...new Set(source.map((j) => db.normalizeJid(j)))].filter((j) => j && !db.isOwner(j));
 
     if (uniqueAdmins.length === 0) {
       return reply("Belum ada Admin Bot tambahan yang terdaftar.");

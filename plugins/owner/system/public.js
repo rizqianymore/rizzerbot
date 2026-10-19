@@ -23,13 +23,12 @@ export default {
 
     if (syncAll) {
       db.main().updateSettings({ public: true });
-      const { getSubBotsList } = await import("@/src/services/system/subbot/subbot.js");
-      const list = getSubBotsList();
-      for (const b of list) {
-        const sJid = `${b.number}@s.whatsapp.net`;
-        db.updateBotSettings(sJid, { public: true });
+      const { getAllSubBotNumbers } = await import("@/src/services/system/subbot/subbot.js");
+      const numbers = getAllSubBotNumbers();
+      for (const number of numbers) {
+        db.updateBotSettings(`${number}@s.whatsapp.net`, { public: true });
       }
-      reply("*MODE PUBLIC (SEMUA USER)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
+      reply(`*MODE PUBLIC (SEMUA USER)* telah diaktifkan & disinkronkan untuk *SEMUA BOT* (${numbers.length} bot).`);
     } else {
       db.updateBotSettings(activeBotJid, { public: true });
       reply(`Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode Public.`);

@@ -31,13 +31,12 @@ export default {
 
     if (syncAll) {
       db.main().updateSettings({ prefix });
-      const { getSubBotsList } = await import("@/src/services/system/subbot/subbot.js");
-      const list = getSubBotsList();
-      for (const b of list) {
-        const sJid = `${b.number}@s.whatsapp.net`;
-        db.updateBotSettings(sJid, { prefix });
+      const { getAllSubBotNumbers } = await import("@/src/services/system/subbot/subbot.js");
+      const numbers = getAllSubBotNumbers();
+      for (const number of numbers) {
+        db.updateBotSettings(`${number}@s.whatsapp.net`, { prefix });
       }
-      reply(`Prefix berhasil diubah & disinkronkan ke semua bot: \`${prefix}\``);
+      reply(`Prefix berhasil diubah & disinkronkan ke semua bot (${numbers.length} bot): \`${prefix}\``);
     } else {
       db.updateBotSettings(activeBotJid, { prefix });
       reply(`Prefix berhasil diubah ke: \`${prefix}\` untuk bot ini (+${activeBotJid.split("@")[0]}).`);

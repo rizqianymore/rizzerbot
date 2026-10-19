@@ -22,13 +22,12 @@ export default {
 
     if (syncAll) {
       db.main().updateSettings({ public: false });
-      const { getSubBotsList } = await import("@/src/services/system/subbot/subbot.js");
-      const list = getSubBotsList();
-      for (const b of list) {
-        const sJid = `${b.number}@s.whatsapp.net`;
-        db.updateBotSettings(sJid, { public: false });
+      const { getAllSubBotNumbers } = await import("@/src/services/system/subbot/subbot.js");
+      const numbers = getAllSubBotNumbers();
+      for (const number of numbers) {
+        db.updateBotSettings(`${number}@s.whatsapp.net`, { public: false });
       }
-      reply("*MODE SELF (OWNER ONLY)* telah diaktifkan & disinkronkan untuk *SEMUA BOT*.");
+      reply(`*MODE SELF (OWNER ONLY)* telah diaktifkan & disinkronkan untuk *SEMUA BOT* (${numbers.length} bot).`);
     } else {
       db.updateBotSettings(activeBotJid, { public: false });
       reply(`Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode Self.`);

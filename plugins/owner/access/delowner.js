@@ -51,7 +51,7 @@ export default {
         return reply(`*${jid.split("@")[0]}* bukan Owner tambahan bot ini.`);
       }
 
-      db.updateBotSettings(activeBotJid, { ownerNumbers: nextOwners });
+      db.setOwner(jid, false, senderJid);
 
       await notifyPrimaryOwner(sock, {
         actor: senderJid,

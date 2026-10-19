@@ -16,6 +16,12 @@ export default {
     if (!db.isAdmin(jid)) return reply(`*${jid.split("@")[0]}* bukan Admin Bot.`);
 
     db.setAdmin(jid, false, senderJid);
+    if (db.isAdmin(jid)) {
+      return reply(
+        `Status Admin *${jid.split("@")[0]}* belum bisa dicabut (masih terdaftar di sumber konfigurasi).\n` +
+          `Periksa *config/settings.js* lalu restart bot.`
+      );
+    }
     reply(`Berhasil mencabut akses Admin Bot dari *${jid.split("@")[0]}*.`);
   },
 };

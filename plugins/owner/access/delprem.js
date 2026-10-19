@@ -13,6 +13,12 @@ export default {
     if (db.isAdmin(jid)) return reply("Admin Bot otomatis memiliki akses Premium.");
 
     db.setPremium(jid, false, null, senderJid);
+    if (db.isPremium(jid)) {
+      return reply(
+        `Status Premium *${jid.split("@")[0]}* belum bisa dicabut (masih terdaftar di sumber konfigurasi).\n` +
+          `Periksa *config/settings.js* lalu restart bot.`
+      );
+    }
     reply(`Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`);
   },
 };

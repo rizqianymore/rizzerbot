@@ -11,13 +11,16 @@ export default {
       return reply("Fitur sinkronisasi server hanya dapat dijalankan oleh SuperOwner Bot Utama.");
     }
     await sendTyping();
-    const { syncSubBotsDatabase, getSubBotsList } = await import("@/src/services/system/subbot/subbot.js");
+    const { syncSubBotsDatabase, getSubBotsList, getAllSubBotNumbers } =
+      await import("@/src/services/system/subbot/subbot.js");
     const count = await syncSubBotsDatabase();
-    const activeList = getSubBotsList();
+    const known = getAllSubBotNumbers();
+    const online = getSubBotsList().filter((b) => b.status === "online").length;
     await reply(
       `*Sinkronisasi Database Sub-Bot Berhasil!*\n\n` +
-        `*Sub-Bot di Server:* ${count} bot disinkronkan\n` +
-        `*Status Aktif:* ${activeList.filter((b) => b.status === "online").length} online / ${activeList.length} total\n` +
+        `*Sub-Bot Terdeteksi:* ${known.length} nomor\n` +
+        `*Tersinkron:* ${count} sesi\n` +
+        `*Status Aktif:* ${online} online / ${known.length} total\n` +
         `*Pengaturan:* Data & konfigurasi masing-masing sub-bot telah diperbarui tanpa bentrok peran.`
     );
   },

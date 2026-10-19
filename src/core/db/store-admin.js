@@ -55,11 +55,12 @@ export class Store extends StoreAccess {
     this.data.settings.adminNumbers = nextList;
     this.refreshConfiguredJids();
 
+    const keepPremium = enabled ? true : this.isConfiguredPremium(normalized);
     const user = this.updateUser(
       normalized,
       {
         admin: Boolean(enabled),
-        premium: enabled ? true : undefined,
+        premium: keepPremium,
       },
       { privileged: true }
     );
