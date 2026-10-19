@@ -13,7 +13,7 @@ export default {
   usage: "<teks>",
   premiumOnly: true,
   category: "Sticker",
-  run: async (sock, msg, args, { reply, prefix }) => {
+  run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
     const { text } = parseBratArgs(args);
     if (!text) {
@@ -29,6 +29,7 @@ export default {
       const videoBuffer = await createBratVideo(text, TEMPLATES.gojo);
       await sendStickerBuffer(sock, msg, videoBuffer);
     } catch (err) {
+      logger?.error?.(`[bratgojovid] ${err?.stack || err?.message || err}`);
       reply(`Gagal membuat stiker Brat Gojo Video: ${err.message}`);
     }
   },

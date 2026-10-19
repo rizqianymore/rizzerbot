@@ -15,14 +15,14 @@ export async function sendStickerBuffer(sock, msg, buffer) {
     author: activeSettings.stickerAuthor,
   });
 
-  await sock.sendMessage(
-    msg.key.remoteJid,
-    {
-      sticker: stickerBuffer,
-      mimetype: "image/webp",
-    },
-    { quoted: msg }
-  );
+  const payload = { sticker: stickerBuffer, mimetype: "image/webp" };
+  try {
+    return await sock.sendMessage(msg.key.remoteJid, payload, { quoted: msg });
+  } catch (err) {
+    console.warn("[brat] gagal kirim stiker, mencoba ulang:", err?.message || err);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return await sock.sendMessage(msg.key.remoteJid, payload, { quoted: msg });
+  }
 }
 
 export function showBratGuide(prefix) {
@@ -56,7 +56,6 @@ export function parseBratArgs(args, { allowVideo = false, allowGreen = false } =
   for (const token of tokens) {
     const lower = token.toLowerCase();
     if (VIDEO_FLAGS.has(lower)) {
-
       isVideo = allowVideo;
       continue;
     }

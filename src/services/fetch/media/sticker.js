@@ -59,6 +59,25 @@ async function ffmpegStaticToWebp(buffer) {
   }
 }
 
+async function ensureWebp(buffer, animated) {
+  if (isWebP(buffer)) return buffer;
+  if (!animated) {
+    try {
+      const converted = await ffmpegStaticToWebp(buffer);
+      if (isWebP(converted)) return converted;
+    } catch (err) {
+      const reason = String(err?.message || err).split("\n")[0];
+      console.warn("[createSticker] konversi akhir ke webp gagal:", reason);
+    }
+  }
+  throw new Error(
+    "Gagal mengubah media menjadi stiker WebP yang valid. " +
+      (getSharp()
+        ? "Pastikan ffmpeg terpasang dengan benar."
+        : "Modul sharp tidak tersedia dan konversi ffmpeg gagal; install sharp atau ffmpeg lalu coba lagi.")
+  );
+}
+
 async function createTextOverlay({ width, height, topText, bottomText, textOpts = {} }) {
   try {
     const { createTextOverlayCanvas } = await import("./text.js");
@@ -114,7 +133,10 @@ async function gifFallback(buffer, { topText, bottomText, hasText, textOpts = {}
   );
 }
 
-export async function createSticker(buffer, { pack, author, topText, bottomText, font, fontSize, maxSize, wordsPerLine, position, align } = {}) {
+export async function createSticker(
+  buffer,
+  { pack, author, topText, bottomText, font, fontSize, maxSize, wordsPerLine, position, align } = {}
+) {
   const activeSettings = db.getSettings();
   const packName = pack === undefined ? activeSettings.stickerPackName : pack;
   const authorName = author === undefined ? activeSettings.stickerAuthor : author;
@@ -264,8 +286,11 @@ export async function createSticker(buffer, { pack, author, topText, bottomText,
     }
   }
 
+  if (!isWebP(webpBuffer)) {
+    webpBuffer = await ensureWebp(webpBuffer, isVideo);
+  }
+
   try {
-    if (!isWebP(webpBuffer)) return webpBuffer;
     return injectExif(webpBuffer, buildStickerExif(packName || "", authorName || ""));
   } catch (_) {
     return webpBuffer;

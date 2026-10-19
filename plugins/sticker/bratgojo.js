@@ -13,7 +13,7 @@ export default {
   usage: "<teks>",
   premiumOnly: true,
   category: "Sticker",
-  run: async (sock, msg, args, { reply, prefix }) => {
+  run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
     const { text } = parseBratArgs(args);
     if (!text) {
@@ -29,6 +29,7 @@ export default {
       const imageBuffer = await createBratImage(text, TEMPLATES.gojo);
       await sendStickerBuffer(sock, msg, imageBuffer);
     } catch (err) {
+      logger?.error?.(`[bratgojo] ${err?.stack || err?.message || err}`);
       reply(`Gagal membuat stiker Brat Gojo: ${err.message}`);
     }
   },

@@ -15,7 +15,7 @@ export default {
   usage: "<teks> [--green] [--video]",
   premiumOnly: true,
   category: "Sticker",
-  run: async (sock, msg, args, { reply, prefix }) => {
+  run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
     const { text, isVideo, bgColor } = parseBratArgs(args, { allowVideo: true, allowGreen: true });
     if (!text) {
@@ -36,6 +36,7 @@ export default {
         await sendStickerBuffer(sock, msg, imageBuffer);
       }
     } catch (err) {
+      logger?.error?.(`[brat] ${err?.stack || err?.message || err}`);
       reply(`Gagal membuat stiker Brat: ${err.message}`);
     }
   },
