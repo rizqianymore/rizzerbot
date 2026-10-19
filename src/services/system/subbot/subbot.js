@@ -1,4 +1,13 @@
-export { subBots, baseSessionsDir, isSubBotSocket, isSubBotNumber, getSubBotsList } from "./store.js";
+export {
+  subBots,
+  baseSessionsDir,
+  isSubBotSocket,
+  isSubBotNumber,
+  getSubBotsList,
+  detectSubBotSessions,
+  getAllSubBotNumbers,
+  subBotDigits,
+} from "./store.js";
 
 export { createSubBot, stopSubBot } from "./manager.js";
 

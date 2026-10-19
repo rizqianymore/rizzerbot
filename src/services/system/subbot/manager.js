@@ -9,6 +9,19 @@ import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots, baseSessionsDir } from "./store.js";
 import { setupSubBotEvents } from "./events.js";
 
+function teardownSubBot(botId) {
+  const existing = subBots.get(botId);
+  if (!existing) return false;
+  try {
+    existing.sock?.ev?.removeAllListeners?.("connection.update");
+    existing.sock?.ev?.removeAllListeners?.("messages.upsert");
+    existing.sock?.ev?.removeAllListeners?.("creds.update");
+    existing.sock?.end?.();
+  } catch (_) {}
+  subBots.delete(botId);
+  return true;
+}
+
 export async function createSubBot(number, onPairingCode, assignedOwner = null) {
   const cleanNumber = number.replace(/[^0-9]/g, "");
   if (!cleanNumber || cleanNumber.length < 8) {
@@ -16,8 +29,12 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
   }
 
   const botId = `sub_${cleanNumber}`;
-  if (subBots.has(botId) && subBots.get(botId)?.status === "online") {
-    throw new Error(`Bot dengan nomor ${cleanNumber} sudah aktif online!`);
+  const existing = subBots.get(botId);
+  if (existing) {
+    if (existing.status === "online") {
+      throw new Error(`Bot dengan nomor ${cleanNumber} sudah aktif online!`);
+    }
+    teardownSubBot(botId);
   }
 
   const sessionDir = path.join(baseSessionsDir, botId);
@@ -105,25 +122,15 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
 }
 
 export async function stopSubBot(identifier) {
-  const clean = identifier.replace(/[^0-9]/g, "");
-  const botId = clean ? `sub_${clean}` : identifier;
-  const bot = subBots.get(botId);
-
-  if (bot?.sock) {
-    try {
-      bot.sock.ev.removeAllListeners("connection.update");
-      bot.sock.ev.removeAllListeners("messages.upsert");
-      bot.sock.end();
-    } catch (_) {}
-  }
-  subBots.delete(botId);
+  const clean = String(identifier || "").replace(/[^0-9]/g, "");
+  const botId = clean ? `sub_${clean}` : String(identifier || "");
+  teardownSubBot(botId);
   try {
     db.invalidateSubDigitsCache();
   } catch (_) {}
 
-  const sessionDir = path.join(baseSessionsDir, botId);
   try {
-    deleteFolderRecursive(sessionDir);
+    deleteFolderRecursive(path.join(baseSessionsDir, botId));
   } catch (_) {}
 
   return true;

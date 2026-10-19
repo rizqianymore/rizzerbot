@@ -59,6 +59,10 @@ export function setupSubBotEvents({
     const { connection, lastDisconnect } = update;
 
     if (connection === "open") {
+      if (botEntry.reconnectTimer) {
+        clearTimeout(botEntry.reconnectTimer);
+        botEntry.reconnectTimer = null;
+      }
       botEntry.status = "online";
       logger.info(`[SubBot ${cleanNumber}] Connected successfully!`);
       const botUserJid = db.normalizeJid(sock.user?.id) || `${cleanNumber}@s.whatsapp.net`;
@@ -85,11 +89,17 @@ export function setupSubBotEvents({
       logger.warn(`[SubBot ${cleanNumber}] Connection closed (status: ${statusCode}). Reconnect: ${shouldReconnect}`);
 
       if (shouldReconnect) {
+        if (botEntry.reconnectTimer) return;
         botEntry.status = "reconnecting";
-        setTimeout(() => {
+        botEntry.reconnectTimer = setTimeout(() => {
+          botEntry.reconnectTimer = null;
           reconnectFn().catch(() => {});
         }, 5000);
       } else {
+        if (botEntry.reconnectTimer) {
+          clearTimeout(botEntry.reconnectTimer);
+          botEntry.reconnectTimer = null;
+        }
         botEntry.status = "disconnected";
         subBots.delete(botId);
         try {
