@@ -1,76 +1,67 @@
-import axios from "axios";
-
-const WMO = {
-  0: "Cerah",
-  1: "Cerah berawan",
-  2: "Berawan",
-  3: "Mendung",
-  45: "Berkabut",
-  48: "Kabut es",
-  51: "Gerimis ringan",
-  53: "Gerimis",
-  55: "Gerimis lebat",
-  61: "Hujan ringan",
-  63: "Hujan",
-  65: "Hujan lebat",
-  80: "Hujan lokal ringan",
-  81: "Hujan lokal",
-  82: "Hujan lokal lebat",
-  95: "Badai petir",
-  96: "Badai petir + es",
-  99: "Badai petir + es",
+const CITY_PRESETS = {
+  jakarta: "31.71.01.1001",
+  bandung: "32.73.01.1001",
+  surabaya: "35.78.01.1001",
+  semarang: "33.74.01.1001",
+  medan: "12.71.01.1001",
+  makassar: "73.71.01.1001",
+  denpasar: "51.71.01.1001",
 };
-
-function wmoText(code) {
-  if (Object.hasOwn(WMO, code)) return WMO[code];
-  if (code >= 71 && code <= 77) return "Salju";
-  return "Berawan";
-}
 
 export default {
   name: "cuaca",
-  aliases: ["weather", "infocuaca"],
-  description: "Cuaca terkini kota Indonesia",
-  usage: "<kota>",
+  aliases: ["weather", "prakiraan", "bmkgcuaca", "infocuaca"],
+  description: "Prakiraan cuaca BMKG (kota preset atau kode adm4)",
+  usage: "[kota|kode adm4], cth: cuaca jakarta | cuaca 31.71.01.1001",
+  premiumOnly: false,
+  cooldownMs: 3000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
-    const city = args.join(" ").trim() || "Jakarta";
+    const currentPrefix = prefix || ".";
+    const input = (args || []).join(" ").trim().toLowerCase();
+    const adm4 = CITY_PRESETS[input] || (args || []).join(" ").trim();
+
+    if (!adm4) {
+      return reply(
+        `*PRAKIRAAN CUACA BMKG*\n\n` +
+          `Kota preset: ${Object.keys(CITY_PRESETS).join(", ")}\n` +
+          `Atau gunakan kode adm4: \`${currentPrefix}cuaca 31.71.01.1001\``
+      );
+    }
+
     await sendTyping();
-    let geo = null;
+    await reply(`Memuat prakiraan cuaca untuk *${adm4}*...`);
+
+    let data;
     try {
-      const g = await axios.get("https://geocoding-api.open-meteo.com/v1/search", {
-        params: { name: city, count: 1, language: "id", format: "json" },
-        timeout: 15000,
-      });
-      geo = g?.data?.results?.[0] || null;
+      const res = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${encodeURIComponent(adm4)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
     } catch (err) {
-      return reply(`Gagal mencari kota ${city}: ${err?.message || "network error"}`);
+      return reply(`Gagal memuat cuaca: ${err?.message || err}`);
     }
-    if (!geo) return reply(`Kota *${city}* tidak ditemukan. Coba: ${prefix || "."}cuaca Surabaya`);
-    let cur = null;
-    try {
-      const w = await axios.get("https://api.open-meteo.com/v1/forecast", {
-        params: {
-          latitude: geo.latitude,
-          longitude: geo.longitude,
-          current: "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m",
-          timezone: "auto",
-        },
-        timeout: 15000,
-      });
-      cur = w?.data?.current || null;
-    } catch (err) {
-      return reply(`Gagal memuat cuaca ${geo.name}: ${err?.message || "network error"}`);
+
+    const lokasi = data?.lokasi || {};
+    const cuacaList = data?.data?.[0]?.cuaca?.[0] || [];
+    if (!cuacaList.length) return reply("Data cuaca kosong dari BMKG.");
+
+    const fmtTime = (s) => (s || "").replace("T", " ").replace("Z", " UTC").slice(0, 16);
+    const lines = [
+      `*PRAKIRAAN CUACA — BMKG*`,
+      ``,
+      `• Wilayah: ${lokasi.kotkab || "-"}, ${lokasi.kecamatan || "-"}`,
+      `• Provinsi: ${lokasi.provinsi || "-"}`,
+      ``,
+      `*Prakiraan:*`,
+    ];
+
+    for (const c of cuacaList.slice(0, 6)) {
+      lines.push(
+        `• ${fmtTime(c.local_datetime)} — ${c.weather_desc || "-"} (${c.t}°C, RH ${c.hu}%, angin ${c.ws} m/s ${c.wd})`
+      );
     }
-    if (!cur) return reply(`Data cuaca ${geo.name} kosong, coba lagi nanti.`);
-    return reply(
-      `*CUACA — ${(geo.name || city).toUpperCase()}*\n` +
-        `${geo.admin1 || ""}${geo.country ? `, ${geo.country}` : ""}\n\n` +
-        `• Kondisi : ${wmoText(cur.weather_code)}\n` +
-        `• Suhu : ${cur.temperature_2m}°C\n` +
-        `• Kelembapan : ${cur.relative_humidity_2m}%\n` +
-        `• Angin : ${cur.wind_speed_10m} km/jam\n\n` +
-        `_Sumber: Open-Meteo_`
-    );
+
+    lines.push(``, `_Sumber: BMKG_`);
+    return reply(lines.join("\n"));
   },
 };
