@@ -49,7 +49,9 @@ export async function createSession(kind) {
   const html = await pageRes.text();
   const rawCookies = pageRes.headers.getSetCookie
     ? pageRes.headers.getSetCookie()
-    : [pageRes.headers.get("set-cookie")];
+    : String(pageRes.headers.get("set-cookie") || "")
+        .split(/,\s*(?=[A-Za-z0-9_-]+=)/)
+        .filter(Boolean);
   const cookie = joinCookies(rawCookies);
   const token = extractToken(html);
   if (!token) throw new KolIdError("Gagal mengambil token CSRF kol.id (struktur halaman berubah)", "no_token");

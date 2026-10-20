@@ -14,7 +14,7 @@ export default {
       return reply("Link harus dari Twitter/X (twitter.com atau x.com).");
     }
     try {
-      const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
+      const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
       const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
       const [pInfo, dl] = await Promise.all([
         probe(url, { timeoutMs: 20000 }).catch(() => null),

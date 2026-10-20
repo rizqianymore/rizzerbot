@@ -76,7 +76,9 @@ export default {
             format: "json",
             timeout: 35000,
           });
-        } catch (_) {}
+        } catch (bdErr) {
+          logger?.warn?.(`[threaddl brightdata] ${bdErr?.message || bdErr}`);
+        }
       }
       const info = data.data || {};
 
@@ -88,7 +90,7 @@ export default {
         ...images.map((item) => ({ type: "image", url: item.url })),
       ];
 
-      if (res.status >= 300 || data.success !== true || mediaResults.length === 0) {
+      if (data?.success !== true || mediaResults.length === 0) {
         return reply(
           `Gagal mengambil media dari Threads.\n` +
             `Postingan mungkin bersifat privat, sudah dihapus, atau link tidak valid.\n` +

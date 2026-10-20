@@ -3,7 +3,9 @@ import { kolIdJob } from "./client.js";
 const QUALITY_RANK = ["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"];
 
 function rankOf(q) {
-  const m = String(q || "")
+  const raw = String(q || "").trim();
+  const normalized = /^\d+$/.test(raw) ? `${raw}p` : raw;
+  const m = normalized
     .toLowerCase()
     .match(/(\d+p)/);
   const i = m ? QUALITY_RANK.indexOf(m[1]) : -1;

@@ -11,7 +11,7 @@ export default {
     const url = args[0];
     if (!url) return reply("Masukkan link TikTok! Contoh: *.tiktok https://tiktok.com/@user/video/xxxx*");
     try {
-      const isAudio = args[args.length - 1]?.toLowerCase() === "mp3";
+      const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
       let buffer;
       let title = "";
       let author = "";

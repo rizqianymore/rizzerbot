@@ -15,7 +15,7 @@ export default {
     const remoteJid = msg.key.remoteJid;
     const currentPrefix = prefix || ".";
 
-    const input = clean(args.join(" ") || args?.[0]);
+    const input = clean(args.join(" ") || args?.[0] || "");
 
     if (!input) {
       return reply(`Contoh:\n${currentPrefix}igdl https://instagram.com/...`);

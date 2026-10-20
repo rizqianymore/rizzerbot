@@ -64,7 +64,7 @@ export default {
       if (viaKolId) lines.push(`Sumber: kol.id`);
       if (info?.duration) {
         const mins = Math.floor(info.duration / 60);
-        const secs = info.duration % 60;
+        const secs = Math.floor(info.duration % 60);
         lines.push(`Durasi: ${mins}m ${secs}s`);
       }
       const caption = lines.join("\n");

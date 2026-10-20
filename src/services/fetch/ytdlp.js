@@ -272,7 +272,12 @@ export async function downloadMedia(
       const lines = text.split("\n");
       for (const line of lines) {
         const trimmed = line.trim();
-        if (path.isAbsolute(trimmed) && !trimmed.endsWith(".part") && !trimmed.endsWith(".ytdl")) {
+        if (
+          path.isAbsolute(trimmed) &&
+          !trimmed.endsWith(".part") &&
+          !trimmed.endsWith(".ytdl") &&
+          fs.existsSync(trimmed)
+        ) {
           filepath = trimmed;
         }
       }
@@ -302,7 +307,10 @@ export async function downloadMedia(
           .split("\n")
           .map((l) => l.trim())
           .filter((l) => path.isAbsolute(l));
-        if (matches.length > 0) {
+        const existing = matches.filter((l) => fs.existsSync(l));
+        if (existing.length > 0) {
+          filepath = existing[existing.length - 1];
+        } else if (matches.length > 0) {
           filepath = matches[matches.length - 1];
         }
       }

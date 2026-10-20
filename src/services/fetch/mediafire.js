@@ -26,7 +26,13 @@ export async function mediafireDownload(url) {
     html.match(/aria-label="Download file"[^>]*href="([^"]+)"/i) ||
     html.match(/https?:\/\/download\d+\.mediafire\.com\/[^\s"'>]+/i);
 
-  const downloadUrl = dlMatch ? dlMatch[1] || dlMatch[0] : null;
+  let downloadUrl = dlMatch ? dlMatch[1] || dlMatch[0] : null;
+
+  if (downloadUrl && !/^https?:\/\//i.test(downloadUrl)) {
+    try {
+      downloadUrl = new URL(downloadUrl, "https://www.mediafire.com").href;
+    } catch (_) {}
+  }
 
   if (!downloadUrl) {
     throw new Error(
