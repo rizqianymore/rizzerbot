@@ -159,11 +159,13 @@ export default {
   description: "Hasil & jadwal turnamen tenis (ATP, WTA, Grand Slam)",
   usage: "[atp|wta|wimbledon|usopen|frenchopen|australianopen]",
   premiumOnly: true,
+  cooldownMs: 4000,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
+    const tour = String(args?.[0] || "").trim().slice(0, 32);
     try {
-      const board = await getTennisBoard(args?.[0]);
+      const board = await getTennisBoard(tour);
       return reply(formatTennisBoard(board));
     } catch (err) {
       return reply(`Gagal memuat data tenis: ${err.message}`);

@@ -7,12 +7,16 @@ export default {
   description: "Harga saham, crypto, komoditas & indeks realtime lengkap dengan statistik harian",
   usage: "<simbol> [rentang], cth: BBCA | BTC 1d | TLKM 3mo",
   premiumOnly: true,
+  cooldownMs: 4000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     await sendTyping();
 
     const { query, range } = parseMarketArgs(args, "1d");
+    if (query.length > 64) {
+      return reply(`Input terlalu panjang. Maksimal 64 karakter.`);
+    }
     if (!query) {
       return reply(
         `*CEK HARGA PASAR*\n\n` +

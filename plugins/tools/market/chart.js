@@ -7,12 +7,16 @@ export default {
   description: "Grafik candlestick saham, crypto, komoditas & indeks dari Yahoo Finance (gambar langsung jadi)",
   usage: "<simbol> [rentang], cth: BBCA 3mo | BTC 1d | AAPL 1y",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     await sendTyping();
 
     const { query, range } = parseMarketArgs(args, "1mo");
+    if (query.length > 64) {
+      return reply(`Input terlalu panjang. Maksimal 64 karakter.`);
+    }
     if (!query) {
       return reply(
         `*GRAFIK PASAR*\n\n` +

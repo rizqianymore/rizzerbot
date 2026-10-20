@@ -6,6 +6,7 @@ export default {
   description: "Cari simbol/kode saham, crypto, komoditas, dan indeks yang valid",
   usage: "<kata kunci>, cth: bank bca | nvidia | bitcoin",
   premiumOnly: true,
+  cooldownMs: 3000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

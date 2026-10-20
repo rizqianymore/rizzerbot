@@ -6,6 +6,7 @@ export default {
   description: "Ringkasan pasar global: IHSG, USD/IDR, emas, minyak, Bitcoin & Ethereum",
   usage: "",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
