@@ -7,8 +7,8 @@ function lastMonth() {
 }
 
 export default {
-  name: "polisi",
-  aliases: ["ukpolice", "crimeuk", "kejahatanuk", "policestats"],
+  name: "crimeuk",
+  aliases: ["ukpolice", "kejahatanuk", "policestats"],
   description: "Data kejahatan UK Police (street-level crime) berdasarkan koordinat",
   usage: "<lat> <lng> [YYYY-MM], cth: polisi 52.6297 -1.1316 2024-01",
   premiumOnly: true,
@@ -37,11 +37,11 @@ export default {
 
     let data;
     try {
-      const res = await fetch(
-        `https://data.police.uk/api/crimes-street/all-crime?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&date=${encodeURIComponent(date)}`
+      const { request } = await import("@/src/utils/request.js");
+      data = await request.json(
+        `https://data.police.uk/api/crimes-street/all-crime?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&date=${encodeURIComponent(date)}`,
+        { timeout: 20000 }
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      data = await res.json();
     } catch (err) {
       return reply(`Gagal memuat data polisi: ${err?.message || err}`);
     }
