@@ -26,7 +26,7 @@ export function buildMenuButtons(catKeys, prefix) {
   ];
 }
 
-async function resolveMenuImage(activeSettings = {}) {
+async function _resolveMenuImage(activeSettings = {}) {
   try {
     const p = await resolveImagePayload(activeSettings);
     if (!p) return undefined;

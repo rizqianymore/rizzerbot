@@ -5,7 +5,7 @@ export default {
   usage: "<username>",
   category: "Stalker",
   premiumOnly: true,
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  run: async (sock, msg, args, { reply, prefix }) => {
     const currentPrefix = prefix || ".";
     const username = (args[0] || "").trim().replace(/^@/, "");
 
