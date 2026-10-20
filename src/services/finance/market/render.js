@@ -304,7 +304,20 @@ function drawStats(ctx, quote) {
   ctx.textAlign = "left";
 }
 
+const chartCache = new Map();
+const CHART_CACHE_TTL_MS = 60 * 1000;
+
+function chartCacheKey(quote) {
+  return `${String(quote?.symbol || "")}|${String(quote?.rangeKey || "")}`;
+}
+
 export async function renderMarketChart(quote) {
+  const key = chartCacheKey(quote);
+  const cached = chartCache.get(key);
+  if (cached && Date.now() - cached.at < CHART_CACHE_TTL_MS) {
+    return cached.buffer;
+  }
+
   const canvasApi = getCanvas();
   if (!canvasApi) throw new Error("Modul canvas tidak tersedia untuk membuat grafik.");
 
@@ -354,5 +367,11 @@ export async function renderMarketChart(quote) {
   drawXAxis(ctx, plot, priceCandles, quote, getRange(quote.rangeKey, "1mo").tick);
   drawStats(ctx, quote);
 
-  return Buffer.from(await canvas.encode("png"));
+  const buffer = Buffer.from(await canvas.encode("png"));
+  chartCache.set(key, { buffer, at: Date.now() });
+  if (chartCache.size > 50) {
+    const oldest = [...chartCache.entries()].sort((a, b) => a[1].at - b[1].at)[0];
+    if (oldest) chartCache.delete(oldest[0]);
+  }
+  return buffer;
 }
