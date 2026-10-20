@@ -24,12 +24,15 @@ export function resolveTour(input) {
   return null;
 }
 
-async function fetchTour(id) {
-  const key = `tennis:${id}`;
+async function fetchTour(id, dateRange = "") {
+  const key = `tennis:${id}:${dateRange}`;
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
+  const url = dateRange
+    ? `${API}/tennis/${id}/scoreboard?dates=${encodeURIComponent(dateRange)}`
+    : `${API}/tennis/${id}/scoreboard`;
   try {
-    const data = await request.json(`${API}/tennis/${id}/scoreboard`, { timeout: 15000 });
+    const data = await request.json(url, { timeout: 15000 });
     cache.set(key, data);
     return data;
   } catch {
@@ -109,7 +112,7 @@ function fmtTennisMatch(comp) {
   return sets ? `${p1} vs ${p2} (${sets})` : `${p1} vs ${p2} (FT)`;
 }
 
-export async function getTennisBoard(tourKey) {
+export async function getTennisBoard(tourKey, dateRange = "") {
   const tour = resolveTour(tourKey);
   if (!tour) {
     const labels = Object.values(TENNIS_TOURNAMENTS)
@@ -121,13 +124,13 @@ export async function getTennisBoard(tourKey) {
   const competitions = [];
 
   if (tour.type === "tour") {
-    const data = await fetchTour(tour.id);
+    const data = await fetchTour(tour.id, dateRange);
     if (!data) return { label: tour.label, lines: ["Sedang mencari data..."] };
     for (const event of Array.isArray(data?.events) ? data.events : []) {
       competitions.push(...collectCompetitions(event));
     }
   } else {
-    const [atpData, wtaData] = await Promise.all([fetchTour("atp"), fetchTour("wta")]);
+    const [atpData, wtaData] = await Promise.all([fetchTour("atp", dateRange), fetchTour("wta", dateRange)]);
     if (!atpData && !wtaData) {
       return { label: tour.label, lines: ["Sedang mencari data..."] };
     }
@@ -157,15 +160,19 @@ export default {
   name: "tenis",
   aliases: ["tennis", "hasiltenis", "jadwaltenis"],
   description: "Hasil & jadwal turnamen tenis (ATP, WTA, Grand Slam)",
-  usage: "[atp|wta|wimbledon|usopen|frenchopen|australianopen]",
+  usage: "[atp|wta|wimbledon|usopen|frenchopen|australianopen] [YYYYMMDD|YYYYMMDD-YYYYMMDD]",
   premiumOnly: true,
   cooldownMs: 4000,
   category: "Sports",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
     const tour = String(args?.[0] || "").trim().slice(0, 32);
+    const dateRange = String(args?.[1] || "").trim();
+    if (dateRange && !/^\d{8}(-\d{8})?$/.test(dateRange)) {
+      return reply(`Format tanggal tidak valid. Gunakan YYYYMMDD atau YYYYMMDD-YYYYMMDD.`);
+    }
     try {
-      const board = await getTennisBoard(tour);
+      const board = await getTennisBoard(tour, dateRange);
       return reply(formatTennisBoard(board));
     } catch (err) {
       return reply(`Gagal memuat data tenis: ${err.message}`);
