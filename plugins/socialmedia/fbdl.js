@@ -4,7 +4,6 @@ export default {
   aliases: ["facebookdl", "fbdown", "fbvideo"],
   description: "Download video dari Facebook (postingan, reels, watch)",
   usage: "<url> [mp3]",
-  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

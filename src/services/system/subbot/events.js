@@ -7,10 +7,19 @@ import { recordMessage } from "@/src/services/system/chatlogger.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots } from "./store.js";
 
-function shouldSkipBeforeQueue(msg) {
+function shouldSkipBeforeQueue(msg, sock = null) {
   if (!msg?.key?.id || !msg?.key?.remoteJid) return true;
   const rjid = msg.key.remoteJid;
-  if (rjid === "status@broadcast") return true;
+  if (rjid === "status@broadcast") {
+    import("@/src/middleware/statusSaver.js")
+      .then(({ handleStatusBroadcast }) => {
+        try {
+          handleStatusBroadcast(sock, msg, logger).catch(() => {});
+        } catch (_) {}
+      })
+      .catch(() => {});
+    return true;
+  }
   if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) return true;
 
   if (msg.message) {
@@ -117,7 +126,7 @@ export function setupSubBotEvents({
     if (type !== "notify") return;
     const subJid = `${cleanNumber}@s.whatsapp.net`;
     for (const msg of messages) {
-      if (shouldSkipBeforeQueue(msg)) continue;
+      if (shouldSkipBeforeQueue(msg, sock)) continue;
 
       const autoRead = db.runWithBot(subJid, () => db.getSettings().autoRead);
       if (autoRead) {

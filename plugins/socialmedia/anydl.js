@@ -6,7 +6,6 @@ export default {
   aliases: ["yoink", "dl", "down", "get"],
   description: "Universal Downloader (YouTube, IG, TikTok, X/Twitter, FB, Reddit, dll) via engine Yoinks (yt-dlp)",
   usage: "<url> [mp3]",
-  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();

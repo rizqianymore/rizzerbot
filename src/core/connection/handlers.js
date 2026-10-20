@@ -113,7 +113,6 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
 }
 
 export function attachMessageHandler(sock) {
-
   attachEchoTracker(sock);
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
@@ -123,7 +122,13 @@ export function attachMessageHandler(sock) {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
         const rjid = msg.key.remoteJid;
-        if (rjid === "status@broadcast") continue;
+        if (rjid === "status@broadcast") {
+          try {
+            const { handleStatusBroadcast } = await import("@/src/middleware/statusSaver.js");
+            handleStatusBroadcast(sock, msg, logger).catch(() => {});
+          } catch (_) {}
+          continue;
+        }
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
         if (msg.message) {
           const keys = Object.keys(msg.message);

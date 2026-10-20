@@ -4,7 +4,6 @@ export default {
   aliases: ["tt", "tikdl", "ttdl"],
   description: "Download TikTok video/music (tanpa watermark)",
   usage: "<url> [mp3]",
-  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();

@@ -4,7 +4,6 @@ export default {
   aliases: ["twitterdl", "twtdl", "xdown", "twdl"],
   description: "Download video/music dari X/Twitter",
   usage: "<url> [mp3]",
-  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

@@ -6,7 +6,6 @@ export default {
   aliases: ["ytdl", "yt"],
   description: "Download video/audio YouTube menggunakan engine yt-dlp",
   usage: "<url> [mp3]",
-  premiumOnly: true,
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
