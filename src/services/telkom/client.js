@@ -73,16 +73,69 @@ export async function telkomRequest(path, { token, cookie, method = "GET", query
   return data;
 }
 
-/**
- * Path GET untuk membaca status presensi (read-only).
- * Isi TELKOM_STATUS_PATH setelah capture request GET halaman presensi di DevTools.
- */
-export function getStatusPath() {
-  return String(process.env.TELKOM_STATUS_PATH || process.env.TELKOM_PROFILE_PATH || "").trim() || null;
+const PRESENSI_GW = "https://gw-digits.telkomschools.sch.id";
+const PRESENSI_ORIGIN = "https://presensi.telkomschools.sch.id";
+
+function resolvePresensiTokenHash() {
+  return String(process.env.TELKOM_PRESENSI_HASH || "dbc366754e1d31910e16a4b41893b09c").trim();
 }
 
-export async function getAttendanceStatus(token, cookie) {
-  const path = getStatusPath();
-  if (!path) return null;
-  return telkomRequest(path, { token, cookie });
+/**
+ * Path GET untuk membaca status presensi (read-only).
+ * Mendukung template :nis atau :hash, atau fallback otomatis ke /api/presensi-read/:hash/:nis
+ */
+export function getStatusPath(nis) {
+  const custom = String(process.env.TELKOM_STATUS_PATH || "").trim();
+  if (custom) {
+    return custom.replace(":nis", nis || "").replace(":hash", resolvePresensiTokenHash());
+  }
+  const hash = resolvePresensiTokenHash();
+  return `/api/presensi-read/${hash}/${nis || ""}`;
+}
+
+export async function getAttendanceStatus(token, cookie, nis) {
+  const path = getStatusPath(nis);
+  const base = process.env.TELKOM_PRESENSI_BASE || PRESENSI_GW;
+  const headers = {
+    Accept: "application/json, text/plain, */*",
+    Authorization: `Bearer ${token}`,
+    Origin: PRESENSI_ORIGIN,
+    Referer: `${PRESENSI_ORIGIN}/`,
+    "User-Agent": UA,
+    "sec-ch-ua-mobile": "?1",
+    "sec-ch-ua-platform": '"Android"',
+    ...(cookie ? { Cookie: cookie } : {}),
+  };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+
+  try {
+    const res = await fetch(`${base}${path}`, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+    });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (_) {
+      data = text;
+    }
+
+    if (!res.ok) {
+      const message =
+        (data && typeof data === "object" ? data.message || data.error : null) ||
+        (typeof data === "string" ? data.slice(0, 160) : `HTTP ${res.status}`);
+      throw new Error(`API ${res.status}: ${message}`);
+    }
+
+    return data;
+  } catch (err) {
+    if (err?.name === "AbortError") throw new Error("Timeout saat menghubungi server presensi.");
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }

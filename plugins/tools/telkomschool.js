@@ -28,9 +28,8 @@ export default {
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";
-    const sub = String(args[0] || "").toLowerCase();
-
-    if (sub === "link" || sub === "presensi") {
+    const firstArg = String(args[0] || "").trim();
+    if (firstArg.toLowerCase() === "link" || firstArg.toLowerCase() === "presensi") {
       return reply(
         `*PRESENSI TELKOM SCHOOLS*\n\n` +
           `Buka halaman resmi berikut untuk absen (QR + lokasi asli dari perangkatmu):\n` +
@@ -39,28 +38,25 @@ export default {
       );
     }
 
-    const isLogin = sub === "login" || sub === "cek" || sub === "auth";
-    const isStatus = sub === "status" || sub === "profil" || sub === "profile";
+    const isExplicitLogin = firstArg.toLowerCase() === "login" || firstArg.toLowerCase() === "auth";
+    const isExplicitStatus = firstArg.toLowerCase() === "status";
 
-    const nisArg = isLogin || isStatus ? args[1] : args[0];
-    const passArg = isLogin || isStatus ? args[2] : args[1];
+    const nisArg = isExplicitLogin || isExplicitStatus ? args[1] : args[0];
+    const passArg = isExplicitLogin || isExplicitStatus ? args[2] : args[1];
     const nis = normalizeNis(nisArg);
 
     if (!nis) {
       return reply(
         `*TELKOM SCHOOLS (DigitS)*\n\n` +
-          `Login dengan NIS. Password otomatis \`dummy@<NIS>\`.\n\n` +
-          `*Perintah:*\n` +
-          `• \`${currentPrefix}telkom status 539241249\` — cek status presensi (read-only)\n` +
-          `• \`${currentPrefix}telkom login 539241249\` — verifikasi login\n` +
-          `• \`${currentPrefix}telkom link\` — link presensi resmi\n` +
-          `• \`${currentPrefix}telkom 539241249 passwordKhusus\` — password custom\n\n` +
-          `_Bot hanya membaca data. Absen tetap lewat aplikasi resmi (QR + GPS asli)._`
+          `Cukup ketik:\n` +
+          `👉 \`${currentPrefix}telkom <nis>\`\n\n` +
+          `*Contoh:* \`${currentPrefix}telkom 539241249\`\n\n` +
+          `_Bot akan otomatis login & menampilkan status presensi hari ini._`
       );
     }
 
     if (nis.length < 5) {
-      return reply("NIS tidak valid. Minimal 5 digit angka. Contoh: `.telkom status 539241249`");
+      return reply(`NIS tidak valid (minimal 5 digit). Contoh: \`${currentPrefix}telkom 539241249\``);
     }
 
     await sendTyping();
@@ -77,26 +73,33 @@ export default {
         `Token berlaku s/d: ${formatWib(auth.expiresAt)}`,
       ];
 
-      if (isLogin) {
+      if (isExplicitLogin) {
         return reply(lines.join("\n"));
       }
 
-      const statusPath = getStatusPath();
-      if (!statusPath) {
-        lines.push(
-          "",
-          `⚠️ *Path status presensi belum diset.*`,
-          `Capture request **GET** saat membuka halaman presensi (DevTools → Network),`,
-          `lalu isi di \`.env\`:`,
-          `• \`TELKOM_STATUS_PATH=/telkomschool/student/...\``,
-          "",
-          `Link presensi resmi: ${PRESENSI_URL}`
-        );
-        return reply(lines.join("\n"));
+      const status = await getAttendanceStatus(auth.token, auth.cookie, nis);
+
+      if (status?.status && Array.isArray(status?.data) && status.data.length > 0) {
+        const studentName = status.data[0]?.name || "Siswa";
+        lines.push("", `👤 *Nama:* ${studentName}`);
+        lines.push(`📋 *Status Presensi Hari Ini:*`);
+        for (const item of status.data) {
+          const type = item.type || "Presensi";
+          const icon = item.status ? "✅" : "⏳";
+          const statusText = item.status ? `Hadir (${item.time || "-"})` : "Belum Absen";
+          if (item.subject) {
+            lines.push(`• *${type}:* ${item.subject}`);
+            lines.push(`  Guru: ${item.teacher_name || "-"}`);
+            lines.push(`  Jam: ${item.lesson_time || "-"} - ${item.lesson_time_end || "-"}`);
+            lines.push(`  Status: ${icon} ${statusText}`);
+          } else {
+            lines.push(`• *${type}:* ${icon} ${statusText}`);
+          }
+        }
+      } else {
+        lines.push("", `*STATUS PRESENSI (Read-only)*`, `\`\`\`${prettyJson(status)}\`\`\``);
       }
 
-      const status = await getAttendanceStatus(auth.token, auth.cookie);
-      lines.push("", `*STATUS PRESENSI (Read-only)*`, `\`\`\`${prettyJson(status)}\`\`\``);
       lines.push("", `_Absen tetap dilakukan di aplikasi resmi: ${PRESENSI_URL}_`);
       return reply(lines.join("\n"));
     } catch (err) {
