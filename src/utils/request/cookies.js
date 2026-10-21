@@ -104,6 +104,17 @@ import { detectProtection, isSolvableType } from "./protection.js";
 export const cookieJar = new CookieJar();
 
 export function isCloudflareChallenge(status, headers = {}, body = "") {
+  const numStatus = Number(status) || 0;
+  // Jika HTTP status sukses (2xx) dan bukan HTML challenge page, jangan anggap sebagai challenge
+  if (numStatus >= 200 && numStatus < 300) {
+    const text = String(body || "").toLowerCase();
+    const isHtmlChallenge =
+      text.includes("_cf_chl_opt") ||
+      text.includes("challenges.cloudflare.com") ||
+      text.includes("cf-browser-verification") ||
+      text.includes("just a moment...");
+    if (!isHtmlChallenge) return false;
+  }
   const det = detectProtection({ status, headers, html: body });
   if (det.type === "rate-limit") return false;
   return isSolvableType(det.type);

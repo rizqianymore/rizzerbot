@@ -47,15 +47,25 @@ export default {
           duration = info.duration ? `${info.duration}s` : "";
         } catch (scrapeErr) {
           logger?.warn?.(`[tiktok snaptik] ${scrapeErr?.message || scrapeErr}`);
-          const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-          const [pInfo, dl] = await Promise.all([
-            probe(url, { timeoutMs: 20000 }).catch(() => null),
-            downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
-          ]);
-          buffer = dl.buffer;
-          title = pInfo?.title || "";
-          author = pInfo?.uploader || "";
-          if (pInfo?.duration) duration = `${pInfo.duration}s`;
+          try {
+            const { downloadSocialMedia } = await import("@/src/services/fetch/socialdownloader.js");
+            const sdl = await downloadSocialMedia(url, { type: isAudio ? "audio" : "video" });
+            buffer = sdl.buffer;
+            title = sdl.info?.title || "";
+            author = sdl.info?.author || "";
+            if (sdl.info?.duration) duration = `${sdl.info.duration}s`;
+          } catch (sdlErr) {
+            logger?.warn?.(`[tiktok socialdownloader] ${sdlErr?.message || sdlErr}`);
+            const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
+            const [pInfo, dl] = await Promise.all([
+              probe(url, { timeoutMs: 20000 }).catch(() => null),
+              downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
+            ]);
+            buffer = dl.buffer;
+            title = pInfo?.title || "";
+            author = pInfo?.uploader || "";
+            if (pInfo?.duration) duration = `${pInfo.duration}s`;
+          }
         }
       }
 

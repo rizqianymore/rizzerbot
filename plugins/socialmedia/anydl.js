@@ -23,17 +23,54 @@ export default {
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
 
     try {
-      const [info, dl] = await Promise.all([
-        probe(url, { timeoutMs: 20000 }).catch((err) => {
-          logger?.warn?.(`[anydl probe] ${err?.message || err}`);
-          return null;
-        }),
-        downloadMedia(url, {
-          mode: isAudio ? "audio" : "video",
-          quality: "720",
-        }),
-      ]);
-      const { buffer } = dl;
+      let buffer = null;
+      let info = null;
+      let sourceName = "";
+
+      // Coba unduh via engine yt-dlp (Yoinks)
+      try {
+        const [meta, dl] = await Promise.all([
+          probe(url, { timeoutMs: 20000 }).catch((err) => {
+            logger?.warn?.(`[anydl probe] ${err?.message || err}`);
+            return null;
+          }),
+          downloadMedia(url, {
+            mode: isAudio ? "audio" : "video",
+            quality: "720",
+          }),
+        ]);
+        if (dl?.buffer && dl.buffer.length > 0) {
+          buffer = dl.buffer;
+          info = meta;
+          sourceName = "yt-dlp";
+        }
+      } catch (ytdlErr) {
+        logger?.warn?.(`[anydl ytdlp] ${ytdlErr?.message || ytdlErr}`);
+      }
+
+      // Fallback ke SocialDownloader Space API
+      if (!buffer) {
+        try {
+          const { downloadSocialMedia } = await import("@/src/services/fetch/socialdownloader.js");
+          const dl = await downloadSocialMedia(url, { type: isAudio ? "audio" : "video" });
+          if (dl?.buffer && dl.buffer.length > 0) {
+            buffer = dl.buffer;
+            info = {
+              title: dl.info?.title,
+              uploader: dl.info?.author,
+              extractor_key: dl.info?.platform,
+              duration: dl.info?.duration,
+            };
+            sourceName = "SocialDownloader";
+          }
+        } catch (sdlErr) {
+          logger?.warn?.(`[anydl socialdownloader] ${sdlErr?.message || sdlErr}`);
+        }
+      }
+
+      if (!buffer) {
+        throw new Error("Gagal mengunduh media dari semua provider (yt-dlp & SocialDownloader).");
+      }
 
       const lines = ["*DOWNLOADER*"];
       if (info?.extractor_key) lines.push(`Platform: ${info.extractor_key}`);
@@ -44,6 +81,7 @@ export default {
         const secs = Math.floor(info.duration % 60);
         lines.push(`Durasi: ${mins}m ${secs}s`);
       }
+      if (sourceName) lines.push(`Engine: ${sourceName}`);
       const caption = lines.join("\n");
 
       await sock.sendMessage(
