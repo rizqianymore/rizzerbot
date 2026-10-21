@@ -1,110 +1,95 @@
-import { issueStudentToken, normalizeNis } from "@/src/services/telkom/auth.js";
-import { getAttendanceStatus, getStatusPath } from "@/src/services/telkom/client.js";
+import { resendOtp, runAttendanceFlow } from "@/src/services/telkom/service.js";
+import { normalizeNis } from "@/src/services/telkom/auth.js";
+import { APP_URL } from "@/src/services/telkom/config.js";
+import { decodeQrFromMessage, parseQrPayload } from "@/src/services/telkom/qr.js";
 
-const PRESENSI_URL = "https://presensi.telkomschools.sch.id/siswa/presensi";
+const USAGE =
+  `*TELKOM SCHOOLS (DigitS)*\n\n` +
+  `Cukup ketik:\n` +
+  `👉 \`{prefix}telkom <nis>\`\n\n` +
+  `*Contoh:* \`{prefix}telkom 539241249\`\n\n` +
+  `*Perintah lain:*\n` +
+  `• \`{prefix}telkom status <nis>\` — cek status saja (tanpa submit)\n` +
+  `• \`{prefix}telkom <nis> <kode>\` — lanjutkan login 2FA\n` +
+  `• \`{prefix}telkom resend <nis>\` — kirim ulang kode 2FA\n` +
+  `• \`{prefix}telkom link\` — link aplikasi resmi\n\n` +
+  `*Absen pakai QR guru:* kirim foto QR guru ke bot dengan caption\n` +
+  `\`{prefix}telkom <nis>\` — bot baca QR-nya lalu mengirim presensi.\n\n` +
+  `_Endpoint API & proteksi Cloudflare ditangani otomatis oleh bot._\n` +
+  `_Absen tetap memakai akun & perangkat kamu sendiri: ${APP_URL}_`;
 
-function formatWib(date) {
-  try {
-    return `${date.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB`;
-  } catch (_) {
-    return date.toISOString();
-  }
-}
-
-function prettyJson(value, max = 1500) {
-  try {
-    return JSON.stringify(value, null, 2).slice(0, max);
-  } catch (_) {
-    return String(value).slice(0, max);
-  }
+/** Pesan ini berisi media (foto) yang bisa berisi QR guru. */
+function hasMedia(msg) {
+  const message = msg?.message || {};
+  return Boolean(message.imageMessage || message.documentMessage || message.videoMessage);
 }
 
 export default {
   name: "telkomschool",
   cooldownMs: 20000,
   aliases: ["telkom", "tsch", "digits", "abstels"],
-  description: "Login & cek status presensi Telkom Schools (DigitS) via NIS. Read-only, tanpa spoof.",
-  usage: "<nis> [password] | login <nis> [password] | status <nis> [password] | link",
+  description: "Cek & submit presensi Telkom Schools (DigitS) untuk NIS terdaftar (consent required).",
+  usage: "<nis> | status <nis> | resend <nis> | link",
   category: "Tools",
-  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger, senderJid }) => {
     const currentPrefix = prefix || ".";
     const firstArg = String(args[0] || "").trim();
-    if (firstArg.toLowerCase() === "link" || firstArg.toLowerCase() === "presensi") {
+    const lowerFirst = firstArg.toLowerCase();
+
+    if (lowerFirst === "link" || lowerFirst === "presensi" || lowerFirst === "help") {
       return reply(
         `*PRESENSI TELKOM SCHOOLS*\n\n` +
           `Buka halaman resmi berikut untuk absen (QR + lokasi asli dari perangkatmu):\n` +
-          `${PRESENSI_URL}\n\n` +
-          `_Bot tidak mengirim presensi palsu / spoof lokasi._`
+          `${APP_URL}\n\n` +
+          `_Bot memakai akun & token kamu sendiri, tidak memalsukan presensi._`
       );
     }
 
-    const isExplicitLogin = firstArg.toLowerCase() === "login" || firstArg.toLowerCase() === "auth";
-    const isExplicitStatus = firstArg.toLowerCase() === "status";
-
-    const nisArg = isExplicitLogin || isExplicitStatus ? args[1] : args[0];
-    const passArg = isExplicitLogin || isExplicitStatus ? args[2] : args[1];
-    const nis = normalizeNis(nisArg);
+    const readOnly = lowerFirst === "status";
+    const resend = lowerFirst === "resend";
+    const nis = normalizeNis(readOnly || resend ? args[1] : args[0]);
 
     if (!nis) {
-      return reply(
-        `*TELKOM SCHOOLS (DigitS)*\n\n` +
-          `Cukup ketik:\n` +
-          `👉 \`${currentPrefix}telkom <nis>\`\n\n` +
-          `*Contoh:* \`${currentPrefix}telkom 539241249\`\n\n` +
-          `_Bot akan otomatis login & menampilkan status presensi hari ini._`
-      );
+      return reply(USAGE.replaceAll("{prefix}", currentPrefix));
     }
 
-    if (nis.length < 5) {
-      return reply(`NIS tidak valid (minimal 5 digit). Contoh: \`${currentPrefix}telkom 539241249\``);
+    if (resend) {
+      const result = await resendOtp(nis, { actorJid: senderJid || "", logger });
+      return reply(result.message.replaceAll("{prefix}", currentPrefix));
     }
+
+    // Argumen kedua: kode OTP (angka) atau isi QR (JSON).
+    const second = String(args[1] || "").trim();
+    const otp = /^\d{4,8}$/.test(second) ? second : "";
+    let qrPayload = otp ? null : parseQrPayload(second);
 
     await sendTyping();
 
-    try {
-      const auth = await issueStudentToken(nis, passArg);
-      const claims = auth.claims || {};
-
-      const lines = [
-        `*TELKOM SCHOOLS (DigitS)*`,
-        `✅ Login berhasil`,
-        `NIS: ${nis}`,
-        `Student ID: ${claims.sub || "-"}`,
-        `Token berlaku s/d: ${formatWib(auth.expiresAt)}`,
-      ];
-
-      if (isExplicitLogin) {
-        return reply(lines.join("\n"));
+    // Foto QR guru: bot decode sendiri, lalu submit memakai QR asli.
+    if (!qrPayload && hasMedia(msg)) {
+      const decoded = await decodeQrFromMessage(sock, msg);
+      qrPayload = parseQrPayload(decoded);
+      if (!qrPayload) {
+        logger?.info?.("[telkomschool] QR pada foto tidak terbaca");
       }
-
-      const status = await getAttendanceStatus(auth.token, auth.cookie, nis);
-
-      if (status?.status && Array.isArray(status?.data) && status.data.length > 0) {
-        const studentName = status.data[0]?.name || "Siswa";
-        lines.push("", `👤 *Nama:* ${studentName}`);
-        lines.push(`📋 *Status Presensi Hari Ini:*`);
-        for (const item of status.data) {
-          const type = item.type || "Presensi";
-          const icon = item.status ? "✅" : "⏳";
-          const statusText = item.status ? `Hadir (${item.time || "-"})` : "Belum Absen";
-          if (item.subject) {
-            lines.push(`• *${type}:* ${item.subject}`);
-            lines.push(`  Guru: ${item.teacher_name || "-"}`);
-            lines.push(`  Jam: ${item.lesson_time || "-"} - ${item.lesson_time_end || "-"}`);
-            lines.push(`  Status: ${icon} ${statusText}`);
-          } else {
-            lines.push(`• *${type}:* ${icon} ${statusText}`);
-          }
-        }
-      } else {
-        lines.push("", `*STATUS PRESENSI (Read-only)*`, `\`\`\`${prettyJson(status)}\`\`\``);
-      }
-
-      lines.push("", `_Absen tetap dilakukan di aplikasi resmi: ${PRESENSI_URL}_`);
-      return reply(lines.join("\n"));
-    } catch (err) {
-      logger?.warn?.(`[telkomschool] ${err?.message || err}`);
-      return reply(`❌ Gagal: ${err?.message || err}`);
     }
+
+    const result = await runAttendanceFlow({
+      nis,
+      actor: senderJid || "",
+      actorJid: senderJid || "",
+      logger,
+      allowSubmit: !readOnly,
+      otp,
+      qrPayload,
+    });
+
+    if (!result.ok) {
+      logger?.warn?.(`[telkomschool] alur gagal: ${result.code}`);
+      return reply(String(result.message || "⚠️ Presensi gagal diproses.").replaceAll("{prefix}", currentPrefix));
+    }
+
+    const header = readOnly ? "*STATUS PRESENSI (cek saja)*" : "*STATUS PRESENSI*";
+    return reply(result.summary || header);
   },
 };

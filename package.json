@@ -12,6 +12,7 @@
     "termux:run": "bash scripts/termux-run.sh",
     "update": "bash scripts/update.sh",
     "test": "node scripts/smoke.js",
+    "test:telkom": "node scripts/smoke-telkom.js",
     "doctor": "node scripts/doctor.js",
     "fast": "node scripts/fast-nonbug.js --dry-run",
     "fast:apply": "node scripts/fast-nonbug.js --apply",
@@ -49,8 +50,9 @@
     "tesseract.js": "^7.0.0"
   },
   "optionalDependencies": {
-    "sharp": "^0.35.5",
-    "puppeteer": "^25.9.0"
+    "jsqr": "^1.4.0",
+    "puppeteer": "^25.9.0",
+    "sharp": "^0.35.5"
   },
   "overrides": {
     "axios": "^1.20.0",

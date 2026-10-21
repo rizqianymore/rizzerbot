@@ -1,141 +1,143 @@
-import { gatewayBase } from "./auth.js";
+import { telkomRequest } from "./http.js";
+import { resolveEndpoints } from "./discovery.js";
+import { APP_ORIGIN, QR_TYPES, joinUrl } from "./config.js";
 
-const ORIGIN = "https://digits.telkomschools.sch.id";
-const UA =
-  "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36";
+/**
+ * Client API presensi Telkom Schools (DigitS).
+ *
+ * Endpoint diambil otomatis dari discovery.js (bundle aplikasi resmi),
+ * sehingga tidak ada path/hash yang harus dikonfigurasi manual.
+ *
+ * Bentuk request (sesuai aplikasi resmi):
+ *   GET  {registrasiRead}/{hashProfile}                 -> profil siswa (numberid/nis, nama)
+ *   GET  {presensiRead}/{hashRead}/{studentId}          -> status presensi hari ini
+ *   POST {presensiWrite}/{hashWrite}                    -> submit presensi
+ */
 
-function buildQuery(params) {
-  if (!params || typeof params !== "object") return "";
-  const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") query.set(key, String(value));
-  }
-  const text = query.toString();
-  return text ? `?${text}` : "";
+async function endpoints() {
+  const result = await resolveEndpoints();
+  return {
+    bases: result?.bases || {},
+    hashes: result?.hashes || {},
+  };
+}
+
+/** Ambil profil siswa (dipakai untuk menemukan studentId internal). */
+export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, signal } = {}) {
+  const { bases, hashes } = await endpoints();
+  const base = bases.registrasiRead;
+  const hash = hashes.profile;
+  if (!base || !hash) throw new Error("Endpoint profil belum terdeteksi.");
+
+  const res = await telkomRequest(joinUrl(base, hash), {
+    method: "GET",
+    token,
+    cookie,
+    timeoutMs,
+    signal,
+    origin: APP_ORIGIN,
+    referer: `${APP_ORIGIN}/`,
+  });
+
+  const body = res?.data && typeof res.data === "object" ? res.data : {};
+  const data = body.data && typeof body.data === "object" ? body.data : body;
+  const profile = data.profile && typeof data.profile === "object" ? data.profile : data;
+
+  const studentId = String(profile.numberid || profile.nis || profile.student_id || "").trim();
+  const name = String(profile.fullname || profile.student_name || profile.name || "").trim();
+
+  return {
+    ok: body.status !== false,
+    studentId,
+    nis: String(profile.nis || "").trim(),
+    name,
+    photo: profile.photo || "",
+    raw: body,
+  };
+}
+
+/** Ambil status presensi hari ini (read-only). */
+export async function fetchAttendance(token, cookie, studentId, { timeoutMs = 12000, signal } = {}) {
+  const { bases, hashes } = await endpoints();
+  const base = bases.presensiRead;
+  const hash = hashes.read;
+  if (!base || !hash) throw new Error("Endpoint presensi belum terdeteksi.");
+  if (!studentId) throw new Error("Student ID tidak tersedia.");
+
+  const res = await telkomRequest(joinUrl(base, `${hash}/${encodeURIComponent(studentId)}`), {
+    method: "GET",
+    token,
+    cookie,
+    timeoutMs,
+    signal,
+    origin: APP_ORIGIN,
+    referer: `${APP_ORIGIN}/`,
+  });
+
+  return res?.data ?? null;
 }
 
 /**
- * Request read-only ke gateway Telkom Schools memakai token hasil issueauth.
- * Tidak dipakai untuk mengubah/mengirim data presensi.
+ * Susun payload submit sesuai aplikasi resmi:
+ *   { studentId, qrType, location, ...isi QR }
  */
-export async function telkomRequest(path, { token, cookie, method = "GET", query, timeoutMs = 20000 } = {}) {
-  const cleanPath = String(path || "").trim();
-  if (!cleanPath.startsWith("/")) {
-    throw new Error("Path API tidak valid (harus diawali '/').");
-  }
-  if (!token) {
-    throw new Error("Token tidak tersedia. Login terlebih dahulu.");
-  }
-
-  const headers = {
-    Accept: "application/json, text/plain, */*",
-    Authorization: `Bearer ${token}`,
-    Origin: ORIGIN,
-    Referer: `${ORIGIN}/`,
-    "User-Agent": UA,
-    "sec-ch-ua-mobile": "?1",
-    "sec-ch-ua-platform": '"Android"',
-    ...(cookie ? { Cookie: cookie } : {}),
+export function buildSubmitPayload({ studentId, kind, qrPayload = null, location = null, date = "" } = {}) {
+  const qrType = QR_TYPES[kind] || QR_TYPES.datang;
+  const payload = {
+    studentId: String(studentId || ""),
+    qrType,
+    ...(location && typeof location === "object" ? { location } : {}),
   };
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  let res;
-  try {
-    res = await fetch(`${gatewayBase()}${cleanPath}${buildQuery(query)}`, {
-      method,
-      headers,
-      signal: controller.signal,
-    });
-  } catch (err) {
-    if (err?.name === "AbortError") throw new Error("Timeout saat menghubungi server Telkom Schools.");
-    throw new Error(`Gagal terhubung ke server Telkom Schools: ${err?.message || err}`);
-  } finally {
-    clearTimeout(timer);
+  if (qrPayload && typeof qrPayload === "object" && !Array.isArray(qrPayload)) {
+    Object.assign(payload, qrPayload);
+    payload.studentId = String(studentId || "");
+    payload.qrType = qrType;
+  } else if (date) {
+    payload.date = date;
   }
-
-  const text = await res.text();
-  let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch (_) {
-    data = text;
-  }
-
-  if (!res.ok) {
-    const message =
-      (data && typeof data === "object" ? data.message || data.error : null) ||
-      (typeof data === "string" ? data.slice(0, 160) : `HTTP ${res.status}`);
-    throw new Error(`API ${res.status}: ${message}`);
-  }
-
-  return data;
+  return payload;
 }
-
-const PRESENSI_GW = "https://gw-digits.telkomschools.sch.id";
-const PRESENSI_ORIGIN = "https://presensi.telkomschools.sch.id";
-
-function resolvePresensiTokenHash() {
-  return String(process.env.TELKOM_PRESENSI_HASH || "dbc366754e1d31910e16a4b41893b09c").trim();
-}
-
 /**
- * Path GET untuk membaca status presensi (read-only).
- * Mendukung template :nis atau :hash, atau fallback otomatis ke /api/presensi-read/:hash/:nis
+ * Submit presensi memakai token siswa.
+ * @param {{token:string, cookie:string, studentId:string, kind:string, qrPayload?:object, location?:object, date?:string}} options
  */
-export function getStatusPath(nis) {
-  const custom = String(process.env.TELKOM_STATUS_PATH || "").trim();
-  if (custom) {
-    return custom.replace(":nis", nis || "").replace(":hash", resolvePresensiTokenHash());
-  }
-  const hash = resolvePresensiTokenHash();
-  return `/api/presensi-read/${hash}/${nis || ""}`;
-}
+export async function submitAttendance({
+  token,
+  cookie,
+  studentId,
+  kind = "datang",
+  qrPayload = null,
+  location = null,
+  date = "",
+  timeoutMs = 12000,
+  signal,
+} = {}) {
+  const { bases, hashes } = await endpoints();
+  const base = bases.presensiWrite;
+  const hash = hashes.write;
+  if (!base || !hash) throw new Error("Endpoint submit presensi belum terdeteksi.");
 
-export async function getAttendanceStatus(token, cookie, nis) {
-  const path = getStatusPath(nis);
-  const base = process.env.TELKOM_PRESENSI_BASE || PRESENSI_GW;
-  const headers = {
-    Accept: "application/json, text/plain, */*",
-    Authorization: `Bearer ${token}`,
-    Origin: PRESENSI_ORIGIN,
-    Referer: `${PRESENSI_ORIGIN}/`,
-    "User-Agent": UA,
-    "sec-ch-ua-mobile": "?1",
-    "sec-ch-ua-platform": '"Android"',
-    ...(cookie ? { Cookie: cookie } : {}),
+  const payload = buildSubmitPayload({ studentId, kind, qrPayload, location, date });
+
+  const res = await telkomRequest(joinUrl(base, hash), {
+    method: "POST",
+    token,
+    cookie,
+    timeoutMs,
+    signal,
+    origin: APP_ORIGIN,
+    referer: `${APP_ORIGIN}/`,
+    contentType: "application/json",
+    body: payload,
+  });
+
+  const body = res?.data && typeof res.data === "object" ? res.data : {};
+  const ok = body.status === true || body.status === "success" || body.success === true;
+  return {
+    ok,
+    status: res?.status || 0,
+    message: String(body.message || (ok ? "Presensi tercatat." : "") || "").slice(0, 160),
+    data: body,
+    payload,
   };
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
-
-  try {
-    const res = await fetch(`${base}${path}`, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    });
-    const text = await res.text();
-    let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch (_) {
-      data = text;
-    }
-
-    if (!res.ok) {
-      const message =
-        (data && typeof data === "object" ? data.message || data.error : null) ||
-        (typeof data === "string" ? data.slice(0, 160) : `HTTP ${res.status}`);
-      throw new Error(`API ${res.status}: ${message}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err?.name === "AbortError") throw new Error("Timeout saat menghubungi server presensi.");
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
 }
