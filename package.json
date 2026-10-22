@@ -15,6 +15,7 @@
     "test:telkom": "node scripts/smoke-telkom.js",
     "telkom:env": "node scripts/telkom-env.js",
     "telkom:net": "node scripts/telkom-net.js",
+    "telkom:live": "node scripts/telkom-live.js",
     "doctor": "node scripts/doctor.js",
     "fast": "node scripts/fast-nonbug.js --dry-run",
     "fast:apply": "node scripts/fast-nonbug.js --apply",
