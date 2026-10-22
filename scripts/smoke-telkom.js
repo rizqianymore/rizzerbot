@@ -245,7 +245,16 @@ console.log("[10/12] Scanner kode (QR & barcode 1D)...");
   assert(distanceMeters(-6.1544783, 106.7507579, -6.1544783, 106.7507579) === 0, "jarak ke diri sendiri 0 m");
   assert(distanceToSchool({ latitude: -6.1544783, longitude: 106.7507579 }) < 5, "jarak lokasi sekolah terhitung 0 m");
   assert(distanceToSchool({ latitude: -6.2, longitude: 106.8 }) > 1000, "jarak lokasi jauh terhitung");
-  assert(useSchoolLocation() === false, "mode lokasi sekolah default nonaktif");
+  assert(useSchoolLocation() === true, "mode lokasi sekolah default AKTIF (auto absen 1 perintah)");
+
+  // Auto-QR (biar ".telkom <nis>" langsung bisa absen tanpa foto QR)
+  const { autoQrEnabled, buildQrPayload, qrSession } = await load("src/services/telkom/config.js");
+  const { wibTimestamp } = await load("src/services/telkom/attendance.js");
+  assert(autoQrEnabled() === true, "auto QR default aktif");
+  const autoQr = buildQrPayload("QR Datang", wibTimestamp());
+  assert(autoQr.type === "QR Datang", "auto QR memakai tipe resmi");
+  assert(autoQr.id === qrSession().id && autoQr.lemdikId === qrSession().lemdikId, "auto QR pakai id sesi guru");
+  assert(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(autoQr.createdAt), "createdAt auto QR format WIB");
 
   const { scanCodes } = await load("src/services/telkom/scanner.js");
   const { parseAttendanceCode } = await load("src/services/telkom/qr.js");

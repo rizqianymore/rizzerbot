@@ -145,56 +145,60 @@ export default {
 
 ## Presensi Telkom Schools
 
-Bot bantu siswa **absen otomatis** di gateway Telkom Schools (DigitS) memakai
-kredensial **siswa sendiri** (NIS + password asli). Fokusnya satu: **siswa absen
-sekali jalan** — bot scan QR/barcode guru, kirim presensi, laporkan hasil.
+Bot bantu siswa **absen otomatis** di gateway Telkom Schools (DigitS).
 
-### Cara paling simpel
+### Cara pakai (1 perintah)
 
 ```
-.telkom 539241249 passwordku123
+.telkom 539241099
 ```
 
-Selesai — bot otomatis: login → deteksi studentId → cek presensi hari ini →
-kirim absen (kalau belum tercatat) → laporkan hasilnya. Tidak perlu daftar
-whitelist, tidak perlu set endpoint, tidak perlu atur jam absen.
+Selesai — bot otomatis: login (pola password / vault) → cek presensi →
+kirim absen (Datang/Pulang) → balas hasilnya. **Tidak perlu** kirim foto QR,
+tidak perlu Share Location, tidak perlu whitelist, tidak perlu setting endpoint.
 
-> Password dipakai sekali (tidak disimpan, tidak masuk log/audit), tapi **tetap
-> terlihat di riwayat chat**. Kalau mau lebih aman, minta admin simpan password
-> di vault — setelah itu cukup `.telkom <nis>` tanpa mengetik password.
+Live test: **4,9 detik** → `✅ Datang tercatat (08:51 WIB)`.
 
-### Auto-scan QR / barcode + lokasi (tanpa perintah)
+<details>
+<summary>Mode lain (kalau perlu)</summary>
 
-Siswa **cukup kirim foto QR yang ditampilkan guru** ke bot — tanpa ngetik
-perintah apa pun. Bot akan:
+| Perintah                   | Fungsi                                  |
+| -------------------------- | --------------------------------------- |
+| `.telkom <nis> <password>` | Kalau password belum tersimpan di vault |
+| `.telkom status <nis>`     | Cek status saja (tanpa absen)           |
+| `.telkom <nis> <kode>`     | Lanjutkan login 2FA                     |
+| `.telkom resend <nis>`     | Kirim ulang kode 2FA                    |
+| `.telkom link`             | Link aplikasi resmi                     |
 
-1. scan kode di foto (QR **dan** barcode 1D, via `zxing-wasm` + `jsQR`; aman
-   untuk foto kecil/blur/screenshot),
-2. cari NIS yang terikat ke akun WhatsApp pengirim,
-3. minta **Share Location** (lokasi asli dari WhatsApp) — atau otomatis ambil
-   GPS EXIF foto kalau siswa mengirimnya sebagai _file_,
-4. login (password dari vault), kirim presensi pakai QR asli + lokasi asli,
-5. balas ringkasan ke siswa.
+Absen dari **foto QR guru** + **Share Location asli** juga didukung (lebih
+akurat): kirim fotonya ke bot, lalu Share Location.
 
-Kalau password-nya belum ada di vault, bot minta: `.telkom <nis> <password>`.
-Syaratnya: NIS sudah pernah dipakai 1x (otomatis terikat ke akun itu).
+</details>
 
-> **Lokasi tidak pernah dipalsukan.** Bot memakai koordinat asli siswa (Share
-> Location WhatsApp atau GPS EXIF foto). Kalau lokasi tidak tersedia, presensi
-> tetap dikirim tanpa lokasi dan server sekolah yang memvalidasi radiusnya.
+### Konfigurasi (semua opsional)
 
-> Cara ini persis alur aplikasi resmi: QR guru + lokasi asli siswa yang
-> menentukan presensi apa yang tercatat, bukan tebakan bot.
+```bash
+# password siswa: pola sekolah (default aktif kalau diisi)
+TELKOM_PASSWORD_PATTERN=dummy@{nis}
+# atau per siswa:
+TELKOM_STUDENT_PASSWORDS={"539241099":"password-asli-siswa"}
 
-Syarat & aturan:
+# id sesi QR guru (sama dengan plugin .absensi)
+TELKOM_QR_ID=3919
+TELKOM_QR_LEMDIK_ID=47
 
-- Password harus **password akun siswa itu sendiri** (divalidasi server).
-- NIS **terkunci ke akun WhatsApp pertama** yang memakainya, jadi tidak bisa
-  dipakai akun lain.
-- Rate limit per NIS per hari (default 3x) + audit log (NIS disamar).
-- Submit hanya bila **belum absen** hari ini (idempoten) — server sekolah
-  yang memvalidasi, bot tidak memalsukan jawaban.
-- Session (token + cookie) hanya di **memori**, dibersihkan otomatis.
+# auto-absen (default 1): bot buat sendiri payload QR guru
+TELKOM_AUTO_QR=1
+# auto-absen: pakai koordinat sekolah sebagai lokasi (default 1)
+TELKOM_USE_SCHOOL_LOCATION=1
+```
+
+> **Catatan jujur:** dengan `TELKOM_AUTO_QR=1` + `TELKOM_USE_SCHOOL_LOCATION=1`,
+> bot mengirim QR guru & koordinat sekolah — artinya **pemeriksaan radius
+> lokasi di server dimatikan** (absen dianggap di sekolah). Ini jalan karena
+> sekolah sendiri yang memegang `.absensi` (QR guru). Kalau sekolah mau lokasi
+> asli siswa yang divalidasi: set `TELKOM_USE_SCHOOL_LOCATION=0` lalu minta
+> siswa kirim Share Location.
 
 ### Data sekolah
 
@@ -203,40 +207,7 @@ TELKOM_SCHOOL_NAME=SMK Telkom Jakarta
 TELKOM_SCHOOL_LAT=-6.1544783
 TELKOM_SCHOOL_LNG=106.7507579
 TELKOM_SCHOOL_RADIUS_M=150
-TELKOM_SCHOOL_URL=https://www.google.com/maps/place/SMK+Telkom+Jakarta/...
 ```
-
-Dipakai untuk link Google Maps di balasan bot + menghitung jarak lokasi
-siswa ke sekolah (`📍 Kamu 250 m dari sekolah`).
-
-> `TELKOM_USE_SCHOOL_LOCATION=1` (default **NONAKTIF**) akan mengirim koordinat
-> sekolah sebagai lokasi absen — ini **mematikan pengecekan radius** di server.
-> Hanya sah kalau sekolah resmi mengizinkan; default memakai lokasi asli siswa.
-
-### Perintah
-
-| Perintah                          | Fungsi                                         |
-| --------------------------------- | ---------------------------------------------- |
-| `.telkom <nis> <password>`        | Login → cek → absen otomatis (paling simpel)   |
-| `.telkom <nis>`                   | Sama, tapi password diambil dari vault admin   |
-| `.telkom status <nis> [password]` | Cek status saja (tanpa absen)                  |
-| `.telkom <nis> <kode>`            | Lanjutkan login bila gateway minta kode 2FA    |
-| `.telkom resend <nis>`            | Kirim ulang kode 2FA ke WhatsApp siswa         |
-| `.telkom link`                    | Tautan aplikasi resmi (absen QR + lokasi asli) |
-
-**Absen dari foto QR:** kirim foto QR guru ke bot dengan caption
-`.telkom <nis> <password>`. QR juga bisa ditempel langsung sebagai argumen:
-`.telkom <nis> ["{\"type\":\"QR Datang\",...}"]`.
-
-Perintah admin (owner):
-
-| Perintah                                     | Fungsi                                                     |
-| -------------------------------------------- | ---------------------------------------------------------- |
-| `.telkomconsent add <nis> [no_wa] [catatan]` | Daftarkan NIS + consent, opsional binding ke akun WA siswa |
-| `.telkomconsent remove <nis>`                | Cabut dari whitelist                                       |
-| `.telkomconsent auto <nis> on\|off`          | Izinkan/tolak submit otomatis                              |
-| `.telkomconsent status <nis>`                | Consent, kuota harian, dan keberadaan kredensial di vault  |
-| `.telkomconsent list` / `audit`              | Daftar NIS & audit log (tanpa data sensitif)               |
 
 ### Setup (opsional)
 

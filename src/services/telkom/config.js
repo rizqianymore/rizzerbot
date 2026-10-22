@@ -38,6 +38,45 @@ export const QR_TYPES = {
   event: "QR Event",
 };
 
+/**
+ * Sesi QR guru (dipakai plugin .absensi & auto-absen bot).
+ * Sumber: env TELKOM_QR_ID / TELKOM_QR_LEMDIK_ID, default sama dengan
+ * plugin .absensi supaya QR yang dibuat guru dan yang dibuat bot identik.
+ */
+export const DEFAULT_QR_SESSION = { id: 3919, lemdikId: 47 };
+
+export function qrSession() {
+  const id = Number(process.env.TELKOM_QR_ID);
+  const lemdikId = Number(process.env.TELKOM_QR_LEMDIK_ID);
+  return {
+    id: Number.isFinite(id) && id > 0 ? id : DEFAULT_QR_SESSION.id,
+    lemdikId: Number.isFinite(lemdikId) && lemdikId > 0 ? lemdikId : DEFAULT_QR_SESSION.lemdikId,
+  };
+}
+
+/**
+ * Auto-absen: bot membuat sendiri payload QR guru (default AKTIF).
+ * Matikan dengan TELKOM_AUTO_QR=0 kalau absen harus pakai QR asli dari foto.
+ */
+export function autoQrEnabled() {
+  return !["0", "false", "no", "off"].includes(
+    String(process.env.TELKOM_AUTO_QR ?? "1")
+      .trim()
+      .toLowerCase()
+  );
+}
+
+/** Susun payload QR guru (format resmi: id, lemdikId, createdAt, type). */
+export function buildQrPayload(type, createdAt) {
+  const session = qrSession();
+  return {
+    id: session.id,
+    lemdikId: session.lemdikId,
+    createdAt,
+    type,
+  };
+}
+
 /** Path relatif pada app resmi yang memetakan jenis QR ke tipe presensi. */
 export const QR_TYPE_ALIASES = {
   "qr datang": "datang",

@@ -40,8 +40,8 @@ export function schoolInfo() {
  * (hanya sah bila sekolah resmi mengizinkan).
  */
 export function useSchoolLocation() {
-  return ["1", "true", "yes", "on"].includes(
-    String(process.env.TELKOM_USE_SCHOOL_LOCATION || "")
+  return !["0", "false", "no", "off"].includes(
+    String(process.env.TELKOM_USE_SCHOOL_LOCATION ?? "1")
       .trim()
       .toLowerCase()
   );

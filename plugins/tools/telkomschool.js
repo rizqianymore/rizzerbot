@@ -16,23 +16,15 @@ import { getMediaBuffer } from "@/src/services/fetch/media/buffer.js";
 
 const USAGE =
   `*TELKOM SCHOOLS (DigitS)*\n\n` +
-  `Cukup ketik NIS + password, sisanya otomatis:\n` +
-  `👉 \`{prefix}telkom <nis> <password>\`\n\n` +
-  `*Contoh:* \`{prefix}telkom 539241249 passwordku123\`\n\n` +
-  `Bot akan: login → cek presensi → kirim absen otomatis → laporkan hasilnya.\n\n` +
-  `*Absen cuma kirim foto QR guru:*\n` +
-  `Kirim foto QR guru ke bot (tanpa perintah) → bot scan & absen otomatis.\n` +
-  `Kalau guru minta lokasi: kirim juga *Share Location* kamu (lokasi asli,\n` +
-  `bukan dipalsukan) → bot langsung kirim absen.\n\n` +
-  `*Perintah lain:*\n` +
-  `• \`{prefix}telkom <nis>\` — pakai password dari vault admin\n` +
-  `• \`{prefix}telkom status <nis> [password]\` — cek status saja (tanpa absen)\n` +
+  `Cukup ketik:\n` +
+  `👉 \`{prefix}telkom <nis>\`\n\n` +
+  `Bot otomatis: login → cek presensi → kirim absen (datang/pulang).\n\n` +
+  `*Lainnya:*\n` +
+  `• \`{prefix}telkom <nis> <password>\` — kalau password belum tersimpan\n` +
+  `• \`{prefix}telkom status <nis>\` — cek status saja\n` +
   `• \`{prefix}telkom <nis> <kode>\` — lanjutkan login 2FA\n` +
-  `• \`{prefix}telkom resend <nis>\` — kirim ulang kode 2FA\n` +
   `• \`{prefix}telkom link\` — link aplikasi resmi\n\n` +
-  `_Password hanya dipakai sekali, tidak disimpan, tidak masuk log._\n` +
-  `_Endpoint API & proteksi Cloudflare ditangani otomatis._\n` +
-  `_Absen tetap memakai akun & token kamu sendiri: ${APP_URL}_`;
+  `_Password tidak disimpan & tidak masuk log._`;
 
 /** Pesan ini berisi media (foto/screenshot) yang bisa berisi QR guru. */
 function hasMedia(msg) {

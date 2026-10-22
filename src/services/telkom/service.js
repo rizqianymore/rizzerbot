@@ -8,6 +8,7 @@ import {
   isRecorded,
   parseAttendanceStatus,
   wibParts,
+  wibTimestamp,
 } from "./attendance.js";
 import { audit, getConsent, isConsented, maskNis, quotaStatus, recordUsage, setConsent } from "./registry.js";
 import { createSession } from "./session.js";
@@ -16,6 +17,7 @@ import { takePendingTwoFactor, setPendingTwoFactor } from "./pending.js";
 import { qrTypeToKind } from "./qr.js";
 import { toApiLocation } from "./location.js";
 import { distanceToSchool, schoolInfo, useSchoolLocation } from "./school.js";
+import { autoQrEnabled, buildQrPayload, QR_TYPES } from "./config.js";
 import { clearTelkomCookies } from "./http.js";
 import { db } from "@/src/core/database.js";
 
@@ -146,12 +148,19 @@ async function maybeSubmit({
 
     try {
       const distance = distanceToSchool(location);
+      // QR: pakai dari foto siswa, dari server, atau dibuat otomatis oleh bot
+      // (mode ".telkom <nis>" tanpa foto QR).
+      const qrForSubmit =
+        qrPayload ||
+        extractQrPayload(parsed, kind) ||
+        (autoQrEnabled() ? buildQrPayload(QR_TYPES[kind] || QR_TYPES.datang, wibTimestamp()) : null);
+
       const response = await submitAttendance({
         token: session.token,
         cookie: session.cookie,
         studentId: session.studentId,
         kind,
-        qrPayload: qrPayload || extractQrPayload(parsed, kind),
+        qrPayload: qrForSubmit,
         location: toApiLocation(location),
         date: wibParts().date,
         logger,
@@ -371,7 +380,8 @@ export async function runAttendanceFlow({
 
     // 6. Submit presensi (otomatis: bot yang tentukan, server yang memvalidasi)
     step = "submit presensi";
-    //    Lokasi: lokasi asli siswa, atau koordinat sekolah bila diizinkan admin.
+    //    Lokasi: lokasi asli siswa, atau koordinat sekolah (default) supaya
+    //    ".telkom <nis>" langsung bisa absen tanpa langkah tambahan.
     const school = schoolInfo();
     let effectiveLocation = location;
     if (!effectiveLocation && useSchoolLocation()) {
@@ -398,7 +408,6 @@ export async function runAttendanceFlow({
       submit,
       title: allowSubmit ? "*PRESENSI HARI INI*" : "*STATUS PRESENSI (cek saja)*",
       school: school.name,
-      schoolUrl: school.url,
     });
 
     return {

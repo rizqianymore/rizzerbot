@@ -1,19 +1,11 @@
 import QRCode from "qrcode";
+import { buildQrPayload, qrSession } from "@/src/services/telkom/config.js";
+import { wibTimestamp } from "@/src/services/telkom/attendance.js";
 
-const ID = 3919;
-const LEMDIK_ID = 47;
+const SESSION = qrSession();
 
 function getWibTimestamp() {
-  const d = new Date();
-
-  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-  const wib = new Date(utc + 3600000 * 7);
-
-  const pad = (n) => String(n).padStart(2, "0");
-  return (
-    `${wib.getFullYear()}-${pad(wib.getMonth() + 1)}-${pad(wib.getDate())} ` +
-    `${pad(wib.getHours())}:${pad(wib.getMinutes())}:${pad(wib.getSeconds())}`
-  );
+  return wibTimestamp();
 }
 
 export default {
@@ -35,19 +27,14 @@ export default {
         `*CARA ABSEN:*\n\n` +
           `• \`${currentPrefix}absensi datang\`\n` +
           `• \`${currentPrefix}absensi pulang\`\n\n` +
-          `_ID (${ID}) & Lemdik (${LEMDIK_ID}) sudah otomatis terpasang._`
+          `_ID (${SESSION.id}) & Lemdik (${SESSION.lemdikId}) sudah otomatis terpasang._`
       );
     }
 
     const mode = isDatang ? "Datang" : "Pulang";
     const timestamp = getWibTimestamp();
 
-    const payload = JSON.stringify({
-      id: ID,
-      lemdikId: LEMDIK_ID,
-      createdAt: timestamp,
-      type: `QR ${mode}`,
-    });
+    const payload = JSON.stringify(buildQrPayload(`QR ${mode}`, timestamp));
 
     try {
       const qrBuffer = await QRCode.toBuffer(payload, {

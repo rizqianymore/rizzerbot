@@ -83,6 +83,17 @@ export function wibDate(date = new Date()) {
   return wibParts(date).date;
 }
 
+/** Timestamp lengkap versi WIB (YYYY-MM-DD HH:MM:SS) — format QR guru. */
+export function wibTimestamp(date = new Date()) {
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  const wib = new Date(utc + 3600000 * 7);
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `${wib.getFullYear()}-${pad(wib.getMonth() + 1)}-${pad(wib.getDate())} ` +
+    `${pad(wib.getHours())}:${pad(wib.getMinutes())}:${pad(wib.getSeconds())}`
+  );
+}
+
 /** Parse "HH:MM-HH:MM" menjadi menit absolut. */
 export function parseWindow(raw) {
   const value = String(raw || "").trim();
@@ -265,21 +276,20 @@ export function formatAttendanceSummary({
   now = new Date(),
   title = "*PRESENSI HARI INI*",
   school = "",
-  schoolUrl = "",
 } = {}) {
   const entries = Array.isArray(parsed.entries) ? parsed.entries : [];
   const lines = [title];
 
-  if (studentName) lines.push(`👤 Nama: ${studentName}`);
+  if (studentName) lines.push(`👤 ${studentName}`);
 
   const datang = findEntry(entries, "datang");
   const pulang = findEntry(entries, "pulang");
   lines.push(
-    `🕒 Datang: ${datang?.present ? formatClock(datang.time) : "belum absen"}` +
+    `🕒 Datang: ${datang?.present ? formatClock(datang.time) : "belum"}` +
       (datang?.present && datang.lessonStart ? ` (jadwal ${formatClock(datang.lessonStart)})` : "")
   );
   lines.push(
-    `🕓 Pulang: ${pulang?.present ? formatClock(pulang.time) : "belum absen"}` +
+    `🕓 Pulang: ${pulang?.present ? formatClock(pulang.time) : "belum"}` +
       (pulang?.present && pulang.lessonStart ? ` (jadwal ${formatClock(pulang.lessonStart)})` : "")
   );
 
@@ -292,25 +302,13 @@ export function formatAttendanceSummary({
         return `${entry.subject}${teacher} ${icon}`;
       })
       .join(", ");
-    lines.push(`📚 Mapel: ${list}`);
-  } else {
-    const plain = entries.filter((entry) => entry.type === "kelas" || entry.type === "aktivitas");
-    if (plain.length > 0) {
-      const list = plain
-        .map((entry) => {
-          const name = entry.subject || entry.label || entry.rawType;
-          return `${name}${entry.present ? " ✅" : " ⏳"}`;
-        })
-        .join(", ");
-      lines.push(`📚 Aktivitas: ${list}`);
-    }
+    lines.push(`📚 ${list}`);
   }
 
   lines.push("", describeSubmit(submit, now));
 
   const distance = describeDistance(submit?.distance);
-  if (distance) lines.push(`📍 Kamu ${distance}${school ? ` · ${school}` : ""}`);
-  if (schoolUrl) lines.push(`🗺️ ${schoolUrl}`);
+  if (distance) lines.push(`📍 ${distance}${school ? ` · ${school}` : ""}`);
 
   return lines.join("\n");
 }
