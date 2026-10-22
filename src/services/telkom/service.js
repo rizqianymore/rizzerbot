@@ -14,6 +14,7 @@ import { createSession } from "./session.js";
 import { resolvePassword } from "./vault.js";
 import { takePendingTwoFactor, setPendingTwoFactor } from "./pending.js";
 import { qrTypeToKind } from "./qr.js";
+import { clearTelkomCookies } from "./http.js";
 import { db } from "@/src/core/database.js";
 
 /**
@@ -338,6 +339,7 @@ export async function runAttendanceFlow({
     password = null;
     if (session) session.destroy(logger);
     session = null;
+    clearTelkomCookies();
     clearTimeout(timer);
   }
 }

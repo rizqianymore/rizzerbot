@@ -139,6 +139,27 @@ export function looksLikeSessionStub(status, body, setCookieHeader) {
   return text.includes("server_session");
 }
 
+/** Host yang dipakai modul telkom (cookie-nya tidak boleh tertinggal di disk). */
+const TELKOM_HOSTS = [
+  "presensi.telkomschools.sch.id",
+  "digits.telkomschools.sch.id",
+  "gw-digits.telkomschools.sch.id",
+  "gateway.ypt.or.id",
+];
+
+/**
+ * Bersihkan cookie telkom dari jar global (disimpan di disk) + jar memori.
+ * Dipanggil setelah alur selesai supaya tidak ada sesi yang tertinggal.
+ */
+export function clearTelkomCookies() {
+  for (const host of TELKOM_HOSTS) {
+    memoryJar.delete(host);
+    try {
+      globalCookieJar.clearDomain(host);
+    } catch (_) {}
+  }
+}
+
 function mergeHeaders(base = {}) {
   const out = {};
   for (const [key, value] of Object.entries(base || {})) {
