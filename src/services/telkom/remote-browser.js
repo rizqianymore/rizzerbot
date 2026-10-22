@@ -122,9 +122,10 @@ export async function remoteSolveChallenge(url, { timeoutMs = NAV_TIMEOUT_MS } =
 
 /**
  * Request dari dalam browser remote (bypass CF + bisa pakai header auth).
+ * `form` (object) dikirim sebagai multipart/form-data (dipakai untuk login).
  * @returns {Promise<{ok: boolean, status: number, data: any}>}
  */
-export async function remoteInPageFetch(url, { method = "GET", headers = {}, body = null } = {}) {
+export async function remoteInPageFetch(url, { method = "GET", headers = {}, body = null, form = null } = {}) {
   const { browser, close } = await connectRemoteBrowser();
   try {
     const page = await browser.newPage();
@@ -134,10 +135,19 @@ export async function remoteInPageFetch(url, { method = "GET", headers = {}, bod
     const result = await page.evaluate(
       async (target, opts) => {
         try {
+          let payload;
+          if (opts.form) {
+            payload = new FormData();
+            for (const [key, value] of Object.entries(opts.form)) {
+              payload.append(key, String(value));
+            }
+          } else if (opts.body) {
+            payload = JSON.stringify(opts.body);
+          }
           const resp = await window.fetch(target, {
             method: opts.method || "GET",
             headers: opts.headers || {},
-            body: opts.body ? JSON.stringify(opts.body) : undefined,
+            body: payload,
             credentials: "include",
           });
           const text = await resp.text();
@@ -151,7 +161,7 @@ export async function remoteInPageFetch(url, { method = "GET", headers = {}, bod
         }
       },
       url,
-      { method, headers, body }
+      { method, headers, body, form }
     );
 
     await page.close().catch(() => {});

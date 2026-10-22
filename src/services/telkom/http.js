@@ -344,6 +344,27 @@ export async function telkomRequest(url, options = {}) {
       // Koneksi ke edge Cloudflare kadang timeout (mis. IPv6 bermasalah).
       // Coba lagi dengan jeda pendek selama masih ada sisa waktu.
       if (err?.code === "network" && attempt < 3 && !signal?.aborted) {
+        // Jalur lain: remote browser BrightData (keluar lewat jaringan BrightData).
+        if (attempt >= 1 && remoteBrowserEnabled() && !isForm) {
+          const viaRemote = await remoteInPageFetch(url, {
+            method,
+            headers: buildRequestHeaders({
+              token,
+              origin,
+              referer,
+              contentType,
+              extra: extraHeaders,
+            }),
+            body,
+          }).catch(() => null);
+          if (viaRemote?.ok) {
+            log("info", "request sukses via remote browser (fallback network)", {
+              url,
+              status: viaRemote.status,
+            });
+            return { status: viaRemote.status, data: viaRemote.data, headers: {}, challenged };
+          }
+        }
         await sleep(400 * (attempt + 1));
         continue;
       }

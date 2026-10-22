@@ -26,7 +26,7 @@ import { db } from "@/src/core/database.js";
  * Cleanup (session cleared) WAJIB dijalankan di finally block.
  */
 
-const TOTAL_TIMEOUT_MS = 60000;
+const TOTAL_TIMEOUT_MS = 75000;
 
 const USER_MESSAGES = {
   invalid_nis: "❌ Format NIS tidak valid (5-15 digit angka).",
@@ -266,6 +266,7 @@ export async function runAttendanceFlow({
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TOTAL_TIMEOUT_MS);
   let session = null;
+  let step = "login";
 
   try {
     // 3. Login + token (mungkin perlu 2FA)
@@ -331,6 +332,7 @@ export async function runAttendanceFlow({
     }
 
     // 4. Profil siswa -> studentId internal (auto-detect, bukan asumsi NIS)
+    step = "profil";
     let studentId = nis;
     let studentName = "";
     try {
@@ -348,6 +350,7 @@ export async function runAttendanceFlow({
     session.studentId = studentId;
 
     // 5. Status presensi hari ini
+    step = "status presensi";
     let statusPayload = null;
     try {
       statusPayload = await fetchAttendance(session.token, session.cookie, studentId, {
@@ -365,6 +368,7 @@ export async function runAttendanceFlow({
     audit("status", { nis: maskNis(nis), entries: parsed.entries.length }, logger);
 
     // 6. Submit presensi (otomatis: bot yang tentukan, server yang memvalidasi)
+    step = "submit presensi";
     //    Lokasi: lokasi asli siswa, atau koordinat sekolah bila diizinkan admin.
     const school = schoolInfo();
     let effectiveLocation = location;
@@ -407,8 +411,12 @@ export async function runAttendanceFlow({
     };
   } catch (err) {
     const code = mapError(err);
-    audit("error", { nis: maskNis(nis), code, detail: String(err?.message || err).slice(0, 120) }, logger);
-    return fail(code, logger, { detail: err?.message });
+    audit("error", { nis: maskNis(nis), code, step, detail: String(err?.message || err).slice(0, 120) }, logger);
+    const result = fail(code, logger, { detail: err?.message });
+    if (code === "timeout") {
+      result.message = `⏱️ Timeout saat menghubungi server Telkom Schools (tahap: ${step}).\nCoba lagi sebentar.`;
+    }
+    return result;
   } finally {
     // 7. Cleanup wajib: hapus cookie & token dari memori, null-kan session.
     password = null;

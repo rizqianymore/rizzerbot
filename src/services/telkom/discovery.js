@@ -259,11 +259,11 @@ function fallbackEndpoints() {
   };
 }
 
-async function fetchText(url, { timeoutMs = 25000 } = {}) {
+async function fetchText(url, { timeoutMs = 25000, allowBrowser = false } = {}) {
   const res = await telkomRequest(url, {
     method: "GET",
     timeoutMs,
-    allowBrowser: true,
+    allowBrowser,
     allowThrow: false,
     extraHeaders: { Accept: "text/html,application/xhtml+xml,application/javascript,*/*" },
   });
@@ -331,20 +331,20 @@ async function discoverHashes(bases, chunks, logger) {
   const candidates = [];
 
   for (const chunk of chunks.slice(0, 12)) {
-    const js = await fetchText(`${APP_ORIGIN}${chunk}`, { timeoutMs: 30000 });
+    const js = await fetchText(`${APP_ORIGIN}${chunk}`, { timeoutMs: 15000 });
     if (!js) continue;
 
     // 1) route chunk halaman siswa
     const routeChunk = findRouteChunk(js, "siswa-presensi");
     if (routeChunk) {
       const routeJs = await fetchText(`${APP_ORIGIN}/_nuxt/${routeChunk}`, {
-        timeoutMs: 30000,
+        timeoutMs: 15000,
       });
       if (routeJs) {
         candidates.push(...extractHashes(routeJs));
         // Modul turunan (mis. fetch profil siswa) menyimpan hash endpoint profil.
         for (const dep of extractImports(routeJs).slice(0, 8)) {
-          const depJs = await fetchText(`${APP_ORIGIN}/_nuxt/${dep}`, { timeoutMs: 30000 });
+          const depJs = await fetchText(`${APP_ORIGIN}/_nuxt/${dep}`, { timeoutMs: 12000 });
           if (depJs) candidates.push(...extractHashes(depJs));
         }
       }
@@ -393,8 +393,8 @@ export async function discoverEndpoints({ force = false, logger } = {}) {
   }
 
   try {
-    const appHtml = await fetchText(APP_ROOT, { timeoutMs: 30000 });
-    const portalHtml = appHtml ? "" : await fetchText(PORTAL_URL, { timeoutMs: 30000 });
+    const appHtml = await fetchText(APP_ROOT, { timeoutMs: 15000, allowBrowser: true });
+    const portalHtml = appHtml ? "" : await fetchText(PORTAL_URL, { timeoutMs: 10000 });
 
     const bases = {
       ...DEFAULT_BASES,
@@ -435,25 +435,74 @@ function complete(result) {
   return result;
 }
 
-/** Endpoint aktif (dengan cache in-memory), selalu tersedia. */
+/** Cache di disk (baca cepat, tanpa jaringan). */
+function loadCachedEndpoints() {
+  const cached = readCache();
+  if (!cached?.bases || !cached?.hashes) return null;
+  return { ...cached, source: cached.source || "cache" };
+}
+
+function isStale(result) {
+  if (!result?.discoveredAt) return true;
+  const age = Date.now() - new Date(result.discoveredAt).getTime();
+  return !Number.isFinite(age) || age > CACHE_TTL_MS;
+}
+
+/**
+ * Endpoint aktif — SELALU tersedia, tidak pernah nunggu jaringan.
+ *
+ * - kalau cache ada (disk atau memori) -> langsung dipakai
+ * - kalau cache basi -> refresh di background (tidak menggantung command)
+ * - kalau belum pernah ada -> pakai default yang sudah tervalidasi,
+ *   discovery jalan di background
+ *
+ * Jadi perintah user tidak pernah timeout gara-gara discovery.
+ */
 export async function resolveEndpoints({ logger, force = false } = {}) {
   if (resolved && !force) {
-    // Hash hilang (mis. server sekolah mengganti endpoint) -> paksa discovery ulang sekali.
-    if (!refreshTried && resolved.hashes && !resolved.hashes.read) {
+    if (!refreshTried && isStale(resolved)) {
       refreshTried = true;
-      try {
-        return await resolveEndpoints({ logger, force: true });
-      } catch (_) {}
+      discoverEndpoints({ logger, force: true })
+        .then((result) => complete(result))
+        .catch(() => {});
     }
     return resolved;
   }
+
   if (resolving && !force) return resolving;
-  resolving = discoverEndpoints({ logger, force })
-    .then((result) => complete(result))
-    .finally(() => {
-      resolving = null;
-    });
-  return resolving;
+
+  const cached = loadCachedEndpoints();
+  if (cached && !force) {
+    complete(cached);
+    if (isStale(cached) && !refreshTried) {
+      refreshTried = true;
+      discoverEndpoints({ logger, force: true })
+        .then((result) => complete(result))
+        .catch(() => {});
+    }
+    return resolved;
+  }
+
+  // Belum ada cache: pakai default (sudah probed & tervalidasi) lalu
+  // discovery di background. Command TIDAK menunggu.
+  const fallback = {
+    bases: { ...DEFAULT_BASES },
+    hashes: { ...DEFAULT_HASHES },
+    discoveredAt: new Date().toISOString(),
+    source: "fallback",
+    validated: false,
+  };
+  complete(fallback);
+  if (!refreshTried) {
+    refreshTried = true;
+    resolving = discoverEndpoints({ logger, force: true })
+      .then((result) => complete(result))
+      .catch(() => {})
+      .finally(() => {
+        resolving = null;
+      });
+  }
+  return resolved;
 }
 
 /** Bersihkan cache in-memory (untuk testing/admin). */
