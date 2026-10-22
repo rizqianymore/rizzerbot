@@ -74,6 +74,16 @@ console.log(`  BRIGHTDATA_SCRAPING_BROWSER_WS: ${process.env.BRIGHTDATA_SCRAPING
 console.log(`  BRIGHTDATA_CUSTOMER       : ${process.env.BRIGHTDATA_CUSTOMER ? "terisi" : "kosong"}`);
 console.log(`  BRIGHTDATA_PROXY_PASSWORD : ${process.env.BRIGHTDATA_PROXY_PASSWORD ? "terisi" : "kosong"}`);
 
+// IP publik server ini (penting: IP harus di-allowlist zone Bright Data).
+try {
+  const res = await fetch("https://api.ipify.org?format=json", { signal: AbortSignal.timeout(8000) });
+  const info = await res.json();
+  console.log(`\nIP publik server ini       : ${info.ip}`);
+  console.log("  -> pastikan IP ini TIDAK ada di 'Denylisted IPs' zone lo.");
+} catch (_) {
+  console.log("\nIP publik: tidak bisa dicek (cek manual: curl ifconfig.me)");
+}
+
 if (process.argv.includes("--browser")) {
   console.log("\nTes remote browser (pakai kuota BrightData)...");
   const { remoteSolveChallenge } = await import("../src/services/telkom/remote-browser.js");

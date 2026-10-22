@@ -2,6 +2,7 @@ import { cookieJar as globalCookieJar } from "@/src/utils/request/cookies.js";
 import { stealthBrowser } from "@/src/utils/request/browser.js";
 import { brightDataRequest, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
 import { remoteBrowserEnabled, remoteInPageFetch, remoteSolveChallenge } from "./remote-browser.js";
+import { nativeProxyEnabled, proxyRequest } from "./proxy.js";
 import { UA } from "./config.js";
 
 /**
@@ -445,7 +446,41 @@ export async function telkomRequest(url, options = {}) {
       }
     }
 
-    // B2. Bright Data Scraping Browser (remote, IP bersih) — jalur utama.
+    // B2. Bright Data native proxy (Web Unlocker lewat proxy 44445).
+    if (allowBrowser && attempt < 3 && nativeProxyEnabled()) {
+      try {
+        const viaProxy = await proxyRequest(url, {
+          method,
+          headers: buildRequestHeaders({
+            token,
+            origin,
+            referer,
+            contentType: isForm ? "" : contentType,
+            extra: extraHeaders,
+          }),
+          body: isForm ? body : body,
+          isForm,
+          timeoutMs: 25000,
+        });
+        if (viaProxy.status >= 200 && viaProxy.status < 400) {
+          log("info", "request sukses via Bright Data native proxy", {
+            url,
+            status: viaProxy.status,
+          });
+          return {
+            status: viaProxy.status,
+            data: viaProxy.data,
+            headers: viaProxy.headers,
+            challenged,
+          };
+        }
+        log("warn", "native proxy menolak request", { url, status: viaProxy.status });
+      } catch (err) {
+        log("warn", `native proxy error: ${String(err?.message || err).slice(0, 140)}`);
+      }
+    }
+
+    // B3. Bright Data Scraping Browser (remote, IP bersih) — jalur utama.
     if (allowBrowser && attempt < 3 && remoteBrowserEnabled()) {
       try {
         const target = origin || new URL(url).origin;
@@ -493,7 +528,7 @@ export async function telkomRequest(url, options = {}) {
       }
     }
 
-    // B3. Bright Data Web Unlocker (REST, lebih murah)
+    // B4. Bright Data Web Unlocker (REST, lebih murah)
     if (allowBrowser && attempt < 3) {
       const unlocked = await tryBrightDataUnlock(url, {
         method,
@@ -513,7 +548,7 @@ export async function telkomRequest(url, options = {}) {
       }
       log("info", "Bright Data tidak resolving, lanjut browser stealth", { url });
 
-      // B4. escalation ke browser stealth (lokal) untuk mendapat clearance baru
+      // B5. escalation ke browser stealth (lokal) untuk mendapat clearance baru
       try {
         const target = origin || new URL(url).origin;
         const solved = await stealthBrowser.solveChallenge(target, { timeoutMs: 25000 });
@@ -535,7 +570,7 @@ export async function telkomRequest(url, options = {}) {
         log("warn", `browser stealth error: ${String(err?.message || err).slice(0, 120)}`);
       }
 
-      // B4. terakhir: jalankan request dari dalam browser (hanya untuk body JSON)
+      // B6. terakhir: jalankan request dari dalam browser (hanya untuk body JSON)
       if (!isForm) {
         try {
           const inPage = await stealthBrowser.inPageFetch(url, {
