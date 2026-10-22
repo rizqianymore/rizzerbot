@@ -1,80 +1,56 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { downloadMediaWithProtectionHandling } from "@/src/services/fetch/webunlock-service.js";
 
 export default {
   name: "ytdlpro",
   cooldownMs: 30000,
-  aliases: ["ytdl", "yt"],
-  description: "Download video/audio YouTube menggunakan engine yt-dlp",
-  usage: "<url> [mp3]",
+  aliases: ["ydl", "youtube-pro"],
+  description: "YouTube Downloader - now with automatic BrightData protection handling",
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping }) => {
+  usage: "<url> [mp3]",
+  run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
-    const url = args[0];
-    if (!url) return reply("Masukkan link YouTube! Contoh: *.ytdl https://youtu.be/xxx*");
+    const url = args[0]?.trim();
+    if (!url || !/^https?:\/\//i.test(url)) {
+      return reply(
+        `*YOUTUBE DOWNLOADER*\n\n` +
+          `Mendownload video/audio dari YouTube dengan otomatis atasi proteksi.\n\n` +
+          `*Penggunaan:*\n` +
+          `• \`.ytdlpro <url>\` (Video)\n` +
+          `• \`.ytdlpro <url> mp3\` (Audio Only)`
+      );
+    }
 
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
 
     try {
-      let buffer = null;
-      let info = null;
-      let viaKolId = false;
+      const result = await downloadMediaWithProtectionHandling(url, {
+        type: isAudio ? "audio" : "video",
+      });
 
-      if (!isAudio) {
-        try {
-          const { downloadYoutube } = await import("@/src/services/fetch/kolid.js");
-          const { fetchBuffer } = await import("@/src/services/network/scrape.js");
-          const yt = await downloadYoutube(url, { maxQuality: "720p" });
-          if (yt?.videoUrl && yt.hasAudio) {
-            const buf = await fetchBuffer(yt.videoUrl, {
-              "User-Agent":
-                "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-              Referer: "https://www.youtube.com/",
-            });
-            if (buf && buf.length < 90 * 1024 * 1024) {
-              buffer = buf;
-              viaKolId = true;
-              info = {
-                title: yt.title,
-                uploader: yt.channelName,
-                duration: yt.duration,
-                quality: yt.quality,
-              };
-            }
-          }
-        } catch (_) {}
-      }
-
-      if (!buffer) {
-        const [meta, dl] = await Promise.all([
-          probe(url, { timeoutMs: 20000 }).catch(() => null),
-          downloadMedia(url, {
-            mode: isAudio ? "audio" : "video",
-            quality: "720",
-          }),
-        ]);
-        info = meta;
-        buffer = dl.buffer;
+      if (!result.buffer || result.buffer.length === 0) {
+        throw new Error("Buffer media kosong");
       }
 
       const lines = ["*YOUTUBE DOWNLOADER*"];
-      if (info?.title) lines.push(`Judul: ${info.title}`);
-      if (info?.uploader || info?.channel) lines.push(`Channel: ${info.uploader || info.channel}`);
-      if (info?.quality) lines.push(`Kualitas: ${info.quality}`);
-      if (viaKolId) lines.push(`Sumber: kol.id`);
-      if (info?.duration) {
-        const mins = Math.floor(info.duration / 60);
-        const secs = Math.floor(info.duration % 60);
+      if (result.info?.title) lines.push(`Judul: ${result.info.title}`);
+      if (result.info?.author) lines.push(`Author: ${result.info.author}`);
+      if (result.info?.duration) {
+        const mins = Math.floor(result.info.duration / 60);
+        const secs = Math.floor(result.info.duration % 60);
         lines.push(`Durasi: ${mins}m ${secs}s`);
       }
+      lines.push(`Engine: ${result.source}`);
       const caption = lines.join("\n");
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
+        result.isAudio
+          ? { audio: result.buffer, mimetype: "audio/mpeg" }
+          : { video: result.buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
     } catch (err) {
-      await reply(`Gagal mendownload: ${err.message}`);
+      await reply(`Gagal mendownload YouTube: ${err.message}`);
     }
   },
 };

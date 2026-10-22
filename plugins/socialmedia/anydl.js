@@ -1,92 +1,52 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { downloadMediaWithProtectionHandling } from "@/src/services/fetch/webunlock-service.js";
 
 export default {
   name: "anydl",
   cooldownMs: 30000,
   aliases: ["yoink", "dl", "down", "get"],
-  description: "Universal Downloader (YouTube, IG, TikTok, X/Twitter, FB, Reddit, dll) via engine Yoinks (yt-dlp)",
-  usage: "<url> [mp3]",
+  description: "Universal Downloader (YouTube, IG, TikTok, X/Twitter, FB, Reddit, dll) - now with automatic BrightData protection handling",
   category: "Social Media",
+  usage: "<url> [mp3]",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args[0]?.trim();
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
-        `*UNIVERSAL DOWNLOADER (YOINKS)*\n\n` +
+        `*UNIVERSAL DOWNLOADER*\n\n` +
           `Mendukung: YouTube, Instagram, TikTok, X (Twitter), Facebook, Threads, Reddit, Vimeo, dll.\n\n` +
           `*Penggunaan:*\n` +
-          `• \`${prefix || "."}dl <url>\` (Video)\n` +
-          `• \`${prefix || "."}dl <url> mp3\` (Audio Only)`
+          `• \`.dl <url>\` (Video)\n` +
+          `• \`.dl <url> mp3\` (Audio Only)`
       );
     }
 
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
 
     try {
-      let buffer = null;
-      let info = null;
-      let sourceName = "";
+      const result = await downloadMediaWithProtectionHandling(url, {
+        type: isAudio ? "audio" : "video",
+      });
 
-      // Coba unduh via engine yt-dlp (Yoinks)
-      try {
-        const [meta, dl] = await Promise.all([
-          probe(url, { timeoutMs: 20000 }).catch((err) => {
-            logger?.warn?.(`[anydl probe] ${err?.message || err}`);
-            return null;
-          }),
-          downloadMedia(url, {
-            mode: isAudio ? "audio" : "video",
-            quality: "720",
-          }),
-        ]);
-        if (dl?.buffer && dl.buffer.length > 0) {
-          buffer = dl.buffer;
-          info = meta;
-          sourceName = "yt-dlp";
-        }
-      } catch (ytdlErr) {
-        logger?.warn?.(`[anydl ytdlp] ${ytdlErr?.message || ytdlErr}`);
-      }
-
-      // Fallback ke SocialDownloader Space API
-      if (!buffer) {
-        try {
-          const { downloadSocialMedia } = await import("@/src/services/fetch/socialdownloader.js");
-          const dl = await downloadSocialMedia(url, { type: isAudio ? "audio" : "video" });
-          if (dl?.buffer && dl.buffer.length > 0) {
-            buffer = dl.buffer;
-            info = {
-              title: dl.info?.title,
-              uploader: dl.info?.author,
-              extractor_key: dl.info?.platform,
-              duration: dl.info?.duration,
-            };
-            sourceName = "SocialDownloader";
-          }
-        } catch (sdlErr) {
-          logger?.warn?.(`[anydl socialdownloader] ${sdlErr?.message || sdlErr}`);
-        }
-      }
-
-      if (!buffer) {
-        throw new Error("Gagal mengunduh media dari semua provider (yt-dlp & SocialDownloader).");
+      if (!result.buffer || result.buffer.length === 0) {
+        throw new Error("Buffer media kosong");
       }
 
       const lines = ["*DOWNLOADER*"];
-      if (info?.extractor_key) lines.push(`Platform: ${info.extractor_key}`);
-      if (info?.title) lines.push(`Judul: ${info.title}`);
-      if (info?.uploader || info?.channel) lines.push(`Author: ${info.uploader || info.channel}`);
-      if (info?.duration) {
-        const mins = Math.floor(info.duration / 60);
-        const secs = Math.floor(info.duration % 60);
+      if (result.info?.title) lines.push(`Judul: ${result.info.title}`);
+      if (result.info?.author) lines.push(`Author: ${result.info.author}`);
+      if (result.info?.duration) {
+        const mins = Math.floor(result.info.duration / 60);
+        const secs = Math.floor(result.info.duration % 60);
         lines.push(`Durasi: ${mins}m ${secs}s`);
       }
-      if (sourceName) lines.push(`Engine: ${sourceName}`);
+      lines.push(`Engine: ${result.source}`);
       const caption = lines.join("\n");
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
+        result.isAudio
+          ? { audio: result.buffer, mimetype: "audio/mpeg" }
+          : { video: result.buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
     } catch (err) {

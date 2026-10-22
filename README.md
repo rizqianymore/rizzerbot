@@ -143,6 +143,50 @@ export default {
 - **File yang diawali `_` (garis bawah) akan dilewati loader** — gunakan untuk helper/modul pendukung di dalam folder plugin.
 - Logika berat sebaiknya diletakkan di `src/services/`, bukan di dalam plugin (plugin harus tipis).
 
+## Downloader & Proteksi (Bright Data)
+
+Semua plugin di `plugins/downloader/` (dan `request.*` di service lain) memakai
+**rantai anti-protection** yang sama. Kalau situs target memproteksi akses
+(Cloudflare, DataDome, Incapsula, Akamai, SafeLine, Sucuri, DDoS-Guard, ...),
+request otomatis naik ke jalur yang lebih andal:
+
+```
+direct -> Web Unlocker (REST) -> native proxy -> browser stealth -> Scraping Browser
+```
+
+| Jalur | Kebutuhan | Keterangan |
+| --- | --- | --- |
+| `direct` | — | Request biasa, paling murah. Dipakai duluan. |
+| `unlocker` | `BRIGHTDATA_API_KEY` | Bright Data Web Unlocker via REST API. |
+| `proxy` | `BRIGHTDATA_CUSTOMER` + `BRIGHTDATA_PROXY_PASSWORD` | Web Unlocker lewat native proxy `brd.superproxy.io:44445`. |
+| `browser` | Chromium/Chrome | Browser stealth (puppeteer) di mesin sendiri. |
+| `scraping-browser` | `BRIGHTDATA_CUSTOMER` + password zone remote | Browser asli di DC BrightData (WS). Paling kuat, paling mahal. |
+
+Aturan penting:
+
+- **404/410 tidak pernah di-eskalasi** — supaya kuota Bright Data tidak terbuang
+  untuk file yang memang tidak ada.
+- **Jalur unlocker hanya dipakai bila ada indikasi proteksi**, jadi request
+  normal tetap gratis.
+- Plugin menampilkan penanda `🛡️ Diambil via ...` kalau sempat naik ke jalur
+  unlocker/browser.
+
+Engine **yt-dlp** punya tangga-nya sendiri:
+
+```
+direct -> Web Unlocker (native proxy) -> cookie clearance (browser / Scraping Browser)
+```
+
+Cookie clearance diambil dari browser yang berhasil melewati challenge, lalu
+dikasih ke yt-dlp lewat `--cookies`.
+
+Perintah tambahan:
+
+- `.webunlock <url>` (alias `.wu`) — downloader media sosial dengan solving
+  proteksi otomatis: SocialDownloader API → rantai unlocker → yt-dlp.
+
+Konfigurasi ada di `.env.example` bagian `BRIGHTDATA_*`.
+
 ## Presensi Telkom Schools
 
 Bot bantu siswa **absen otomatis** di gateway Telkom Schools (DigitS).

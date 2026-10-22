@@ -1,68 +1,14 @@
-import axios from "axios";
-import http from "http";
-import https from "https";
-import { brightDataRequest, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
+import { cookieJar } from "./cookies.js";
 import { getRandomDevice } from "./devices.js";
 import { buildScraperHeaders } from "./headers.js";
-import { cookieJar, isCloudflareChallenge } from "./cookies.js";
 import { stealthBrowser } from "./browser.js";
-
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
+import { protectedFetchWithMeta } from "@/src/services/network/scraper/index.js";
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_BUFFER_MAX_BYTES = 40 * 1024 * 1024;
 
-function brightDataFirstHosts() {
-  return String(process.env.BRIGHTDATA_FIRST_HOSTS || "")
-    .split(",")
-    .map(
-      (h) =>
-        h
-          .trim()
-          .toLowerCase()
-          .replace(/^https?:\/\//i, "")
-          .split("/")[0]
-    )
-    .filter(Boolean);
-}
-
-function resolveVia(url, viaOpt) {
-  if (viaOpt === "direct") return "direct";
-  if (viaOpt === "brightdata") return "brightdata";
-  try {
-    const host = new URL(String(url)).hostname.toLowerCase();
-    if (brightDataFirstHosts().some((h) => host === h || host.endsWith(`.${h}`))) return "brightdata";
-  } catch (_) {}
-  return "auto";
-}
-
-function toBrightDataOptions(url, { method, headers, data, params, timeout, responseType, country, state, city }) {
-  let fullUrl = String(url);
-  if (params && typeof params === "object" && Object.keys(params).length > 0) {
-    const u = new URL(fullUrl);
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null) u.searchParams.set(k, String(v));
-    }
-    fullUrl = u.toString();
-  }
-  const opts = {
-    format: responseType === "json" ? "json" : "raw",
-    binary: responseType === "buffer",
-    method,
-    timeout,
-  };
-  if (headers && Object.keys(headers).length > 0) opts.headers = { ...headers };
-  if (data !== undefined) opts.data = data;
-  if (country) opts.country = country;
-  if (state) opts.state = state;
-  if (city) opts.city = city;
-  return { fullUrl, opts };
-}
-
-const TRANSIENT_STATUS = new Set([408, 429, 502, 503, 504]);
-
 const inflight = new Map();
+
 function dedupKey(url, { responseType, via, bypassCloudflare, country, state, city, params }) {
   let full = String(url);
   try {
@@ -79,20 +25,24 @@ function dedupKey(url, { responseType, via, bypassCloudflare, country, state, ci
   );
 }
 
+/**
+ * Request HTTP dengan rantai anti-protection otomatis.
+ *
+ * Jalur yang dicoba berurutan (lihat `src/services/network/scraper/`):
+ *   direct -> Web Unlocker (REST) -> native proxy -> browser stealth -> Scraping Browser
+ *
+ * Opsi penting:
+ *   - `via`: "auto" | "direct" | "brightdata" | "browser"
+ *   - `bypassCloudflare`: "auto" | true | false
+ *   - `onVia`: callback(wia) saat jalur yang dipakai diketahui
+ */
 export async function smartRequest(url, options = {}) {
   const method = (options.method || "GET").toUpperCase();
   const responseType = options.responseType || "json";
   const timeout = options.timeout || DEFAULT_TIMEOUT_MS;
-  const retries = options.retries !== undefined ? options.retries : 2;
   const bypassCloudflare = options.bypassCloudflare !== undefined ? options.bypassCloudflare : "auto";
   const preferredDevice = options.preferredDevice || "any";
   const onVia = typeof options.onVia === "function" ? options.onVia : null;
-  const via = resolveVia(url, options.via);
-  const report = (v) => {
-    try {
-      onVia?.(v);
-    } catch (_) {}
-  };
 
   const device = getRandomDevice(preferredDevice);
   const defaultHeaders = buildScraperHeaders(device);
@@ -104,101 +54,17 @@ export async function smartRequest(url, options = {}) {
     ...(options.headers || {}),
   };
 
-  const hasBrightData = isBrightDataEnabled();
-  let brightDataTried = false;
-
-  const tryBrightData = async () => {
-    const envCountry = String(process.env.BRIGHTDATA_COUNTRY || "").trim() || undefined;
-    const { fullUrl, opts } = toBrightDataOptions(url, {
-      method,
-      headers,
-      data: options.data,
-      params: options.params,
-      timeout,
-      responseType,
-      country: options.country || envCountry,
-      state: options.state,
-      city: options.city,
-    });
-    const bdResult = await brightDataRequest(fullUrl, opts);
-    if (responseType === "buffer") return Buffer.from(bdResult);
-    return bdResult;
-  };
-
-  if (via === "brightdata" && hasBrightData) {
-    brightDataTried = true;
-    try {
-      const bdFirst = await tryBrightData();
-      report("brightdata");
-      return bdFirst;
-    } catch (_bdFirstErr) {}
-  }
-
-  if (bypassCloudflare === true) {
-    if (hasBrightData) {
-      brightDataTried = true;
-      try {
-        const bdData = await tryBrightData();
-        report("brightdata");
-        return bdData;
-      } catch (_bdErr) {}
-    }
-
-    if (responseType === "json") {
-      const inPage = await stealthBrowser.inPageFetch(url, {
-        method,
-        headers: options.headers,
-        body: options.data,
-      });
-      report("browser");
-      return inPage;
-    }
-    if (responseType === "buffer") {
-      await stealthBrowser.solveChallenge(url, {
-        timeoutMs: timeout,
-        preferredDevice,
-      });
-      const res = await axios({
-        url,
-        method,
-        headers,
-        timeout,
-        httpAgent,
-        httpsAgent,
-        responseType: "arraybuffer",
-        validateStatus: () => true,
-      });
-      if (res.headers?.["set-cookie"]) {
-        cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
-      }
-      if (res.status >= 200 && res.status < 300) {
-        report("direct");
-        return Buffer.from(res.data);
-      }
-      throw new Error(`HTTP ${res.status} saat mengunduh buffer ${url}`);
-    }
-    const solved = await stealthBrowser.solveChallenge(url, {
-      timeoutMs: timeout,
-      preferredDevice,
-    });
-    report("browser");
-    return solved.content;
-  }
-
-  let attempt = 0;
-  let lastError = null;
-
   const canDedup =
     method === "GET" &&
     (responseType === "json" || responseType === "text") &&
     options.dedup !== false &&
     options.data === undefined &&
     bypassCloudflare === "auto" &&
-    via !== "brightdata";
+    options.via !== "brightdata";
   const key = canDedup
     ? dedupKey(url, {
         responseType,
-        via,
+        via: options.via,
         bypassCloudflare,
         country: options.country,
         state: options.state,
@@ -209,139 +75,25 @@ export async function smartRequest(url, options = {}) {
   if (key && inflight.has(key)) return inflight.get(key);
 
   const run = (async () => {
-    while (attempt <= retries) {
-      attempt++;
-      report("direct");
-      try {
-        const axiosConfig = {
-          url,
-          method,
-          headers,
-          params: options.params,
-          data: options.data,
-          timeout,
-          httpAgent,
-          httpsAgent,
-          responseType: responseType === "buffer" ? "arraybuffer" : responseType,
-          validateStatus: () => true,
-        };
-        if (responseType === "buffer") {
-          axiosConfig.maxContentLength = options.maxBytes || DEFAULT_BUFFER_MAX_BYTES;
-        }
-
-        const res = await axios(axiosConfig);
-
-        if (res.headers && res.headers["set-cookie"]) {
-          cookieJar.addCookiesFromHeader(url, res.headers["set-cookie"]);
-        }
-
-        const isChallenge = isCloudflareChallenge(
-          res.status,
-          res.headers,
-          typeof res.data === "string" ? res.data : ""
-        );
-
-        if (isChallenge) {
-          if (bypassCloudflare === false) {
-            throw new Error(`Protection challenge detected (HTTP ${res.status}) and bypass is disabled.`);
-          }
-
-          if (hasBrightData && via !== "direct") {
-            brightDataTried = true;
-            try {
-              const bdResult = await tryBrightData();
-              report("brightdata");
-              if (responseType === "buffer") {
-                return Buffer.from(bdResult);
-              }
-              return bdResult;
-            } catch (_) {}
-          }
-
-          const solved = await stealthBrowser.solveChallenge(url, {
-            timeoutMs: timeout,
-            preferredDevice,
-          });
-
-          if (!solved.cleared) {
-            if (hasBrightData && via !== "direct") {
-              brightDataTried = true;
-              try {
-                const bdLast = await tryBrightData();
-                report("brightdata");
-                if (responseType === "buffer") return Buffer.from(bdLast);
-                return bdLast;
-              } catch (_) {}
-            }
-            throw new Error(`Protection challenge not cleared after timeout on ${url}`);
-          }
-
-          const refreshedCookies = cookieJar.getCookieString(url);
-          headers.Cookie = refreshedCookies;
-
-          if (responseType === "json") {
-            try {
-              const inPage = await stealthBrowser.inPageFetch(url, {
-                method,
-                headers: options.headers,
-                body: options.data,
-              });
-              report("browser");
-              return inPage;
-            } catch (_) {}
-          }
-
-          const secondRes = await axios({
-            ...axiosConfig,
-            headers,
-          });
-
-          if (responseType === "buffer") {
-            return Buffer.from(secondRes.data);
-          }
-          return secondRes.data;
-        }
-
-        if (res.status >= 400) {
-          const errBody = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data).slice(0, 300);
-          throw new Error(`HTTP ${res.status}: ${errBody}`);
-        }
-
-        if (responseType === "buffer") {
-          return Buffer.from(res.data);
-        }
-        return res.data;
-      } catch (err) {
-        lastError = err;
-        const statusMatch = String(err?.message || "").match(/HTTP (\d{3})/);
-        const statusCode = statusMatch ? Number(statusMatch[1]) : 0;
-        const isTransient =
-          err.code === "ECONNRESET" ||
-          err.code === "ETIMEDOUT" ||
-          err.code === "ECONNABORTED" ||
-          err.message?.includes("timeout") ||
-          TRANSIENT_STATUS.has(statusCode);
-
-        if (isTransient && attempt <= retries) {
-          await new Promise((r) => setTimeout(r, 800 * attempt));
-          continue;
-        }
-
-        if (hasBrightData && via !== "direct" && bypassCloudflare !== false && !brightDataTried) {
-          brightDataTried = true;
-          try {
-            const bdFallback = await tryBrightData();
-            report("brightdata");
-            return bdFallback;
-          } catch (bdErr) {
-            lastError = bdErr;
-          }
-        }
-        break;
-      }
-    }
-
-    throw lastError;
+    const result = await protectedFetchWithMeta(url, {
+      method,
+      headers,
+      data: options.data,
+      params: options.params,
+      timeout,
+      responseType,
+      retries: options.retries,
+      maxBytes: options.maxBytes || DEFAULT_BUFFER_MAX_BYTES,
+      country: options.country,
+      state: options.state,
+      city: options.city,
+      via: options.via,
+      bypassCloudflare,
+      preferredDevice,
+      onVia,
+      onAttempt: options.onAttempt,
+    });
+    return result.data;
   })();
 
   if (!key) return run;

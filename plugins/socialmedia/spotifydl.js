@@ -1,63 +1,51 @@
-import axios from "axios";
+import { downloadMediaWithProtectionHandling } from "@/src/services/fetch/webunlock-service.js";
 
 export default {
   name: "spotifydl",
   cooldownMs: 30000,
-  aliases: ["spdl", "spotify", "spotdl", "spotify-dl"],
-  description: "Unduh lagu dari Spotify",
-  usage: "<url>",
+  aliases: ["spotify"],
+  description: "Spotify Downloader - now with automatic BrightData protection handling",
   category: "Social Media",
+  usage: "<url>",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
-    const text = args[0]?.trim();
-    const currentPrefix = prefix || ".";
-
-    if (!text || !/open\.spotify\.com\/track/i.test(text)) {
+    const url = args[0]?.trim();
+    if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
         `*SPOTIFY DOWNLOADER*\n\n` +
-          `Masukkan link track Spotify yang valid.\n\n` +
-          `*Contoh:*\n` +
-          `\`${currentPrefix}spdl https://open.spotify.com/track/3RY0NyQQXxuAiyk5eAS4fC\``
+          `Mendownload dari Spotify dengan otomatis atasi proteksi.\n\n` +
+          `*Penggunaan:*\n` +
+          `• \`.spotifydl <url>\` - Unduh dari Spotify`
       );
     }
 
     try {
-      const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
-      let data = null;
-      try {
-        const res = await axios.get(apiUrl, { timeout: 25000 });
-        data = res.data;
-      } catch (err) {
-        logger?.warn?.(`[spotifydl nexray] ${err?.message || err}`);
-        try {
-          const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
-          if (getBrightDataConfig().apiKey) {
-            data = await brightDataRequest(apiUrl, { format: "json", timeout: 35000 });
-          }
-        } catch (_) {}
+      const result = await downloadMediaWithProtectionHandling(url, {
+        type: "video",
+      });
+
+      if (!result.buffer || result.buffer.length === 0) {
+        throw new Error("Buffer media kosong");
       }
 
-      if (!data || !data.status || !data.result || !data.result.url) {
-        return reply("Gagal mengambil lagu. Server penyedia tidak memberikan tautan unduhan yang valid.");
+      const lines = ["*SPOTIFY DOWNLOADER*"];
+      if (result.info?.title) lines.push(`Judul: ${result.info.title}`);
+      if (result.info?.author) lines.push(`Author: ${result.info.author}`);
+      if (result.info?.duration) {
+        const mins = Math.floor(result.info.duration / 60);
+        const secs = Math.floor(result.info.duration % 60);
+        lines.push(`Durasi: ${mins}m ${secs}s`);
       }
-
-      const { title, artist, url } = data.result;
-      const filename = `${artist || "Spotify"} - ${title || "Audio"}.mp3`;
-      const remoteJid = msg.key.remoteJid;
+      lines.push(`Engine: ${result.source}`);
+      const caption = lines.join("\n");
 
       await sock.sendMessage(
-        remoteJid,
-        {
-          audio: { url },
-          mimetype: "audio/mpeg",
-          fileName: filename,
-          ptt: false,
-        },
+        msg.key.remoteJid,
+        { video: result.buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
-    } catch (error) {
-      logger?.warn?.(`[spotifydl] ${error.message}`);
-      await reply(`Terjadi kesalahan saat memproses tautan Spotify: ${error.message}`);
+    } catch (err) {
+      await reply(`Gagal mendownload Spotify: ${err.message}`);
     }
   },
 };

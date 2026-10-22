@@ -1,5 +1,6 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { downloadMedia, probe } from "@/src/services/fetch/ytdlp/index.js";
 import { request } from "@/src/utils/request.js";
+import { describeVia } from "@/src/services/network/scraper/report.js";
 
 const UA =
   "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36";
@@ -36,6 +37,7 @@ export default {
     const url = (args[0] || "").trim();
     const currentPrefix = prefix || ".";
     const remoteJid = msg.key.remoteJid;
+    const usedVias = [];
 
     if (!url || !/^https?:\/\//i.test(url) || !/(pin\.it|pinterest\.[a-z.]+)\//i.test(url)) {
       return reply(
@@ -48,7 +50,11 @@ export default {
     }
 
     try {
-      const info = await probe(url, { timeoutMs: 45000 }).catch((err) => {
+      const info = await probe(url, {
+        timeoutMs: 45000,
+        logger,
+        onVia: (via) => usedVias.push(via),
+      }).catch((err) => {
         logger?.warn?.(`[pindl probe] ${err?.message || err}`);
         return null;
       });
@@ -62,12 +68,19 @@ export default {
       const lines = ["*PINTEREST DOWNLOADER*"];
       if (title) lines.push(`Judul: ${title}`);
       if (uploader) lines.push(`Pembuat: ${uploader}`);
-      const caption = lines.join("\n");
 
       if (isVideoInfo(info)) {
         await sendTyping();
-        const dl = await downloadMedia(url, { mode: "video", quality: "1080" });
+        const dl = await downloadMedia(url, {
+          mode: "video",
+          quality: "1080",
+          logger,
+          onVia: (via) => usedVias.push(via),
+        });
         if (!dl?.buffer?.length) throw new Error("Video Pinterest kosong / gagal diunduh.");
+
+        const unlockerVia = usedVias.find((via) => via !== "direct");
+        if (unlockerVia) lines.push(`🛡️ Diambil via ${describeVia(unlockerVia)}`);
 
         await sock.sendMessage(
           remoteJid,
@@ -75,7 +88,7 @@ export default {
             video: dl.buffer,
             mimetype: "video/mp4",
             fileName: `Pinterest_${Date.now()}.mp4`,
-            caption,
+            caption: lines.join("\n"),
           },
           { quoted: msg }
         );
@@ -86,6 +99,8 @@ export default {
       if (!imageUrl) throw new Error("URL gambar Pinterest tidak ditemukan.");
 
       await sendTyping();
+      // Memakai request.buffer -> otomatis naik ke Web Unlocker / Scraping Browser
+      // bila CDN Pinterest memblokir dengan proteksi.
       const buffer = await request.buffer(imageUrl, {
         timeout: 60000,
         maxBytes: 25 * 1024 * 1024,
@@ -94,10 +109,14 @@ export default {
           Referer: "https://www.pinterest.com/",
           Accept: "image/avif,image/webp,image/*,*/*;q=0.8",
         },
+        onVia: (via) => usedVias.push(via),
       });
       if (!buffer?.length) throw new Error("Gambar Pinterest kosong / gagal diunduh.");
 
-      await sock.sendMessage(remoteJid, { image: buffer, caption }, { quoted: msg });
+      const unlockerVia = usedVias.find((via) => via !== "direct");
+      if (unlockerVia) lines.push(`🛡️ Diambil via ${describeVia(unlockerVia)}`);
+
+      await sock.sendMessage(remoteJid, { image: buffer, caption: lines.join("\n") }, { quoted: msg });
     } catch (err) {
       logger?.warn?.(`[pindl] ${err?.message || err}`);
       await reply(`Gagal mengunduh Pinterest: ${err?.message || "Media tidak ditemukan atau link privat."}`);

@@ -13,6 +13,7 @@
     "update": "bash scripts/update.sh",
     "test": "node scripts/smoke.js",
     "test:telkom": "node scripts/smoke-telkom.js",
+    "probe:unlock": "node scripts/probe-unlock.js",
     "telkom:env": "node scripts/telkom-env.js",
     "telkom:net": "node scripts/telkom-net.js",
     "telkom:live": "node scripts/telkom-live.js",
