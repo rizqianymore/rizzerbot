@@ -184,7 +184,7 @@ async function maybeSubmit({
         message: message.slice(0, 120),
         window: window.window,
         distance,
-        hadQr: Boolean(qrPayload || extractQrPayload(parsed, kind)),
+        hadQr: Boolean(qrForSubmit),
         time: submittedAt,
       };
     } catch (err) {
@@ -197,8 +197,7 @@ async function maybeSubmit({
         window: window.window,
         hadQr: Boolean(qrPayload || extractQrPayload(parsed, kind)),
         time: wibParts().time,
-      };
-    }
+      };    }
   }
 
   if (alreadyRecorded) return { attempted: false, reason: "already_recorded" };
@@ -382,10 +381,15 @@ export async function runAttendanceFlow({
     step = "submit presensi";
     //    Lokasi: lokasi asli siswa, atau koordinat sekolah (default) supaya
     //    ".telkom <nis>" langsung bisa absen tanpa langkah tambahan.
+    //    Mode auto-QR tanpa lokasi selalu ditolak server ("QR tidak valid"),
+    //    jadi auto-QR otomatis memakai koordinat sekolah.
     const school = schoolInfo();
     let effectiveLocation = location;
-    if (!effectiveLocation && useSchoolLocation()) {
+    if (!effectiveLocation && (useSchoolLocation() || autoQrEnabled())) {
       effectiveLocation = { latitude: school.latitude, longitude: school.longitude };
+      if (!useSchoolLocation()) {
+        logger?.info?.("[Telkom] auto-QR aktif -> memakai koordinat sekolah (lokasi wajib)");
+      }
     }
 
     const submit = await maybeSubmit({

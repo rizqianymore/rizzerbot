@@ -41,6 +41,9 @@ const DEFAULTS = [
 ];
 
 // Key yang wajib diisi manual (nilainya gw tidak bisa tebak).
+// Policy auto-absen: sering berubah default -> bisa disinkronkan (--sync).
+const POLICY = ["TELKOM_USE_SCHOOL_LOCATION", "TELKOM_AUTO_QR"];
+
 const MANUAL = [
   ["BRIGHTDATA_CUSTOMER", "contoh: hl_66a04297"],
   ["BRIGHTDATA_PROXY_PASSWORD", "password proxy dari dashboard BrightData"],
@@ -133,27 +136,52 @@ function apply() {
     console.log("❌ .env belum ada. Buat dulu (minimal berisi konfigurasi bot lain).");
     process.exit(1);
   }
-  if (!missing.length && !missingManual.length) {
+
+  // --sync: samakan policy auto-absen dengan default terbaru.
+  const sync = process.argv.includes("--sync");
+  const changed = [];
+  if (sync) {
+    for (const [key, value] of DEFAULTS.filter(([key]) => POLICY.includes(key))) {
+      const current = keys.get(key);
+      if (current !== undefined && current !== value) {
+        changed.push({ key, from: current, to: value });
+      }
+    }
+  }
+
+  if (!missing.length && !missingManual.length && !changed.length) {
     console.log("✅ Semua key sudah ada di .env — tidak ada yang diubah.");
     return;
   }
 
-  const block = [
-    "",
-    "# --- Telkom Schools / DigitS (presensi siswa, auto-scan QR) ---",
-    "# Password: pakai vault per siswa, atau pola password sekolah (opsional).",
-    ...missing.map(([key, value]) => `${key}=${value}`),
-    "",
-    "# --- Bright Data Scraping Browser (remote browser, bypass Cloudflare) ---",
-    "# Isi salah satu: BRIGHTDATA_SCRAPING_BROWSER_WS (1 baris) ATAU 3 baris di bawah.",
-    ...missingManual.map(([key, hint]) => `# ${key}=  <- ${hint}`),
-    "",
-  ].join("\n");
+  let content = text;
+  if (missing.length || missingManual.length) {
+    content += [
+      "",
+      "# --- Telkom Schools / DigitS (presensi siswa, auto-scan QR) ---",
+      "# Password: pakai vault per siswa, atau pola password sekolah (opsional).",
+      ...missing.map(([key, value]) => `${key}=${value}`),
+      "",
+      "# --- Bright Data Scraping Browser (remote browser, bypass Cloudflare) ---",
+      "# Isi salah satu: BRIGHTDATA_SCRAPING_BROWSER_WS (1 baris) ATAU 3 baris di bawah.",
+      ...missingManual.map(([key, hint]) => `# ${key}=  <- ${hint}`),
+      "",
+    ].join("\n");
+  }
+  for (const item of changed) {
+    content = content.replace(new RegExp(`^${item.key}=.*$`, "m"), `${item.key}=${item.to}`);
+  }
+  fs.writeFileSync(ENV_FILE, content, "utf8");
 
-  fs.appendFileSync(ENV_FILE, block, "utf8");
-  console.log(`✅ ${missing.length + missingManual.length} key ditambahkan ke .env:`);
-  for (const [key] of missing) console.log(`   - ${key}`);
-  for (const [key] of missingManual) console.log(`   - ${key}  (ISI MANUAL)`);
+  if (missing.length || missingManual.length) {
+    console.log(`✅ ${missing.length + missingManual.length} key ditambahkan ke .env:`);
+    for (const [key] of missing) console.log(`   - ${key}`);
+    for (const [key] of missingManual) console.log(`   - ${key}  (ISI MANUAL)`);
+  }
+  if (changed.length) {
+    console.log("🔄 Policy auto-absen disinkronkan:");
+    for (const item of changed) console.log(`   - ${item.key}: ${item.from} -> ${item.to}`);
+  }
   console.log("");
   if (missingManual.length) {
     console.log("⚠️  Yang perlu lo isi manual:");
