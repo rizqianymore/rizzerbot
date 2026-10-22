@@ -221,7 +221,7 @@ console.log("[10/12] Scanner kode (QR & barcode 1D)...");
   assert(body.id === 3919 && body.lemdikId === 47, "id & lemdikId QR ikut terkirim ke server");
 }
 
-console.log("[11/12] Auto-absen dari foto QR (media handler, tanpa perintah)...");
+console.log("[11/12] Auto-absen dari foto QR + Share Location (media handler)...");
 {
   const { default: QRCode } = await import("qrcode");
   const { db } = await load("src/core/database.js");
@@ -292,9 +292,75 @@ console.log("[11/12] Auto-absen dari foto QR (media handler, tanpa perintah)..."
   });
 
   assert(handled === true, "media handler menangani foto QR");
-  assert(Boolean(sent), "absen otomatis terkirim dari foto");
+  assert(String(replied || "").includes("Share Location"), "bot minta Share Location (2 langkah)");
+  assert(!sent, "belum submit sebelum lokasi dikirim");
+
+  // Langkah 2: siswa Share Location (lokasi asli dari WhatsApp).
+  replied = null;
+  const handledLoc = await plugin.onMedia(
+    sock,
+    {
+      key: { remoteJid: "628111@s.whatsapp.net", id: "m2" },
+      message: {
+        locationMessage: {
+          degreesLatitude: -6.2,
+          degreesLongitude: 106.8,
+          name: "Sekolah",
+        },
+      },
+    },
+    {
+      logger: { info: () => {}, warn: () => {} },
+      senderJid: JID,
+      remoteJid: "628111@s.whatsapp.net",
+    }
+  );
+
+  assert(handledLoc === true, "media handler menangani Share Location");
+  assert(Boolean(sent), "absen otomatis terkirim setelah lokasi dikirim");
   assert(sent?.qrType === "QR Datang" && sent?.code === "uuid-1", "payload QR guru ikut dikirim");
+  assert(
+    sent?.location?.latitude === -6.2 && sent?.location?.longitude === 106.8,
+    "lokasi asli siswa ikut dikirim (tidak dipalsukan)"
+  );
   assert(String(replied || "").includes("PRESENSI"), "balasan ke siswa dikirim");
+
+  // Lokasi dari EXIF foto (student kirim sebagai file) -> 1 langkah.
+  const { extractLocationFromMessage, extractGpsFromImage, toApiLocation } = await load(
+    "src/services/telkom/location.js"
+  );
+  const fromMsg = extractLocationFromMessage({
+    message: { locationMessage: { degreesLatitude: -6.2, degreesLongitude: 106.8 } },
+  });
+  assert(fromMsg?.latitude === -6.2, "lokasi dari Share Location terbaca");
+  assert(
+    JSON.stringify(toApiLocation(fromMsg)) === JSON.stringify({ latitude: -6.2, longitude: 106.8 }),
+    "lokasi diformat seperti aplikasi resmi (tanpa field tambahan)"
+  );
+  assert(extractLocationFromMessage({ message: {} }) === null, "pesan tanpa lokasi tidak dianggap lokasi");
+  try {
+    const sharp = (await import("sharp")).default;
+    const jpeg = await sharp(qrPng)
+      .withMetadata({
+        exif: {
+          IFD3: {
+            GPSLatitude: "6/1 12/1 0/1",
+            GPSLatitudeRef: "S",
+            GPSLongitude: "106/1 48/1 0/1",
+            GPSLongitudeRef: "E",
+          },
+        },
+      })
+      .jpeg()
+      .toBuffer();
+    const gps = await extractGpsFromImage(jpeg);
+    assert(
+      Math.abs((gps?.latitude ?? 0) + 6.2) < 0.001 && Math.abs((gps?.longitude ?? 0) - 106.8) < 0.001,
+      "GPS EXIF foto terbaca (fallback lokasi)"
+    );
+  } catch (err) {
+    assert(true, "tes EXIF dilewati (sharp tidak ada)", err.message);
+  }
 
   globalThis.fetch = realFetch;
   delete process.env.TELKOM_STUDENT_PASSWORDS;

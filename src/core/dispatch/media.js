@@ -13,7 +13,9 @@ export async function runMediaHandlers(sock, msg, logger) {
   if (!mediaHandlers.size) return false;
 
   const message = msg?.message || {};
-  const hasMedia = Boolean(message.imageMessage || message.documentMessage || message.videoMessage);
+  const hasMedia = Boolean(
+    message.imageMessage || message.documentMessage || message.videoMessage || message.locationMessage
+  );
   if (!hasMedia) return false;
 
   const senderJid = resolveSenderJid(msg);

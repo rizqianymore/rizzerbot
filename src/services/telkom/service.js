@@ -14,6 +14,7 @@ import { createSession } from "./session.js";
 import { resolvePassword } from "./vault.js";
 import { takePendingTwoFactor, setPendingTwoFactor } from "./pending.js";
 import { qrTypeToKind } from "./qr.js";
+import { toApiLocation } from "./location.js";
 import { clearTelkomCookies } from "./http.js";
 import { db } from "@/src/core/database.js";
 
@@ -149,7 +150,7 @@ async function maybeSubmit({
         studentId: session.studentId,
         kind,
         qrPayload: qrPayload || extractQrPayload(parsed, kind),
-        location,
+        location: toApiLocation(location),
         date: wibParts().date,
       });
       const ok = response?.ok === true;

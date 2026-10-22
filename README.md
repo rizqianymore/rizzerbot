@@ -163,7 +163,7 @@ whitelist, tidak perlu set endpoint, tidak perlu atur jam absen.
 > terlihat di riwayat chat**. Kalau mau lebih aman, minta admin simpan password
 > di vault — setelah itu cukup `.telkom <nis>` tanpa mengetik password.
 
-### Auto-scan QR / barcode (tanpa perintah)
+### Auto-scan QR / barcode + lokasi (tanpa perintah)
 
 Siswa **cukup kirim foto QR yang ditampilkan guru** ke bot — tanpa ngetik
 perintah apa pun. Bot akan:
@@ -171,14 +171,20 @@ perintah apa pun. Bot akan:
 1. scan kode di foto (QR **dan** barcode 1D, via `zxing-wasm` + `jsQR`; aman
    untuk foto kecil/blur/screenshot),
 2. cari NIS yang terikat ke akun WhatsApp pengirim,
-3. login (password dari vault), kirim presensi memakai QR asli,
-4. balas ringkasan ke siswa.
+3. minta **Share Location** (lokasi asli dari WhatsApp) — atau otomatis ambil
+   GPS EXIF foto kalau siswa mengirimnya sebagai _file_,
+4. login (password dari vault), kirim presensi pakai QR asli + lokasi asli,
+5. balas ringkasan ke siswa.
 
 Kalau password-nya belum ada di vault, bot minta: `.telkom <nis> <password>`.
 Syaratnya: NIS sudah pernah dipakai 1x (otomatis terikat ke akun itu).
 
-> Cara ini persis alur aplikasi resmi: QR guru yang menentukan presensi apa
-> yang tercatat, bukan tebakan bot.
+> **Lokasi tidak pernah dipalsukan.** Bot memakai koordinat asli siswa (Share
+> Location WhatsApp atau GPS EXIF foto). Kalau lokasi tidak tersedia, presensi
+> tetap dikirim tanpa lokasi dan server sekolah yang memvalidasi radiusnya.
+
+> Cara ini persis alur aplikasi resmi: QR guru + lokasi asli siswa yang
+> menentukan presensi apa yang tercatat, bukan tebakan bot.
 
 Syarat & aturan:
 
