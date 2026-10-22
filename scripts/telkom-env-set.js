@@ -48,7 +48,13 @@ const values = {
   BRIGHTDATA_SCRAPING_BROWSER_ZONE: "scraping_browser1",
   BRIGHTDATA_SCRAPING_BROWSER_HOST: "brd.superproxy.io",
   BRIGHTDATA_SCRAPING_BROWSER_PORT: "9222",
-  ...(browserPassword ? { BRIGHTDATA_SCRAPING_BROWSER_PASSWORD: browserPassword } : {}),
+  ...(browserPassword
+    ? {
+        BRIGHTDATA_SCRAPING_BROWSER_PASSWORD: browserPassword,
+        // Tulis endpoint WS eksplisit supaya tidak salah zone/password.
+        BRIGHTDATA_SCRAPING_BROWSER_WS: `wss://brd-customer-${customer}-zone-scraping_browser1:${browserPassword}@brd.superproxy.io:9222`,
+      }
+    : {}),
   // --- Browser stealth: hemat RAM ---
   BROWSER_IDLE_MS: "30000",
   BROWSER_MAX_OLD_SPACE_MB: "192",

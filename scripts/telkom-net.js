@@ -111,6 +111,36 @@ try {
   console.log("  -> cek BRIGHTDATA_CUSTOMER / BRIGHTDATA_ZONE / BRIGHTDATA_PROXY_PASSWORD");
 }
 
+// Tes apakah native proxy meneruskan header Authorization (kritis buat API).
+try {
+  const { proxyRequest } = await import("../src/services/telkom/proxy.js");
+  const form = new FormData();
+  form.append("username", "539241249");
+  form.append("password", "dummy@539241249");
+  const login = await proxyRequest("https://gateway.ypt.or.id/telkomschool/student/issueauth/web", {
+    method: "POST",
+    headers: { "User-Agent": "curl/8.5.0", Accept: "application/json" },
+    body: form,
+    isForm: true,
+    timeoutMs: 25000,
+  });
+  const token = login?.data?.token;
+  console.log(`\nproxy login    : status ${login.status} | token: ${token ? "didapat" : "TIDAK didapat"}`);
+  if (token) {
+    const api = await proxyRequest("https://gw-digits.telkomschools.sch.id/api/read/7b566720a8dd41916b2d3f565f57f42b", {
+      method: "GET",
+      headers: { "User-Agent": "curl/8.5.0", Accept: "application/json", Authorization: `Bearer ${token}` },
+      timeoutMs: 25000,
+    });
+    const ok = api.status !== 401 && api.status !== 403;
+    console.log(
+      `proxy API+token: status ${api.status} -> ${ok ? "Authorization DITERUSKAN ✓" : "Authorization TIDAK diteruskan (proxy stripping) ✗"}`
+    );
+  }
+} catch (err) {
+  console.log(`\nproxy tes      : GAGAL -> ${String(err?.message || err).slice(0, 150)}`);
+}
+
 if (process.argv.includes("--browser")) {
   console.log("\nTes remote browser (pakai kuota BrightData)...");
   const { remoteSolveChallenge } = await import("../src/services/telkom/remote-browser.js");
