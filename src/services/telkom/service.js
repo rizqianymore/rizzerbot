@@ -9,7 +9,7 @@ import {
   parseAttendanceStatus,
   wibParts,
 } from "./attendance.js";
-import { audit, getConsent, isConsented, maskNis, quotaStatus, recordUsage } from "./registry.js";
+import { audit, getConsent, isConsented, maskNis, quotaStatus, recordUsage, setConsent } from "./registry.js";
 import { createSession } from "./session.js";
 import { resolvePassword } from "./vault.js";
 import { takePendingTwoFactor, setPendingTwoFactor } from "./pending.js";
@@ -28,11 +28,13 @@ const TOTAL_TIMEOUT_MS = 60000;
 
 const USER_MESSAGES = {
   invalid_nis: "❌ Format NIS tidak valid (5-15 digit angka).",
-  not_consented: "ℹ️ NIS ini belum terdaftar atau belum ada consent.\nHubungi admin untuk aktivasi.",
+  not_consented:
+    "ℹ️ NIS ini belum terdaftar di vault admin.\nCukup ketik: `{prefix}telkom <nis> <password>` untuk absen sendiri.",
   nis_bound_other: "❌ NIS ini terdaftar pada akun lain. Hubungi admin.",
   quota_exceeded: "⏳ Kuota presensi harian sudah habis. Coba lagi besok.",
-  missing_credential: "🔑 Kredensial siswa belum tersedia di vault. Hubungi admin.",
-  auth_failed: "❌ Login ditolak gateway (NIS/password tidak cocok).",
+  missing_credential:
+    "🔑 Password belum tersedia.\nKetik: `{prefix}telkom <nis> <password>` atau minta admin menyimpannya di vault.",
+  auth_failed: "❌ Login ditolak gateway.\nCek NIS & password akunmu sendiri ya.",
   timeout: "⏱️ Timeout saat menghubungi server Telkom Schools. Coba lagi.",
   network: "🌐 Gagal terhubung ke server Telkom Schools. Coba lagi nanti.",
   status_failed: "⚠️ Gagal membaca status presensi. Coba lagi sebentar.",
@@ -90,35 +92,51 @@ function mapError(err) {
 }
 
 /**
- * Decide & perform submit presensi.
- * Syarat: consent autoSubmit, dalam window resmi, dan belum absen hari ini (idempoten).
+ * Decide & perform submit presensi (mode otomatis).
+ *
+ * Aturan:
+ * - submit hanya bila BELUM absen hari ini (idempoten, dicek ke server);
+ * - jenis yang didahulukan: yang jendela absennya sedang aktif;
+ * - server sekolah yang memutuskan (di luar jam absen tetap ditolak server)
+ *   — bot tidak pernah memalsukan jawaban.
  *
  * `qrPayload` = isi QR guru (dari foto / tempelan siswa). Bila ada, jenis
  * presensi mengikuti tipe QR tersebut (mis. "QR Datang" -> datang).
  */
-async function maybeSubmit({ nis, session, parsed, consent, allowSubmit, logger, location, qrPayload = null }) {
+async function maybeSubmit({
+  nis,
+  session,
+  parsed,
+  consent,
+  allowSubmit,
+  logger,
+  location,
+  qrPayload = null,
+  selfService = false,
+}) {
   if (!allowSubmit) return { attempted: false, reason: "read_only" };
-  if (consent?.autoSubmit === false) return { attempted: false, reason: "auto_submit_disabled" };
+  if (!selfService && consent?.autoSubmit === false) {
+    return { attempted: false, reason: "auto_submit_disabled" };
+  }
   if (!parsed?.ok) return { attempted: false, reason: "status_unavailable" };
 
   const qrKind = qrPayload?.type ? qrTypeToKind(qrPayload.type) : null;
   const kinds = qrKind ? [qrKind] : ["datang", "pulang"];
 
-  let outsideWindow = false;
+  // Urutan submit: jenis dengan jendela absen aktif didahulukan.
+  const ordered = kinds
+    .map((kind) => ({ kind, window: checkWindow(kind) }))
+    .sort((a, b) => Number(b.window.allowed) - Number(a.window.allowed));
+
   let alreadyRecorded = false;
 
-  for (const kind of kinds) {
+  for (const { kind, window } of ordered) {
     if (isRecorded(parsed.entries, kind)) {
       alreadyRecorded = true;
       continue;
     }
 
     const isDaily = kind === "datang" || kind === "pulang";
-    const window = isDaily ? checkWindow(kind) : { allowed: true, window: null };
-    if (isDaily && !window.allowed) {
-      outsideWindow = true;
-      continue;
-    }
     if (!isDaily && !qrPayload) {
       // Presensi mapel/kegiatan wajib memakai QR asli dari guru.
       continue;
@@ -167,9 +185,8 @@ async function maybeSubmit({ nis, session, parsed, consent, allowSubmit, logger,
     }
   }
 
-  if (alreadyRecorded && !outsideWindow) return { attempted: false, reason: "already_recorded" };
-  if (outsideWindow) return { attempted: false, reason: "outside_window" };
-  return { attempted: false, reason: "already_recorded" };
+  if (alreadyRecorded) return { attempted: false, reason: "already_recorded" };
+  return { attempted: false, reason: "nothing_to_submit" };
 }
 
 /**
@@ -186,6 +203,7 @@ export async function runAttendanceFlow({
   otp = "",
   location = null,
   qrPayload = null,
+  password: inlinePassword = "",
 } = {}) {
   const nis = normalizeNis(nisInput);
 
@@ -195,31 +213,43 @@ export async function runAttendanceFlow({
     return fail("invalid_nis", logger);
   }
 
-  // 1b. Whitelist + consent
+  // 1b. Kredensial: dari chat (siswa mengetik sendiri) atau dari vault.
+  //     Password dari chat = siswa membuktikan kepemilikan akunnya sendiri.
+  const typed = String(inlinePassword || "").trim();
+  let password = null;
+  let credentialSource = "chat";
+
+  if (typed) {
+    password = typed;
+  } else {
+    credentialSource = "vault";
+    try {
+      password = resolvePassword(nis);
+    } catch (err) {
+      audit("reject_no_credential", { nis: maskNis(nis) }, logger);
+      return fail(err?.code === "invalid_nis" ? "invalid_nis" : "missing_credential", logger);
+    }
+  }
+
+  // 1c. Consent: whitelist admin (opsional) ATAU kredensial sendiri dari chat.
   const consent = getConsent(nis);
-  if (!isConsented(nis)) {
+  const consented = isConsented(nis);
+  const selfService = credentialSource === "chat" && !consented;
+
+  if (!consented && !selfService) {
     audit("reject_no_consent", { nis: maskNis(nis), actor: maskNis(actor) }, logger);
     return fail("not_consented", logger);
   }
-  if (consent.jid && actorJid && !sameAccount(consent.jid, actorJid)) {
+  if (consent?.jid && actorJid && !sameAccount(consent.jid, actorJid)) {
     audit("reject_nis_mismatch", { nis: maskNis(nis), actor: maskNis(actor) }, logger);
     return fail("nis_bound_other", logger);
   }
 
-  // 1c. Rate limit per NIS
+  // 1d. Rate limit per NIS
   const quota = quotaStatus(nis);
   if (!quota.allowed) {
     audit("reject_quota", { nis: maskNis(nis), count: quota.count, limit: quota.limit }, logger);
     return fail("quota_exceeded", logger, { quota });
-  }
-
-  // 2. Kredensial dari vault (tidak ada password default)
-  let password = null;
-  try {
-    password = resolvePassword(nis);
-  } catch (err) {
-    audit("reject_no_credential", { nis: maskNis(nis) }, logger);
-    return fail(err?.code === "invalid_nis" ? "invalid_nis" : "missing_credential", logger);
   }
 
   const controller = new AbortController();
@@ -265,7 +295,29 @@ export async function runAttendanceFlow({
       claims: auth.claims,
       expiresAt: auth.expiresAt,
     });
-    audit("login", { nis: maskNis(nis), ok: true, bound: Boolean(consent.jid) }, logger);
+    audit(
+      "login",
+      {
+        nis: maskNis(nis),
+        ok: true,
+        bound: Boolean(consent?.jid),
+        source: credentialSource,
+        selfService,
+      },
+      logger
+    );
+
+    // 3b. Mode mandiri: NIS yang pertama dipakai otomatis terikat ke akun ini.
+    if (selfService && actorJid && !consent?.jid) {
+      setConsent(nis, {
+        consent: true,
+        actor: actorJid,
+        jid: actorJid,
+        autoSubmit: true,
+        note: "auto-binding (login mandiri)",
+      });
+      audit("auto_bind", { nis: maskNis(nis), actor: maskNis(actor) }, logger);
+    }
 
     // 4. Profil siswa -> studentId internal (auto-detect, bukan asumsi NIS)
     let studentId = nis;
@@ -299,7 +351,7 @@ export async function runAttendanceFlow({
     if (studentName) parsed.studentName = studentName;
     audit("status", { nis: maskNis(nis), entries: parsed.entries.length }, logger);
 
-    // 6. Submit presensi (hanya jika diizinkan & dalam window)
+    // 6. Submit presensi (otomatis: bot yang tentukan, server yang memvalidasi)
     const submit = await maybeSubmit({
       nis,
       session,
@@ -309,6 +361,7 @@ export async function runAttendanceFlow({
       logger,
       location,
       qrPayload,
+      selfService,
     });
 
     recordUsage(nis);

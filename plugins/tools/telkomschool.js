@@ -5,31 +5,34 @@ import { decodeQrFromMessage, parseQrPayload } from "@/src/services/telkom/qr.js
 
 const USAGE =
   `*TELKOM SCHOOLS (DigitS)*\n\n` +
-  `Cukup ketik:\n` +
-  `👉 \`{prefix}telkom <nis>\`\n\n` +
-  `*Contoh:* \`{prefix}telkom 539241249\`\n\n` +
+  `Cukup ketik NIS + password, sisanya otomatis:\n` +
+  `👉 \`{prefix}telkom <nis> <password>\`\n\n` +
+  `*Contoh:* \`{prefix}telkom 539241249 passwordku123\`\n\n` +
+  `Bot akan: login → cek presensi → kirim absen otomatis → laporkan hasilnya.\n\n` +
   `*Perintah lain:*\n` +
-  `• \`{prefix}telkom status <nis>\` — cek status saja (tanpa submit)\n` +
+  `• \`{prefix}telkom <nis>\` — pakai password dari vault admin (kalau sudah didaftarkan)\n` +
+  `• \`{prefix}telkom status <nis> [password]\` — cek status saja (tanpa absen)\n` +
   `• \`{prefix}telkom <nis> <kode>\` — lanjutkan login 2FA\n` +
   `• \`{prefix}telkom resend <nis>\` — kirim ulang kode 2FA\n` +
   `• \`{prefix}telkom link\` — link aplikasi resmi\n\n` +
   `*Absen pakai QR guru:* kirim foto QR guru ke bot dengan caption\n` +
-  `\`{prefix}telkom <nis>\` — bot baca QR-nya lalu mengirim presensi.\n\n` +
-  `_Endpoint API & proteksi Cloudflare ditangani otomatis oleh bot._\n` +
-  `_Absen tetap memakai akun & perangkat kamu sendiri: ${APP_URL}_`;
+  `\`{prefix}telkom <nis> <password>\` — bot baca QR-nya lalu langsung absen.\n\n` +
+  `_Password hanya dipakai sekali, tidak disimpan, tidak masuk log._\n` +
+  `_Endpoint API & proteksi Cloudflare ditangani otomatis._\n` +
+  `_Absen tetap memakai akun & token kamu sendiri: ${APP_URL}_`;
 
 /** Pesan ini berisi media (foto) yang bisa berisi QR guru. */
 function hasMedia(msg) {
-  const message = msg?.message || {};
+  const message = msg?.message || "";
   return Boolean(message.imageMessage || message.documentMessage || message.videoMessage);
 }
 
 export default {
   name: "telkomschool",
-  cooldownMs: 20000,
+  cooldownMs: 15000,
   aliases: ["telkom", "tsch", "digits", "abstels"],
-  description: "Cek & submit presensi Telkom Schools (DigitS) untuk NIS terdaftar (consent required).",
-  usage: "<nis> | status <nis> | resend <nis> | link",
+  description: "Absen Telkom Schools (DigitS) otomatis: cukup NIS + password, bot login, cek, lalu kirim presensi.",
+  usage: "<nis> [password] | status <nis> [password] | resend <nis> | link",
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger, senderJid }) => {
     const currentPrefix = prefix || ".";
@@ -58,20 +61,21 @@ export default {
       return reply(result.message.replaceAll("{prefix}", currentPrefix));
     }
 
-    // Argumen kedua: kode OTP (angka) atau isi QR (JSON).
-    const second = String(args[1] || "").trim();
-    const otp = /^\d{4,8}$/.test(second) ? second : "";
-    let qrPayload = otp ? null : parseQrPayload(second);
+    // Argumen berikutnya bisa: kode OTP (angka), isi QR (JSON), atau password.
+    const second = String(args[readOnly ? 2 : 1] || "").trim();
+    const isOtp = /^\d{4,8}$/.test(second);
+    const otp = isOtp ? second : "";
+    const qrFromArg = isOtp ? null : parseQrPayload(second);
+    const password = isOtp || qrFromArg ? "" : second;
 
     await sendTyping();
 
-    // Foto QR guru: bot decode sendiri, lalu submit memakai QR asli.
+    // Foto QR guru: bot decode sendiri, lalu absen memakai QR asli.
+    let qrPayload = qrFromArg;
     if (!qrPayload && hasMedia(msg)) {
       const decoded = await decodeQrFromMessage(sock, msg);
       qrPayload = parseQrPayload(decoded);
-      if (!qrPayload) {
-        logger?.info?.("[telkomschool] QR pada foto tidak terbaca");
-      }
+      if (!qrPayload) logger?.info?.("[telkomschool] QR pada foto tidak terbaca");
     }
 
     const result = await runAttendanceFlow({
@@ -82,6 +86,7 @@ export default {
       allowSubmit: !readOnly,
       otp,
       qrPayload,
+      password,
     });
 
     if (!result.ok) {
@@ -89,7 +94,7 @@ export default {
       return reply(String(result.message || "⚠️ Presensi gagal diproses.").replaceAll("{prefix}", currentPrefix));
     }
 
-    const header = readOnly ? "*STATUS PRESENSI (cek saja)*" : "*STATUS PRESENSI*";
+    const header = readOnly ? "*STATUS PRESENSI (cek saja)*" : "*PRESENSI HARI INI*";
     return reply(result.summary || header);
   },
 };

@@ -311,14 +311,11 @@ function describeSubmit(submit, now = new Date()) {
   if (!submit || !submit.attempted) {
     if (submit?.reason === "read_only") return "ℹ️ Mode cek status saja (tanpa submit).";
     if (submit?.reason === "auto_submit_disabled") {
-      return "ℹ️ Submit otomatis dinonaktifkan untuk akun ini. Absen lewat aplikasi resmi.";
+      return "ℹ️ Submit otomatis dinonaktifkan oleh admin. Absen lewat aplikasi resmi.";
     }
     if (submit?.reason === "already_recorded") return "✅ Presensi hari ini sudah tercatat, tidak ada submit ulang.";
-    if (submit?.reason === "outside_window") {
-      const { time } = wibParts(now);
-      return `⏳ Di luar jendela absen (sekarang ${time} WIB). Absen lewat aplikasi resmi.`;
-    }
     if (submit?.reason === "status_unavailable") return "⚠️ Status presensi tidak terbaca, submit dilewati.";
+    if (submit?.reason === "nothing_to_submit") return "ℹ️ Tidak ada presensi yang perlu dikirim.";
     return "ℹ️ Tidak ada perubahan presensi.";
   }
 
@@ -327,6 +324,11 @@ function describeSubmit(submit, now = new Date()) {
     const extra = submit.message ? ` — ${submit.message}` : "";
     return `✅ ${label} tercatat (${submit.time || wibParts(now).time} WIB)${extra}`;
   }
-  const detail = submit.message ? ` (${submit.message})` : "";
-  return `⚠️ Pengiriman ${KIND_LABEL[submit.kind] || submit.kind} ditolak server${detail}. Absen lewat aplikasi resmi.`;
+
+  const label = KIND_LABEL[submit.kind] || submit.kind;
+  const detail = submit.message ? `\n   ↳ server: ${submit.message}` : "";
+  return (
+    `⚠️ Gagal kirim absen ${label} (server menolak).${detail}\n` +
+    `   ↳ Kirim foto QR guru ke bot (caption \`.telkom <nis>\`) atau absen di aplikasi resmi.`
+  );
 }

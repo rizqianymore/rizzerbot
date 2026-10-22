@@ -145,31 +145,49 @@ export default {
 
 ## Presensi Telkom Schools
 
-Bot bantu siswa **cek dan submit presensi** di gateway Telkom Schools (DigitS) memakai
-kredensial **siswa sendiri** (NIS + password asli), dengan syarat:
+Bot bantu siswa **absen otomatis** di gateway Telkom Schools (DigitS) memakai
+kredensial **siswa sendiri** (NIS + password asli).
 
-- NIS terdaftar di **whitelist + consent** (disetujui admin/siswa).
-- Password hanya ada di **vault** (env/secret manager) — tidak pernah di kode, log, atau chat.
-- Session (token + cookie) hanya di **memori**, dibersihkan otomatis setelah proses.
-- Submit hanya jalan **di dalam jendela absen resmi** dan **tidak dobel** (idempoten).
-- Semua endpoint, hash API, dan proteksi Cloudflare **ditemukan otomatis** — tidak ada
-  konfigurasi path/hash manual.
+### Cara paling simpel
+
+```
+.telkom 539241249 passwordku123
+```
+
+Selesai — bot otomatis: login → deteksi studentId → cek presensi hari ini →
+kirim absen (kalau belum tercatat) → laporkan hasilnya. Tidak perlu daftar
+whitelist, tidak perlu set endpoint, tidak perlu atur jam absen.
+
+> Password dipakai sekali (tidak disimpan, tidak masuk log/audit), tapi **tetap
+> terlihat di riwayat chat**. Kalau mau lebih aman, minta admin simpan password
+> di vault — setelah itu cukup `.telkom <nis>` tanpa mengetik password.
+
+Syarat & aturan:
+
+- Password harus **password akun siswa itu sendiri** (divalidasi server).
+- NIS **terkunci ke akun WhatsApp pertama** yang memakainya, jadi tidak bisa
+  dipakai akun lain.
+- Rate limit per NIS per hari (default 3x) + audit log (NIS disamar).
+- Submit hanya bila **belum absen** hari ini (idempoten) — server sekolah
+  yang memvalidasi, bot tidak memalsukan jawaban.
+- Session (token + cookie) hanya di **memori**, dibersihkan otomatis.
 
 ### Perintah
 
-| Perintah               | Fungsi                                              |
-| ---------------------- | --------------------------------------------------- |
-| `.telkom <nis>`        | Login → cek status hari ini → submit bila diizinkan |
-| `.telkom status <nis>` | Cek status saja (tanpa submit)                      |
-| `.telkom <nis> <kode>` | Lanjutkan login bila gateway minta kode 2FA         |
-| `.telkom resend <nis>` | Kirim ulang kode 2FA ke WhatsApp siswa              |
-| `.telkom link`         | Tautan aplikasi resmi (absen QR + lokasi asli)      |
+| Perintah                          | Fungsi                                         |
+| --------------------------------- | ---------------------------------------------- |
+| `.telkom <nis> <password>`        | Login → cek → absen otomatis (paling simpel)   |
+| `.telkom <nis>`                   | Sama, tapi password diambil dari vault admin   |
+| `.telkom status <nis> [password]` | Cek status saja (tanpa absen)                  |
+| `.telkom <nis> <kode>`            | Lanjutkan login bila gateway minta kode 2FA    |
+| `.telkom resend <nis>`            | Kirim ulang kode 2FA ke WhatsApp siswa         |
+| `.telkom link`                    | Tautan aplikasi resmi (absen QR + lokasi asli) |
 
 **Absen pakai QR guru (otomatis):** siswa memotret QR yang ditampilkan guru lalu
-mengirim fotonya ke bot dengan caption `.telkom <nis>`. Bot membaca QR-nya
-(`jsQR` + `sharp`, dependensi opsional) lalu mengirim presensi memakai token
-siswa sendiri — persis seperti aplikasi resmi. QR juga bisa ditempel langsung
-sebagai argumen: `.telkom <nis> ["{\"type\":\"QR Datang\",...}"]`.
+mengirim fotonya ke bot dengan caption `.telkom <nis> <password>`. Bot membaca
+QR-nya (`jsQR` + `sharp`, dependensi opsional) lalu mengirim presensi memakai
+token siswa sendiri — persis seperti aplikasi resmi. QR juga bisa ditempel
+langsung sebagai argumen: `.telkom <nis> ["{\"type\":\"QR Datang\",...}"]`.
 
 Perintah admin (owner):
 
@@ -181,18 +199,20 @@ Perintah admin (owner):
 | `.telkomconsent status <nis>`                | Consent, kuota harian, dan keberadaan kredensial di vault  |
 | `.telkomconsent list` / `audit`              | Daftar NIS & audit log (tanpa data sensitif)               |
 
-### Setup
+### Setup (opsional)
+
+Semua opsional — bot jalan tanpa konfigurasi apa pun.
 
 ```bash
-# 1. Daftarkan NIS + consent (.binding ke nomor WA siswa disarankan)
+# 1. Daftarkan NIS + consent (opsional: biar siswa tidak perlu ketik password)
 .telkomconsent add 539241249 628xxxxxxxx
 
-# 2. Simpan password siswa Sendiri di vault (.env, JANGAN via chat)
+# 2. Simpan password siswa di vault (opsional, lebih aman daripada chat)
 TELKOM_STUDENT_PASSWORDS={"539241249":"password-asli-siswa"}
 # alternatif per siswa: TELKOM_PW_539241249=password-asli-siswa
 # alternatif file vault di luar repo: TELKOM_VAULT_FILE=/path/vault.json
 
-# 3. Selesai. Endpoint/hash API & proteksi Cloudflare dideteksi otomatis.
+# 3. Endpoint/hash API & proteksi Cloudflare — terdeteksi otomatis, tanpa setting.
 #    Jendela absen & kuota (opsional, ada default):
 TELKOM_WINDOW_DATANG=05:30-08:00
 TELKOM_WINDOW_PULANG=14:30-16:30
