@@ -146,6 +146,24 @@ assert(
   "stub session bootstrap terdeteksi"
 );
 
+// Bridge Bright Data (bypass Cloudflare lewat .env)
+const { brightDataBridgeEnabled, tryBrightDataUnlock } = await load("src/services/telkom/http.js");
+const prevBdKey = process.env.BRIGHTDATA_API_KEY;
+delete process.env.BRIGHTDATA_API_KEY;
+delete process.env.TELKOM_VIA_BRIGHTDATA;
+assert(brightDataBridgeEnabled() === false, "bridge BrightData nonaktif tanpa API key");
+process.env.BRIGHTDATA_API_KEY = "test-key";
+assert(brightDataBridgeEnabled() === true, "bridge BrightData aktif kalau API key ada");
+process.env.TELKOM_VIA_BRIGHTDATA = "0";
+assert(brightDataBridgeEnabled() === false, "bridge BrightData bisa dimatikan manual");
+delete process.env.TELKOM_VIA_BRIGHTDATA;
+assert(
+  (await tryBrightDataUnlock("https://example.com/", { method: "GET" })) === null,
+  "unlocker gagal -> null (eskalasi ke jalur lain)"
+);
+if (prevBdKey === undefined) delete process.env.BRIGHTDATA_API_KEY;
+else process.env.BRIGHTDATA_API_KEY = prevBdKey;
+
 console.log("[7/12] Payload submit + sesi 2FA...");
 const submitBody = buildSubmitPayload({ studentId: "12345", kind: "datang", date: "2026-10-22" });
 assert(submitBody.studentId === "12345", "studentId masuk payload");

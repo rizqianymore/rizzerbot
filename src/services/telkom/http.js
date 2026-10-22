@@ -1,5 +1,6 @@
 import { cookieJar as globalCookieJar } from "@/src/utils/request/cookies.js";
 import { stealthBrowser } from "@/src/utils/request/browser.js";
+import { brightDataRequest, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
 import { UA } from "./config.js";
 
 /**
@@ -238,6 +239,48 @@ function sleep(ms) {
 }
 
 /**
+ * Bright Data Web Unlocker sebagai jalur bypass challenge.
+ * Config diambil dari .env: BRIGHTDATA_API_KEY + BRIGHTDATA_ZONE.
+ * Default: aktif kalau API key tersedia (matikan dengan TELKOM_VIA_BRIGHTDATA=0).
+ */
+export function brightDataBridgeEnabled() {
+  if (String(process.env.TELKOM_VIA_BRIGHTDATA || "1").trim() === "0") return false;
+  return isBrightDataEnabled();
+}
+
+/**
+ * Coba request lewat Web Unlocker.
+ * Mengembalikan null bila tidak tersedia/gagal (eskalasi ke jalur lain).
+ */
+export async function tryBrightDataUnlock(url, { method = "GET", headers = {}, body, isForm = false } = {}) {
+  if (!brightDataBridgeEnabled() || isForm) return null;
+  try {
+    const text = await brightDataRequest(url, {
+      format: "raw",
+      method,
+      headers: { ...headers },
+      data: body === undefined ? undefined : body,
+      timeout: 45000,
+    });
+    const raw = typeof text === "string" ? text : JSON.stringify(text);
+    if (!raw) return null;
+    // Masih halaman challenge -> Web Unlocker gagal, lanjut jalur lain.
+    if (looksLikeChallenge(200, {}, raw)) return null;
+    let data = raw;
+    try {
+      data = JSON.parse(raw);
+    } catch (_) {}
+    return { status: 200, data, raw };
+  } catch (err) {
+    console.warn(
+      `[Telkom] BrightData unlocker gagal: ${String(err?.message || err).slice(0, 120)} ` +
+        "(cek BRIGHTDATA_API_KEY/ZONE & koneksi ke api.brightdata.com)"
+    );
+    return null;
+  }
+}
+
+/**
  * Request ke server Telkom Schools dengan penanganan proteksi otomatis.
  *
  * @param {string} url
@@ -334,8 +377,25 @@ export async function telkomRequest(url, options = {}) {
       }
     }
 
-    // B2. escalation ke browser stealth untuk mendapat clearance baru
+    // B2. Bright Data Web Unlocker (pakai .env: BRIGHTDATA_API_KEY + ZONE)
     if (allowBrowser && attempt < 3) {
+      const unlocked = await tryBrightDataUnlock(url, {
+        method,
+        headers: buildRequestHeaders({
+          token,
+          origin,
+          referer,
+          contentType: isForm ? "" : contentType,
+          extra: extraHeaders,
+        }),
+        body: isForm ? undefined : body,
+        isForm,
+      });
+      if (unlocked) {
+        return { status: unlocked.status, data: unlocked.data, headers: {}, challenged };
+      }
+
+      // B3. escalation ke browser stealth untuk mendapat clearance baru
       try {
         const target = origin || new URL(url).origin;
         const solved = await stealthBrowser.solveChallenge(target, { timeoutMs: 25000 });
@@ -351,7 +411,7 @@ export async function telkomRequest(url, options = {}) {
         // lanjut ke fallback browser fetch
       }
 
-      // B3. terakhir: jalankan request dari dalam browser (hanya untuk body JSON)
+      // B4. terakhir: jalankan request dari dalam browser (hanya untuk body JSON)
       if (!isForm) {
         try {
           const inPage = await stealthBrowser.inPageFetch(url, {

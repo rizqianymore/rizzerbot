@@ -75,6 +75,18 @@ function status() {
   console.log("  - .env dibaca saat bot START -> selesai edit, restart bot.");
   console.log("  - env yang sudah ada di shell/pm2 TIDAK ditimpa .env (lihat index.js).");
   console.log("  - TELKOM_USE_SCHOOL_LOCATION=1 mematikan pengecekan radius server.");
+
+  // Status Bright Data (bridge bypass Cloudflare)
+  const bdKey = keys.get("BRIGHTDATA_API_KEY");
+  const bdZone = keys.get("BRIGHTDATA_ZONE");
+  console.log("");
+  console.log("Bridge Bright Data (bypass Cloudflare):");
+  console.log(`  BRIGHTDATA_API_KEY : ${bdKey ? "terisi" : "KOSONG (bridge nonaktif)"}`);
+  console.log(`  BRIGHTDATA_ZONE    : ${bdZone || "web_unlocker2 (default)"}`);
+  console.log(`  TELKOM_VIA_BRIGHTDATA: ${keys.get("TELKOM_VIA_BRIGHTDATA") || "1 (default)"}`);
+  if (!bdKey) {
+    console.log("  -> bypass Cloudflare telkom pakai browser stealth (puppeteer).");
+  }
 }
 
 function apply() {
