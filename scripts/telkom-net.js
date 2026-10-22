@@ -141,6 +141,69 @@ try {
   console.log(`\nproxy tes      : GAGAL -> ${String(err?.message || err).slice(0, 150)}`);
 }
 
+// Cek browser lokal (fallback kalau remote browser tidak bisa dipakai).
+try {
+  const puppeteer = (await import("puppeteer")).default;
+  const resolved = puppeteer.executablePath();
+  const chromePath = typeof resolved === "string" ? resolved : await resolved;
+  const fs = await import("fs");
+  const ok = Boolean(chromePath) && fs.existsSync(chromePath);
+  console.log(
+    `\nbrowser lokal : ${ok ? "siap (fallback API ber-token)" : "TIDAK ADA - install: npx puppeteer browsers install chrome"}`
+  );
+} catch (_err) {
+  console.log("\nbrowser lokal : modul puppeteer tidak tersedia");
+}
+
+// Tes handshake WS BrightData (menampilkan status asli handshake).
+try {
+  const ws = String(process.env.BRIGHTDATA_SCRAPING_BROWSER_WS || "").trim();
+  if (!ws) {
+    console.log("\nWS handshake  : BRIGHTDATA_SCRAPING_BROWSER_WS belum diisi");
+  } else {
+    const url = new URL(ws.replace(/^wss:/, "https:"));
+    const auth = `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`;
+    const https = await import("https");
+    const status = await new Promise((resolve) => {
+      const req = https.request(
+        {
+          host: url.hostname,
+          port: url.port || 9222,
+          path: "/",
+          method: "GET",
+          headers: {
+            Authorization: `Basic ${Buffer.from(auth).toString("base64")}`,
+            Connection: "Upgrade",
+            Upgrade: "websocket",
+            "Sec-WebSocket-Version": "13",
+            "Sec-WebSocket-Key": Buffer.from("0123456789abcdef").toString("base64"),
+          },
+          timeout: 12000,
+        },
+        (res) => {
+          resolve(res.statusCode);
+          res.resume();
+        }
+      );
+      req.on("error", (err) => resolve(`error: ${String(err.message).slice(0, 60)}`));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve("timeout");
+      });
+      req.end();
+    });
+    const note =
+      status === 407 || status === 401
+        ? "-> kredensial zone scraping_browser1 salah ATAU IP lo tidak di-allowlist zone itu"
+        : status === 426 || status === 400
+          ? "-> kredensial OK (server cuma nolak request biasa, bukan WebSocket)"
+          : "";
+    console.log(`\nWS handshake  : status ${status} ${note}`);
+  }
+} catch (err) {
+  console.log(`\nWS handshake  : GAGAL -> ${String(err?.message || err).slice(0, 120)}`);
+}
+
 if (process.argv.includes("--browser")) {
   console.log("\nTes remote browser (pakai kuota BrightData)...");
   const { remoteSolveChallenge } = await import("../src/services/telkom/remote-browser.js");
