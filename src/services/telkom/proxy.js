@@ -157,17 +157,30 @@ export async function proxyRequest(
   if (payload) requestHeaders["Content-Length"] = Buffer.byteLength(payload);
 
   const result = await new Promise((resolve, reject) => {
-    const req = https.request(url, { method, headers: requestHeaders, agent, timeout: timeoutMs }, (res) => {
-      const chunks = [];
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () =>
-        resolve({
-          status: res.statusCode || 0,
-          headers: res.headers || {},
-          raw: Buffer.concat(chunks).toString("utf8"),
-        })
-      );
-    });
+    const req = https.request(
+      url,
+      {
+        method,
+        headers: requestHeaders,
+        agent,
+        timeout: timeoutMs,
+        // Bright Data-proxy_forwarded-connection MITM TLS dengan sertifikat
+        // internal mereka (tidak berotorasi publik) - sama seperti -k di curl.
+        // Verifikasi sertifikat target dimatikan khusus jalur proxy ini.
+        rejectUnauthorized: false,
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () =>
+          resolve({
+            status: res.statusCode || 0,
+            headers: res.headers || {},
+            raw: Buffer.concat(chunks).toString("utf8"),
+          })
+        );
+      }
+    );
     req.on("error", reject);
     req.on("timeout", () => req.destroy(new Error(`Timeout ${timeoutMs}ms lewat proxy`)));
     if (payload) req.write(payload);
