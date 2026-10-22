@@ -92,6 +92,25 @@ try {
   console.log("\nIP publik: tidak bisa dicek (cek manual: curl ifconfig.me)");
 }
 
+// Tes kredensial native proxy Bright Data (tanpa kuota, cuma handshake).
+try {
+  const { nativeProxyConfig, proxyRequest } = await import("../src/services/telkom/proxy.js");
+  const cfg = nativeProxyConfig();
+  if (!cfg) {
+    console.log("\nnative proxy  : BELUM dikonfigurasi (BRIGHTDATA_CUSTOMER + PROXY_PASSWORD)");
+  } else {
+    const res = await proxyRequest("https://gw-digits.telkomschools.sch.id/api/read/x", {
+      method: "GET",
+      headers: { "User-Agent": "curl/8.5.0" },
+      timeoutMs: 20000,
+    });
+    console.log(`\nnative proxy  : OK (auth ${cfg.username}@${cfg.host}:${cfg.port}) -> status ${res.status}`);
+  }
+} catch (err) {
+  console.log(`\nnative proxy  : GAGAL -> ${String(err?.message || err).slice(0, 160)}`);
+  console.log("  -> cek BRIGHTDATA_CUSTOMER / BRIGHTDATA_ZONE / BRIGHTDATA_PROXY_PASSWORD");
+}
+
 if (process.argv.includes("--browser")) {
   console.log("\nTes remote browser (pakai kuota BrightData)...");
   const { remoteSolveChallenge } = await import("../src/services/telkom/remote-browser.js");

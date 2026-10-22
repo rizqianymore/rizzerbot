@@ -555,7 +555,10 @@ export async function telkomRequest(url, options = {}) {
     }
 
     // B4. Bright Data Web Unlocker (REST, lebih murah)
-    if (allowBrowser && attempt < 3) {
+    //     PENTING: Web Unlocker tidak meneruskan header Authorization ->
+    //     jangan dipakai untuk request API yang butuh token siswa
+    //     (akibatnya server membalas "Invalid token").
+    if (allowBrowser && attempt < 3 && !token) {
       const unlocked = await tryBrightDataUnlock(url, {
         method,
         headers: buildRequestHeaders({
@@ -573,7 +576,11 @@ export async function telkomRequest(url, options = {}) {
         return { status: unlocked.status, data: unlocked.data, headers: {}, challenged };
       }
       log("info", "Bright Data tidak resolving, lanjut browser stealth", { url });
+    } else if (token) {
+      log("info", "Web Unlocker dilewati (tidak meneruskan Authorization) - pakai proxy/remote browser", { url });
+    }
 
+    if (allowBrowser && attempt < 3) {
       // B5. escalation ke browser stealth (lokal) untuk mendapat clearance baru
       //     (opsional: bisa dimatikan supaya RAM server tetap ringan)
       try {
