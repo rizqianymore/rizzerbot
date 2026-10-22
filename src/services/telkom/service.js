@@ -117,6 +117,7 @@ async function maybeSubmit({
   location,
   qrPayload = null,
   selfService = false,
+  kind = "",
 }) {
   if (!allowSubmit) return { attempted: false, reason: "read_only" };
   if (!selfService && consent?.autoSubmit === false) {
@@ -124,8 +125,11 @@ async function maybeSubmit({
   }
   if (!parsed?.ok) return { attempted: false, reason: "status_unavailable" };
 
+  // Prioritas: pilihan eksplisit (datang/pulang) > tipe QR > otomatis.
   const qrKind = qrPayload?.type ? qrTypeToKind(qrPayload.type) : null;
-  const kinds = qrKind ? [qrKind] : ["datang", "pulang"];
+  const requested = String(kind || "").toLowerCase();
+  const kinds =
+    requested === "datang" || requested === "pulang" ? [requested] : qrKind ? [qrKind] : ["datang", "pulang"];
 
   // Urutan submit: jenis dengan jendela absen aktif didahulukan.
   const ordered = kinds
@@ -219,6 +223,7 @@ export async function runAttendanceFlow({
   otp = "",
   location = null,
   qrPayload = null,
+  kind = "",
   password: inlinePassword = "",
 } = {}) {
   const nis = normalizeNis(nisInput);
@@ -403,6 +408,7 @@ export async function runAttendanceFlow({
       location: effectiveLocation,
       qrPayload,
       selfService,
+      kind,
     });
 
     recordUsage(nis);

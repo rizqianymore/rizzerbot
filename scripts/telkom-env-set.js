@@ -34,7 +34,7 @@ const values = {
     "https://www.google.com/maps/place/SMK+Telkom+Jakarta/@-6.1544288,106.7501684,19.03z/data=!4m14!1m7!3m6!1s0x2e69f7c113c644b5:0xa3a809c8c4627262!2sSMK+Telkom+Jakarta!8m2!3d-6.1544783!4d106.7507579!16s%2Fg%2F122dry26",
   TELKOM_USE_SCHOOL_LOCATION: "1",
   TELKOM_AUTO_QR: "1",
-  TELKOM_DAILY_LIMIT: "3",
+  TELKOM_DAILY_LIMIT: "5",
   TELKOM_WINDOW_DATANG: "05:30-08:00",
   TELKOM_WINDOW_PULANG: "14:30-16:30",
   // --- Bright Data: zone web_unlocker2 (native proxy 44445) ---

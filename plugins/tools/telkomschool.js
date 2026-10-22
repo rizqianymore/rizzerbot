@@ -20,11 +20,21 @@ const USAGE =
   `👉 \`{prefix}telkom <nis>\`\n\n` +
   `Bot otomatis: login → cek presensi → kirim absen (datang/pulang).\n\n` +
   `*Lainnya:*\n` +
+  `• \`{prefix}telkom <nis> datang\` / \`{prefix}telkom <nis> pulang\` — pilih jenis absen\n` +
   `• \`{prefix}telkom <nis> <password>\` — kalau password belum tersimpan\n` +
   `• \`{prefix}telkom status <nis>\` — cek status saja\n` +
   `• \`{prefix}telkom <nis> <kode>\` — lanjutkan login 2FA\n` +
   `• \`{prefix}telkom link\` — link aplikasi resmi\n\n` +
   `_Password tidak disimpan & tidak masuk log._`;
+
+/** Alias jenis absen yang bisa diketik siswa. */
+const KIND_ALIASES = {
+  datang: "datang",
+  masuk: "datang",
+  pulang: "pulang",
+  balik: "pulang",
+  keluar: "pulang",
+};
 
 /** Pesan ini berisi media (foto/screenshot) yang bisa berisi QR guru. */
 function hasMedia(msg) {
@@ -212,10 +222,11 @@ export default {
 
     // Argumen berikutnya bisa: kode OTP (angka), isi QR (JSON), atau password.
     const second = String(args[readOnly ? 2 : 1] || "").trim();
-    const isOtp = /^\d{4,8}$/.test(second);
+    const kindArg = KIND_ALIASES[String(second || "").toLowerCase()] || "";
+    const isOtp = /^\d{4,8}$/.test(second) && !kindArg;
     const otp = isOtp ? second : "";
-    const qrFromArg = isOtp ? null : parseAttendanceCode(second).payload;
-    const password = isOtp || qrFromArg ? "" : second;
+    const qrFromArg = isOtp || kindArg ? null : parseAttendanceCode(second).payload;
+    const password = isOtp || qrFromArg || kindArg ? "" : second;
 
     await sendTyping();
 
@@ -239,6 +250,7 @@ export default {
       allowSubmit: !readOnly,
       otp,
       qrPayload,
+      kind: kindArg,
       password,
       location,
     });

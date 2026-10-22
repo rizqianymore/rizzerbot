@@ -27,7 +27,7 @@ const DEFAULTS = [
     false,
   ],
   ["TELKOM_USE_SCHOOL_LOCATION", "1", false],
-  ["TELKOM_DAILY_LIMIT", "3", false],
+  ["TELKOM_DAILY_LIMIT", "5", false],
   ["TELKOM_WINDOW_DATANG", "05:30-08:00", false],
   ["TELKOM_WINDOW_PULANG", "14:30-16:30", false],
   // --- bypass Cloudflare ---

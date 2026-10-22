@@ -11,7 +11,7 @@ import { db } from "@/src/core/database.js";
 
 const SECTION = "telkom";
 const MAX_AUDIT = 200;
-export const DEFAULT_DAILY_LIMIT = 3;
+export const DEFAULT_DAILY_LIMIT = 5;
 
 function normalizeNis(value) {
   return String(value || "").replace(/\D/g, "");
