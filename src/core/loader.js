@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const pluginsDir = path.join(__dirname, "..", "..", "plugins");
 
 export const commands = new Map();
+export const mediaHandlers = new Map();
 const watchers = new Map();
 
 function getFilesRecursive(dir, baseDir = dir) {
@@ -68,6 +69,10 @@ export async function reloadPluginFile(absolutePath, relativePath) {
         commands.delete(key);
       }
     }
+    for (const [key] of mediaHandlers.entries()) {
+      const handler = mediaHandlers.get(key);
+      if (handler?.filePath === absolutePath) mediaHandlers.delete(key);
+    }
 
     for (const cmd of cmds) {
       if (cmd && cmd.name && typeof cmd.run === "function") {
@@ -80,6 +85,14 @@ export async function reloadPluginFile(absolutePath, relativePath) {
           }
         }
         console.log(`  ✓ Plugin loaded/updated: ${cmd.name} (${relativePath})`);
+        loadedAny = true;
+      }
+
+      // Handler media opsional (mis. scan QR dari foto -> aksi otomatis).
+      if (cmd && cmd.name && typeof cmd.onMedia === "function") {
+        cmd.filePath = absolutePath;
+        mediaHandlers.set(cmd.name.toLowerCase(), cmd.onMedia);
+        console.log(`  ✓ Media handler registered: ${cmd.name} (${relativePath})`);
         loadedAny = true;
       }
     }
@@ -146,6 +159,7 @@ function updateDirectoryWatchers() {
 
 export async function loadPlugins() {
   commands.clear();
+  mediaHandlers.clear();
 
   for (const watcher of watchers.values()) {
     watcher.close();

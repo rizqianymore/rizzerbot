@@ -39,16 +39,18 @@ export async function resolveCommandAccess(
   const remoteJid = msg.key.remoteJid;
 
   let commandName = "";
-  const drop = (reason, { silent = false } = {}) => {
+  const drop = (reason, { silent = false, code = "" } = {}) => {
     if (!silent) logger?.info?.(`[Access] drop: ${reason} | prefix=${prefix} bot=${botJid || "?"}`);
-    return { drop: true, reason, commandName, silent };
+    return { drop: true, reason, commandName, silent, code };
   };
 
-  if (!messageContent.startsWith(prefix)) return drop("bukan perintah (prefix tidak cocok)", { silent: true });
+  if (!messageContent.startsWith(prefix)) {
+    return drop("bukan perintah (prefix tidak cocok)", { silent: true, code: "not_command" });
+  }
 
   const args = messageContent.slice(prefix.length).trim().split(/ +/).filter(Boolean);
   commandName = args.shift()?.toLowerCase() || "";
-  if (!commandName) return drop("perintah kosong", { silent: true });
+  if (!commandName) return drop("perintah kosong", { silent: true, code: "not_command" });
 
   const cmd = commands.get(commandName);
   if (!cmd) {
@@ -61,7 +63,7 @@ export async function resolveCommandAccess(
         )
         .catch(() => {});
     }
-    return drop(`perintah tidak dikenal: ${commandName}`);
+    return drop(`perintah tidak dikenal: ${commandName}`, { code: "unknown_command" });
   }
 
   const isSelfMessage = Boolean(isFromMe);

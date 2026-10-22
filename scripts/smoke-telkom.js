@@ -44,14 +44,14 @@ const { setPendingTwoFactor, takePendingTwoFactor, clearPendingTwoFactor } = awa
   "src/services/telkom/pending.js"
 );
 
-console.log("[1/10] Validasi NIS...");
+console.log("[1/12] Validasi NIS...");
 assert(normalizeNis("539-241-249") === "539241249", "normalizeNis membuang non-digit");
 assert(isValidNis("539241249") === true, "NIS 9 digit valid");
 assert(isValidNis("1234") === false, "NIS terlalu pendek ditolak");
 assert(isValidNis("abc") === false, "NIS non-numerik ditolak");
 assert(decodeJwtPayload("a.eyJzdWIiOiIxMjMifQ.c")?.sub === "123", "payload JWT terbaca");
 
-console.log("[2/10] Vault kredensial (tanpa password default)...");
+console.log("[2/12] Vault kredensial (tanpa password default)...");
 const parsedJson = parseVaultPayload('{"539241249":"rahasia"}');
 assert(parsedJson["539241249"] === "rahasia", "parse vault JSON object");
 assert(Object.keys(parseVaultPayload("539241249:rahasia")).length === 1, "parse vault format teks");
@@ -68,7 +68,7 @@ try {
 assert(threw, "tidak ada fallback password default");
 delete process.env.TELKOM_STUDENT_PASSWORDS;
 
-console.log("[3/10] Jendela absen (WIB)...");
+console.log("[3/12] Jendela absen (WIB)...");
 assert(parseWindow("05:30-08:00")?.start === 330, "parse window start");
 assert(parseWindow("bukan window") === null, "window invalid ditolak");
 const now = wibParts();
@@ -76,7 +76,7 @@ assert(Boolean(now.date && now.time), "wibParts menghasilkan tanggal & jam");
 assert(typeof checkWindow("datang").allowed === "boolean", "checkWindow mengembalikan boolean");
 assert(checkWindow("ngawur").allowed === false, "jenis absen tak dikenal tidak diizinkan");
 
-console.log("[4/10] Parsing payload resmi presensi...");
+console.log("[4/12] Parsing payload resmi presensi...");
 const payload = {
   status: true,
   data: [
@@ -103,7 +103,7 @@ assert(isPresentValue(true) === true && isPresentValue("Hadir") === true, "statu
 assert(isPresentValue(false) === false && isPresentValue("Alpa") === false, "status alpa dikenali");
 assert(extractQrPayload(parsed, "datang") === null, "tidak ada payload QR bila server tidak kirim");
 
-console.log("[5/10] Auto-discovery endpoint (tanpa konfigurasi manual)...");
+console.log("[5/12] Auto-discovery endpoint (tanpa konfigurasi manual)...");
 const html = `<script>window.__NUXT__={};window.__NUXT__.config={public:{presensiRead:"https://gw-digits.telkomschools.sch.id/api/presensi-read",presensiWrite:"https://gw-digits.telkomschools.sch.id/api/presensi-write",registrasiRead:"https://gw-digits.telkomschools.sch.id/api/read"},app:{baseURL:"/"}}</script><script type="module" src="/_nuxt/W4tpoFgY.js"></script><link rel="prefetch" href="/_nuxt/Brfox_0j.js">`;
 const nuxtConfig = parseNuxtConfig(html);
 assert(nuxtConfig?.public?.presensiRead?.includes("presensi-read") === true, "runtime config ter-parse");
@@ -117,7 +117,7 @@ const hashes = extractHashes(studentChunk);
 assert(hashes.includes("dbc366754e1d31910e16a4b41893b09c"), "hash read ter-ekstrak");
 assert(hashes.includes("caa809d407e0b78296e0c0dc019f5965"), "hash write ter-ekstrak");
 
-console.log("[6/10] Deteksi proteksi Cloudflare...");
+console.log("[6/12] Deteksi proteksi Cloudflare...");
 assert(
   looksLikeChallenge(403, {}, "<!DOCTYPE html><title>Just a moment...</title>") === true,
   "challenge 'Just a moment' terdeteksi"
@@ -137,7 +137,7 @@ assert(
   "stub session bootstrap terdeteksi"
 );
 
-console.log("[7/10] Payload submit + sesi 2FA...");
+console.log("[7/12] Payload submit + sesi 2FA...");
 const submitBody = buildSubmitPayload({ studentId: "12345", kind: "datang", date: "2026-10-22" });
 assert(submitBody.studentId === "12345", "studentId masuk payload");
 assert(submitBody.qrType === "QR Datang", "qrType resmi dipakai");
@@ -147,7 +147,7 @@ setPendingTwoFactor("539241249", "jid@test", "session-abc");
 assert(takePendingTwoFactor("539241249", "jid@test")?.url === "session-abc", "sesi 2FA tersimpan & diambil");
 assert(takePendingTwoFactor("539241249", "jid@test") === null, "sesi 2FA sekali pakai");
 
-console.log("[8/10] Session in-memory & cleanup...");
+console.log("[8/12] Session in-memory & cleanup...");
 const session = createSession({ token: "jwt-token-rahasia", cookie: "SESSION=rahasia" });
 assert(session.isActive() === true, "session aktif setelah dibuat");
 const cleared = session.destroy();
@@ -155,7 +155,7 @@ assert(cleared.cleared === true, "destroy() menandai session cleared");
 assert(session.token === null && session.cookie === null, "token & cookie di-null-kan");
 assert(session.isActive() === false, "session tidak aktif setelah cleanup");
 
-console.log("[9/10] Decode QR guru (foto) & tipe QR...");
+console.log("[9/12] Decode QR guru (foto) & tipe QR...");
 const { parseQrPayload, qrTypeToKind, decodeQrFromBuffer } = await load("src/services/telkom/qr.js");
 const officialQr = { type: "QR Datang", date: "2026-10-22", code: "abc123" };
 const officialText = JSON.stringify([JSON.stringify(officialQr)]);
@@ -174,7 +174,111 @@ try {
   assert(true, "decode QR dilewati (dependensi opsional tidak ada)", err.message);
 }
 
-console.log("[10/10] Mode mandiri: NIS + password langsung (tanpa whitelist admin)...");
+console.log("[10/12] Scanner kode (QR & barcode 1D)...");
+{
+  const { scanCodes } = await load("src/services/telkom/scanner.js");
+  const { parseAttendanceCode } = await load("src/services/telkom/qr.js");
+  const { default: QRCode } = await import("qrcode");
+  const officialText = JSON.stringify([JSON.stringify({ type: "QR Datang", code: "abc" })]);
+
+  const big = await QRCode.toBuffer(officialText, { type: "png", width: 500, margin: 2 });
+  const codes = await scanCodes(big);
+  assert(codes.length === 1, "QR terbaca dari gambar");
+  const parsed = parseAttendanceCode(codes[0]?.text, codes[0]?.format);
+  assert(parsed?.kind === "datang", "QR resmi dikenali sebagai absen datang");
+
+  const small = await QRCode.toBuffer(officialText, { type: "jpeg", width: 180, quality: 70 });
+  const smallCodes = await scanCodes(small);
+  assert(smallCodes.length === 1, "QR kecil + blur tetap terbaca");
+}
+
+console.log("[11/12] Auto-absen dari foto QR (media handler, tanpa perintah)...");
+{
+  const { default: QRCode } = await import("qrcode");
+  const { db } = await load("src/core/database.js");
+  const { setConsent } = await load("src/services/telkom/registry.js");
+  const plugin = (await load("plugins/tools/telkomschool.js")).default;
+  const TEST_NIS = "999888777";
+  const JID = "628111@s.whatsapp.net";
+  const realFetch = globalThis.fetch;
+  let sent = null;
+  let replied = null;
+
+  globalThis.fetch = async (url, opts = {}) => {
+    const u = String(url);
+    const json = (s, b) =>
+      new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json" } });
+    if (u.includes("issueauth")) {
+      const pw = opts.body?.get ? String(opts.body.get("password") || "") : "";
+      if (pw === "password-siswa") return json(200, { token: "jwt.palsu", expired: 86400 });
+      return json(401, { status: "Failed", message: "Credentials not Found" });
+    }
+    if (u.includes("/api/read/")) {
+      return json(200, {
+        status: true,
+        data: { profile: { nis: TEST_NIS, numberid: "12345", fullname: "Siswa Uji" } },
+      });
+    }
+    if (u.includes("/api/presensi-read/")) {
+      return json(200, {
+        status: true,
+        data: [
+          { type: "QR Datang", name: "Presensi Datang", status: false, time: "00:00" },
+          { type: "QR Pulang", name: "Presensi Pulang", status: false, time: "00:00" },
+        ],
+      });
+    }
+    if (u.includes("/api/presensi-write/")) {
+      sent = JSON.parse(opts.body || "{}");
+      return json(200, { status: true, message: "Presensi berhasil dicatat" });
+    }
+    return json(404, {});
+  };
+
+  // Vault + binding akun (agar handler foto punya NIS & password).
+  process.env.TELKOM_STUDENT_PASSWORDS = JSON.stringify({ [TEST_NIS]: "password-siswa" });
+  setConsent(TEST_NIS, { consent: true, actor: JID, jid: JID, autoSubmit: true });
+
+  const qrPng = await QRCode.toBuffer(
+    JSON.stringify([JSON.stringify({ type: "QR Datang", date: "2026-10-22", code: "uuid-1" })]),
+    { type: "png", width: 500, margin: 2 }
+  );
+
+  const sock = {
+    downloadMediaMessage: async () => qrPng,
+    sendMessage: async (jid, content) => {
+      replied = content?.text || "";
+      return { key: { id: "x" } };
+    },
+  };
+  const msg = {
+    key: { remoteJid: "628111@s.whatsapp.net", id: "m1" },
+    message: { imageMessage: { url: "https://wa.me/fake", mimetype: "image/png" } },
+  };
+
+  const handled = await plugin.onMedia(sock, msg, {
+    logger: { info: () => {}, warn: () => {} },
+    senderJid: JID,
+    remoteJid: "628111@s.whatsapp.net",
+  });
+
+  assert(handled === true, "media handler menangani foto QR");
+  assert(Boolean(sent), "absen otomatis terkirim dari foto");
+  assert(sent?.qrType === "QR Datang" && sent?.code === "uuid-1", "payload QR guru ikut dikirim");
+  assert(String(replied || "").includes("PRESENSI"), "balasan ke siswa dikirim");
+
+  globalThis.fetch = realFetch;
+  delete process.env.TELKOM_STUDENT_PASSWORDS;
+
+  const store = db.data.telkom || {};
+  delete (store.students || {})[TEST_NIS];
+  delete (store.usage || {})[TEST_NIS];
+  store.audit = [];
+  try {
+    db.save();
+  } catch (_) {}
+}
+console.log("[12/12] Mode mandiri: NIS + password langsung (tanpa whitelist admin)...");
 {
   const { db } = await load("src/core/database.js");
   const { runAttendanceFlow } = await load("src/services/telkom/service.js");

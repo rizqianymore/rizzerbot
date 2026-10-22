@@ -146,7 +146,8 @@ export default {
 ## Presensi Telkom Schools
 
 Bot bantu siswa **absen otomatis** di gateway Telkom Schools (DigitS) memakai
-kredensial **siswa sendiri** (NIS + password asli).
+kredensial **siswa sendiri** (NIS + password asli). Fokusnya satu: **siswa absen
+sekali jalan** — bot scan QR/barcode guru, kirim presensi, laporkan hasil.
 
 ### Cara paling simpel
 
@@ -161,6 +162,23 @@ whitelist, tidak perlu set endpoint, tidak perlu atur jam absen.
 > Password dipakai sekali (tidak disimpan, tidak masuk log/audit), tapi **tetap
 > terlihat di riwayat chat**. Kalau mau lebih aman, minta admin simpan password
 > di vault — setelah itu cukup `.telkom <nis>` tanpa mengetik password.
+
+### Auto-scan QR / barcode (tanpa perintah)
+
+Siswa **cukup kirim foto QR yang ditampilkan guru** ke bot — tanpa ngetik
+perintah apa pun. Bot akan:
+
+1. scan kode di foto (QR **dan** barcode 1D, via `zxing-wasm` + `jsQR`; aman
+   untuk foto kecil/blur/screenshot),
+2. cari NIS yang terikat ke akun WhatsApp pengirim,
+3. login (password dari vault), kirim presensi memakai QR asli,
+4. balas ringkasan ke siswa.
+
+Kalau password-nya belum ada di vault, bot minta: `.telkom <nis> <password>`.
+Syaratnya: NIS sudah pernah dipakai 1x (otomatis terikat ke akun itu).
+
+> Cara ini persis alur aplikasi resmi: QR guru yang menentukan presensi apa
+> yang tercatat, bukan tebakan bot.
 
 Syarat & aturan:
 
@@ -183,11 +201,9 @@ Syarat & aturan:
 | `.telkom resend <nis>`            | Kirim ulang kode 2FA ke WhatsApp siswa         |
 | `.telkom link`                    | Tautan aplikasi resmi (absen QR + lokasi asli) |
 
-**Absen pakai QR guru (otomatis):** siswa memotret QR yang ditampilkan guru lalu
-mengirim fotonya ke bot dengan caption `.telkom <nis> <password>`. Bot membaca
-QR-nya (`jsQR` + `sharp`, dependensi opsional) lalu mengirim presensi memakai
-token siswa sendiri — persis seperti aplikasi resmi. QR juga bisa ditempel
-langsung sebagai argumen: `.telkom <nis> ["{\"type\":\"QR Datang\",...}"]`.
+**Absen dari foto QR:** kirim foto QR guru ke bot dengan caption
+`.telkom <nis> <password>`. QR juga bisa ditempel langsung sebagai argumen:
+`.telkom <nis> ["{\"type\":\"QR Datang\",...}"]`.
 
 Perintah admin (owner):
 

@@ -12,6 +12,7 @@ import { routeMultiBot } from "./route.js";
 import { checkProfanityInput } from "./profanity.js";
 import { checkPermits, checkRateLimit } from "./limits.js";
 import { executeCommand } from "./execute.js";
+import { runMediaHandlers } from "./media.js";
 
 export async function dispatchMessage(sock, msg, logger) {
   return db.runWithBot(resolveBotJid(sock), () => dispatchInner(sock, msg, logger));
@@ -64,7 +65,9 @@ async function dispatchInner(sock, msg, logger) {
       }
 
       if (ageMs < -5 * 60 * 1000) {
-        logger?.info?.(`[Stale] timestamp masa depan diabaikan (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
+        logger?.info?.(
+          `[Stale] timestamp masa depan diabaikan (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`
+        );
         return;
       }
     }
@@ -111,6 +114,11 @@ async function dispatchInner(sock, msg, logger) {
     logger,
   });
   if (resolved.drop) {
+    // Pesan media tanpa perintah -> coba handler media plugin
+    // (mis. scan QR guru -> absen otomatis).
+    if (resolved.code === "not_command" && (await runMediaHandlers(sock, msg, logger))) {
+      return;
+    }
     if (tapText) logger?.info?.(`[ButtonTap] drop (unknown/blocked): ${tapText}`);
     else if (resolved.reason && !resolved.silent) {
       logger?.info?.(
@@ -175,7 +183,6 @@ async function dispatchInner(sock, msg, logger) {
   if (!isOwner) {
     if (await checkRateLimit(activeSettings, senderJid, sock, msg, remoteJid, cmd)) return;
   } else if (registerOwnerCommand(senderJid)) {
-
     logger?.warn?.(`[OwnerThrottle] ${senderJid} melebihi batas perintah owner via ${botJid}`);
     await sock
       .sendMessage(

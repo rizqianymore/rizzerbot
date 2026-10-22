@@ -1,74 +1,20 @@
+import { scanCodes, scanCodesFromMessage } from "./scanner.js";
+
 /**
- * Decoder QR untuk presensi Telkom Schools.
+ * Pemroses isi kode yang discan (QR guru / barcode).
  *
- * Siswa memotret QR yang ditampilkan guru, lalu mengirim fotonya ke bot.
- * Bot membacanya (jsQR + sharp) dan memakai isi QR itu untuk submit presensi
- * dengan token siswa sendiri — persis seperti aplikasi resmi.
+ * Format resmi Telkom Schools: QR berisi array JSON yang elemen pertamanya
+ * adalah string JSON, contoh:
+ *   ["{\"type\":\"QR Datang\",\"date\":\"2026-10-22\",\"code\":\"...\"}"]
  *
- * Semua dependensi (sharp, jsqr) bersifat opsional: bila tidak tersedia,
- * fungsi ini hanya mengembalikan null (bot tetap jalan tanpa fitur foto).
+ * Format polos (mis. barcode 1D) tetap dipakai apa adanya sebagai `raw`.
  */
 
-let sharpMod = null;
-let jsQrMod = null;
-let depsChecked = false;
-
-async function loadDeps() {
-  if (depsChecked) return { sharp: sharpMod, jsQR: jsQrMod };
-  depsChecked = true;
-  try {
-    const sharp = await import("sharp");
-    sharpMod = sharp.default || sharp;
-  } catch (_) {
-    sharpMod = null;
-  }
-  try {
-    const jsqr = await import("jsqr");
-    jsQrMod = jsqr.default || jsqr;
-  } catch (_) {
-    jsQrMod = null;
-  }
-  return { sharp: sharpMod, jsQR: jsQrMod };
-}
-
-/** Decode QR dari buffer gambar (PNG/JPEG). */
-export async function decodeQrFromBuffer(buffer) {
-  if (!buffer || !buffer.length) return null;
-  const { sharp, jsQR } = await loadDeps();
-  if (!sharp || !jsQR) return null;
-
-  const attempts = [{ width: null }, { width: 1200 }, { width: 2000 }];
-
-  for (const attempt of attempts) {
-    try {
-      let pipeline = sharp(buffer).toColourspace("srgb").ensureAlpha();
-      if (attempt.width) pipeline = pipeline.resize({ width: attempt.width, withoutEnlargement: false });
-      const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
-      const result = jsQR(new Uint8ClampedArray(data), info.width, info.height);
-      if (result?.data) return String(result.data);
-    } catch (_) {
-      // coba skala berikutnya
-    }
-  }
-  return null;
-}
-
-/** Download media dari pesan WhatsApp lalu decode QR-nya. */
-export async function decodeQrFromMessage(sock, msg) {
-  try {
-    const { getMediaBuffer } = await import("@/src/services/fetch/media/buffer.js");
-    const buffer = await getMediaBuffer(sock, msg, { maxBytes: 12 * 1024 * 1024 });
-    if (!buffer) return null;
-    return await decodeQrFromBuffer(buffer);
-  } catch (_) {
-    return null;
-  }
-}
+export { scanCodes, scanCodesFromMessage };
 
 /**
  * Parse isi QR resmi Telkom Schools.
- * Aplikasi resmi memindai QR berisi array JSON yang elemen pertamanya
- * adalah string JSON, contoh: ["{\"type\":\"QR Datang\", ...}"]
+ * Mengembalikan objek payload, atau null bila formatnya tidak dikenali.
  */
 export function parseQrPayload(raw) {
   const text = String(raw || "").trim();
@@ -95,6 +41,21 @@ export function parseQrPayload(raw) {
   return value;
 }
 
+/**
+ * Parse kode yang discan menjadi bentuk siap pakai.
+ * @returns {{payload: object|null, raw: string, kind: string|null, format: string}}
+ */
+export function parseAttendanceCode(raw, format = "unknown") {
+  const text = String(raw || "").trim();
+  const payload = parseQrPayload(text);
+  return {
+    payload,
+    raw: text,
+    format,
+    kind: payload?.type ? qrTypeToKind(payload.type) : null,
+  };
+}
+
 /** Petakan tipe QR resmi ke jenis presensi (datang/pulang/...). */
 export function qrTypeToKind(type) {
   const key = String(type || "")
@@ -106,4 +67,10 @@ export function qrTypeToKind(type) {
   if (key === "qr aktivitas") return "aktivitas";
   if (key === "qr event") return "event";
   return null;
+}
+
+/** Decode QR dari buffer gambar (helper lama, tetap dipakai test). */
+export async function decodeQrFromBuffer(buffer) {
+  const codes = await scanCodes(buffer);
+  return codes.length ? codes[0].text : null;
 }

@@ -118,6 +118,24 @@ export function listConsent() {
     .sort((a, b) => String(a.nis).localeCompare(String(b.nis)));
 }
 
+/**
+ * Cari NIS yang terikat ke sebuah akun WhatsApp.
+ * Dipakai untuk auto-absen: siswa tinggal kirim foto QR guru.
+ */
+export function findConsentByJid(jid) {
+  const target = String(jid || "").trim();
+  if (!target) return null;
+  const store = section();
+  for (const entry of Object.values(store.students)) {
+    if (!entry || typeof entry !== "object") continue;
+    if (!entry.jid) continue;
+    if (entry.jid === target) {
+      return { nis: entry.nis, consent: Boolean(entry.consent), autoSubmit: entry.autoSubmit !== false };
+    }
+  }
+  return null;
+}
+
 /** Status kuota harian NIS tanpa menambah counter. */
 export function quotaStatus(nis, today) {
   const key = normalizeNis(nis);
