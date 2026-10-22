@@ -387,6 +387,13 @@ export async function telkomRequest(url, options = {}) {
   let challenged = false;
   let stubRetries = 0;
 
+  // FormData native -> objek field (bisa dikirim ulang dari browser remote).
+  let formFields = null;
+  if (isForm && body && typeof body.entries === "function") {
+    formFields = {};
+    for (const [key, value] of body.entries()) formFields[key] = String(value);
+  }
+
   for (let attempt = 0; attempt < 4; attempt++) {
     const jarCookie = mergedCookie(url, cookie);
     if (jarCookie) headers.Cookie = jarCookie;
@@ -472,7 +479,59 @@ export async function telkomRequest(url, options = {}) {
       }
     }
 
-    // B2. Bright Data native proxy (Web Unlocker lewat proxy 44445).
+    // B2. Bright Data Scraping Browser (remote, IP bersih) — JALUR UTAMA untuk
+    //     request ber-token: browser asli mengirim header Authorization apa adanya
+    //     (Web Unlocker REST & native proxy bisa menghapusnya).
+    if (allowBrowser && attempt < 3 && remoteBrowserEnabled()) {
+      // 1) Request langsung dari dalam remote browser (header auth forwarded).
+      //    Fungsi ini sekaligus menunggu challenge CF selesai + mengulang sekali.
+      try {
+        const inPage = await remoteInPageFetch(url, {
+          method,
+          headers: buildRequestHeaders({
+            token,
+            origin,
+            referer,
+            contentType: isForm ? "" : contentType,
+            extra: extraHeaders,
+          }),
+          body: isForm ? null : body,
+          form: isForm ? formFields : null,
+        });
+        if (inPage?.ok && inPage.status >= 200 && inPage.status < 400) {
+          log("info", "request sukses via remote browser", { url, status: inPage.status });
+          return { status: inPage.status, data: inPage.data, headers: {}, challenged };
+        }
+        if (inPage?.status === 401 || inPage?.status === 403) {
+          log("warn", "remote browser: server menolak (401/403)", { url, status: inPage.status });
+        }
+      } catch (err) {
+        log("warn", `remote browser error: ${String(err?.message || err).slice(0, 140)}`);
+      }
+
+      // 2) Fallback: ambil cookie clearance dulu, lalu ulangi request langsung.
+      try {
+        const target = origin || new URL(url).origin;
+        const solved = await remoteSolveChallenge(target);
+        if (solved?.cleared) {
+          for (const cookie of solved.cookies || []) {
+            storeMemoryCookies(url, `${cookie.name}=${cookie.value}`);
+          }
+          const fresh = mergedCookie(url, cookie);
+          if (fresh) {
+            headers.Cookie = fresh;
+            await sleep(400);
+            continue;
+          }
+        }
+      } catch (err) {
+        log("warn", `remote browser challenge error: ${String(err?.message || err).slice(0, 140)}`);
+      }
+    }
+
+    // B3. Bright Data native proxy (Web Unlocker lewat proxy 44445).
+    //     Catatan: beberapa zona proxy MENGHAPUS header Authorization -> untuk
+    //     request ber-token, remote browser (B2) lebih akurat.
     if (allowBrowser && attempt < 3 && nativeProxyEnabled()) {
       try {
         const viaProxy = await proxyRequest(url, {
@@ -510,54 +569,6 @@ export async function telkomRequest(url, options = {}) {
         }
       } catch (err) {
         log("warn", `native proxy error: ${String(err?.message || err).slice(0, 140)}`);
-      }
-    }
-
-    // B3. Bright Data Scraping Browser (remote, IP bersih) — jalur utama.
-    if (allowBrowser && attempt < 3 && remoteBrowserEnabled()) {
-      try {
-        const target = origin || new URL(url).origin;
-        const solved = await remoteSolveChallenge(target);
-        log("info", "remote browser: challenge dicek", {
-          url,
-          cleared: solved?.cleared,
-        });
-        if (solved?.cleared) {
-          for (const cookie of solved.cookies || []) {
-            storeMemoryCookies(url, `${cookie.name}=${cookie.value}`);
-          }
-          const fresh = mergedCookie(url, cookie);
-          if (fresh) {
-            headers.Cookie = fresh;
-            await sleep(400);
-            continue;
-          }
-        }
-      } catch (err) {
-        log("warn", `remote browser error: ${String(err?.message || err).slice(0, 140)}`);
-      }
-
-      // Request API langsung dari dalam remote browser (bisa pakai header auth).
-      if (!isForm) {
-        try {
-          const inPage = await remoteInPageFetch(url, {
-            method,
-            headers: buildRequestHeaders({
-              token,
-              origin,
-              referer,
-              contentType,
-              extra: extraHeaders,
-            }),
-            body,
-          });
-          if (inPage?.ok && inPage.status >= 200 && inPage.status < 400) {
-            log("info", "request sukses via remote browser", { url, status: inPage.status });
-            return { status: inPage.status, data: inPage.data, headers: {}, challenged };
-          }
-        } catch (err) {
-          log("warn", `remote in-page fetch gagal: ${String(err?.message || err).slice(0, 140)}`);
-        }
       }
     }
 

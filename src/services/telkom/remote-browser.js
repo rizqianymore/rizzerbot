@@ -140,37 +140,47 @@ export async function remoteInPageFetch(url, { method = "GET", headers = {}, bod
     const origin = new URL(url).origin;
     await page.goto(origin, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS }).catch(() => {});
 
-    const result = await page.evaluate(
-      async (target, opts) => {
-        try {
-          let payload;
-          if (opts.form) {
-            payload = new FormData();
-            for (const [key, value] of Object.entries(opts.form)) {
-              payload.append(key, String(value));
-            }
-          } else if (opts.body) {
-            payload = JSON.stringify(opts.body);
-          }
-          const resp = await window.fetch(target, {
-            method: opts.method || "GET",
-            headers: opts.headers || {},
-            body: payload,
-            credentials: "include",
-          });
-          const text = await resp.text();
-          let parsed = null;
+    const doFetch = async () =>
+      page.evaluate(
+        async (target, opts) => {
           try {
-            parsed = JSON.parse(text);
-          } catch (_) {}
-          return { ok: resp.ok, status: resp.status, data: parsed !== null ? parsed : text };
-        } catch (err) {
-          return { ok: false, error: err.message };
-        }
-      },
-      url,
-      { method, headers, body, form }
-    );
+            let payload;
+            if (opts.form) {
+              payload = new FormData();
+              for (const [key, value] of Object.entries(opts.form)) {
+                payload.append(key, String(value));
+              }
+            } else if (opts.body) {
+              payload = JSON.stringify(opts.body);
+            }
+            const resp = await window.fetch(target, {
+              method: opts.method || "GET",
+              headers: opts.headers || {},
+              body: payload,
+              credentials: "include",
+            });
+            const text = await resp.text();
+            let parsed = null;
+            try {
+              parsed = JSON.parse(text);
+            } catch (_) {}
+            return { ok: resp.ok, status: resp.status, data: parsed !== null ? parsed : text };
+          } catch (err) {
+            return { ok: false, error: err.message };
+          }
+        },
+        url,
+        { method, headers, body, form }
+      );
+
+    // Beri waktu challenge Cloudflare selesai di halaman itu, lalu coba ulang
+    // sekali lagi kalau masih kena proteksi.
+    await new Promise((r) => setTimeout(r, 2500));
+    let result = await doFetch();
+    if (result && !result.ok && result.status >= 400) {
+      await new Promise((r) => setTimeout(r, 3000));
+      result = await doFetch();
+    }
 
     await page.close().catch(() => {});
     if (!result || result.error) {
