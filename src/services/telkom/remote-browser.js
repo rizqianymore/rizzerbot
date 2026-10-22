@@ -24,8 +24,15 @@ export function scrapingBrowserEndpoint() {
   if (direct) return direct;
 
   const customer = String(process.env.BRIGHTDATA_CUSTOMER || "").trim();
-  const password = String(process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
-  const zone = String(process.env.BRIGHTDATA_SCRAPING_BROWSER_ZONE || "").trim();
+  // Password remote browser = password zone scraping_browser1 (BEDA dari
+  // password zone web_unlocker2). Fallback ke BRIGHTDATA_PROXY_PASSWORD.
+  const password = String(
+    process.env.BRIGHTDATA_SCRAPING_BROWSER_PASSWORD ||
+      process.env.BRIGHTDATA_PROXY_PASSWORD ||
+      process.env.BRIGHTDATA_PASSWORD ||
+      ""
+  ).trim();
+  const zone = String(process.env.BRIGHTDATA_SCRAPING_BROWSER_ZONE || "scraping_browser1").trim();
   if (customer && password && zone) {
     return `wss://brd-customer-${customer}-zone-${zone}:${password}@brd.superproxy.io:9222`;
   }

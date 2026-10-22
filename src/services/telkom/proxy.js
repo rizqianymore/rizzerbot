@@ -27,6 +27,15 @@ const DEFAULT_HOST = "brd.superproxy.io";
 const DEFAULT_PORT = 44445;
 
 /** Konfigurasi native proxy (null kalau belum dikonfigurasi). */
+/**
+ * Konfigurasi native proxy (Web Unlocker, port 44445).
+ *
+ * CATATAN: tiap zone Bright Data punya password sendiri:
+ *   - native proxy   : BRIGHTDATA_ZONE (default web_unlocker2) + BRIGHTDATA_PROXY_PASSWORD
+ *   - remote browser : BRIGHTDATA_SCRAPING_BROWSER_ZONE (default scraping_browser1)
+ *                      + BRIGHTDATA_SCRAPING_BROWSER_PASSWORD
+ * Jangan campur password antar zone.
+ */
 export function nativeProxyConfig() {
   const direct = String(process.env.BRIGHTDATA_PROXY || "").trim();
   if (direct) {
@@ -45,7 +54,9 @@ export function nativeProxyConfig() {
 
   const customer = String(process.env.BRIGHTDATA_CUSTOMER || "").trim();
   const password = String(process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
-  const zone = String(process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim();
+  // Zone native proxy (Web Unlocker). PENTING: tiap zone punya password
+  // sendiri, jangan pakai password zone lain.
+  const zone = String(process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim();
   if (!customer || !password) return null;
 
   return {

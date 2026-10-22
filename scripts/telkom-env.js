@@ -32,6 +32,7 @@ const DEFAULTS = [
   ["TELKOM_WINDOW_PULANG", "14:30-16:30", false],
   // --- bypass Cloudflare ---
   ["BRIGHTDATA_SCRAPING_BROWSER_ZONE", "scraping_browser1", false],
+  ["BRIGHTDATA_PROXY_ZONE", "web_unlocker2", false],
   ["BRIGHTDATA_SCRAPING_BROWSER_CLOSE", "1", false],
   ["TELKOM_VIA_BRIGHTDATA_BROWSER", "1", false],
   // --- browser stealth: hemat RAM ---
@@ -111,7 +112,11 @@ function status() {
   const customer = keys.get("BRIGHTDATA_CUSTOMER");
   const proxyPass = keys.get("BRIGHTDATA_PROXY_PASSWORD") || keys.get("BRIGHTDATA_PASSWORD");
   const sbZone = keys.get("BRIGHTDATA_SCRAPING_BROWSER_ZONE");
+  const sbPassword = keys.get("BRIGHTDATA_SCRAPING_BROWSER_PASSWORD");
+  const proxyZone = keys.get("BRIGHTDATA_PROXY_ZONE") || keys.get("BRIGHTDATA_ZONE");
   console.log(`  BRIGHTDATA_SCRAPING_BROWSER_WS: ${ws ? "terisi" : "kosong"}`);
+  console.log(`  password zone scraping_browser1: ${sbPassword ? "terisi" : "KOSONG"}`);
+  console.log(`  password zone ${proxyZone || "web_unlocker2"}: ${proxyPass ? "terisi" : "KOSONG"}`);
   if (!ws) {
     console.log(`  BRIGHTDATA_CUSTOMER            : ${customer ? "terisi" : "kosong"}`);
     console.log(`  BRIGHTDATA_PROXY_PASSWORD      : ${proxyPass ? "terisi" : "kosong"}`);
