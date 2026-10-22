@@ -9,6 +9,8 @@
  *                 "date": "2026-10-22", "time": "08:00", "status": true } ] }
  */
 
+import { describeDistance } from "./school.js";
+
 const WIB = "Asia/Jakarta";
 
 export const ATTENDANCE_KINDS = ["datang", "pulang"];
@@ -262,6 +264,8 @@ export function formatAttendanceSummary({
   submit = null,
   now = new Date(),
   title = "*PRESENSI HARI INI*",
+  school = "",
+  schoolUrl = "",
 } = {}) {
   const entries = Array.isArray(parsed.entries) ? parsed.entries : [];
   const lines = [title];
@@ -303,6 +307,10 @@ export function formatAttendanceSummary({
   }
 
   lines.push("", describeSubmit(submit, now));
+
+  const distance = describeDistance(submit?.distance);
+  if (distance) lines.push(`📍 Kamu ${distance}${school ? ` · ${school}` : ""}`);
+  if (schoolUrl) lines.push(`🗺️ ${schoolUrl}`);
 
   return lines.join("\n");
 }

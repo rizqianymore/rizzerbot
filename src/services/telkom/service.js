@@ -11,10 +11,11 @@ import {
 } from "./attendance.js";
 import { audit, getConsent, isConsented, maskNis, quotaStatus, recordUsage, setConsent } from "./registry.js";
 import { createSession } from "./session.js";
-import { resolvePassword } from "./vault.js";
+import { resolvePassword, credentialSource as credentialSourceOf } from "./vault.js";
 import { takePendingTwoFactor, setPendingTwoFactor } from "./pending.js";
 import { qrTypeToKind } from "./qr.js";
 import { toApiLocation } from "./location.js";
+import { distanceToSchool, schoolInfo, useSchoolLocation } from "./school.js";
 import { clearTelkomCookies } from "./http.js";
 import { db } from "@/src/core/database.js";
 
@@ -144,6 +145,7 @@ async function maybeSubmit({
     }
 
     try {
+      const distance = distanceToSchool(location);
       const response = await submitAttendance({
         token: session.token,
         cookie: session.cookie,
@@ -171,6 +173,7 @@ async function maybeSubmit({
         success: ok,
         message: message.slice(0, 120),
         window: window.window,
+        distance,
         time: submittedAt,
       };
     } catch (err) {
@@ -219,9 +222,11 @@ export async function runAttendanceFlow({
   const typed = String(inlinePassword || "").trim();
   let password = null;
   let credentialSource = "chat";
+  let selfService = false;
 
   if (typed) {
     password = typed;
+    selfService = true;
   } else {
     credentialSource = "vault";
     try {
@@ -230,12 +235,16 @@ export async function runAttendanceFlow({
       audit("reject_no_credential", { nis: maskNis(nis) }, logger);
       return fail(err?.code === "invalid_nis" ? "invalid_nis" : "missing_credential", logger);
     }
+    // Pola password sekolah (dummy@{nis}) = kredensial mandiri siswa.
+    if (credentialSourceOf(nis) === "pola") {
+      credentialSource = "pola";
+      selfService = true;
+    }
   }
 
   // 1c. Consent: whitelist admin (opsional) ATAU kredensial sendiri dari chat.
   const consent = getConsent(nis);
   const consented = isConsented(nis);
-  const selfService = credentialSource === "chat" && !consented;
 
   if (!consented && !selfService) {
     audit("reject_no_consent", { nis: maskNis(nis), actor: maskNis(actor) }, logger);
@@ -353,6 +362,13 @@ export async function runAttendanceFlow({
     audit("status", { nis: maskNis(nis), entries: parsed.entries.length }, logger);
 
     // 6. Submit presensi (otomatis: bot yang tentukan, server yang memvalidasi)
+    //    Lokasi: lokasi asli siswa, atau koordinat sekolah bila diizinkan admin.
+    const school = schoolInfo();
+    let effectiveLocation = location;
+    if (!effectiveLocation && useSchoolLocation()) {
+      effectiveLocation = { latitude: school.latitude, longitude: school.longitude };
+    }
+
     const submit = await maybeSubmit({
       nis,
       session,
@@ -360,7 +376,7 @@ export async function runAttendanceFlow({
       consent,
       allowSubmit,
       logger,
-      location,
+      location: effectiveLocation,
       qrPayload,
       selfService,
     });
@@ -372,6 +388,8 @@ export async function runAttendanceFlow({
       parsed,
       submit,
       title: allowSubmit ? "*PRESENSI HARI INI*" : "*STATUS PRESENSI (cek saja)*",
+      school: school.name,
+      schoolUrl: school.url,
     });
 
     return {

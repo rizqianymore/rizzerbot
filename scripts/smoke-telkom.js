@@ -185,6 +185,18 @@ try {
 
 console.log("[10/12] Scanner kode (QR & barcode 1D)...");
 {
+  const { schoolInfo, distanceMeters, distanceToSchool, useSchoolLocation } = await load(
+    "src/services/telkom/school.js"
+  );
+  const school = schoolInfo();
+  assert(school.name.length > 0, "data sekolah termuat");
+  assert(Number.isFinite(school.latitude) && Number.isFinite(school.longitude), "koordinat sekolah valid");
+  assert(school.url.includes("google.com/maps"), "link map sekolah tersedia");
+  assert(distanceMeters(-6.1544783, 106.7507579, -6.1544783, 106.7507579) === 0, "jarak ke diri sendiri 0 m");
+  assert(distanceToSchool({ latitude: -6.1544783, longitude: 106.7507579 }) < 5, "jarak lokasi sekolah terhitung 0 m");
+  assert(distanceToSchool({ latitude: -6.2, longitude: 106.8 }) > 1000, "jarak lokasi jauh terhitung");
+  assert(useSchoolLocation() === false, "mode lokasi sekolah default nonaktif");
+
   const { scanCodes } = await load("src/services/telkom/scanner.js");
   const { parseAttendanceCode } = await load("src/services/telkom/qr.js");
   const { buildSubmitPayload } = await load("src/services/telkom/client.js");

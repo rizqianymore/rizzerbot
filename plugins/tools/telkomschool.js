@@ -5,6 +5,7 @@ import { parseAttendanceCode, scanCodes } from "@/src/services/telkom/qr.js";
 import { findConsentByJid } from "@/src/services/telkom/registry.js";
 import { hasCredential } from "@/src/services/telkom/vault.js";
 import { clearScanState, getScanState, setScanState } from "@/src/services/telkom/pending.js";
+import { schoolInfo } from "@/src/services/telkom/school.js";
 import {
   extractGpsFromImage,
   extractLocationFromMessage,
@@ -192,8 +193,12 @@ export default {
     const lowerFirst = firstArg.toLowerCase();
 
     if (lowerFirst === "link" || lowerFirst === "presensi" || lowerFirst === "help") {
+      const school = schoolInfo();
       return reply(
         `*PRESENSI TELKOM SCHOOLS*\n\n` +
+          `📍 ${school.name}\n` +
+          `${school.address}\n` +
+          `🗺️ ${school.url}\n\n` +
           `Buka halaman resmi berikut untuk absen (QR + lokasi asli dari perangkatmu):\n` +
           `${APP_URL}\n\n` +
           `_Bot memakai akun & token kamu sendiri, tidak memalsukan presensi._`

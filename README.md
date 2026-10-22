@@ -196,6 +196,23 @@ Syarat & aturan:
   yang memvalidasi, bot tidak memalsukan jawaban.
 - Session (token + cookie) hanya di **memori**, dibersihkan otomatis.
 
+### Data sekolah
+
+```bash
+TELKOM_SCHOOL_NAME=SMK Telkom Jakarta
+TELKOM_SCHOOL_LAT=-6.1544783
+TELKOM_SCHOOL_LNG=106.7507579
+TELKOM_SCHOOL_RADIUS_M=150
+TELKOM_SCHOOL_URL=https://www.google.com/maps/place/SMK+Telkom+Jakarta/...
+```
+
+Dipakai untuk link Google Maps di balasan bot + menghitung jarak lokasi
+siswa ke sekolah (`📍 Kamu 250 m dari sekolah`).
+
+> `TELKOM_USE_SCHOOL_LOCATION=1` (default **NONAKTIF**) akan mengirim koordinat
+> sekolah sebagai lokasi absen — ini **mematikan pengecekan radius** di server.
+> Hanya sah kalau sekolah resmi mengizinkan; default memakai lokasi asli siswa.
+
 ### Perintah
 
 | Perintah                          | Fungsi                                         |
