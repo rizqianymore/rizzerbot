@@ -500,7 +500,14 @@ export async function telkomRequest(url, options = {}) {
             challenged,
           };
         }
-        log("warn", "native proxy menolak request", { url, status: viaProxy.status });
+        if (viaProxy.status === 401 || viaProxy.status === 403) {
+          log("warn", "native proxy menjawab 401/403 - Authorization kemungkinan tidak diteruskan proxy", {
+            url,
+            status: viaProxy.status,
+          });
+        } else {
+          log("warn", "native proxy menolak request", { url, status: viaProxy.status });
+        }
       } catch (err) {
         log("warn", `native proxy error: ${String(err?.message || err).slice(0, 140)}`);
       }
