@@ -164,6 +164,38 @@ assert(
 if (prevBdKey === undefined) delete process.env.BRIGHTDATA_API_KEY;
 else process.env.BRIGHTDATA_API_KEY = prevBdKey;
 
+// Scraping Browser remote (Bright Data WebSocket)
+const { scrapingBrowserEndpoint, remoteBrowserEnabled } = await load("src/services/telkom/remote-browser.js");
+const prevEnv = {
+  BRIGHTDATA_SCRAPING_BROWSER_WS: process.env.BRIGHTDATA_SCRAPING_BROWSER_WS,
+  BRIGHTDATA_CUSTOMER: process.env.BRIGHTDATA_CUSTOMER,
+  BRIGHTDATA_PROXY_PASSWORD: process.env.BRIGHTDATA_PROXY_PASSWORD,
+  BRIGHTDATA_SCRAPING_BROWSER_ZONE: process.env.BRIGHTDATA_SCRAPING_BROWSER_ZONE,
+};
+for (const key of Object.keys(prevEnv)) delete process.env[key];
+delete process.env.TELKOM_VIA_BRIGHTDATA_BROWSER;
+assert(scrapingBrowserEndpoint() === "", "endpoint scraping browser kosong tanpa konfigurasi");
+assert(remoteBrowserEnabled() === false, "scraping browser nonaktif tanpa endpoint");
+process.env.BRIGHTDATA_SCRAPING_BROWSER_WS =
+  "wss://brd-customer-cus-zone-scraping_browser1:pass@brd.superproxy.io:9222";
+assert(scrapingBrowserEndpoint().startsWith("wss://brd-customer-"), "endpoint scraping browser dibaca dari env");
+assert(remoteBrowserEnabled() === true, "scraping browser aktif kalau endpoint ada");
+process.env.TELKOM_VIA_BRIGHTDATA_BROWSER = "0";
+assert(remoteBrowserEnabled() === false, "scraping browser bisa dimatikan manual");
+delete process.env.TELKOM_VIA_BRIGHTDATA_BROWSER;
+delete process.env.BRIGHTDATA_SCRAPING_BROWSER_WS;
+process.env.BRIGHTDATA_CUSTOMER = "cus";
+process.env.BRIGHTDATA_PROXY_PASSWORD = "pass";
+process.env.BRIGHTDATA_SCRAPING_BROWSER_ZONE = "scraping_browser1";
+assert(
+  scrapingBrowserEndpoint() === "wss://brd-customer-cus-zone-scraping_browser1:pass@brd.superproxy.io:9222",
+  "endpoint scraping browser bisa disusun dari 3 env terpisah"
+);
+for (const [key, value] of Object.entries(prevEnv)) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+}
+
 console.log("[7/12] Payload submit + sesi 2FA...");
 const submitBody = buildSubmitPayload({ studentId: "12345", kind: "datang", date: "2026-10-22" });
 assert(submitBody.studentId === "12345", "studentId masuk payload");

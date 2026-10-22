@@ -1,6 +1,7 @@
 import { cookieJar as globalCookieJar } from "@/src/utils/request/cookies.js";
 import { stealthBrowser } from "@/src/utils/request/browser.js";
 import { brightDataRequest, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
+import { remoteBrowserEnabled, remoteInPageFetch, remoteSolveChallenge } from "./remote-browser.js";
 import { UA } from "./config.js";
 
 /**
@@ -391,7 +392,55 @@ export async function telkomRequest(url, options = {}) {
       }
     }
 
-    // B2. Bright Data Web Unlocker (pakai .env: BRIGHTDATA_API_KEY + ZONE)
+    // B2. Bright Data Scraping Browser (remote, IP bersih) — jalur utama.
+    if (allowBrowser && attempt < 3 && remoteBrowserEnabled()) {
+      try {
+        const target = origin || new URL(url).origin;
+        const solved = await remoteSolveChallenge(target);
+        log("info", "remote browser: challenge dicek", {
+          url,
+          cleared: solved?.cleared,
+        });
+        if (solved?.cleared) {
+          for (const cookie of solved.cookies || []) {
+            storeMemoryCookies(url, `${cookie.name}=${cookie.value}`);
+          }
+          const fresh = mergedCookie(url, cookie);
+          if (fresh) {
+            headers.Cookie = fresh;
+            await sleep(400);
+            continue;
+          }
+        }
+      } catch (err) {
+        log("warn", `remote browser error: ${String(err?.message || err).slice(0, 140)}`);
+      }
+
+      // Request API langsung dari dalam remote browser (bisa pakai header auth).
+      if (!isForm) {
+        try {
+          const inPage = await remoteInPageFetch(url, {
+            method,
+            headers: buildRequestHeaders({
+              token,
+              origin,
+              referer,
+              contentType,
+              extra: extraHeaders,
+            }),
+            body,
+          });
+          if (inPage?.ok && inPage.status >= 200 && inPage.status < 400) {
+            log("info", "request sukses via remote browser", { url, status: inPage.status });
+            return { status: inPage.status, data: inPage.data, headers: {}, challenged };
+          }
+        } catch (err) {
+          log("warn", `remote in-page fetch gagal: ${String(err?.message || err).slice(0, 140)}`);
+        }
+      }
+    }
+
+    // B3. Bright Data Web Unlocker (REST, lebih murah)
     if (allowBrowser && attempt < 3) {
       const unlocked = await tryBrightDataUnlock(url, {
         method,
@@ -409,9 +458,9 @@ export async function telkomRequest(url, options = {}) {
         log("info", "challenge teratasi via Bright Data Web Unlocker", { url });
         return { status: unlocked.status, data: unlocked.data, headers: {}, challenged };
       }
-      log("info", "Bright Data tidak resolving, lanjut ke browser stealth", { url });
+      log("info", "Bright Data tidak resolving, lanjut browser stealth", { url });
 
-      // B3. escalation ke browser stealth untuk mendapat clearance baru
+      // B4. escalation ke browser stealth (lokal) untuk mendapat clearance baru
       try {
         const target = origin || new URL(url).origin;
         const solved = await stealthBrowser.solveChallenge(target, { timeoutMs: 25000 });

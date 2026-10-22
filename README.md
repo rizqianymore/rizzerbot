@@ -283,8 +283,29 @@ Proteksi yang ditangani otomatis:
 
 - **Session bootstrap** — server app balas `403` + stub redirect JS lalu memberi
   cookie sesi; bot mengulang request dengan cookie tersebut.
+- **Bright Data Scraping Browser** (remote, WS) — browser sungguhan di DC
+  BrightData (IP bersih, tanpa challenge). Request API dilakukan dari dalam
+  browser itu, jadi header `Authorization` siswa tetap terpakai.
+- **Bright Data Web Unlocker** (REST) — lebih murah, untuk ambil halaman yang
+  di-challenge.
 - **Cloudflare challenge** ("Just a moment...") — retry pakai clearance cookie,
-  lalu eskalasi ke browser stealth (headless), terakhir request dari dalam browser.
+  lalu eskalasi ke browser stealth (headless lokal), terakhir request dari
+  dalam browser.
+
+Urutan eskalasi (otomatis, kelihatan di log):
+
+```
+direct -> cookie jar -> Scraping Browser (remote) -> Web Unlocker (REST) -> browser stealth -> in-page fetch
+```
+
+```bash
+# .env — remote browser (jalur terbaik)
+BRIGHTDATA_SCRAPING_BROWSER_WS=wss://brd-customer-<CUSTOMER>-zone-scraping_browser1:<PASSWORD>@brd.superproxy.io:9222
+# atau 3 baris terpisah:
+BRIGHTDATA_CUSTOMER=<CUSTOMER>
+BRIGHTDATA_PROXY_PASSWORD=<PASSWORD>
+BRIGHTDATA_SCRAPING_BROWSER_ZONE=scraping_browser1
+```
 
 > Submit memakai token & akun siswa sendiri. Bila server menolak (mis. QR guru
 > tidak tersedia / lokasi tidak dikirim), jawaban **tidak dipalsukan** — user

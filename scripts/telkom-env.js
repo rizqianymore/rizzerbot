@@ -87,6 +87,25 @@ function status() {
   if (!bdKey) {
     console.log("  -> bypass Cloudflare telkom pakai browser stealth (puppeteer).");
   }
+
+  console.log("");
+  console.log("Scraping Browser (remote, jalur terbaik):");
+  const ws = keys.get("BRIGHTDATA_SCRAPING_BROWSER_WS");
+  const customer = keys.get("BRIGHTDATA_CUSTOMER");
+  const proxyPass = keys.get("BRIGHTDATA_PROXY_PASSWORD") || keys.get("BRIGHTDATA_PASSWORD");
+  const sbZone = keys.get("BRIGHTDATA_SCRAPING_BROWSER_ZONE");
+  console.log(`  BRIGHTDATA_SCRAPING_BROWSER_WS: ${ws ? "terisi" : "kosong"}`);
+  if (!ws) {
+    console.log(`  BRIGHTDATA_CUSTOMER            : ${customer ? "terisi" : "kosong"}`);
+    console.log(`  BRIGHTDATA_PROXY_PASSWORD      : ${proxyPass ? "terisi" : "kosong"}`);
+    console.log(`  BRIGHTDATA_SCRAPING_BROWSER_ZONE: ${sbZone || "kosong (mis. scraping_browser1)"}`);
+  }
+  console.log(`  TELKOM_VIA_BRIGHTDATA_BROWSER  : ${keys.get("TELKOM_VIA_BRIGHTDATA_BROWSER") || "1 (default)"}`);
+  if (ws || (customer && proxyPass && sbZone)) {
+    console.log("  -> siap: challenge diatasi lewat remote browser (IP bersih).");
+  } else {
+    console.log("  -> scraping browser nonaktif; pakai Web Unlocker / browser stealth.");
+  }
 }
 
 function apply() {

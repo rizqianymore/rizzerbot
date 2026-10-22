@@ -53,6 +53,7 @@
   "optionalDependencies": {
     "jsqr": "^1.4.0",
     "puppeteer": "^25.9.0",
+    "puppeteer-core": "^25.13.0",
     "sharp": "^0.35.5",
     "zxing-wasm": "^3.1.6"
   },
