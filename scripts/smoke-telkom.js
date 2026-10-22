@@ -178,6 +178,7 @@ console.log("[10/12] Scanner kode (QR & barcode 1D)...");
 {
   const { scanCodes } = await load("src/services/telkom/scanner.js");
   const { parseAttendanceCode } = await load("src/services/telkom/qr.js");
+  const { buildSubmitPayload } = await load("src/services/telkom/client.js");
   const { default: QRCode } = await import("qrcode");
   const officialText = JSON.stringify([JSON.stringify({ type: "QR Datang", code: "abc" })]);
 
@@ -190,6 +191,34 @@ console.log("[10/12] Scanner kode (QR & barcode 1D)...");
   const small = await QRCode.toBuffer(officialText, { type: "jpeg", width: 180, quality: 70 });
   const smallCodes = await scanCodes(small);
   assert(smallCodes.length === 1, "QR kecil + blur tetap terbaca");
+
+  // Format QR yang dipakai plugin .absensi (guru): objek JSON polos.
+  const absensiPayload = JSON.stringify({
+    id: 3919,
+    lemdikId: 47,
+    createdAt: "2026-10-22 07:24:38",
+    type: "QR Datang",
+  });
+  const absensiPng = await QRCode.toBuffer(absensiPayload, {
+    type: "png",
+    errorCorrectionLevel: "H",
+    margin: 2,
+    scale: 8,
+  });
+  const absensiCodes = await scanCodes(absensiPng);
+  const absensiParsed = parseAttendanceCode(absensiCodes[0]?.text, absensiCodes[0]?.format);
+  assert(absensiParsed?.kind === "datang", "QR format .absensi dikenali");
+  assert(absensiParsed?.payload?.id === 3919, "id QR .absensi terbaca");
+  assert(absensiParsed?.payload?.createdAt === "2026-10-22 07:24:38", "createdAt QR terbaca");
+
+  const body = buildSubmitPayload({
+    studentId: "88123",
+    kind: absensiParsed.kind,
+    qrPayload: absensiParsed.payload,
+    date: "2026-10-22",
+  });
+  assert(body.qrType === "QR Datang", "qrType mengikuti QR guru");
+  assert(body.id === 3919 && body.lemdikId === 47, "id & lemdikId QR ikut terkirim ke server");
 }
 
 console.log("[11/12] Auto-absen dari foto QR (media handler, tanpa perintah)...");
