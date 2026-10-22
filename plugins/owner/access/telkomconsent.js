@@ -22,6 +22,7 @@ function usage() {
     `*KONSENT TELKOM SCHOOLS*\n\n` +
     `• \`add <nis> [nomor_wa] [catatan]\` — daftarkan NIS + consent\n` +
     `• \`remove <nis>\` — cabut NIS dari whitelist\n` +
+    `• \`unbind <nis>\` — lepas binding NIS ke akun WA (siswa ganti nomor)\n` +
     `• \`auto <nis> on|off\` — izinkan/tolak submit otomatis\n` +
     `• \`status <nis>\` — cek consent, kuota, dan keberadaan kredensial di vault\n` +
     `• \`list\` — daftar NIS terdaftar\n` +
@@ -90,6 +91,26 @@ export default {
       return removed
         ? `✅ NIS \`${nis}\` dicabut dari whitelist consent.`
         : `⚠️ NIS \`${nis}\` tidak ada di whitelist.`;
+    }
+
+    if (sub === "unbind") {
+      // Lepas binding NIS <-> akun WhatsApp (siswa ganti nomor / device).
+      const entry = getConsent(nis);
+      if (!entry) return reply(`⚠️ NIS \`${nis}\` belum terdaftar di whitelist.`);
+      if (!entry.jid) return reply(`ℹ️ NIS \`${nis}\` memang tidak terikat ke akun mana pun.`);
+      const oldJid = entry.jid;
+      setConsent(nis, {
+        consent: entry.consent,
+        actor: senderJid,
+        jid: "",
+        autoSubmit: entry.autoSubmit,
+        note: entry.note,
+      });
+      logger?.info?.(`[OwnerCmd] telkomconsent unbind ${maskNis(nis)} oleh ${senderJid}`);
+      return reply(
+        `✅ Binding NIS \`${nis}\` dilepas (dari ${oldJid.split("@")[0]}).\n` +
+          `Siswa bisa pakai lagi dari akun WhatsApp-nya yang sekarang.`
+      );
     }
 
     if (sub === "auto") {

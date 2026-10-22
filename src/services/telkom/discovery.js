@@ -264,6 +264,9 @@ async function fetchText(url, { timeoutMs = 25000, allowBrowser = false } = {}) 
     method: "GET",
     timeoutMs,
     allowBrowser,
+    // Discovery = pekerjaan latar; jangan pernah nyalakan Chromium lokal
+    // (boros RAM ~200MB). Pakai proxy/remote browser (di cloud) saja.
+    allowLocalBrowser: false,
     allowThrow: false,
     extraHeaders: { Accept: "text/html,application/xhtml+xml,application/javascript,*/*" },
   });

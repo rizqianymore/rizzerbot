@@ -39,9 +39,10 @@ function diskCheck() {
 function memoryCheck() {
   try {
     const total = os.totalmem();
+    const rss = Math.round(process.memoryUsage().rss / (1024 * 1024));
     const ok = total >= 2 * 1024 * 1024 * 1024;
     return {
-      name: `RAM total (${formatBytes(total)})`,
+      name: `RAM total (${formatBytes(total)}) | proses node: ${rss} MB`,
       ok,
       hint: ok ? "" : "RAM kecil: wajib pakai npm run start:termux (browser mati) agar tidak OOM.",
     };

@@ -55,10 +55,18 @@ if (!nis) {
 
 const { runAttendanceFlow } = await import("../src/services/telkom/service.js");
 const { schoolInfo } = await import("../src/services/telkom/school.js");
+const { getConsent } = await import("../src/services/telkom/registry.js");
+
+// Pakai JID yang sudah terikat ke NIS ini (biar hasilnya sama dengan flow
+// WhatsApp), atau --jid kalo mau men_specify.
+const jidIndex = args.indexOf("--jid");
+const bound = getConsent(nis);
+const actorJid = jidIndex >= 0 ? String(args[jidIndex + 1] || "") : bound?.jid || "628999888777@s.whatsapp.net";
 
 console.log(`NIS      : ${nis}`);
 console.log(`Mode     : ${wantSubmit ? "cek + submit absen" : "cek status saja"}`);
 console.log(`Password : ${password ? "dari argumen" : "dari vault/pola .env"}`);
+console.log(`Akun WA  : ${actorJid}${bound?.jid ? " (terikat)" : " (tidak terikat)"}`);
 console.log(`Sekolah  : ${schoolInfo().name}`);
 console.log("");
 
@@ -66,7 +74,7 @@ const t0 = Date.now();
 const result = await runAttendanceFlow({
   nis,
   password,
-  actorJid: "628999888777@s.whatsapp.net",
+  actorJid,
   allowSubmit: wantSubmit,
   qrPayload,
   logger: {

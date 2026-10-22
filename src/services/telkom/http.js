@@ -352,6 +352,7 @@ export async function telkomRequest(url, options = {}) {
     timeoutMs = 20000,
     signal,
     allowBrowser = true,
+    allowLocalBrowser = true,
     allowThrow = true,
     logger = null,
   } = options;
@@ -574,7 +575,9 @@ export async function telkomRequest(url, options = {}) {
       log("info", "Bright Data tidak resolving, lanjut browser stealth", { url });
 
       // B5. escalation ke browser stealth (lokal) untuk mendapat clearance baru
+      //     (opsional: bisa dimatikan supaya RAM server tetap ringan)
       try {
+        if (!allowLocalBrowser) throw new Error("local browser dimatikan");
         const target = origin || new URL(url).origin;
         const solved = await stealthBrowser.solveChallenge(target, { timeoutMs: 25000 });
         if (solved?.cleared) {
