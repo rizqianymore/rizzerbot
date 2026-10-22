@@ -249,19 +249,41 @@ export function brightDataBridgeEnabled() {
   return isBrightDataEnabled();
 }
 
+// Circuit breaker: kalau unlocker unreachable, jangan buang 15 detik tiap request.
+let unlockerFailures = 0;
+let unlockerDisabledUntil = 0;
+const UNLOCKER_TIMEOUT_MS = 12000;
+const UNLOCKER_COOLDOWN_MS = 10 * 60 * 1000;
+const UNLOCKER_MAX_FAILURES = 2;
+
+function unlockerAvailable() {
+  if (Date.now() < unlockerDisabledUntil) return false;
+  return true;
+}
+
+/** Status circuit breaker (untuk log/monitor). */
+export function unlockerStatus() {
+  return {
+    failures: unlockerFailures,
+    disabledUntil: unlockerDisabledUntil,
+    available: unlockerAvailable(),
+  };
+}
+
 /**
  * Coba request lewat Web Unlocker.
  * Mengembalikan null bila tidak tersedia/gagal (eskalasi ke jalur lain).
  */
 export async function tryBrightDataUnlock(url, { method = "GET", headers = {}, body, isForm = false } = {}) {
   if (!brightDataBridgeEnabled() || isForm) return null;
+  if (!unlockerAvailable()) return null;
   try {
     const text = await brightDataRequest(url, {
       format: "raw",
       method,
       headers: { ...headers },
       data: body === undefined ? undefined : body,
-      timeout: 45000,
+      timeout: UNLOCKER_TIMEOUT_MS,
     });
     const raw = typeof text === "string" ? text : JSON.stringify(text);
     if (!raw) return null;
@@ -271,12 +293,22 @@ export async function tryBrightDataUnlock(url, { method = "GET", headers = {}, b
     try {
       data = JSON.parse(raw);
     } catch (_) {}
+    unlockerFailures = 0;
     return { status: 200, data, raw };
   } catch (err) {
+    unlockerFailures += 1;
     console.warn(
-      `[Telkom] BrightData unlocker gagal: ${String(err?.message || err).slice(0, 120)} ` +
+      `[Telkom] BrightData unlocker gagal (${unlockerFailures}/${UNLOCKER_MAX_FAILURES}): ` +
+        `${String(err?.message || err).slice(0, 100)} ` +
         "(cek BRIGHTDATA_API_KEY/ZONE & koneksi ke api.brightdata.com)"
     );
+    if (unlockerFailures >= UNLOCKER_MAX_FAILURES) {
+      unlockerDisabledUntil = Date.now() + UNLOCKER_COOLDOWN_MS;
+      console.warn(
+        "[Telkom] BrightData unlocker dinonaktifkan sementara 10 menit (belum terjangkau) — " +
+          "loncat ke jalur berikutnya."
+      );
+    }
     return null;
   }
 }

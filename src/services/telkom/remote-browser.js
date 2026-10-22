@@ -70,6 +70,7 @@ export async function connectRemoteBrowser({ timeoutMs = CONNECT_TIMEOUT_MS } = 
     browserWSEndpoint: endpoint,
     defaultViewport: null,
     protocolTimeout: timeoutMs,
+    timeout: timeoutMs,
   });
 
   const close = async () => {
