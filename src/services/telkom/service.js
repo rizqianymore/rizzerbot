@@ -175,6 +175,7 @@ async function maybeSubmit({
         message: message.slice(0, 120),
         window: window.window,
         distance,
+        hadQr: Boolean(qrPayload || extractQrPayload(parsed, kind)),
         time: submittedAt,
       };
     } catch (err) {
@@ -185,6 +186,7 @@ async function maybeSubmit({
         success: false,
         message: String(err?.message || "").slice(0, 120),
         window: window.window,
+        hadQr: Boolean(qrPayload || extractQrPayload(parsed, kind)),
         time: wibParts().time,
       };
     }

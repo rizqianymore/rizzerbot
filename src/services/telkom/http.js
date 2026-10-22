@@ -111,6 +111,25 @@ function challengeHeader(headers = {}) {
  * sebagai penanda challenge. Kriteria: status 403/503/429 + body/header yang
  * memang berisi halaman challenge.
  */
+/**
+ * Respons 2xx tapi isinya halaman HTML: beberapa proteksi Cloudflare
+ * membalas 200 dengan halaman challenge, bukan 403. Harus dianggap challenge.
+ */
+export function looksLikeChallengeHtml(text) {
+  const lower = String(text || "").toLowerCase();
+  if (!lower) return false;
+  if (!lower.includes("<html") && !lower.includes("<!doctype")) return false;
+  return (
+    lower.includes("just a moment") ||
+    lower.includes("cf-browser-verification") ||
+    lower.includes("challenges.cloudflare.com") ||
+    lower.includes("checking your browser") ||
+    lower.includes("attention required") ||
+    lower.includes("enable javascript and cookies") ||
+    lower.includes("cloudflare")
+  );
+}
+
 export function looksLikeChallenge(status, headers, body) {
   const code = Number(status) || 0;
   const text = String(body || "").toLowerCase();
@@ -407,29 +426,35 @@ export async function telkomRequest(url, options = {}) {
     if (setCookie) storeMemoryCookies(url, setCookie);
 
     if (last.status >= 200 && last.status < 400) {
-      return { status: last.status, data: last.data, headers: last.headers, challenged };
-    }
-
-    // A. Session bootstrap: ulang request dengan cookie sesi yang baru didapat.
-    if (looksLikeSessionStub(last.status, last.text, setCookie) && stubRetries < 2) {
-      stubRetries++;
-      await sleep(250);
-      continue;
-    }
-
-    // B. Cloudflare challenge.
-    if (!looksLikeChallenge(last.status, last.headers, last.text)) {
-      if (allowThrow) {
-        throw new TelkomHttpError(errorMessage(last.status, last.data), {
-          status: last.status,
-          code: "api_error",
-          body: last.data,
-        });
+      // 2xx tapi isinya halaman challenge -> perlakukan sebagai challenge.
+      if (typeof last.data === "string" && looksLikeChallengeHtml(last.data)) {
+        challenged = true;
+        log("warn", "respons 200 tapi isinya halaman challenge", { url, status: last.status });
+        // lanjut ke eskalasi di bawah
+      } else {
+        return { status: last.status, data: last.data, headers: last.headers, challenged };
       }
-      return { status: last.status, data: last.data, headers: last.headers, challenged };
-    }
+    } else {
+      // A. Session bootstrap: ulang request dengan cookie sesi yang baru didapat.
+      if (looksLikeSessionStub(last.status, last.text, setCookie) && stubRetries < 2) {
+        stubRetries++;
+        await sleep(250);
+        continue;
+      }
 
-    challenged = true;
+      // B. Cloudflare challenge.
+      if (!looksLikeChallenge(last.status, last.headers, last.text)) {
+        if (allowThrow) {
+          throw new TelkomHttpError(errorMessage(last.status, last.data), {
+            status: last.status,
+            code: "api_error",
+            body: last.data,
+          });
+        }
+        return { status: last.status, data: last.data, headers: last.headers, challenged };
+      }
+      challenged = true;
+    }
     log("warn", "challenge terdeteksi, eskalasi", {
       url,
       status: last.status,

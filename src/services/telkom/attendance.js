@@ -359,8 +359,11 @@ function describeSubmit(submit, now = new Date()) {
   }
 
   const label = KIND_LABEL[submit.kind] || submit.kind;
-  const hint = explainServerMessage(submit.message);
   const detail = submit.message ? `\n   ↳ server: ${submit.message}` : "";
-  const advice = hint ? `\n   ↳ ${hint}` : "";
-  return `⚠️ Gagal kirim absen ${label} (server menolak).${detail}${advice}`;
+  let advice = explainServerMessage(submit.message);
+  if (!advice && submit.hadQr === false) {
+    advice = "Belum ada QR guru. Kirim foto QR guru ke bot (caption `.telkom <nis>`), lalu Share Location.";
+  }
+  const adviceLine = advice ? `\n   ↳ ${advice}` : "";
+  return `⚠️ Gagal kirim absen ${label} (server menolak).${detail}${adviceLine}`;
 }
