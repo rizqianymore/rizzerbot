@@ -276,9 +276,32 @@ const UNLOCKER_TIMEOUT_MS = 12000;
 const UNLOCKER_COOLDOWN_MS = 10 * 60 * 1000;
 const UNLOCKER_MAX_FAILURES = 2;
 
+// Circuit breaker remote browser (WS): 407 = kredensial/IP zone ditolak.
+let remoteFailures = 0;
+let remoteDisabledUntil = 0;
+const REMOTE_COOLDOWN_MS = 10 * 60 * 1000;
+const REMOTE_MAX_FAILURES = 1;
+
 function unlockerAvailable() {
   if (Date.now() < unlockerDisabledUntil) return false;
   return true;
+}
+
+/** Remote browser layak dicoba? (matikan sementara kalau 407) */
+export function remoteBrowserUsable() {
+  if (!remoteBrowserEnabled()) return false;
+  return Date.now() >= remoteDisabledUntil;
+}
+
+function disableRemoteTemporarily(reason) {
+  remoteFailures += 1;
+  if (remoteFailures >= REMOTE_MAX_FAILURES) {
+    remoteDisabledUntil = Date.now() + REMOTE_COOLDOWN_MS;
+    console.warn(
+      `[Telkom] remote browser dinonaktifkan 10 menit (${reason}) - pakai jalur lain. ` +
+        "Cek: BRIGHTDATA_SCRAPING_BROWSER_WS & IP Allowlist zone scraping_browser1."
+    );
+  }
 }
 
 /** Status circuit breaker (untuk log/monitor). */
@@ -482,7 +505,7 @@ export async function telkomRequest(url, options = {}) {
     // B2. Bright Data Scraping Browser (remote, IP bersih) — JALUR UTAMA untuk
     //     request ber-token: browser asli mengirim header Authorization apa adanya
     //     (Web Unlocker REST & native proxy bisa menghapusnya).
-    if (allowBrowser && attempt < 3 && remoteBrowserEnabled()) {
+    if (allowBrowser && attempt < 3 && remoteBrowserUsable()) {
       // 1) Request langsung dari dalam remote browser (header auth forwarded).
       //    Fungsi ini sekaligus menunggu challenge CF selesai + mengulang sekali.
       try {
@@ -506,7 +529,9 @@ export async function telkomRequest(url, options = {}) {
           log("warn", "remote browser: server menolak (401/403)", { url, status: inPage.status });
         }
       } catch (err) {
-        log("warn", `remote browser error: ${String(err?.message || err).slice(0, 140)}`);
+        const detail = String(err?.message || err).slice(0, 140);
+        log("warn", `remote browser error: ${detail}`);
+        if (detail.includes("407")) disableRemoteTemporarily("407 auth/IP zone");
       }
 
       // 2) Fallback: ambil cookie clearance dulu, lalu ulangi request langsung.
@@ -525,14 +550,18 @@ export async function telkomRequest(url, options = {}) {
           }
         }
       } catch (err) {
-        log("warn", `remote browser challenge error: ${String(err?.message || err).slice(0, 140)}`);
+        const detail = String(err?.message || err).slice(0, 140);
+        log("warn", `remote browser challenge error: ${detail}`);
+        if (detail.includes("407")) disableRemoteTemporarily("407 auth/IP zone");
       }
     }
 
     // B3. Bright Data native proxy (Web Unlocker lewat proxy 44445).
-    //     Catatan: beberapa zona proxy MENGHAPUS header Authorization -> untuk
-    //     request ber-token, remote browser (B2) lebih akurat.
-    if (allowBrowser && attempt < 3 && nativeProxyEnabled()) {
+    //     Catatan: zona proxy MENGHAPUS header Authorization -> untuk request
+    //     ber-token dilewati, andalkan remote browser (B2) & browser lokal.
+    // Proxy native menghapus header Authorization -> dilewati untuk request
+    // ber-token (pakai remote browser / browser lokal).
+    if (allowBrowser && attempt < 3 && nativeProxyEnabled() && !token) {
       try {
         const viaProxy = await proxyRequest(url, {
           method,

@@ -165,6 +165,15 @@ try {
     const auth = `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`;
     const https = await import("https");
     const status = await new Promise((resolve) => {
+      let done = false;
+      const finish = (value) => {
+        if (done) return;
+        done = true;
+        try {
+          req.destroy();
+        } catch (_) {}
+        resolve(value);
+      };
       const req = https.request(
         {
           host: url.hostname,
@@ -181,15 +190,15 @@ try {
           timeout: 12000,
         },
         (res) => {
-          resolve(res.statusCode);
+          finish(res.statusCode);
           res.resume();
         }
       );
-      req.on("error", (err) => resolve(`error: ${String(err.message).slice(0, 60)}`));
-      req.on("timeout", () => {
-        req.destroy();
-        resolve("timeout");
-      });
+      req.on("error", (err) => finish(`error: ${String(err.message).slice(0, 60)}`));
+      req.on("timeout", () => finish("timeout (tidak ada handshake)"));
+      req.on("close", () => finish("ditutup tanpa handshake"));
+      // Guard keras: WS server bisa menahan socket tanpa membalas.
+      setTimeout(() => finish("timeout 10d (tidak ada handshake)"), 10000).unref?.();
       req.end();
     });
     const note =
