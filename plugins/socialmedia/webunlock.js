@@ -4,7 +4,7 @@ export default {
   name: "webunlock",
   cooldownMs: 30000,
   aliases: ["wu", "unlock", "bdl"],
-  description: "Downloader media sosial dengan penanganan proteksi otomatis (web unclocker + browser stealth)",
+  description: "Downloader media sosial dengan penanganan proteksi otomatis (Bright Data Web Unlocker + Browser Stealth)",
   category: "Social Media",
   usage: "<url>",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
@@ -21,6 +21,13 @@ export default {
     }
 
     try {
+      // Proses dengan status menunggu
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { text: "⏳ Sedang mengunduh media..." },
+        { quoted: msg }
+      );
+
       const result = await downloadMediaWithProtectionHandling(url, {
         type: "video",
       });
@@ -28,6 +35,13 @@ export default {
       if (!result.buffer || result.buffer.length === 0) {
         throw new Error("Buffer media kosong");
       }
+
+      // Hapus pesan menunggu dan kirim hasil
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { delete: msg.key },
+        { quoted: msg }
+      );
 
       const lines = ["*DOWNLOADER WEBUNLOCK*"];
       if (result.info?.title) lines.push(`Judul: ${result.info.title}`);
