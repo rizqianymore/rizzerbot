@@ -74,8 +74,14 @@ for (const p of candidateFfmpegPaths) {
 const { startBot, logger } = await import("./src/core/connection.js");
 
 try {
+  // Logger untuk browser stealth: launch/idle-close/cratch jadi kelihatan di log.
+  const { stealthBrowser } = await import("./src/utils/request/browser.js");
+  stealthBrowser.setLogger?.(logger);
+} catch (_) {}
+
+try {
   const { checkEnvironment, formatDoctorReport } = await import("./src/utils/doctor.js");
-  const report = checkEnvironment();
+  const report = await checkEnvironment();
   if (!report.coreOk) {
     logger?.warn?.(`[Doctor] Ada dependensi inti yang hilang:\n${formatDoctorReport(report)}`);
   }

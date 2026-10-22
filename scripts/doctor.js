@@ -2,7 +2,7 @@
 const { checkEnvironment, formatDoctorReport } = await import("../src/utils/doctor.js");
 const { nativeStatus } = await import("../src/utils/native.js");
 
-const report = checkEnvironment();
+const report = await checkEnvironment();
 console.log(formatDoctorReport(report));
 
 const native = nativeStatus();

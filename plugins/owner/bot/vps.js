@@ -121,7 +121,7 @@ export default {
 
     const [cpuPct, root, ip] = await Promise.all([cpuUsagePercent(), diskRoot(), lookupIp()]);
     const cwd = diskCwd();
-    const env = checkEnvironment();
+    const env = await checkEnvironment();
     const native = nativeStatus();
 
     const cpus = os.cpus() || [];

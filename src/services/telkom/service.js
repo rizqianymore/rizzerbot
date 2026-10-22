@@ -154,6 +154,7 @@ async function maybeSubmit({
         qrPayload: qrPayload || extractQrPayload(parsed, kind),
         location: toApiLocation(location),
         date: wibParts().date,
+        logger,
       });
       const ok = response?.ok === true;
       const message = String(response?.message || "");
@@ -336,6 +337,7 @@ export async function runAttendanceFlow({
       const profile = await fetchStudentProfile(session.token, session.cookie, {
         timeoutMs: TOTAL_TIMEOUT_MS,
         signal: controller.signal,
+        logger,
       });
       if (profile?.studentId) studentId = profile.studentId;
       if (profile?.name) studentName = profile.name;
@@ -351,6 +353,7 @@ export async function runAttendanceFlow({
       statusPayload = await fetchAttendance(session.token, session.cookie, studentId, {
         timeoutMs: TOTAL_TIMEOUT_MS,
         signal: controller.signal,
+        logger,
       });
     } catch (err) {
       audit("status_error", { nis: maskNis(nis), detail: String(err?.message || err).slice(0, 120) }, logger);

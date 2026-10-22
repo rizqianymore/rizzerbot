@@ -23,7 +23,7 @@ async function endpoints() {
 }
 
 /** Ambil profil siswa (dipakai untuk menemukan studentId internal). */
-export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, signal } = {}) {
+export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, signal, logger } = {}) {
   const { bases, hashes } = await endpoints();
   const base = bases.registrasiRead;
   const hash = hashes.profile;
@@ -37,6 +37,7 @@ export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, si
     signal,
     origin: APP_ORIGIN,
     referer: `${APP_ORIGIN}/`,
+    logger,
   });
 
   const body = res?.data && typeof res.data === "object" ? res.data : {};
@@ -57,7 +58,7 @@ export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, si
 }
 
 /** Ambil status presensi hari ini (read-only). */
-export async function fetchAttendance(token, cookie, studentId, { timeoutMs = 12000, signal } = {}) {
+export async function fetchAttendance(token, cookie, studentId, { timeoutMs = 12000, signal, logger } = {}) {
   const { bases, hashes } = await endpoints();
   const base = bases.presensiRead;
   const hash = hashes.read;
@@ -72,6 +73,7 @@ export async function fetchAttendance(token, cookie, studentId, { timeoutMs = 12
     signal,
     origin: APP_ORIGIN,
     referer: `${APP_ORIGIN}/`,
+    logger,
   });
 
   return res?.data ?? null;
@@ -111,6 +113,7 @@ export async function submitAttendance({
   date = "",
   timeoutMs = 12000,
   signal,
+  logger,
 } = {}) {
   const { bases, hashes } = await endpoints();
   const base = bases.presensiWrite;
@@ -129,6 +132,7 @@ export async function submitAttendance({
     referer: `${APP_ORIGIN}/`,
     contentType: "application/json",
     body: payload,
+    logger,
   });
 
   const body = res?.data && typeof res.data === "object" ? res.data : {};

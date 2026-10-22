@@ -50,7 +50,36 @@ function memoryCheck() {
   }
 }
 
-export function checkEnvironment() {
+/** Status browser stealth: chrome tersedia, batas RAM, idle timeout, BrightData. */
+async function browserCheck() {
+  const disabled = ["1", "true", "yes"].includes(String(process.env.BROWSER_DISABLED || "").toLowerCase());
+  const idleMs = Number(process.env.BROWSER_IDLE_MS) || 30000;
+  const heapMb = Number(process.env.BROWSER_MAX_OLD_SPACE_MB) || 192;
+  const bdKey = String(process.env.BRIGHTDATA_API_KEY || "").trim();
+
+  let chromePath = "";
+  try {
+    const puppeteer = (await import("puppeteer")).default;
+    const resolved = puppeteer.executablePath();
+    chromePath = typeof resolved === "string" ? resolved : await resolved;
+  } catch (_) {}
+
+  const chromeOk = Boolean(chromePath) && fs.existsSync(chromePath);
+  const parts = [];
+  if (disabled) parts.push("BROWSER_DISABLED=1");
+  parts.push(`idle ${Math.round(idleMs / 1000)}s`);
+  parts.push(`heap ${heapMb}MB`);
+  parts.push(bdKey ? "BrightData aktif" : "BrightData nonaktif");
+
+  return {
+    name: `browser stealth (${chromeOk ? "siap" : "chrome tidak ada"})`,
+    ok: chromeOk || disabled || bdKey ? true : false,
+    hint: chromeOk || disabled || bdKey ? "" : "Jalankan: npx puppeteer browsers install chrome",
+    detail: parts.join(", "),
+  };
+}
+
+export async function checkEnvironment() {
   const termux = isTermux();
   const nodeMajor = Number(process.versions.node.split(".")[0] || 0);
 
@@ -90,6 +119,7 @@ export function checkEnvironment() {
       ok: probe("tar", ["--version"]),
       hint: termux ? "pkg install tar" : "Install tar.",
     },
+    await browserCheck(),
     diskCheck(),
     memoryCheck(),
   ];
@@ -101,6 +131,9 @@ export function formatDoctorReport(report) {
   const lines = [`Cek lingkungan${report.termux ? " (Termux terdeteksi)" : ""}:`];
   for (const c of report.core) lines.push(`  ${c.ok ? "OK  " : "FAIL"} ${c.name}${c.ok ? "" : `  -> ${c.hint}`}`);
   for (const c of report.optional)
-    lines.push(`  ${c.ok ? "ok  " : "--  "} ${c.name} (opsional)${c.ok ? "" : `  -> ${c.hint}`}`);
+    lines.push(
+      `  ${c.ok ? "ok  " : "--  "} ${c.name} (opsional)${c.ok ? "" : `  -> ${c.hint}`}` +
+        (c.detail ? ` [${c.detail}]` : "")
+    );
   return lines.join("\n");
 }

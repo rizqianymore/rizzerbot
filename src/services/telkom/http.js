@@ -300,7 +300,16 @@ export async function telkomRequest(url, options = {}) {
     signal,
     allowBrowser = true,
     allowThrow = true,
+    logger = null,
   } = options;
+
+  const log = (level, message, extra = {}) => {
+    const fn = logger?.[level] || logger?.info;
+    if (typeof fn !== "function") return;
+    try {
+      fn.call(logger, `[Telkom] ${message}`, extra);
+    } catch (_) {}
+  };
 
   const isForm = typeof FormData !== "undefined" && body instanceof FormData;
   const headers = buildRequestHeaders({
@@ -366,6 +375,11 @@ export async function telkomRequest(url, options = {}) {
     }
 
     challenged = true;
+    log("warn", "challenge terdeteksi, eskalasi", {
+      url,
+      status: last.status,
+      attempt,
+    });
 
     // B1. clearance dari cookie jar (hasil challenge sebelumnya)
     if (attempt < 2) {
@@ -392,8 +406,10 @@ export async function telkomRequest(url, options = {}) {
         isForm,
       });
       if (unlocked) {
+        log("info", "challenge teratasi via Bright Data Web Unlocker", { url });
         return { status: unlocked.status, data: unlocked.data, headers: {}, challenged };
       }
+      log("info", "Bright Data tidak resolving, lanjut ke browser stealth", { url });
 
       // B3. escalation ke browser stealth untuk mendapat clearance baru
       try {
@@ -401,14 +417,20 @@ export async function telkomRequest(url, options = {}) {
         const solved = await stealthBrowser.solveChallenge(target, { timeoutMs: 25000 });
         if (solved?.cleared) {
           const fresh = mergedCookie(url, cookie);
+          log("info", "challenge teratasi via browser stealth", { url, type: solved.type });
           if (fresh) {
             headers.Cookie = fresh;
             await sleep(500);
             continue;
           }
+        } else {
+          log("warn", "browser stealth tidak berhasil clear challenge", {
+            url,
+            type: solved?.type,
+          });
         }
-      } catch (_) {
-        // lanjut ke fallback browser fetch
+      } catch (err) {
+        log("warn", `browser stealth error: ${String(err?.message || err).slice(0, 120)}`);
       }
 
       // B4. terakhir: jalankan request dari dalam browser (hanya untuk body JSON)
