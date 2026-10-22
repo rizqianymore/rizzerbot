@@ -49,8 +49,16 @@ async function probe(label, url, method) {
       headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Chrome/155.0.0.0" },
     });
     const ms = Date.now() - t0;
+    const body = await res.text().catch(() => "");
     const note = res.status === 401 || res.status === 403 ? "(401/403 = replied, network OK)" : "";
     console.log(`  OK    ${label.padEnd(16)} ${String(res.status).padEnd(4)} ${ms}ms ${note}`);
+    // Potongan body supaya kelihatan kalau dibalas halaman Cloudflare/challenge.
+    const snippet = body.replace(/\s+/g, " ").slice(0, 110);
+    if (snippet && !snippet.startsWith("{")) {
+      console.log(`        body: ${snippet}`);
+    } else if (snippet) {
+      console.log(`        body: ${snippet}`);
+    }
     return true;
   } catch (err) {
     const ms = Date.now() - t0;

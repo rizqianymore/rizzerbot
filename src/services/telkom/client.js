@@ -22,6 +22,19 @@ async function endpoints() {
   };
 }
 
+/**
+ * Cek respons API: kalau bukan objek JSON yang diharapkan, log potongan body
+ * supaya ketahuan (mis. dibalas halaman Cloudflare / HTML).
+ */
+function describeUnexpected(res, expected) {
+  const body = res?.data;
+  if (body && typeof body === "object" && !Array.isArray(body)) return null;
+  const snippet = String(typeof body === "string" ? body : JSON.stringify(body || ""))
+    .replace(/\s+/g, " ")
+    .slice(0, 180);
+  return `respons ${expected} bukan JSON (${res?.status}): ${snippet}`;
+}
+
 /** Ambil profil siswa (dipakai untuk menemukan studentId internal). */
 export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, signal, logger } = {}) {
   const { bases, hashes } = await endpoints();
@@ -39,6 +52,12 @@ export async function fetchStudentProfile(token, cookie, { timeoutMs = 12000, si
     referer: `${APP_ORIGIN}/`,
     logger,
   });
+
+  const odd = describeUnexpected(res, "profil");
+  if (odd) {
+    logger?.warn?.(`[Telkom] ${odd}`);
+    throw new Error(odd);
+  }
 
   const body = res?.data && typeof res.data === "object" ? res.data : {};
   const data = body.data && typeof body.data === "object" ? body.data : body;
@@ -75,6 +94,12 @@ export async function fetchAttendance(token, cookie, studentId, { timeoutMs = 12
     referer: `${APP_ORIGIN}/`,
     logger,
   });
+
+  const odd = describeUnexpected(res, "status presensi");
+  if (odd) {
+    logger?.warn?.(`[Telkom] ${odd}`);
+    throw new Error(odd);
+  }
 
   return res?.data ?? null;
 }
@@ -136,11 +161,15 @@ export async function submitAttendance({
   });
 
   const body = res?.data && typeof res.data === "object" ? res.data : {};
-  const ok = body.status === true || body.status === "success" || body.success === true;
+  const odd = describeUnexpected(res, "submit presensi");
+  if (odd) {
+    logger?.warn?.(`[Telkom] ${odd}`);
+  }
+  const ok = !odd && (body.status === true || body.status === "success" || body.success === true);
   return {
     ok,
     status: res?.status || 0,
-    message: String(body.message || (ok ? "Presensi tercatat." : "") || "").slice(0, 160),
+    message: String(body.message || (ok ? "Presensi tercatat." : "")).slice(0, 160),
     data: body,
     payload,
   };

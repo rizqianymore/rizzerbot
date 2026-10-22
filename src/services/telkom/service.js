@@ -197,7 +197,8 @@ async function maybeSubmit({
         window: window.window,
         hadQr: Boolean(qrPayload || extractQrPayload(parsed, kind)),
         time: wibParts().time,
-      };    }
+      };
+    }
   }
 
   if (alreadyRecorded) return { attempted: false, reason: "already_recorded" };
