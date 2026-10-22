@@ -68,6 +68,15 @@ try {
 assert(threw, "tidak ada fallback password default");
 delete process.env.TELKOM_STUDENT_PASSWORDS;
 
+// Pola password sekolah (opsional, default nonaktif)
+const { patternPassword } = await load("src/services/telkom/vault.js");
+assert(patternPassword("539241249") === "", "pola password default nonaktif");
+process.env.TELKOM_PASSWORD_PATTERN = "dummy@{nis}";
+assert(patternPassword("539241249") === "dummy@539241249", "pola password sekolah bisa diaktifkan");
+assert(resolvePassword("539241249") === "dummy@539241249", "vault memakai pola password");
+delete process.env.TELKOM_PASSWORD_PATTERN;
+assert(hasCredential("539241249") === false, "tanpa pola & vault, kredensial tetap tidak ada");
+
 console.log("[3/12] Jendela absen (WIB)...");
 assert(parseWindow("05:30-08:00")?.start === 330, "parse window start");
 assert(parseWindow("bukan window") === null, "window invalid ditolak");

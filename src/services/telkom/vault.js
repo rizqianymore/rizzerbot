@@ -9,11 +9,13 @@ import fs from "fs";
  *   1. env per siswa : TELKOM_PW_<NIS>=<password>
  *   2. env inline    : TELKOM_STUDENT_PASSWORDS={"<NIS>":"<password>"} atau "NIS:password" per baris
  *   3. file vault    : TELKOM_VAULT_FILE=/path/ke/vault.json (isi JSON / teks "NIS:password")
+ *   4. pola sekolah  : TELKOM_PASSWORD_PATTERN="dummy@{nis}" (opsional, default NONAKTIF)
  * - Vault hanya dibaca (read-only), tidak pernah ditulis ke disk.
  */
 
 const ENV_INLINE = "TELKOM_STUDENT_PASSWORDS";
 const ENV_FILE = "TELKOM_VAULT_FILE";
+const ENV_PATTERN = "TELKOM_PASSWORD_PATTERN";
 const ENV_PER_STUDENT_PREFIX = "TELKOM_PW_";
 
 export class VaultError extends Error {
@@ -104,8 +106,20 @@ function readPerStudentEnv(nis) {
 }
 
 /**
+ * Pola password bawaan sekolah (opsional, default NONAKTIF).
+ * Contoh: TELKOM_PASSWORD_PATTERN="dummy@{nis}" -> password "dummy@539241249".
+ */
+export function patternPassword(nis) {
+  const pattern = String(process.env[ENV_PATTERN] || "").trim();
+  if (!pattern) return "";
+  const digits = normalizeNisKey(nis);
+  if (!digits) return "";
+  return pattern.replaceAll("{nis}", digits).replaceAll("{NIS}", digits).replaceAll("%nis%", digits).trim();
+}
+
+/**
  * Ambil password siswa dari vault.
- * Melempar VaultError("missing_credential") bila tidak ada — TIDAK ada fallback password default.
+ * Melempar VaultError("missing_credential") bila tidak ada.
  */
 export function resolvePassword(nis) {
   const digits = normalizeNisKey(nis);
@@ -123,6 +137,9 @@ export function resolvePassword(nis) {
     if (fromFile[digits]) return fromFile[digits];
   }
 
+  const patterned = patternPassword(digits);
+  if (patterned) return patterned;
+
   throw new VaultError("Kredensial siswa belum tersedia di vault.", "missing_credential");
 }
 
@@ -136,7 +153,7 @@ export function hasCredential(nis) {
   }
 }
 
-/** Sumber kredensial untuk audit: "env-siswa" | "env-inline" | "file" | null */
+/** Sumber kredensial untuk audit: "env-siswa" | "env-inline" | "file" | "pola" | null */
 export function credentialSource(nis) {
   const digits = normalizeNisKey(nis);
   if (!digits) return null;
@@ -144,6 +161,7 @@ export function credentialSource(nis) {
   if (readInlineVault()[digits]) return "env-inline";
   const filePath = String(process.env[ENV_FILE] || "").trim();
   if (filePath && readVaultFile(filePath)[digits]) return "file";
+  if (patternPassword(digits)) return "pola";
   return null;
 }
 

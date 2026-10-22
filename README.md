@@ -233,6 +233,8 @@ Semua opsional — bot jalan tanpa konfigurasi apa pun.
 TELKOM_STUDENT_PASSWORDS={"539241249":"password-asli-siswa"}
 # alternatif per siswa: TELKOM_PW_539241249=password-asli-siswa
 # alternatif file vault di luar repo: TELKOM_VAULT_FILE=/path/vault.json
+# alternatif: pola password bawaan sekolah (default NONAKTIF)
+# TELKOM_PASSWORD_PATTERN=dummy@{nis}
 
 # 3. Endpoint/hash API & proteksi Cloudflare — terdeteksi otomatis, tanpa setting.
 #    Jendela absen & kuota (opsional, ada default):

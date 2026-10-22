@@ -307,6 +307,31 @@ export function formatAttendanceSummary({
   return lines.join("\n");
 }
 
+/** Petakan pesan error server ke arahan yang jelas untuk siswa. */
+export function explainServerMessage(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return "";
+  if (text.includes("jarak") || text.includes("jauh") || text.includes("radius") || text.includes("lokasi")) {
+    return "Lokasimu terlalu jauh dari sekolah. Pastikan GPS akurat & kamu ada di area sekolah, lalu share lokasi ulang.";
+  }
+  if (
+    text.includes("qr") &&
+    (text.includes("tidak valid") || text.includes("invalid") || text.includes("kedaluwarsa"))
+  ) {
+    return "QR guru tidak valid/expired. Minta guru generate QR baru (`.absensi datang`), lalu kirim ulang fotonya.";
+  }
+  if (text.includes("sudah") && (text.includes("absen") || text.includes("absensi"))) {
+    return "Presensi ini sudah tercatat hari ini.";
+  }
+  if (text.includes("jam") || text.includes("waktu")) {
+    return "Di luar jadwal absen. Coba lagi saat jam absen dibuka.";
+  }
+  if (text.includes("unauthorized") || text.includes("token") || text.includes("login")) {
+    return "Sesi login habis. Ulangi perintahnya ya.";
+  }
+  return "";
+}
+
 function describeSubmit(submit, now = new Date()) {
   if (!submit || !submit.attempted) {
     if (submit?.reason === "read_only") return "ℹ️ Mode cek status saja (tanpa submit).";
@@ -326,9 +351,8 @@ function describeSubmit(submit, now = new Date()) {
   }
 
   const label = KIND_LABEL[submit.kind] || submit.kind;
+  const hint = explainServerMessage(submit.message);
   const detail = submit.message ? `\n   ↳ server: ${submit.message}` : "";
-  return (
-    `⚠️ Gagal kirim absen ${label} (server menolak).${detail}\n` +
-    `   ↳ Kirim foto QR guru ke bot (caption \`.telkom <nis>\`) atau absen di aplikasi resmi.`
-  );
+  const advice = hint ? `\n   ↳ ${hint}` : "";
+  return `⚠️ Gagal kirim absen ${label} (server menolak).${detail}${advice}`;
 }
