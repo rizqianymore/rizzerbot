@@ -30,6 +30,19 @@ const DEFAULTS = [
   ["TELKOM_DAILY_LIMIT", "3", false],
   ["TELKOM_WINDOW_DATANG", "05:30-08:00", false],
   ["TELKOM_WINDOW_PULANG", "14:30-16:30", false],
+  // --- bypass Cloudflare ---
+  ["BRIGHTDATA_SCRAPING_BROWSER_ZONE", "scraping_browser1", false],
+  ["BRIGHTDATA_SCRAPING_BROWSER_CLOSE", "1", false],
+  ["TELKOM_VIA_BRIGHTDATA_BROWSER", "1", false],
+  // --- browser stealth: hemat RAM ---
+  ["BROWSER_IDLE_MS", "30000", false],
+  ["BROWSER_MAX_OLD_SPACE_MB", "192", false],
+];
+
+// Key yang wajib diisi manual (nilainya gw tidak bisa tebak).
+const MANUAL = [
+  ["BRIGHTDATA_CUSTOMER", "contoh: hl_66a04297"],
+  ["BRIGHTDATA_PROXY_PASSWORD", "password proxy dari dashboard BrightData"],
 ];
 
 const SECRET_LIKE = /PASSWORD|PW_|TOKEN|KEY|SECRET|COOKIE/i;
@@ -112,13 +125,15 @@ function apply() {
   const { text, exists } = readEnv();
   const keys = parseKeys(text);
   const missing = DEFAULTS.filter(([key]) => keys.get(key) === undefined);
+  // Placeholder yang sudah ada (diformat "# KEY=  <- hint") dianggap sudah diisi.
+  const missingManual = MANUAL.filter(([key]) => keys.get(key) === undefined && !text.includes(`# ${key}=`));
 
   if (!exists) {
     console.log("❌ .env belum ada. Buat dulu (minimal berisi konfigurasi bot lain).");
     process.exit(1);
   }
-  if (!missing.length) {
-    console.log("✅ Semua key telkom sudah ada di .env — tidak ada yang diubah.");
+  if (!missing.length && !missingManual.length) {
+    console.log("✅ Semua key sudah ada di .env — tidak ada yang diubah.");
     return;
   }
 
@@ -128,12 +143,22 @@ function apply() {
     "# Password: pakai vault per siswa, atau pola password sekolah (opsional).",
     ...missing.map(([key, value]) => `${key}=${value}`),
     "",
+    "# --- Bright Data Scraping Browser (remote browser, bypass Cloudflare) ---",
+    "# Isi salah satu: BRIGHTDATA_SCRAPING_BROWSER_WS (1 baris) ATAU 3 baris di bawah.",
+    ...missingManual.map(([key, hint]) => `# ${key}=  <- ${hint}`),
+    "",
   ].join("\n");
 
   fs.appendFileSync(ENV_FILE, block, "utf8");
-  console.log(`✅ ${missing.length} key ditambahkan ke .env:`);
+  console.log(`✅ ${missing.length + missingManual.length} key ditambahkan ke .env:`);
   for (const [key] of missing) console.log(`   - ${key}`);
+  for (const [key] of missingManual) console.log(`   - ${key}  (ISI MANUAL)`);
   console.log("");
+  if (missingManual.length) {
+    console.log("⚠️  Yang perlu lo isi manual:");
+    for (const [key, hint] of missingManual) console.log(`   ${key}=  (${hint})`);
+    console.log("");
+  }
   console.log("Langkah berikutnya: restart bot (pm2 restart rizzerbot).");
 }
 
