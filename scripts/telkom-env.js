@@ -196,6 +196,92 @@ function apply() {
   console.log("Langkah berikutnya: restart bot (pm2 restart rizzerbot).");
 }
 
+/**
+ * Setup kredensial Bright Data (2 zone) secara interaktif.
+ * Tiap zone punya password sendiri -> asked terpisah biar gak ketuker.
+ */
+async function setupBrightData() {
+  const { text, exists } = readEnv();
+  if (!exists) {
+    console.log("❌ .env belum ada. Buat dulu (minimal berisi konfigurasi bot lain).");
+    process.exit(1);
+  }
+  // Kalau input di-pipe (non-TTY), baca semua baris dulu supaya tidak hilang.
+  // (readline hanya dibuat untuk mode interaktif, jangan sampai keduanya berebut stream)
+  const piped = !process.stdin.isTTY;
+  const pipedLines = [];
+  let rl = null;
+  if (piped) {
+    for await (const chunk of process.stdin) {
+      // Pipe sering datang sebagai satu chunk; pecah per baris.
+      for (const part of String(chunk).split(/\r?\n/)) {
+        const value = part.trim();
+        if (value) pipedLines.push(value);
+      }
+    }
+  } else {
+    const readline = await import("readline");
+    rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  }
+
+  let promptIndex = 0;
+  const ask = async (question) => {
+    if (piped) {
+      const value = pipedLines[promptIndex] || "";
+      promptIndex += 1;
+      return value;
+    }
+    return new Promise((resolve) => {
+      rl.question(question, (answer) => resolve(String(answer || "").trim()));
+    });
+  };
+
+  console.log("Setup kredensial Bright Data.\n");
+  console.log("⚠️  Password tiap zone BERBEDA. Masukkan sesuai dashboard:");
+  console.log("   • zone web_unlocker2   (native proxy, port 44445)");
+  console.log("   • zone scraping_browser1 (remote browser, port 9222)\n");
+
+  const customer = (await ask("BRIGHTDATA_CUSTOMER (mis. hl_66a04297)   : ")) || "hl_66a04297";
+  const proxyPassword = await ask("Password zone web_unlocker2             : ");
+  const browserPassword = await ask("Password zone scraping_browser1        : ");
+  if (!piped) rl.close();
+
+  if (!proxyPassword || !browserPassword) {
+    console.log("\n❌ Password belum lengkap - tidak ada yang diubah.");
+    return;
+  }
+
+  const values = {
+    BRIGHTDATA_CUSTOMER: customer,
+    BRIGHTDATA_ZONE: "web_unlocker2",
+    BRIGHTDATA_PROXY_ZONE: "web_unlocker2",
+    BRIGHTDATA_PROXY_PASSWORD: proxyPassword,
+    BRIGHTDATA_SCRAPING_BROWSER_ZONE: "scraping_browser1",
+    BRIGHTDATA_SCRAPING_BROWSER_PASSWORD: browserPassword,
+  };
+
+  let content = text;
+  for (const [key, value] of Object.entries(values)) {
+    const line = `${key}=${value}`;
+    if (new RegExp(`^${key}=`, "m").test(content)) {
+      content = content.replace(new RegExp(`^${key}=.*$`, "m"), line);
+    } else {
+      content += `\n${line}`;
+    }
+  }
+  fs.writeFileSync(ENV_FILE, content, "utf8");
+
+  console.log("\n✅ Kredensial Bright Data disimpan ke .env:");
+  for (const key of Object.keys(values)) {
+    if (key.includes("PASSWORD")) console.log(`   - ${key} = (disembunyikan)`);
+    else console.log(`   - ${key} = ${values[key]}`);
+  }
+  console.log("\nLangkah berikutnya:");
+  console.log("   npm run telkom:net            # cek kredensialnya");
+  console.log("   pm2 restart rizzerbot");
+}
+
 const arg = process.argv[2];
 if (arg === "--apply") apply();
+else if (arg === "--setup-brightdata") await setupBrightData();
 else status();
