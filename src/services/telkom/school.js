@@ -24,12 +24,15 @@ function num(value, fallback) {
 
 /** Data sekolah aktif (bisa dioverride lewat env). */
 export function schoolInfo() {
+  const rawUrl = String(process.env.TELKOM_SCHOOL_URL || "").trim();
+  // Abaikan URL yang tidak valid / kepotong -> pakai default.
+  const url = /^https:\/\/(www\.)?google\.[a-z.]+\/maps/i.test(rawUrl) ? rawUrl : DEFAULT_SCHOOL.url;
   return {
     name: String(process.env.TELKOM_SCHOOL_NAME || DEFAULT_SCHOOL.name).trim(),
     latitude: num(process.env.TELKOM_SCHOOL_LAT, DEFAULT_SCHOOL.latitude),
     longitude: num(process.env.TELKOM_SCHOOL_LNG, DEFAULT_SCHOOL.longitude),
     address: String(process.env.TELKOM_SCHOOL_ADDRESS || DEFAULT_SCHOOL.address).trim(),
-    url: String(process.env.TELKOM_SCHOOL_URL || DEFAULT_SCHOOL.url).trim(),
+    url,
     radiusM: num(process.env.TELKOM_SCHOOL_RADIUS_M, DEFAULT_SCHOOL.radiusM),
   };
 }

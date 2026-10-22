@@ -30,6 +30,8 @@ const values = {
   TELKOM_SCHOOL_LAT: "-6.1544783",
   TELKOM_SCHOOL_LNG: "106.7507579",
   TELKOM_SCHOOL_RADIUS_M: "150",
+  TELKOM_SCHOOL_URL:
+    "https://www.google.com/maps/place/SMK+Telkom+Jakarta/@-6.1544288,106.7501684,19.03z/data=!4m14!1m7!3m6!1s0x2e69f7c113c644b5:0xa3a809c8c4627262!2sSMK+Telkom+Jakarta!8m2!3d-6.1544783!4d106.7507579!16s%2Fg%2F122dry26",
   TELKOM_USE_SCHOOL_LOCATION: "1",
   TELKOM_AUTO_QR: "1",
   TELKOM_DAILY_LIMIT: "3",
@@ -58,26 +60,43 @@ if (!fs.existsSync(ENV_FILE)) {
 }
 
 let content = fs.readFileSync(ENV_FILE, "utf8");
-const changed = [];
-for (const [key, value] of Object.entries(values)) {
-  const re = new RegExp(`^${key}=.*$`, "m");
-  if (re.test(content)) {
-    const current = content.match(re)[0].split("=").slice(1).join("=");
-    if (current !== value) {
-      content = content.replace(re, `${key}=${value}`);
-      changed.push(`${key}: ${current} -> ${value}`);
-    }
-  } else {
-    content = content.trimEnd() + `\n${key}=${value}`;
-    changed.push(`${key}=${value} (baru)`);
-  }
-}
-fs.writeFileSync(ENV_FILE, content.trimEnd() + "\n", "utf8");
 
-console.log(`✅ .env diperbarui (${changed.length} perubahan):`);
-for (const item of changed) {
-  console.log(`   - ${item.includes("PASSWORD") ? item.split(":")[0] + ": (disembunyikan)" : item}`);
+// 1) Buang SEMUA kemunculan key yang dikelola (duplikat -> ambigu, yg terakhir menang).
+const managed = Object.keys(values);
+const removed = [];
+content = content
+  .split(/\r?\n/)
+  .filter((line) => {
+    const key = line.split("=")[0]?.trim();
+    if (managed.includes(key)) {
+      removed.push(key);
+      return false;
+    }
+    return true;
+  })
+  .join("\n");
+
+// 2) Tulis blok bersih (satu kemunculan per key).
+const block = [
+  "",
+  "# --- Telkom Schools / DigitS (presensi siswa, auto-absen) ---",
+  "# Password: vault per siswa, atau pola password sekolah.",
+  ...Object.entries(values).map(([key, value]) => `${key}=${value}`),
+  "",
+  "# --- Bright Data: 2 zone, password masing-masing ---",
+  "# zone web_unlocker2   -> native proxy (port 44445)",
+  "# zone scraping_browser1 -> remote browser (WS 9222)",
+  "",
+].join("\n");
+
+fs.writeFileSync(ENV_FILE, content.trimEnd() + "\n" + block, "utf8");
+
+const dupes = removed.filter((key, i) => removed.indexOf(key) !== i);
+console.log(`✅ .env ditata ulang (${removed.length} baris key ditulis ulang, 1 blok bersih).`);
+if (dupes.length) {
+  console.log(`   duplikat yang dibuang: ${[...new Set(dupes)].join(", ")}`);
 }
+console.log("   Password tidak ditampilkan di log.");
 if (!unlockerPassword || !browserPassword) {
   console.log("\nℹ️  Password Bright Data tidak diubah (kalau belum diisi, isi manual):");
   if (!unlockerPassword) console.log("   BRIGHTDATA_PROXY_PASSWORD=  (password zone web_unlocker2)");
