@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+/**
+ * Helper konfigurasi Telkom Schools.
+ *
+ *   node scripts/telkom-env.js          -> cek status config (tanpa buka secret)
+ *   node scripts/telkom-env.js --apply  -> tambahkan blok config telkom ke .env
+ *                                          (idempotent: nilai yang sudah ada TIDAK ditimpa)
+ *
+ * Aman: password tidak pernah ditampilkan; hanya "terisi/kosong".
+ */
+import fs from "fs";
+import path from "path";
+
+const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
+const ENV_FILE = path.join(ROOT, ".env");
+
+// key -> { nilai, secret? }
+const DEFAULTS = [
+  ["TELKOM_PASSWORD_PATTERN", "dummy@{nis}", true],
+  ["TELKOM_SCHOOL_NAME", "SMK Telkom Jakarta", false],
+  ["TELKOM_SCHOOL_LAT", "-6.1544783", false],
+  ["TELKOM_SCHOOL_LNG", "106.7507579", false],
+  ["TELKOM_SCHOOL_RADIUS_M", "150", false],
+  [
+    "TELKOM_SCHOOL_URL",
+    "https://www.google.com/maps/place/SMK+Telkom+Jakarta/@-6.1544288,106.7501684,19.03z/data=!4m14!1m7!3m6!1s0x2e69f7c113c644b5:0xa3a809c8c4627262!2sSMK+Telkom+Jakarta!8m2!3d-6.1544783!4d106.7507579!16s%2Fg%2F122dry26",
+    false,
+  ],
+  ["TELKOM_USE_SCHOOL_LOCATION", "0", false],
+  ["TELKOM_DAILY_LIMIT", "3", false],
+  ["TELKOM_WINDOW_DATANG", "05:30-08:00", false],
+  ["TELKOM_WINDOW_PULANG", "14:30-16:30", false],
+];
+
+const SECRET_LIKE = /PASSWORD|PW_|TOKEN|KEY|SECRET|COOKIE/i;
+
+function readEnv() {
+  if (!fs.existsSync(ENV_FILE)) return { text: "", exists: false };
+  return { text: fs.readFileSync(ENV_FILE, "utf8"), exists: true };
+}
+
+function parseKeys(text) {
+  const map = new Map();
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const idx = trimmed.indexOf("=");
+    if (idx <= 0) continue;
+    map.set(trimmed.slice(0, idx).trim(), trimmed.slice(idx + 1).trim());
+  }
+  return map;
+}
+
+function status() {
+  const { text, exists } = readEnv();
+  const keys = parseKeys(text);
+  console.log(`File .env: ${exists ? ENV_FILE : "BELUM ADA (" + ENV_FILE + ")"}`);
+  console.log("");
+  for (const [key, defValue, secret] of DEFAULTS) {
+    const value = keys.get(key);
+    const state = value === undefined ? "kosong" : value === "" ? "kosong" : "terisi";
+    let shown = "";
+    if (value) {
+      if (secret || SECRET_LIKE.test(key)) shown = "(disembunyikan)";
+      else shown = value;
+    }
+    const def = key === "TELKOM_PASSWORD_PATTERN" ? "(opsional)" : defValue;
+    console.log(
+      `  ${state.padEnd(7)} ${key.padEnd(26)} ${shown || "-"}`.padEnd(60) +
+        (value === undefined ? `default: ${def}` : "")
+    );
+  }
+  console.log("");
+  console.log("Catatan:");
+  console.log("  - .env dibaca saat bot START -> selesai edit, restart bot.");
+  console.log("  - env yang sudah ada di shell/pm2 TIDAK ditimpa .env (lihat index.js).");
+  console.log("  - TELKOM_USE_SCHOOL_LOCATION=1 mematikan pengecekan radius server.");
+}
+
+function apply() {
+  const { text, exists } = readEnv();
+  const keys = parseKeys(text);
+  const missing = DEFAULTS.filter(([key]) => keys.get(key) === undefined);
+
+  if (!exists) {
+    console.log("❌ .env belum ada. Buat dulu (minimal berisi konfigurasi bot lain).");
+    process.exit(1);
+  }
+  if (!missing.length) {
+    console.log("✅ Semua key telkom sudah ada di .env — tidak ada yang diubah.");
+    return;
+  }
+
+  const block = [
+    "",
+    "# --- Telkom Schools / DigitS (presensi siswa, auto-scan QR) ---",
+    "# Password: pakai vault per siswa, atau pola password sekolah (opsional).",
+    ...missing.map(([key, value]) => `${key}=${value}`),
+    "",
+  ].join("\n");
+
+  fs.appendFileSync(ENV_FILE, block, "utf8");
+  console.log(`✅ ${missing.length} key ditambahkan ke .env:`);
+  for (const [key] of missing) console.log(`   - ${key}`);
+  console.log("");
+  console.log("Langkah berikutnya: restart bot (pm2 restart rizzerbot).");
+}
+
+const arg = process.argv[2];
+if (arg === "--apply") apply();
+else status();

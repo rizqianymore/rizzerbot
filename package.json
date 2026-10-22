@@ -13,6 +13,7 @@
     "update": "bash scripts/update.sh",
     "test": "node scripts/smoke.js",
     "test:telkom": "node scripts/smoke-telkom.js",
+    "telkom:env": "node scripts/telkom-env.js",
     "doctor": "node scripts/doctor.js",
     "fast": "node scripts/fast-nonbug.js --dry-run",
     "fast:apply": "node scripts/fast-nonbug.js --apply",
