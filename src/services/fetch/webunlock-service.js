@@ -74,53 +74,52 @@ export async function downloadMediaWithProtectionHandling(targetUrl, opts = {}) 
       timeout: 30000,
     });
 
-      if (bdRes && bdRes.download_link) {
-        const author = bdRes.author || {};
-        const result = {
-          title: bdRes.title || bdRes.description || "",
-          author: author.nickname || author.uniqueId || "",
-          uniqueId: author.uniqueId || "",
-          playCount: bdRes.statistics?.play_count || 0,
-          diggCount: bdRes.statistics?.digg_count || 0,
-          duration: bdRes.duration || 0,
-          cover: bdRes.cover || "",
-          mp3: bdRes.download_link.mp3 || "",
-          noWatermark: bdRes.download_link.no_watermark || "",
-          watermark: bdRes.download_link.watermark || "",
-        };
+    if (bdRes && bdRes.download_link) {
+      const author = bdRes.author || {};
+      const result = {
+        title: bdRes.title || bdRes.description || "",
+        author: author.nickname || author.uniqueId || "",
+        uniqueId: author.uniqueId || "",
+        playCount: bdRes.statistics?.play_count || 0,
+        diggCount: bdRes.statistics?.digg_count || 0,
+        duration: bdRes.duration || 0,
+        cover: bdRes.cover || "",
+        mp3: bdRes.download_link.mp3 || "",
+        noWatermark: bdRes.download_link.no_watermark || "",
+        watermark: bdRes.download_link.watermark || "",
+      };
 
-        // Coba fetch buffer dari link yang didapat
-        if (result.noWatermark) {
-          const buffer = await request.buffer(result.noWatermark, {
-            headers: {
-              origin: "https://snaptik.fi",
-              referer: "https://snaptik.fi/id/download-tiktok-video",
-              "user-agent":
-                "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+      // Coba fetch buffer dari link yang didapat
+      if (result.noWatermark) {
+        const buffer = await request.buffer(result.noWatermark, {
+          headers: {
+            origin: "https://snaptik.fi",
+            referer: "https://snaptik.fi/id/download-tiktok-video",
+            "user-agent":
+              "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+          },
+          timeout: 40000,
+        });
+
+        if (buffer && buffer.length > 0) {
+          return {
+            buffer: Buffer.from(buffer),
+            info: {
+              title: result.title,
+              author: result.author,
+              duration: result.duration,
+              platform: "brightdata-unlocker",
             },
-            timeout: 40000,
-          });
-
-          if (buffer && buffer.length > 0) {
-            return {
-              buffer: Buffer.from(buffer),
-              info: {
-                title: result.title,
-                author: result.author,
-                duration: result.duration,
-                platform: "brightdata-unlocker",
-              },
-              isAudio: opts.type === "audio" || opts.isAudio === true,
-              source: "brightdata-unlocker",
-            };
-          }
+            isAudio: opts.type === "audio" || opts.isAudio === true,
+            source: "brightdata-unlocker",
+          };
         }
       }
-    } catch (bdErr) {
-      // Jika BRIGHTDATA_API_KEY belum di-set atau error, diam-lanjutkan
-      // ke langkah browser stealth secara otomatis. Error ini akan di-ignore
-      // dan sistem akan melangkah ke langkah selanjutnya.
     }
+  } catch (bdErr) {
+    // Jika BRIGHTDATA_API_KEY belum di-set atau error, diam-lanjutkan
+    // ke langkah browser stealth secara otomatis. Error ini akan di-ignore
+    // dan sistem akan melangkah ke langkah selanjutnya.
   }
 
   // === Langkah 3: Coba Browser Stealth ===

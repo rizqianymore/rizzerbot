@@ -1,21 +1,19 @@
 export default {
   name: "eval",
-  description: "Evaluate javascript code",
+  description: "Evaluate JavaScript code (hanya untuk owner utama)",
   usage: "<kode js>",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply, senderJid, logger, isPrimarySuperOwner }) => {
-    logger?.warn?.(`[OwnerCmd] eval oleh ${senderJid}`);
+  run: async (sock, msg, { reply, senderJid, logger, isPrimarySuperOwner }) => {
     if (!isPrimarySuperOwner) {
-      return reply("Perintah evaluasi kode hanya dapat dijalankan oleh SuperOwner Bot Utama.");
+      return reply("❌ Hanya owner utama yang bisa menggunakan perintah ini");
     }
-    if (!args.length) return reply("Masukkan kode!");
+    logger?.warn?.(`[OwnerCmd] eval oleh ${senderJid}`);
     try {
-      let evaled = await eval(args.join(" "));
-      if (typeof evaled !== "string") evaled = await import("util").then((u) => u.inspect(evaled));
-      reply(evaled);
-    } catch (err) {
-      reply(String(err));
+      const result = eval(msg?.text?.replace(`/eval `, "") || "''");
+      await reply(`*Hasil:*\n\`\`\`js\n${typeof result === 'object' ? JSON.stringify(result, null, 2) : result}\n\`\`\``);
+    } catch (e) {
+      await reply(`*Error:* ${e.message}`);
     }
   },
 };

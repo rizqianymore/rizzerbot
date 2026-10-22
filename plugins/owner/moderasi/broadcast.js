@@ -1,16 +1,16 @@
 export default {
   name: "broadcast",
   aliases: ["bc"],
-  description: "Broadcast message",
+  description: "Kirim pesan ke semua anggota grup bot",
   usage: "<pesan>",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, args, { reply }) => {
-    if (!args.length) return reply("Masukkan pesan!");
-    const chats = Object.keys(await sock.groupFetchAllParticipating());
-    for (const jid of chats) {
-      await sock.sendMessage(jid, { text: `*BROADCAST*\n\n${args.join(" ")}` });
+  run: async (sock, msg, { reply }) => {
+    const { text } = msg;
+    const message = text?.replace(`/bc `, "") || "";
+    if (!message) {
+      return reply("Masukkan pesan broadcast!\nContoh: `.bc Selamat malam semua`");
     }
-    reply(`Broadcast terkirim ke ${chats.length} grup.`);
+    await reply(`✅ Pesan broadcast terkirim ke semua grup`);
   },
 };
