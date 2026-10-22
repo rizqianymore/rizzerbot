@@ -33,7 +33,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "telkom:env:set": "node scripts/telkom-env-set.js"
   },
   "engines": {
     "node": ">=20",

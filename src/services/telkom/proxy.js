@@ -5,6 +5,11 @@ import FormDataPkg from "form-data";
 // v7 mengekspor { HttpsProxyAgent }, v5 mengekspor default.
 const HttpsProxyAgent = HttpsProxyAgentModule.HttpsProxyAgent || HttpsProxyAgentModule.default || HttpsProxyAgentModule;
 
+// https-proxy-agent harus v7+ (v5 bentrok dengan agent-base v6 & opsi TLS-nya beda).
+if (!Object.prototype.hasOwnProperty.call(HttpsProxyAgent.prototype || {}, "connect")) {
+  console.warn("[Telkom] https-proxy-agent versi lama terdeteksi - jalankan: npm install https-proxy-agent@^7");
+}
+
 /**
  * Bright Data Web Unlocker via NATIVE PROXY (bukan REST API).
  *
@@ -88,35 +93,38 @@ function toAxiosForm(form) {
  * Bright Data memakai sertifikat sendiri (belum berotorasi publik) —
  * sama seperti perlu flag `-k` pada curl.
  *
- * https-proxy-agent v7 membaca kredensial dari `username`/`password`
- * (v5 memakai `auth`), jadi keduanya kita isi.
+ * Deteksi versi (penting!):
+ *   - v7  : constructor(proxy, connectOpts)  -> "connect" adalah method milik sendiri
+ *   - v5  : constructor(opts) + callback(req, opts)
+ * (v5 mewarisi method "connect" dari agent-base, jadi harus dicek own-property)
  */
 function createProxyAgent(proxy) {
-  const credentials = {
-    host: proxy.host,
-    port: proxy.port,
-    username: proxy.username,
-    password: proxy.password,
-  };
+  const isV7 = Object.prototype.hasOwnProperty.call(HttpsProxyAgent.prototype, "connect");
 
-  // v7+: constructor(proxy, connectOpts) — opsi TLS masuk connectOpts.
-  if (typeof HttpsProxyAgent.prototype.connect === "function") {
-    return new HttpsProxyAgent(credentials, { rejectUnauthorized: false });
+  if (isV7) {
+    return new HttpsProxyAgent(
+      {
+        host: proxy.host,
+        port: proxy.port,
+        username: proxy.username,
+        password: proxy.password,
+      },
+      { rejectUnauthorized: false }
+    );
   }
 
-  // v5: constructor(opts) + callback override.
-  const options = {
-    host: proxy.host,
-    port: proxy.port,
-    auth: `${proxy.username}:${proxy.password}`,
-    rejectUnauthorized: false,
-  };
+  // v5: opsi TLS diambil dari request options -> override callback.
   class InsecureProxyAgent extends HttpsProxyAgent {
     callback(req, opts) {
       return super.callback(req, { ...opts, rejectUnauthorized: false });
     }
   }
-  return new InsecureProxyAgent(options);
+  return new InsecureProxyAgent({
+    host: proxy.host,
+    port: proxy.port,
+    auth: `${proxy.username}:${proxy.password}`,
+    rejectUnauthorized: false,
+  });
 }
 
 /**
