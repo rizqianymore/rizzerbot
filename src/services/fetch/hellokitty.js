@@ -64,6 +64,10 @@ export async function createHelloKittyImage(rawText, options = {}) {
   const ctx = canvas.getContext("2d");
   ctx.scale(SCALE, SCALE);
 
+  // Background solid putih (bukan transparan)
+  ctx.fillStyle = options.bgColor || "#FFFFFF";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
   // Layout text first to calculate spacing
   const layout = layoutText(ctx, text);
   const totalTextHeight = layout.lines.length * layout.lineHeight;
