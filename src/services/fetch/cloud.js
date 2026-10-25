@@ -63,16 +63,9 @@ export function isGoogleDriveUrl(url) {
 
 /**
  * Mengunduh file publik Google Drive langsung ke buffer.
- *
- * Request memakai rantai anti-protection (`src/utils/request.js`), jadi
- * Cloudflare/DataDome yang menghalangi otomatis naik ke Web Unlocker /
- * Scraping Browser Bright Data.
- * @param {string} url
- * @param {{logger?: object, onVia?: Function}} [options]
  * @returns {Promise<{buffer: Buffer, fileName: string, mime: string}>}
  */
-export async function downloadGoogleDrive(url, options = {}) {
-  const { logger, onVia } = options;
+export async function downloadGoogleDrive(url, logger) {
   const match = String(url).match(GOOGLE_DRIVE_ID_REGEX);
   if (!match) throw new Error("ID file Google Drive tidak ditemukan dalam link.");
   const fileId = match[1];
@@ -100,7 +93,6 @@ export async function downloadGoogleDrive(url, options = {}) {
     timeout: 90000,
     maxBytes: MAX_DOWNLOAD_BYTES,
     retries: 1,
-    onVia,
   });
   if (!buffer?.length) throw new Error("Google Drive mengembalikan file kosong.");
 
@@ -115,7 +107,6 @@ export async function downloadGoogleDrive(url, options = {}) {
         timeout: 90000,
         maxBytes: MAX_DOWNLOAD_BYTES,
         retries: 1,
-        onVia,
       });
     }
     if (looksLikeHtml(buffer)) {
@@ -183,13 +174,9 @@ function findFileName(data, depth = 0) {
  * Best-effort mengunduh file dari link share Terabox publik.
  * Terabox membatasi unduhan tanpa login/cookie, sehingga kegagalan
  * dikembalikan sebagai error yang informatif.
- *
- * @param {string} url
- * @param {{logger?: object, onVia?: Function}} [options]
  * @returns {Promise<{buffer: Buffer, fileName: string, mime: string}>}
  */
-export async function downloadTerabox(url, options = {}) {
-  const { logger, onVia } = options;
+export async function downloadTerabox(url, logger) {
   const match = String(url).match(TERABOX_REGEX);
   if (!match) throw new Error("Link Terabox tidak valid (contoh: https://terabox.com/s/xxxxxx).");
   const surl = match[1];
@@ -206,7 +193,6 @@ export async function downloadTerabox(url, options = {}) {
         headers: baseHeaders(referer),
         timeout: 20000,
         retries: 1,
-        onVia,
       });
       const link = findDownloadLink(data);
       if (!link) continue;
@@ -216,7 +202,6 @@ export async function downloadTerabox(url, options = {}) {
         timeout: 90000,
         maxBytes: MAX_DOWNLOAD_BYTES,
         retries: 1,
-        onVia,
       });
       if (!buffer?.length) continue;
 

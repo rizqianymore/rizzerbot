@@ -70,24 +70,12 @@ async function browserCheck() {
   if (disabled) parts.push("BROWSER_DISABLED=1");
   parts.push(`idle ${Math.round(idleMs / 1000)}s`);
   parts.push(`heap ${heapMb}MB`);
-
-  // Jalur anti-protection yang siap dipakai.
-  const { nativeProxyConfig } = await import("@/src/services/network/unlocker-proxy.js");
-  const { scrapingBrowserEndpoint } = await import("@/src/services/network/scraping-browser.js");
-  const proxyOk = Boolean(nativeProxyConfig());
-  const remoteOk = Boolean(scrapingBrowserEndpoint());
-
-  parts.push(bdKey ? "Unlocker REST aktif" : "Unlocker REST nonaktif");
-  parts.push(proxyOk ? "native proxy aktif" : "native proxy nonaktif");
-  parts.push(remoteOk ? "Scraping Browser aktif" : "Scraping Browser nonaktif");
-
-  const anyUnlocker = bdKey || proxyOk || remoteOk;
-  const ok = chromeOk || disabled || anyUnlocker;
+  parts.push(bdKey ? "BrightData aktif" : "BrightData nonaktif");
 
   return {
     name: `browser stealth (${chromeOk ? "siap" : "chrome tidak ada"})`,
-    ok,
-    hint: ok ? "" : "Jalankan: npx puppeteer browsers install chrome",
+    ok: chromeOk || disabled || bdKey ? true : false,
+    hint: chromeOk || disabled || bdKey ? "" : "Jalankan: npx puppeteer browsers install chrome",
     detail: parts.join(", "),
   };
 }

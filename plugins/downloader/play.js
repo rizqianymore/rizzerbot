@@ -1,5 +1,4 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp/index.js";
-import { describeVia } from "@/src/services/network/scraper/report.js";
+import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
 
 const MAX_QUERY_LENGTH = 120;
 
@@ -16,7 +15,6 @@ export default {
     const query = args.join(" ").trim().slice(0, MAX_QUERY_LENGTH);
     const currentPrefix = prefix || ".";
     const remoteJid = msg.key.remoteJid;
-    const usedVias = [];
 
     if (!query) {
       return reply(
@@ -30,13 +28,9 @@ export default {
     }
 
     try {
-      // Pencarian otomatis via YouTube (ytsearch)
+      // Pencarian otomatis via YouTube (yt-dlp ytsearch)
       const searchUrl = `ytsearch5:${query}`;
-      const search = await probe(searchUrl, {
-        timeoutMs: 45000,
-        logger,
-        onVia: (via) => usedVias.push(via),
-      }).catch((err) => {
+      const search = await probe(searchUrl, { timeoutMs: 45000 }).catch((err) => {
         logger?.warn?.(`[play search] ${err?.message || err}`);
         return null;
       });
@@ -57,11 +51,7 @@ export default {
       const durationSec = Number(entry.duration) || 0;
 
       await sendTyping();
-      const dl = await downloadMedia(videoUrl, {
-        mode: "audio",
-        logger,
-        onVia: (via) => usedVias.push(via),
-      });
+      const dl = await downloadMedia(videoUrl, { mode: "audio" });
       if (!dl?.buffer?.length) throw new Error("Audio kosong / gagal diunduh.");
 
       const lines = ["*MUSIC PLAYER*"];
@@ -72,13 +62,7 @@ export default {
         const seconds = String(durationSec % 60).padStart(2, "0");
         lines.push(`Durasi: ${minutes}:${seconds}`);
       }
-      lines.push("Sumber: YouTube (pencarian judul)");
-
-      // Info jalur anti-protection (bila sempat naik ke unlocker/browser).
-      const unlockerVia = usedVias.find((via) => via !== "direct");
-      if (unlockerVia) {
-        lines.push(`🛡️ Diambil via ${describeVia(unlockerVia)}`);
-      }
+      lines.push(`Sumber: YouTube (pencarian judul)`);
 
       await sock.sendMessage(
         remoteJid,

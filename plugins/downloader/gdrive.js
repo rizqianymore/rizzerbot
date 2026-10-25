@@ -1,5 +1,4 @@
 import { downloadGoogleDrive, downloadTerabox, isGoogleDriveUrl, isTeraboxUrl } from "@/src/services/fetch/cloud.js";
-import { describeVia } from "@/src/services/network/scraper/report.js";
 
 export default {
   name: "gdrive",
@@ -14,7 +13,6 @@ export default {
     const url = (args[0] || "").trim();
     const currentPrefix = prefix || ".";
     const remoteJid = msg.key.remoteJid;
-    const usedVias = [];
 
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
@@ -34,21 +32,15 @@ export default {
     }
 
     try {
-      const result = terabox
-        ? await downloadTerabox(url, { logger, onVia: (via) => usedVias.push(via) })
-        : await downloadGoogleDrive(url, { logger, onVia: (via) => usedVias.push(via) });
-
+      const result = terabox ? await downloadTerabox(url, logger) : await downloadGoogleDrive(url, logger);
       const sizeMb = (result.buffer.length / 1024 / 1024).toFixed(2);
-      const unlockerVia = usedVias.find((via) => via !== "direct");
-      const note = unlockerVia ? `\n🛡️ Diambil via ${describeVia(unlockerVia)}` : "";
-
       await sock.sendMessage(
         remoteJid,
         {
           document: result.buffer,
           fileName: result.fileName,
           mimetype: result.mime,
-          caption: `✅ Berhasil mengunduh *${result.fileName}* (${sizeMb} MB)${note}`,
+          caption: `✅ Berhasil mengunduh *${result.fileName}* (${sizeMb} MB)`,
         },
         { quoted: msg }
       );

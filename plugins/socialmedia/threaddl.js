@@ -1,51 +1,146 @@
-import { downloadMediaWithProtectionHandling } from "@/src/services/fetch/webunlock-service.js";
+import axios from "axios";
 
 export default {
   name: "threaddl",
   cooldownMs: 30000,
-  aliases: ["thread"],
-  description: "Threads Downloader - now with automatic BrightData protection handling",
-  category: "Social Media",
+  aliases: ["tdl", "threads", "threadsdl"],
+  description: "Download foto dan video dari postingan Threads",
   usage: "<url>",
+  category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args[0]?.trim();
-    if (!url || !/^https?:\/\//i.test(url)) {
+    const currentPrefix = prefix || ".";
+
+    if (!url || !/threads/i.test(url)) {
       return reply(
         `*THREADS DOWNLOADER*\n\n` +
-          `Mendownload media dari Threads dengan otomatis atasi proteksi.\n\n` +
-          `*Penggunaan:*\n` +
-          `• \`.thread <url>\` - Unduh media Threads`
+          `Masukkan link postingan Threads yang ingin diunduh.\n\n` +
+          `*Contoh:*\n` +
+          `\`${currentPrefix}tdl https://www.threads.net/@zuck/post/xxx\``
       );
     }
 
+    const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
+
+    const decodeEntities = (str = "") => {
+      return String(str || "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\r/g, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    };
+
+    const uniqueByUrl = (list = []) => {
+      const seen = new Set();
+      const result = [];
+      for (const item of list) {
+        if (!item?.url || seen.has(item.url)) continue;
+        seen.add(item.url);
+        result.push(item);
+      }
+      return result;
+    };
+
     try {
-      const result = await downloadMediaWithProtectionHandling(url, {
-        type: "video",
+      const res = await axios.get(BASE_URL, {
+        timeout: 20000,
+        validateStatus: () => true,
+        params: { url, action: "info" },
+        headers: {
+          "sec-ch-ua-platform": `"Android"`,
+          "user-agent":
+            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36",
+          accept: "application/json",
+          "content-type": "application/json",
+          origin: "https://threadsvid.com",
+          referer: "https://threadsvid.com/",
+          "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        },
       });
 
-      if (!result.buffer || result.buffer.length === 0) {
-        throw new Error("Buffer media kosong");
+      let data = res.data || {};
+      if (
+        (res.status >= 300 || data.success !== true) &&
+        (await import("@/src/services/network/brightdata.js")).getBrightDataConfig().apiKey
+      ) {
+        try {
+          const { brightDataRequest } = await import("@/src/services/network/brightdata.js");
+          data = await brightDataRequest(`${BASE_URL}?url=${encodeURIComponent(url)}&action=info`, {
+            format: "json",
+            timeout: 35000,
+          });
+        } catch (bdErr) {
+          logger?.warn?.(`[threaddl brightdata] ${bdErr?.message || bdErr}`);
+        }
+      }
+      const info = data.data || {};
+
+      const videoQualities = uniqueByUrl(info.video?.qualities || []);
+      const images = uniqueByUrl(info.images?.urls || []);
+
+      const mediaResults = [
+        ...videoQualities.map((item) => ({ type: "video", url: item.url })),
+        ...images.map((item) => ({ type: "image", url: item.url })),
+      ];
+
+      if (data?.success !== true || mediaResults.length === 0) {
+        return reply(
+          `Gagal mengambil media dari Threads.\n` +
+            `Postingan mungkin bersifat privat, sudah dihapus, atau link tidak valid.\n` +
+            `Detail: ${data.message || data.error || "Data kosong"}`
+        );
       }
 
+      const cleanDesc = decodeEntities(info.title || info.description || "");
       const lines = ["*THREADS DOWNLOADER*"];
-      if (result.info?.title) lines.push(`Judul: ${result.info.title}`);
-      if (result.info?.author) lines.push(`Author: ${result.info.author}`);
-      if (result.info?.duration) {
-        const mins = Math.floor(result.info.duration / 60);
-        const secs = Math.floor(result.info.duration % 60);
-        lines.push(`Durasi: ${mins}m ${secs}s`);
-      }
-      lines.push(`Engine: ${result.source}`);
-      const caption = lines.join("\n");
+      if (info.author) lines.push(`Author: ${info.author}`);
+      if (cleanDesc) lines.push(`Deskripsi: ${cleanDesc}`);
+      lines.push(`Total Media: ${mediaResults.length} file`);
+      const captionText = lines.join("\n");
 
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { video: result.buffer, caption, mimetype: "video/mp4" },
-        { quoted: msg }
-      );
+      const remoteJid = msg.key.remoteJid;
+
+      if (mediaResults.length > 1) {
+        await reply(captionText);
+        for (const item of mediaResults) {
+          if (item.type === "image") {
+            await sock.sendMessage(remoteJid, { image: { url: item.url } }, { quoted: msg });
+          } else if (item.type === "video") {
+            await sock.sendMessage(remoteJid, { video: { url: item.url }, mimetype: "video/mp4" }, { quoted: msg });
+          }
+        }
+      } else {
+        const single = mediaResults[0];
+        if (single.type === "image") {
+          await sock.sendMessage(remoteJid, { image: { url: single.url }, caption: captionText }, { quoted: msg });
+        } else {
+          await sock.sendMessage(
+            remoteJid,
+            { video: { url: single.url }, caption: captionText, mimetype: "video/mp4" },
+            { quoted: msg }
+          );
+        }
+      }
     } catch (err) {
-      await reply(`Gagal mendownload Threads: ${err.message}`);
+      logger?.warn?.(`[threaddl] ${err.message}`);
+      try {
+        const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
+        const [pInfo, dl] = await Promise.all([
+          probe(url, { timeoutMs: 20000 }).catch(() => null),
+          downloadMedia(url, { mode: "video" }),
+        ]);
+        const remoteJid = msg.key.remoteJid;
+        const caption = `*THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
+        await sock.sendMessage(remoteJid, { video: dl.buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
+      } catch (_ytdlpErr) {
+        await reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
+      }
     }
   },
 };

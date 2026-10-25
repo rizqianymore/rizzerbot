@@ -1,3 +1,5 @@
+import path from "path";
+import fsp from "fs/promises";
 import { requireCanvas, getSharp } from "@/src/utils/native.js";
 import { ensureFont } from "./brat/assets.js";
 import { normalizeText } from "./brat/text.js";
@@ -5,106 +7,17 @@ import { normalizeText } from "./brat/text.js";
 const SIZE = 512;
 const SCALE = 2;
 const FONT = "Arial Narrow";
-const BG_COLOR = "#FFB6C1";
-const TEXT_COLOR = "#111111";
+const IMAGE_PATH = path.resolve(process.cwd(), "assets/image/hellokitty.png");
 
-function drawEar(ctx, points) {
-  ctx.beginPath();
-  ctx.moveTo(points[0], points[1]);
-  ctx.lineTo(points[2], points[3]);
-  ctx.lineTo(points[4], points[5]);
-  ctx.closePath();
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fill();
-  ctx.lineWidth = 6;
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "#2B2B2B";
-  ctx.stroke();
-}
+let kittyImageCache = null;
 
-function drawBow(ctx, x, y) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-0.35);
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = "#2B2B2B";
-
-  ctx.beginPath();
-  ctx.ellipse(-24, 0, 25, 19, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "#FF4D79";
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.ellipse(24, 0, 25, 19, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "#FF4D79";
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(0, 0, 11, 0, Math.PI * 2);
-  ctx.fillStyle = "#FFC2D6";
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawKitty(ctx) {
-  const cx = 256;
-  const cy = 212;
-  const rx = 124;
-  const ry = 102;
-
-  drawEar(ctx, [148, 156, 132, 68, 224, 110]);
-  drawEar(ctx, [364, 156, 380, 68, 288, 110]);
-  drawBow(ctx, 168, 118);
-
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fill();
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = "#2B2B2B";
-  ctx.stroke();
-
-  ctx.fillStyle = "rgba(255, 120, 160, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(cx - 66, cy + 34, 20, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(cx + 66, cy + 34, 20, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#2B2B2B";
-  ctx.beginPath();
-  ctx.ellipse(cx - 44, cy, 9, 13, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(cx + 44, cy, 9, 13, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 27, 13, 9, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "#FFC93C";
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "#2B2B2B";
-  ctx.stroke();
-
-  ctx.strokeStyle = "#2B2B2B";
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  for (const dy of [-16, 0, 16]) {
-    ctx.beginPath();
-    ctx.moveTo(cx - 82, cy + dy);
-    ctx.lineTo(cx - 138, cy + dy - (dy === 0 ? 0 : dy > 0 ? 6 : -6));
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(cx + 82, cy + dy);
-    ctx.lineTo(cx + 138, cy + dy - (dy === 0 ? 0 : dy > 0 ? 6 : -6));
-    ctx.stroke();
-  }
+async function getKittyImage() {
+  
+  if (kittyImageCache) return kittyImageCache;
+  const { loadImage } = requireCanvas();
+  const buffer = await fsp.readFile(IMAGE_PATH);
+  kittyImageCache = await loadImage(buffer);
+  return kittyImageCache;
 }
 
 function wrapLines(ctx, text, maxWidth) {
@@ -126,18 +39,18 @@ function wrapLines(ctx, text, maxWidth) {
 }
 
 function layoutText(ctx, text) {
-  const maxWidth = 430;
+  const maxWidth = 470;
   const maxLines = 3;
-  for (let size = 56; size >= 18; size -= 2) {
-    ctx.font = `${size}px "${FONT}"`;
+  for (let size = 44; size >= 18; size -= 2) {
+    ctx.font = `bold ${size}px "${FONT}"`;
     const lines = wrapLines(ctx, text, maxWidth);
     if (lines.length > maxLines) continue;
-    const maxSize = lines.length === 1 ? 56 : lines.length === 2 ? 46 : 38;
+    const maxSize = lines.length === 1 ? 44 : lines.length === 2 ? 36 : 28;
     if (size > maxSize) continue;
-    return { lines, size, lineHeight: Math.round(size * 1.12) };
+    return { lines, size, lineHeight: Math.round(size * 1.15) };
   }
-  ctx.font = `18px "${FONT}"`;
-  return { lines: wrapLines(ctx, text, maxWidth).slice(0, maxLines), size: 18, lineHeight: 20 };
+  ctx.font = `bold 18px "${FONT}"`;
+  return { lines: wrapLines(ctx, text, maxWidth).slice(0, maxLines), size: 18, lineHeight: 22 };
 }
 
 export async function createHelloKittyImage(rawText, options = {}) {
@@ -145,32 +58,52 @@ export async function createHelloKittyImage(rawText, options = {}) {
   if (!text.trim()) throw new Error("Teks sticker kosong");
 
   await ensureFont();
+  const kittyImg = await getKittyImage();
   const { createCanvas } = requireCanvas();
+  
   const canvas = createCanvas(SIZE * SCALE, SIZE * SCALE);
   const ctx = canvas.getContext("2d");
   ctx.scale(SCALE, SCALE);
 
-  ctx.fillStyle = options.bgColor || BG_COLOR;
-  ctx.fillRect(0, 0, SIZE, SIZE);
-
-  drawKitty(ctx);
-
+  // Layout text first to calculate spacing
   const layout = layoutText(ctx, text);
-  const totalHeight = layout.lines.length * layout.lineHeight;
-  let y = 492 - totalHeight + layout.size * 0.8;
+  const totalTextHeight = layout.lines.length * layout.lineHeight;
 
-  ctx.font = `${layout.size}px "${FONT}"`;
-  ctx.fillStyle = options.color || TEXT_COLOR;
+  // Hello Kitty character dimensions
+  // Target available height for Kitty: around 340px
+  const targetKittyHeight = Math.min(340, SIZE - totalTextHeight - 50);
+  const scaleKitty = targetKittyHeight / kittyImg.height;
+  const kittyW = kittyImg.width * scaleKitty;
+  const kittyH = targetKittyHeight;
+  const kittyX = (SIZE - kittyW) / 2;
+  const kittyY = 15;
+
+  // Draw Hello Kitty Image
+  ctx.drawImage(kittyImg, kittyX, kittyY, kittyW, kittyH);
+
+  // Position text below the Hello Kitty image
+  let y = kittyY + kittyH + 30;
+
+  ctx.font = `bold ${layout.size}px "${FONT}"`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
   for (const line of layout.lines) {
+    // White text stroke/outline for maximum readability on dark & light WhatsApp backgrounds
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineJoin = "round";
+    ctx.strokeText(line, SIZE / 2, y);
+
+    // Black text fill
+    ctx.fillStyle = options.color || "#111111";
     ctx.fillText(line, SIZE / 2, y);
+
     y += layout.lineHeight;
   }
 
   const png = await canvas.encode("png");
   const sharp = getSharp();
   if (!sharp) return png;
-  return sharp(png).resize(SIZE, SIZE, { kernel: sharp.kernel.lanczos3 }).png().toBuffer();
+  return sharp(png).resize(SIZE, SIZE, { kernel: sharp.kernel.lanczos3 }).webp({ quality: 90 }).toBuffer();
 }
