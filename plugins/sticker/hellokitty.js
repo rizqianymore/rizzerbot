@@ -3,7 +3,7 @@ import { sendStickerBuffer, validateBratText } from "@/src/services/fetch/brat.j
 
 export default {
   name: "hellokitty",
-  cooldownMs: 10000,
+  cooldownMs: 5000,
   aliases: ["hk", "kitty"],
   description: "Membuat sticker karakter Hello Kitty dengan teks kustom",
   category: "Sticker",
@@ -25,12 +25,31 @@ export default {
     const check = validateBratText(text, false);
     if (!check.ok) return reply(check.error);
 
+    // Indikator reaksi & typing untuk respon instan
+    Promise.resolve(
+      sock.sendMessage(msg.key.remoteJid, {
+        react: { text: "🎀", key: msg.key },
+      })
+    ).catch(() => {});
     await sendTyping();
+
     try {
       const image = await createHelloKittyImage(text);
       await sendStickerBuffer(sock, msg, image);
+
+      // Indikator selesai
+      Promise.resolve(
+        sock.sendMessage(msg.key.remoteJid, {
+          react: { text: "✨", key: msg.key },
+        })
+      ).catch(() => {});
     } catch (err) {
       logger?.error?.(`[hellokitty] ${err?.stack || err?.message || err}`);
+      Promise.resolve(
+        sock.sendMessage(msg.key.remoteJid, {
+          react: { text: "❌", key: msg.key },
+        })
+      ).catch(() => {});
       await reply(`Gagal membuat sticker Hello Kitty: ${err.message}`);
     }
   },

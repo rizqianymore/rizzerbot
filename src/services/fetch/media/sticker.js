@@ -269,9 +269,9 @@ export async function createSticker(
             kernel: sharp.kernel.lanczos3,
           })
           .webp({
-            quality: 95,
+            quality: 90,
             smartSubsample: true,
-            effort: 6,
+            effort: 3,
           })
           .toBuffer();
       } catch (_) {
