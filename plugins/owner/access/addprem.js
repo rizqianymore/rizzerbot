@@ -41,12 +41,24 @@ export default {
     } catch (_) {
       return reply("Gagal memverifikasi nomor ke WhatsApp. Coba lagi sebentar.");
     }
-    if (db.isOwner(jid)) return reply("Owner otomatis memiliki akses Premium selamanya.");
-    if (db.isAdmin(jid)) return reply("Admin Bot otomatis memiliki akses Premium selamanya.");
+    const isOwner = db.isOwner(jid);
+    const isAdmin = db.isAdmin(jid);
 
     db.setPremium(jid, true, durationDays, senderJid);
-    reply(
-      `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
-    );
+    if (isOwner) {
+      reply(
+        `Owner otomatis memiliki akses Premium selamanya.\n` +
+        `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
+      );
+    } else if (isAdmin) {
+      reply(
+        `Admin Bot otomatis memiliki akses Premium selamanya.\n` +
+        `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
+      );
+    } else {
+      reply(
+        `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
+      );
+    }
   },
 };
