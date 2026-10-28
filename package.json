@@ -18,7 +18,9 @@
     "pm2:restart": "pm2 restart ecosystem.config.cjs",
     "pm2:logs": "pm2 logs rizzerbot",
     "pm2:monit": "pm2 monit",
-    "clean:comments": "node scripts/clean-comments.js"
+    "clean:comments": "node scripts/clean-comments.js",
+    "reset": "node scripts/reset-total.js",
+    "reset:force": "node scripts/reset-total.js --force"
   },
   "engines": {
     "node": ">=20",
