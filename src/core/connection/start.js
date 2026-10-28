@@ -100,7 +100,7 @@ export async function startBot() {
       auth: state,
       logger: pino({ level: "silent" }),
       printQRInTerminal: !usePairingCode,
-      browser: Browsers.ubuntu("Chrome"),
+      browser: Browsers.macOS("Chrome"), // Browser macOS Chrome lebih stabil dan diizinkan oleh WhatsApp Web
       markOnlineOnConnect: activeSettings.autoOnline,
       syncFullHistory: false,
       msgRetryCounterCache,
@@ -111,7 +111,7 @@ export async function startBot() {
       defaultQueryTimeoutMs: 60000,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 250,
+      retryRequestDelayMs: 500,
       autoFollowNewsletterOnConnect: false,
     });
 
@@ -120,36 +120,44 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
-    if (usePairingCode && !sock.authState.creds.registered) {
-      const phoneNumber = db.normalizeJid(activeSettings.pairingNumber).split("@")[0];
-      if (!phoneNumber) {
-        logger.error("Pairing phone number is missing or invalid in database/settings.js!");
-      } else {
+    // Logika Pairing Code: Hanya diminta jika socket belum terdaftar
+    if (usePairingCode && !sock.authState?.creds?.registered) {
+      const rawNumber = activeSettings.pairingNumber || activeSettings.ownerNumber;
+      const phoneNumber = String(rawNumber || "").replace(/\D/g, "");
 
+      if (!phoneNumber || phoneNumber.length < 8) {
+        logger.error("Nomor pairing tidak valid! Silakan cek pairingNumber di config/settings.js");
+      } else {
         const RETRY_STEPS = [5000, 15000, 30000, 60000];
         let pairingAttempts = 0;
 
         const requestPairing = async () => {
+          if (sock.authState?.creds?.registered) {
+            if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
+            return;
+          }
           try {
-            logger.info(`Requesting pairing code for primary bot: ${phoneNumber}...`);
+            logger.info(`Requesting pairing code for: +${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
             pairingAttempts = 0;
             console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
-            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Hubungkan dengan nomor ini.\n`);
-            console.log(`\x1b[0m   Kode berlaku singkat; kode baru diminta otomatis 3 menit lagi.\n`);
+            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
+            console.log(`\x1b[0m   Kode berlaku 2-3 menit. Masukkan segera sebelum kedaluwarsa.\n`);
             console.log(`\x1b[36m====================================\x1b[0m\n`);
             timers.pairingTimeout = setTimeout(requestPairing, 180000);
           } catch (err) {
             pairingAttempts += 1;
             const wait = RETRY_STEPS[Math.min(pairingAttempts - 1, RETRY_STEPS.length - 1)];
-            logger.error(
-              `Failed to request pairing code: ${err.message || err}. Retrying in ${wait / 1000} seconds...`
+            logger.warn(
+              `Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam ${wait / 1000} detik...`
             );
             timers.pairingTimeout = setTimeout(requestPairing, wait);
           }
         };
-        timers.pairingTimeout = setTimeout(requestPairing, 3000);
+
+        // Beri jeda 4 detik agar socket WebSocket benar-benar siap
+        timers.pairingTimeout = setTimeout(requestPairing, 4000);
       }
     }
 

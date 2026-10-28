@@ -4,7 +4,6 @@ import qrcode from "qrcode-terminal";
 import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
-
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
@@ -32,6 +31,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
 
       connectionState.lastDisconnectAt = Date.now();
       const wasRegistered = Boolean(sock.authState?.creds?.registered);
+
       try {
         const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
         setPrimaryOnline(false);
@@ -41,58 +41,63 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         }
       } catch (_) {}
 
-      if (shouldReconnect) {
-        logger.info("Attempting to reconnect primary in 5 seconds...");
+      // Jika socket terputus saat proses pairing atau sesi belum terdaftar, bersihkan sesi parsial
+      if (!wasRegistered) {
+        connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
+
+        // Jika pairing gagal 2x berturut-turut, auto-clean sesi parsial agar tidak loop session korup
+        if (connectionState.unregisteredFailures >= 2) {
+          logger.warn("[Pairing] Membersihkan cache sesi parsial yang gagal ditautkan...");
+          try {
+            deleteFolderRecursive(authDir);
+          } catch (_) {}
+          connectionState.unregisteredFailures = 0;
+        }
+
+        const waitMs = 5000;
+        logger.info(`Memulai ulang permintaan pairing dalam ${waitMs / 1000} detik...`);
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;
           restart().catch((err) => {
-            logger.error("Failed to restart primary bot:", err);
+            logger.error("Gagal memulai ulang pairing:", err);
+          });
+        }, waitMs);
+        return;
+      }
+
+      if (shouldReconnect) {
+        logger.info("Mencoba menghubungkan kembali (reconnect) dalam 5 detik...");
+        if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
+        connectionState.reconnectTimer = setTimeout(() => {
+          connectionState.reconnectTimer = null;
+          restart().catch((err) => {
+            logger.error("Gagal restart bot:", err);
           });
         }, 5000);
         return;
       }
 
-      if (!sock.authState?.creds?.registered) {
-        connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
-
-        const waitMs = connectionState.unregisteredFailures >= 3 ? 15 * 60 * 1000 : 120 * 1000;
-        logger.warn(
-          `Belum terdaftar: koneksi ditolak sebelum pairing selesai (status ${statusCode || "?"}). ` +
-            `Percobaan ke-${connectionState.unregisteredFailures}, sesi dipertahankan, coba lagi dalam ${waitMs / 1000} detik...` +
-            (connectionState.pairingHintSent
-              ? ""
-              : " Pairing belum selesai — masukkan kode pairing di WhatsApp → Perangkat Tertaut.")
-        );
-        connectionState.pairingHintSent = true;
-        if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
-        connectionState.reconnectTimer = setTimeout(() => {
-          connectionState.reconnectTimer = null;
-          restart().catch((err) => {
-            logger.error("Failed to restart primary bot:", err);
-          });
-        }, waitMs);
-        return;
-      }
+      // Kasus logout resmi dari WhatsApp Web
       connectionState.unregisteredFailures = 0;
-
-      logger.error("Log out detected. Cleaning up primary session files...");
+      logger.error("Log out terdeteksi dari WhatsApp. Membersihkan seluruh sesi lama...");
       try {
         deleteFolderRecursive(authDir);
       } catch (e) {
-        logger.error("Failed to delete corrupted primary session:", e.message);
+        logger.error("Gagal menghapus folder sesi:", e.message);
       }
-      logger.info("Re-initializing bot connection with fresh state in 3 seconds...");
+      logger.info("Membuat sesi baru dalam 3 detik...");
       if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
       connectionState.reconnectTimer = setTimeout(() => {
         connectionState.reconnectTimer = null;
         restart().catch((err) => {
-          logger.error("Failed to restart primary bot with fresh state:", err);
+          logger.error("Gagal inisialisasi sesi baru:", err);
         });
       }, 3000);
     } else if (connection === "open") {
       connectionState.unregisteredFailures = 0;
-      logger.info("Primary Rizzer Bot successfully connected and is now online!");
+      if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
+      logger.info("🎉 Primary Rizzer Bot BERHASIL TERHUBUNG dan sekarang ONLINE!");
       try {
         const { setPrimaryOnline, notifyOwner } = await import("@/src/services/system/health.js");
         setPrimaryOnline(true);
@@ -138,30 +143,10 @@ export function attachMessageHandler(sock) {
           )
             continue;
         }
-        try {
-          const ts = Number(msg.messageTimestamp);
-          if (Number.isFinite(ts) && ts > 0) {
-            const ageMs = Date.now() - ts * 1000;
-            if (ageMs > 5 * 60 * 1000) {
-              logger.info?.(`[Stale] pesan basi pra-antrean diabaikan: ${msg.key?.id || "?"}`);
-              continue;
-            }
-            if (ageMs < -5 * 60 * 1000) {
-              logger.info?.(`[Stale] timestamp masa depan pra-antrean diabaikan: ${msg.key?.id || "?"}`);
-              continue;
-            }
-          }
-        } catch (_) {}
 
-        if (db.getSettings().autoRead) {
-          await sock.readMessages([msg.key]).catch(() => {});
-        }
-        try {
-          recordMessage(sock, msg);
-        } catch (_) {}
         enqueueMessage(sock, msg, logger);
       } catch (err) {
-        logger.error("Error in primary message handler:", err);
+        logger?.error?.("[Message Handler Error]", err?.message || err);
       }
     }
   });
