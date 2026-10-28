@@ -1,4 +1,4 @@
-import makeWASocket, { useMultiFileAuthState, Browsers, fetchLatestBaileysVersion } from "ourin-baileys";
+import makeWASocket, { useMultiFileAuthState, Browsers } from "ourin-baileys";
 import pino from "pino";
 import path from "path";
 import fs from "fs";
@@ -14,6 +14,9 @@ import { startKeepAlive, startStabilityWatchdog } from "./keepalive.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// WhatsApp Web Versi Stabil yang Cepat & Langsung Diterima
+const STABLE_WA_VERSION = [2, 3000, 1043857760];
 
 export async function startBot() {
   if (connectionState.isStarting) {
@@ -48,9 +51,11 @@ export async function startBot() {
   try {
     const activeSettings = db.getSettings();
 
+    // Fast-boot: Muat plugin secara async paralel tanpa menghambat inisialisasi socket
     if (!connectionState.isPluginsLoaded) {
-      await loadPlugins();
-      connectionState.isPluginsLoaded = true;
+      loadPlugins().then(() => {
+        connectionState.isPluginsLoaded = true;
+      }).catch((e) => logger.error("Plugin load error:", e));
     }
 
     if (!connectionState.cleanIntervalStarted) {
@@ -68,50 +73,46 @@ export async function startBot() {
       try {
         const stats = fs.statSync(credsPath);
         if (stats.size === 0) {
-          throw new Error("creds.json kosong (0 bytes)");
+          throw new Error("creds.json kosong");
         }
         const parsed = JSON.parse(fs.readFileSync(credsPath, "utf-8"));
         if (!parsed || typeof parsed !== "object" || !parsed.noiseKey) {
-          throw new Error("Format creds.json tidak lengkap atau korup");
+          throw new Error("Format creds.json korup");
         }
       } catch (err) {
-        logger.warn(
-          `Sesi sebelumnya tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru yang bersih...`
-        );
+        logger.warn(`Sesi lama tidak valid (${err.message}). Menghapus sesi lama...`);
         deleteFolderRecursive(authDir);
         fs.mkdirSync(authDir, { recursive: true });
       }
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
-    const { version } = await fetchLatestBaileysVersion().catch(() => ({
-      version: [2, 3000, 1043857760],
-    }));
 
     logger.info(
-      `Initializing primary Rizzer Bot connection (WA Version: ${version ? version.join(".") : "default"})...`
+      `Fast initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`
     );
 
     const usePairingCode = activeSettings.usePairingCode;
     const msgRetryCounterCache = new Map();
 
+    // Socket Ultra-Cepat: Mengurangi delay handshake & fire init queries cepat
     const sock = makeWASocket({
-      version,
+      version: STABLE_WA_VERSION,
       auth: state,
       logger: pino({ level: "silent" }),
       printQRInTerminal: !usePairingCode,
-      browser: Browsers.macOS("Chrome"), // Browser macOS Chrome lebih stabil dan diizinkan oleh WhatsApp Web
+      browser: Browsers.macOS("Chrome"),
       markOnlineOnConnect: activeSettings.autoOnline,
       syncFullHistory: false,
       msgRetryCounterCache,
       generateHighQualityLinkPreview: false,
       shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
-      keepAliveIntervalMs: 25000,
-      connectTimeoutMs: 60000,
-      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 15000,
+      connectTimeoutMs: 30000,
+      defaultQueryTimeoutMs: 30000,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 500,
+      retryRequestDelayMs: 200,
       autoFollowNewsletterOnConnect: false,
     });
 
@@ -120,44 +121,36 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
-    // Logika Pairing Code: Hanya diminta jika socket belum terdaftar
+    // Fast-Pairing Handler: Instan meminta kode tanpa delay tunggu lama
     if (usePairingCode && !sock.authState?.creds?.registered) {
       const rawNumber = activeSettings.pairingNumber || activeSettings.ownerNumber;
       const phoneNumber = String(rawNumber || "").replace(/\D/g, "");
 
       if (!phoneNumber || phoneNumber.length < 8) {
-        logger.error("Nomor pairing tidak valid! Silakan cek pairingNumber di config/settings.js");
+        logger.error("Nomor pairing tidak valid di config/settings.js!");
       } else {
-        const RETRY_STEPS = [5000, 15000, 30000, 60000];
-        let pairingAttempts = 0;
-
         const requestPairing = async () => {
           if (sock.authState?.creds?.registered) {
             if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
             return;
           }
           try {
-            logger.info(`Requesting pairing code for: +${phoneNumber}...`);
+            logger.info(`Meminta kode pairing cepat untuk: +${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
-            pairingAttempts = 0;
             console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
             console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
-            console.log(`\x1b[0m   Kode berlaku 2-3 menit. Masukkan segera sebelum kedaluwarsa.\n`);
+            console.log(`\x1b[0m   Kode berlaku 2-3 menit.\n`);
             console.log(`\x1b[36m====================================\x1b[0m\n`);
             timers.pairingTimeout = setTimeout(requestPairing, 180000);
           } catch (err) {
-            pairingAttempts += 1;
-            const wait = RETRY_STEPS[Math.min(pairingAttempts - 1, RETRY_STEPS.length - 1)];
-            logger.warn(
-              `Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam ${wait / 1000} detik...`
-            );
-            timers.pairingTimeout = setTimeout(requestPairing, wait);
+            logger.warn(`Retrying pairing code request: ${err?.message || err}`);
+            timers.pairingTimeout = setTimeout(requestPairing, 3000);
           }
         };
 
-        // Beri jeda 4 detik agar socket WebSocket benar-benar siap
-        timers.pairingTimeout = setTimeout(requestPairing, 4000);
+        // Langsung minta kode dalam 1.2 detik (sangat cepat)
+        timers.pairingTimeout = setTimeout(requestPairing, 1200);
       }
     }
 
@@ -179,7 +172,7 @@ export async function startBot() {
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
       startBot().catch(() => {});
-    }, 5000);
+    }, 3000);
     return null;
   }
 }
