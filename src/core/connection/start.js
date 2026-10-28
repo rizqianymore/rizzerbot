@@ -15,7 +15,6 @@ import { startKeepAlive, startStabilityWatchdog } from "./keepalive.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// WhatsApp Web Versi Stabil yang Cepat & Langsung Diterima
 const STABLE_WA_VERSION = [2, 3000, 1043857760];
 
 export async function startBot() {
@@ -51,7 +50,6 @@ export async function startBot() {
   try {
     const activeSettings = db.getSettings();
 
-    // Fast-boot: Muat plugin secara async paralel tanpa menghambat inisialisasi socket
     if (!connectionState.isPluginsLoaded) {
       loadPlugins().then(() => {
         connectionState.isPluginsLoaded = true;
@@ -89,13 +87,12 @@ export async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
     logger.info(
-      `Fast initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`
+      `Initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`
     );
 
     const usePairingCode = activeSettings.usePairingCode;
     const msgRetryCounterCache = new Map();
 
-    // Socket Ultra-Cepat: Mengurangi delay handshake & fire init queries cepat
     const sock = makeWASocket({
       version: STABLE_WA_VERSION,
       auth: state,
@@ -107,12 +104,12 @@ export async function startBot() {
       msgRetryCounterCache,
       generateHighQualityLinkPreview: false,
       shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
-      keepAliveIntervalMs: 15000,
-      connectTimeoutMs: 30000,
-      defaultQueryTimeoutMs: 30000,
+      keepAliveIntervalMs: 25000,
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 60000,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 200,
+      retryRequestDelayMs: 500,
       autoFollowNewsletterOnConnect: false,
     });
 
@@ -121,7 +118,7 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
-    // Fast-Pairing Handler: Instan meminta kode tanpa delay tunggu lama
+    // Request Pairing Code: Minta SATU KALI dengan masa berlaku 3 menit
     if (usePairingCode && !sock.authState?.creds?.registered) {
       const rawNumber = activeSettings.pairingNumber || activeSettings.ownerNumber;
       const phoneNumber = String(rawNumber || "").replace(/\D/g, "");
@@ -129,28 +126,36 @@ export async function startBot() {
       if (!phoneNumber || phoneNumber.length < 8) {
         logger.error("Nomor pairing tidak valid di config/settings.js!");
       } else {
+        let isRequested = false;
+
         const requestPairing = async () => {
-          if (sock.authState?.creds?.registered) {
-            if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
+          if (sock.authState?.creds?.registered || isRequested) {
             return;
           }
+          isRequested = true;
           try {
-            logger.info(`Meminta kode pairing cepat untuk: +${phoneNumber}...`);
+            logger.info(`Meminta kode pairing untuk: +${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
             console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
             console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
-            console.log(`\x1b[0m   Kode berlaku 2-3 menit.\n`);
+            console.log(`\x1b[0m   Kode aktif selama 3 menit. Jangan minta kode baru selagi memasukkan kode ini!\n`);
             console.log(`\x1b[36m====================================\x1b[0m\n`);
-            timers.pairingTimeout = setTimeout(requestPairing, 180000);
+
+            // Minta kode berikutnya HANYA setelah 3 menit (180 detik) jika belum terdaftar
+            timers.pairingTimeout = setTimeout(() => {
+              isRequested = false;
+              requestPairing();
+            }, 180000);
           } catch (err) {
-            logger.warn(`Retrying pairing code request: ${err?.message || err}`);
-            timers.pairingTimeout = setTimeout(requestPairing, 3000);
+            isRequested = false;
+            logger.warn(`Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam 15 detik...`);
+            timers.pairingTimeout = setTimeout(requestPairing, 15000);
           }
         };
 
-        // Langsung minta kode dalam 1.2 detik (sangat cepat)
-        timers.pairingTimeout = setTimeout(requestPairing, 1200);
+        // Beri jeda 3 detik agar koneksi WebSocket handshake stabil sebelum meminta pairing
+        timers.pairingTimeout = setTimeout(requestPairing, 3000);
       }
     }
 
@@ -172,7 +177,7 @@ export async function startBot() {
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
       startBot().catch(() => {});
-    }, 3000);
+    }, 5000);
     return null;
   }
 }
