@@ -98,7 +98,7 @@ export async function startBot() {
       auth: state,
       logger: pino({ level: "silent" }),
       printQRInTerminal: !usePairingCode,
-      browser: Browsers.macOS("Chrome"),
+      browser: Browsers.ubuntu("Chrome"), // Ubuntu Chrome standar Baileys yang 100% cocok dengan pairing
       markOnlineOnConnect: activeSettings.autoOnline,
       syncFullHistory: false,
       msgRetryCounterCache,
@@ -118,7 +118,7 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
-    // Request Pairing Code: Minta SATU KALI dengan masa berlaku 3 menit
+    // Request Pairing Code: JANGAN minta ulang jika sudah pernah meminta kode di sesi ini
     if (usePairingCode && !sock.authState?.creds?.registered) {
       const rawNumber = activeSettings.pairingNumber || activeSettings.ownerNumber;
       const phoneNumber = String(rawNumber || "").replace(/\D/g, "");
@@ -126,35 +126,34 @@ export async function startBot() {
       if (!phoneNumber || phoneNumber.length < 8) {
         logger.error("Nomor pairing tidak valid di config/settings.js!");
       } else {
-        let isRequested = false;
-
         const requestPairing = async () => {
-          if (sock.authState?.creds?.registered || isRequested) {
+          if (sock.authState?.creds?.registered) {
             return;
           }
-          isRequested = true;
+          // Jika sudah ada pairingCode yang aktif di creds.json, tampilkan kode yang SAMA agar tidak invalid!
+          if (sock.authState?.creds?.pairingCode) {
+            const existingCode = sock.authState.creds.pairingCode;
+            console.log(`\n\x1b[36m====================================\x1b[0m`);
+            console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${existingCode}\x1b[0m 🔑`);
+            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
+            console.log(`\x1b[36m====================================\x1b[0m\n`);
+            return;
+          }
+
           try {
             logger.info(`Meminta kode pairing untuk: +${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
             console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
             console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
-            console.log(`\x1b[0m   Kode aktif selama 3 menit. Jangan minta kode baru selagi memasukkan kode ini!\n`);
             console.log(`\x1b[36m====================================\x1b[0m\n`);
-
-            // Minta kode berikutnya HANYA setelah 3 menit (180 detik) jika belum terdaftar
-            timers.pairingTimeout = setTimeout(() => {
-              isRequested = false;
-              requestPairing();
-            }, 180000);
           } catch (err) {
-            isRequested = false;
-            logger.warn(`Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam 15 detik...`);
-            timers.pairingTimeout = setTimeout(requestPairing, 15000);
+            logger.warn(`Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam 10 detik...`);
+            timers.pairingTimeout = setTimeout(requestPairing, 10000);
           }
         };
 
-        // Beri jeda 3 detik agar koneksi WebSocket handshake stabil sebelum meminta pairing
+        // Tunggu 3 detik agar handshake awal Baileys siap
         timers.pairingTimeout = setTimeout(requestPairing, 3000);
       }
     }

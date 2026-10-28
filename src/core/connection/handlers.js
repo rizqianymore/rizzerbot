@@ -41,26 +41,18 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         }
       } catch (_) {}
 
-      // Jika socket terputus saat proses pairing atau sesi belum terdaftar, bersihkan sesi parsial
+      // Jika socket terputus saat belum terdaftar (misal user belum selesai memasukkan kode), PERTAHANKAN sesi!
+      // JANGAN hapus authDir agar kredensial pairing code di HP tidak menjadi tidak valid!
       if (!wasRegistered) {
         connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
 
-        // Jika pairing gagal 2x berturut-turut, auto-clean sesi parsial agar tidak loop session korup
-        if (connectionState.unregisteredFailures >= 2) {
-          logger.warn("[Pairing] Membersihkan cache sesi parsial yang gagal ditautkan...");
-          try {
-            deleteFolderRecursive(authDir);
-          } catch (_) {}
-          connectionState.unregisteredFailures = 0;
-        }
-
-        const waitMs = 5000;
-        logger.info(`Memulai ulang permintaan pairing dalam ${waitMs / 1000} detik...`);
+        const waitMs = 3000;
+        logger.info(`Mempertahankan sesi pairing. Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`);
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;
           restart().catch((err) => {
-            logger.error("Gagal memulai ulang pairing:", err);
+            logger.error("Gagal menghubungkan kembali soket:", err);
           });
         }, waitMs);
         return;
