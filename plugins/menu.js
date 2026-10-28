@@ -3,55 +3,19 @@ import { db } from "@/src/core/database.js";
 import { sortCategoryKeys, resolveCategoryAlias } from "@/src/core/categories.js";
 import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 
-export const MENU_INTERACTIVE_MAX = 900;
-
-export function buildMenuButtons(catKeys, prefix) {
-  return [
-    {
-      name: "quick_reply",
-      buttonParamsJson: JSON.stringify({ display_text: "Semua Menu", id: `${prefix}menu all` }),
-    },
-    {
-      name: "single_select",
-      buttonParamsJson: JSON.stringify({
-        title: "Kategori",
-        sections: [
-          {
-            title: "Kategori",
-            rows: catKeys.map((k) => ({ title: k, id: `${prefix}menu ${k}` })),
-          },
-        ],
-      }),
-    },
-  ];
-}
-
-async function _resolveMenuImage(activeSettings = {}) {
-  try {
-    const p = await resolveImagePayload(activeSettings);
-    if (!p) return undefined;
-    if (Buffer.isBuffer(p)) return p;
-    if (p?.url) return { url: p.url };
-  } catch (_) {}
-  return undefined;
-}
-
-export function shouldUseInteractive(bodyText) {
-  return typeof bodyText === "string" && bodyText.length > 0 && bodyText.length <= MENU_INTERACTIVE_MAX;
-}
-
 export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
   let text = "";
 
-  text += `╭───「 *${botName}* 」\n`;
+  text += `╭───「 *${botName.toUpperCase()}* 」\n`;
+  text += `│ • Status: Aktif (Online)\n`;
   text += `│ • Prefix: [ ${prefix} ]\n`;
   text += `│ • Role: ${role}\n`;
   text += `│ • Total: ${totalCmds} Perintah\n`;
   text += `╰───\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
-    const cmds = categories[targetCategory];
+    const cmds = categories[targetCategory] || [];
     text += `╭───「 *${targetCategory.toUpperCase()}* (${cmds.length}) 」\n`;
     for (const c of cmds) {
       text += `│ • ${prefix}${c.name}\n`;
@@ -62,7 +26,8 @@ export function renderMenu(data) {
   }
 
   for (const cat of catKeys) {
-    const cmds = categories[cat];
+    const cmds = categories[cat] || [];
+    if (!cmds || cmds.length === 0) continue;
     text += `╭───「 *${cat.toUpperCase()}* (${cmds.length}) 」\n`;
     for (const c of cmds) {
       text += `│ • ${prefix}${c.name}\n`;
@@ -164,27 +129,25 @@ export default {
     const catKeys = sortCategoryKeys(Object.keys(categories));
 
     const role = isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "User";
-    const totalCmds = catKeys.reduce((n, k) => n + categories[k].length, 0);
+    const totalCmds = catKeys.reduce((n, k) => n + (categories[k]?.length || 0), 0);
     const jid = msg.key.remoteJid;
     const botName = activeSettings.botName || "Rizzer Bot";
 
-    if (showAll || !targetCategory) {
-      const body = renderMenu({
-        botName,
-        prefix,
-        role,
-        totalCmds,
-        categories,
-        catKeys,
-        targetCategory: null,
-      }).trim();
+    const body = renderMenu({
+      botName,
+      prefix,
+      role,
+      totalCmds,
+      categories,
+      catKeys,
+      targetCategory: targetCategory || null,
+    }).trim();
 
+    try {
       const imagePayload = await resolveImagePayload(activeSettings);
       return await sendWithImage(sock, jid, imagePayload, body, msg);
+    } catch (_) {
+      return await reply(body);
     }
-
-    const body = renderMenu({ botName, prefix, role, totalCmds, categories, catKeys, targetCategory }).trim();
-    const imagePayload = await resolveImagePayload(activeSettings);
-    return await sendWithImage(sock, jid, imagePayload, body, msg);
   },
 };
