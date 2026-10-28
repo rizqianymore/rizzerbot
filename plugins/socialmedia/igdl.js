@@ -1,7 +1,6 @@
 import { clean, cleanText } from "@/src/services/fetch/igdl/utils.js";
 import { downloadFromKolId } from "@/src/services/fetch/igdl/providers.js";
 import { sendImage, sendVideo } from "@/src/services/fetch/igdl/sender.js";
-import { request } from "@/src/utils/request.js";
 
 export default {
   name: "igdl",
@@ -24,129 +23,20 @@ export default {
     try {
       let res = null;
 
+      // 1. Coba kol.id
       try {
         res = await downloadFromKolId(input, { timeoutMs: 25000 });
       } catch (kolErr) {
         logger?.warn?.(`[igdl kol.id] ${kolErr?.message || kolErr}`);
       }
 
-      if (!res) {
-        try {
-          const data = await request.json(
-            `https://api.nexray.eu.cc/downloader/v2/instagram?url=${encodeURIComponent(input)}`,
-            { timeout: 15000 }
-          );
-          if (data.status && data.result?.media?.length) {
-            res = data.result;
-          }
-        } catch (nexrayErr) {
-          logger?.warn?.(`[igdl nexray] ${nexrayErr?.message || nexrayErr}`);
-        }
-      }
-
-      if (!res) {
-        try {
-          const { brightDataRequest, getBrightDataConfig } = await import("@/src/services/network/brightdata.js");
-          if (getBrightDataConfig().apiKey) {
-            const bdRes = await brightDataRequest("https://fastdl.app/c/", {
-              format: "json",
-              method: "POST",
-              headers: { "content-type": "application/x-www-form-urlencoded; charset=UTF-8" },
-              data: `url=${encodeURIComponent(input)}`,
-            });
-            if (bdRes && (Array.isArray(bdRes) || bdRes.url)) {
-              const items = Array.isArray(bdRes) ? bdRes : [bdRes];
-              res = {
-                username: "",
-                likes: 0,
-                title: "",
-                media: items
-                  .map((it) => ({
-                    type: it.type === "mp4" ? "mp4" : "image",
-                    url: it.url?.[0]?.url || it.url,
-                  }))
-                  .filter((m) => m.url),
-              };
-            }
-          }
-        } catch (bdErr) {
-          logger?.warn?.(`[igdl brightdata] ${bdErr?.message || bdErr}`);
-        }
-      }
-
-      if (!res) {
-        try {
-          const { stealthBrowser } = await import("@/src/utils/request.js");
-          const browser = await stealthBrowser.getBrowser();
-          const page = await browser.newPage();
-          try {
-            let captured = null;
-            page.on("response", async (response) => {
-              if (response.url().includes("/api/convert")) {
-                try {
-                  captured = await response.json();
-                } catch (_) {}
-              }
-            });
-
-            await page.goto("https://fastdl.app/en", { waitUntil: "domcontentloaded", timeout: 20000 });
-            await page.waitForSelector("#search-form-input", { timeout: 10000 });
-            await page.type("#search-form-input", input);
-            await page.click("button.search-form__button");
-
-            for (let i = 0; i < 15; i++) {
-              if (captured) break;
-              await new Promise((r) => setTimeout(r, 400));
-            }
-
-            if (Array.isArray(captured) && captured.length > 0) {
-              const mediaItems = [];
-              for (const item of captured) {
-                const dlUrl = item.url?.[0]?.url;
-                const type = item.url?.[0]?.type || "jpg";
-                if (!dlUrl) continue;
-
-                const b64 = await page.evaluate(async (url) => {
-                  const resp = await window.fetch(url);
-                  const blob = await resp.blob();
-                  return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                  });
-                }, dlUrl);
-
-                const commaIdx = b64.indexOf(",");
-                const buffer = Buffer.from(b64.slice(commaIdx + 1), "base64");
-                mediaItems.push({
-                  type: type === "mp4" ? "mp4" : "image",
-                  buffer,
-                });
-              }
-
-              if (mediaItems.length > 0) {
-                res = {
-                  username: captured[0]?.meta?.username || "",
-                  likes: 0,
-                  title: captured[0]?.meta?.title || "",
-                  media: mediaItems,
-                };
-              }
-            }
-          } finally {
-            await page.close().catch(() => {});
-          }
-        } catch (fastdlErr) {
-          logger?.warn?.(`[igdl fastdl fallback] ${fastdlErr?.message || fastdlErr}`);
-        }
-      }
-
+      // 2. Fallback ke engine yt-dlp
       if (!res || !res.media?.length) {
         try {
           const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-          const info = await probe(input).catch(() => null);
+          const info = await probe(input, { timeoutMs: 20000 }).catch(() => null);
           const dl = await downloadMedia(input, { mode: "video" });
-          if (dl?.buffer) {
+          if (dl?.buffer?.length) {
             res = {
               username: info?.uploader || "",
               likes: 0,

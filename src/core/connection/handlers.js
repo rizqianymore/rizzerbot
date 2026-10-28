@@ -4,7 +4,7 @@ import qrcode from "qrcode-terminal";
 import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
-import { recordMessage } from "@/src/services/system/chatlogger.js";
+
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";

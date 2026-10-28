@@ -1,0 +1,52 @@
+import { db } from "@/src/core/database.js";
+import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
+
+/**
+ * Helper terpusat untuk verifikasi konteks grup, hak akses Admin pengguna, dan Admin bot.
+ */
+export async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
+  const remoteJid = msg.key.remoteJid;
+  if (!remoteJid || !remoteJid.endsWith("@g.us")) {
+    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
+    return null;
+  }
+
+  const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
+  if (!meta || !Array.isArray(meta.participants)) {
+    await context.reply("Gagal mengambil informasi grup WhatsApp.");
+    return null;
+  }
+
+  const senderJid = context.senderJid;
+  const botJid = db.normalizeJid(sock.user?.id);
+
+  const botParticipant = findGroupParticipant(meta, botJid);
+  const isBotAdmin = Boolean(
+    botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
+  );
+
+  const userParticipant = findGroupParticipant(meta, senderJid);
+  const isUserAdmin = Boolean(
+    context.isOwner ||
+    context.isAdmin ||
+    (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
+  );
+
+  if (requireUserAdmin && !isUserAdmin) {
+    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
+    return null;
+  }
+
+  if (requireBotAdmin && !isBotAdmin) {
+    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
+    return null;
+  }
+
+  return {
+    remoteJid,
+    meta,
+    participants: meta.participants,
+    isBotAdmin,
+    isUserAdmin,
+  };
+}

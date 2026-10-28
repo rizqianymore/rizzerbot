@@ -3,7 +3,7 @@ import { DisconnectReason } from "ourin-baileys";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { logger } from "@/src/core/connection.js";
 import { db } from "@/src/core/database.js";
-import { recordMessage } from "@/src/services/system/chatlogger.js";
+
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots } from "./store.js";
 

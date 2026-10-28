@@ -104,12 +104,13 @@ try {
   assert(false, "EXIF stiker JS murni valid", err.message);
 }
 
-console.log("[4/5] Service tanpa native (userhunt) termuat...");
+console.log("[4/5] Downloader core engine (kol.id & ytdlp) termuat...");
 try {
-  const { USERHUNT_PLATFORMS } = await import("../src/services/osint/userhunt.js");
-  assert(USERHUNT_PLATFORMS.length >= 18, `${USERHUNT_PLATFORMS.length} platform userhunt`);
+  const { KolIdError } = await import("../src/services/fetch/kolid.js");
+  const { downloadMedia, probe } = await import("../src/services/fetch/ytdlp.js");
+  assert(typeof KolIdError === "function" && typeof downloadMedia === "function" && typeof probe === "function", "kolid & ytdlp termuat");
 } catch (err) {
-  assert(false, "userhunt termuat", err.message);
+  assert(false, "kolid & ytdlp termuat", err.message);
 }
 
 console.log("[5/5] Simulasi dispatch perintah (proses terpisah, db dummy)...");

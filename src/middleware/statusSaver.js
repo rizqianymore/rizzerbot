@@ -50,11 +50,9 @@ export async function handleStatusBroadcast(sock, msg, logger) {
       fs.mkdirSync(statusesDir, { recursive: true });
     }
 
-    const participant = msg.key?.participant || msg.key?.remoteJid || "unknown";
-    const number =
-      String(participant)
-        .split("@")[0]
-        .replace(/[^0-9]/g, "") || "unknown";
+    // Ekstrak identitas pengirim status (nomor HP & pushName jika ada)
+    const rawSender = msg.key?.participant || msg.participant || msg.key?.remoteJid || "";
+    const number = String(rawSender).split("@")[0].replace(/[^0-9]/g, "") || "unknown";
     const ext =
       mediaKey === "image"
         ? "jpg"
@@ -65,17 +63,37 @@ export async function handleStatusBroadcast(sock, msg, logger) {
             : mediaKey === "sticker"
               ? "webp"
               : "bin";
+
+    // Format: status_<nomor>_<timestamp>.<ext>
     const filename = `status_${number}_${Date.now()}.${ext}`;
     fs.writeFileSync(path.join(statusesDir, filename), buffer);
 
-    if (logger?.info) {
-      logger.info(`[Status Saver] Saved status from ${number} as ${filename}`);
-    }
+    // Auto-clean status lama (> 24 jam) agar penyimpanan tidak penuh
+    cleanOldStatuses();
+
+    logger?.info?.(`[Status Saver] Status tersimpan dari +${number}: ${filename} (${buffer.length} bytes)`);
   } catch (err) {
-    if (logger?.error) {
-      logger.error("[Status Saver Error]", err?.message || err);
-    } else if (logger?.warn) {
-      logger.warn("[Status Saver Error]", err?.message || err);
-    }
+    logger?.warn?.(`[Status Saver Error] ${err?.message || err}`);
   }
+}
+
+function cleanOldStatuses() {
+  try {
+    if (!fs.existsSync(statusesDir)) return;
+    const files = fs.readdirSync(statusesDir);
+    const now = Date.now();
+    const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 jam sesuai durasi status WA
+
+    for (const f of files) {
+      const match = f.match(/_(\d+)\./);
+      if (match && match[1]) {
+        const fileTime = Number(match[1]);
+        if (now - fileTime > MAX_AGE_MS) {
+          try {
+            fs.unlinkSync(path.join(statusesDir, f));
+          } catch (_) {}
+        }
+      }
+    }
+  } catch (_) {}
 }

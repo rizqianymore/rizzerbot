@@ -99,8 +99,6 @@ startBot()
       startExpiryCron(logger);
     } catch (_) {}
     try {
-      const { startChatLogCron } = await import("./src/services/system/chatlogger.js");
-      startChatLogCron(logger);
     } catch (_) {}
     try {
       const { startBackupCron } = await import("./src/services/system/backup-cron.js");

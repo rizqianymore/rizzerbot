@@ -3,6 +3,8 @@ import { isGroupJid } from "./identity.js";
 import { getUniversalContextInfo, findPhoneJid } from "./message.js";
 import { getGroupAccessError } from "./group.js";
 
+const DEFAULT_CMD_TIMEOUT_MS = 60000; // 60 detik timeout agar tidak hanging/stuck
+
 export async function executeCommand(sock, msg, logger, env) {
   const {
     remoteJid,
@@ -38,7 +40,6 @@ export async function executeCommand(sock, msg, logger, env) {
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const isPrimarySuperOwner = db.isPrimaryOwner(senderJid);
-
   const isSub = Boolean(sock.isSubBot);
 
   const context = {
@@ -73,7 +74,9 @@ export async function executeCommand(sock, msg, logger, env) {
         Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
         await delay(responseDelay);
       }
-      return sock.sendMessage(remoteJid, { text }, { quoted: msg });
+      return sock.sendMessage(remoteJid, { text }, { quoted: msg }).catch((e) => {
+        logger?.warn?.(`[Reply Send Error] ${remoteJid}: ${e?.message || e}`);
+      });
     },
     getTargetJid: (targetArgs) => {
       const _ctx = getUniversalContextInfo(msg.message) || {};
@@ -96,16 +99,28 @@ export async function executeCommand(sock, msg, logger, env) {
 
   try {
     const t0 = Date.now();
-    await cmd.run(sock, msg, args, context);
+    const timeoutMs = Number(cmd.timeoutMs) || Number(process.env.COMMAND_TIMEOUT_MS) || DEFAULT_CMD_TIMEOUT_MS;
+
+    // Guard timeout agar perintah yang freeze/stuck tidak menahan antrean queue selamanya
+    const runPromise = Promise.resolve(cmd.run(sock, msg, args, context));
+    const timerPromise = new Promise((_, reject) => {
+      const t = setTimeout(() => {
+        reject(new Error(`Perintah '${cmd.name}' melebihi batas waktu (${Math.round(timeoutMs / 1000)}s)`));
+      }, timeoutMs);
+      if (t.unref) t.unref();
+    });
+
+    await Promise.race([runPromise, timerPromise]);
+
     const tookMs = Date.now() - t0;
     const slowMs = Number(process.env.SLOW_CMD_MS) || 3000;
     if (tookMs >= slowMs) {
       logger?.warn?.(`[SlowCommand] ${cmd.name} memakan ${tookMs}ms dari ${senderJid} di ${remoteJid}`);
     }
   } catch (err) {
-    logger?.error?.(`[Command Error] ${cmd.name}:`, err);
+    logger?.error?.(`[Command Error] ${cmd.name}:`, err?.message || err);
     try {
-      await context.reply(`❌ Error: ${err.message}`);
+      await context.reply(`❌ Error: ${err?.message || "Terjadi kesalahan saat mengeksekusi perintah."}`);
     } catch (_) {}
   }
 }

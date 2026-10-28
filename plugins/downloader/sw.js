@@ -13,10 +13,12 @@ async function streamToBuffer(stream) {
 }
 
 function normalizeNumber(value) {
-  return String(value || "").replace(/[^0-9]/g, "");
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.startsWith("08")) return `628${digits.slice(2)}`;
+  return digits;
 }
 
-function listStatusFiles(digits) {
+function listStatusFiles(filterQuery = "") {
   if (!fs.existsSync(STATUSES_DIR)) return [];
   let files = [];
   try {
@@ -24,13 +26,22 @@ function listStatusFiles(digits) {
   } catch (_) {
     return [];
   }
-  const prefix = `status_${digits}_`;
+
+  const cleanQuery = String(filterQuery || "").replace(/\D/g, "");
+  const querySuffix = cleanQuery.startsWith("0")
+    ? cleanQuery.slice(1)
+    : cleanQuery.startsWith("62")
+      ? cleanQuery.slice(2)
+      : cleanQuery;
+
   const matched = files.filter((name) => {
-    if (!name.startsWith(prefix)) return false;
-    return /\.(jpe?g|png|webp|mp4|mov|m4a|mp3|ogg)$/i.test(name);
+    if (!name.startsWith("status_")) return false;
+    if (!/\.(jpe?g|png|webp|mp4|mov|m4a|mp3|ogg)$/i.test(name)) return false;
+    if (!querySuffix) return true; // Tampilkan semua jika tanpa filter
+    return name.includes(querySuffix);
   });
 
-  // terbaru dulu (berdasarkan timestamp di nama file, lalu mtime)
+  // Urutkan dari status yang paling baru
   matched.sort((a, b) => {
     const ta = Number((a.match(/_(\d+)\./) || [])[1] || 0);
     const tb = Number((b.match(/_(\d+)\./) || [])[1] || 0);
@@ -84,17 +95,27 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
     buf = await streamToBuffer(stream);
 
     const ext = type === "image" ? ".jpg" : type === "video" ? ".mp4" : type === "audio" ? ".m4a" : ".bin";
-    const fileName = `Status_${Date.now()}${ext}`;
-    await sock.sendMessage(
-      msg.key.remoteJid,
-      {
-        document: buf,
-        mimetype: mimetypeFor(ext),
-        fileName,
-        caption: "✅ Status berhasil didownload.",
-      },
-      { quoted: msg }
-    );
+    const mime = mimetypeFor(ext);
+
+    if (type === "video") {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { video: buf, mimetype: "video/mp4", caption: "✅ Status video berhasil diunduh." },
+        { quoted: msg }
+      );
+    } else if (type === "image") {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { image: buf, mimetype: "image/jpeg", caption: "✅ Status foto berhasil diunduh." },
+        { quoted: msg }
+      );
+    } else {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { document: buf, mimetype: mime, fileName: `Status_${Date.now()}${ext}`, caption: "✅ Status berhasil diunduh." },
+        { quoted: msg }
+      );
+    }
   } catch (err) {
     await reply(`❌ Gagal mendownload status: ${err?.message || err}`);
   }
@@ -102,11 +123,11 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
 
 export default {
   name: "sw",
-  aliases: ["downloadsw", "download", "save"],
-  description: "Download status WhatsApp (SW). By nomor bot: .sw <nomor bot> [urutan]",
-  usage: "<nomor bot> [urutan] (atau reply status)",
-  category: "Downloader",
-  run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
+  aliases: ["downloadsw", "status", "statussaver", "swdl"],
+  description: "Download status WhatsApp (SW) dari kontak tersimpan atau reply status",
+  usage: "[nomor/kontak] [urutan] (atau reply status)",
+  category: "Downloader & Media",
+  run: async (sock, msg, args, { reply, sendTyping, prefix, getTargetJid }) => {
     const { extractMessageContent } = await import("ourin-baileys");
 
     const getMediaNode = (m) => {
@@ -128,59 +149,7 @@ export default {
       return null;
     };
 
-    const firstDigits = normalizeNumber(args[0]);
-
-    // Mode 1: download by nomor bot
-    if (firstDigits.length >= 8 && args[0]) {
-      // jika user memberi nomor tapi bukan bot, tetap cek
-      await sendTyping();
-      if (!fs.existsSync(STATUSES_DIR)) {
-        fs.mkdirSync(STATUSES_DIR, { recursive: true });
-      }
-
-      const files = listStatusFiles(firstDigits);
-      if (files.length === 0) {
-        return reply(`Belum ada status tersimpan untuk bot *+${firstDigits}*.`);
-      }
-
-      let idx = 1;
-      if (args[1]) {
-        const n = parseInt(String(args[1]).replace(/[^0-9]/g, ""), 10);
-        if (!Number.isFinite(n) || n < 1 || n > files.length) {
-          return reply(
-            `Urutan tidak valid. Tersedia ${files.length} status untuk *+${firstDigits}*.\n` +
-              `Contoh: *.sw ${firstDigits} 1*`
-          );
-        }
-        idx = n;
-      }
-
-      const fileName = files[idx - 1];
-      const filePath = path.join(STATUSES_DIR, fileName);
-      let buffer;
-      try {
-        buffer = fs.readFileSync(filePath);
-      } catch (err) {
-        return reply(`Gagal membaca file status: ${err?.message || err}`);
-      }
-      const ext = path.extname(fileName);
-      const mime = mimetypeFor(ext);
-      const caption = `✅ Status bot *+${firstDigits}* (#${idx}/${files.length}) berhasil didownload.`;
-
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        {
-          document: buffer,
-          mimetype: mime,
-          fileName,
-          caption,
-        },
-        { quoted: msg }
-      );
-      return;
-    }
-
-    // Mode 2: reply status (legacy)
+    // Mode 1: Reply status WhatsApp langsung
     const quotedInfo = msg.message?.extendedTextMessage?.contextInfo;
     const quotedMsg = quotedInfo?.quotedMessage;
     const quotedMedia = getMediaNode(quotedMsg);
@@ -191,11 +160,78 @@ export default {
       return;
     }
 
-    return reply(
-      `*DOWNLOAD STATUS (SW)*\n\n` +
-        `• \`${prefix || "."}sw <nomor bot> [urutan]\` — download status bot yang tersimpan\n` +
-        `• Reply status lalu \`${prefix || "."}sw\` — download status yang dibalas\n\n` +
-        `_Contoh: \`${prefix || "."}sw 6281234567890 1\`_`
-    );
+    // Mode 2: Cari status tersimpan dari kontak / nomor HP / mention
+    const targetJid = getTargetJid?.(args);
+    const targetNumber = targetJid ? normalizeNumber(targetJid) : normalizeNumber(args[0]);
+
+    if (!fs.existsSync(STATUSES_DIR)) {
+      fs.mkdirSync(STATUSES_DIR, { recursive: true });
+    }
+
+    const files = listStatusFiles(targetNumber);
+
+    if (files.length === 0) {
+      if (targetNumber) {
+        return reply(
+          `Belum ada status yang terekam dari nomor *+${targetNumber}*.\n` +
+            `_Pastikan bot sudah menyimpan kontak tersebut dan statusnya pernah dibuka/muncul di WhatsApp bot._`
+        );
+      }
+      return reply(
+        `*DOWNLOAD STATUS (SW)*\n\n` +
+          `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
+          `*Cara Penggunaan:*\n` +
+          `• Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
+          `• Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
+      );
+    }
+
+    let idx = 1;
+    // Parameter urutan angka jika disediakan di args
+    const candidateIdx = parseInt(String(args[1] || (!targetNumber ? args[0] : "")).replace(/\D/g, ""), 10);
+    if (Number.isFinite(candidateIdx) && candidateIdx >= 1) {
+      if (candidateIdx > files.length) {
+        return reply(`Urutan tidak valid. Hanya tersedia *${files.length}* status.`);
+      }
+      idx = candidateIdx;
+    }
+
+    const selectedFile = files[idx - 1];
+    const filePath = path.join(STATUSES_DIR, selectedFile);
+    let buffer;
+    try {
+      buffer = fs.readFileSync(filePath);
+    } catch (err) {
+      return reply(`Gagal membaca file status: ${err?.message || err}`);
+    }
+
+    const ext = path.extname(selectedFile).toLowerCase();
+    const isVideo = ext === ".mp4" || ext === ".mov";
+    const isImage = ext === ".jpg" || ext === ".jpeg" || ext === ".png" || ext === ".webp";
+    const senderMatch = selectedFile.match(/status_(\d+)_/);
+    const senderNumber = senderMatch ? senderMatch[1] : "kontak";
+
+    await sendTyping();
+    const caption = `✅ *STATUS DOWNLOADER*\n\nDari: *+${senderNumber}*\nStatus: #${idx} dari ${files.length} tersimpan.`;
+
+    if (isVideo) {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { video: buffer, caption, mimetype: "video/mp4" },
+        { quoted: msg }
+      );
+    } else if (isImage) {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { image: buffer, caption, mimetype: ext === ".webp" ? "image/webp" : "image/jpeg" },
+        { quoted: msg }
+      );
+    } else {
+      await sock.sendMessage(
+        msg.key.remoteJid,
+        { document: buffer, caption, mimetype: mimetypeFor(ext), fileName: selectedFile },
+        { quoted: msg }
+      );
+    }
   },
 };

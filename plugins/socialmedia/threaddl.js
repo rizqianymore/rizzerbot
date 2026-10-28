@@ -64,23 +64,8 @@ export default {
         },
       });
 
-      let data = res.data || {};
-      if (
-        (res.status >= 300 || data.success !== true) &&
-        (await import("@/src/services/network/brightdata.js")).getBrightDataConfig().apiKey
-      ) {
-        try {
-          const { brightDataRequest } = await import("@/src/services/network/brightdata.js");
-          data = await brightDataRequest(`${BASE_URL}?url=${encodeURIComponent(url)}&action=info`, {
-            format: "json",
-            timeout: 35000,
-          });
-        } catch (bdErr) {
-          logger?.warn?.(`[threaddl brightdata] ${bdErr?.message || bdErr}`);
-        }
-      }
+      const data = res.data || {};
       const info = data.data || {};
-
       const videoQualities = uniqueByUrl(info.video?.qualities || []);
       const images = uniqueByUrl(info.images?.urls || []);
 
@@ -90,11 +75,7 @@ export default {
       ];
 
       if (data?.success !== true || mediaResults.length === 0) {
-        return reply(
-          `Gagal mengambil media dari Threads.\n` +
-            `Postingan mungkin bersifat privat, sudah dihapus, atau link tidak valid.\n` +
-            `Detail: ${data.message || data.error || "Data kosong"}`
-        );
+        throw new Error(data.message || data.error || "Data API Threads kosong.");
       }
 
       const cleanDesc = decodeEntities(info.title || info.description || "");
