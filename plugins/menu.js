@@ -61,7 +61,7 @@ export default {
     const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
     const targetCategory = rawArg && !showAll ? resolveCategoryAlias(rawArg) : null;
 
-    if (rawArg && !targetCategory) {
+    if (rawArg && !showAll && !targetCategory) {
       const targetCmd = commands.get(rawArg);
 
       if (targetCmd) {
@@ -98,6 +98,12 @@ export default {
 
         return await reply(detailText.trim());
       }
+
+      // Jika argumen diberikan tapi bukan 'all', bukan kategori valid, dan bukan nama command
+      return await reply(
+        `❌ Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
+        `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`
+      );
     }
 
     const categories = {};
