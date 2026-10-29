@@ -9,6 +9,7 @@ export const CATEGORY_ORDER = [
   "Owner",
   "Bug",
   "General",
+  "OSINT",
 ];
 
 export const CATEGORY_ALIASES = {
@@ -44,6 +45,8 @@ export const CATEGORY_ALIASES = {
   bugs: "Bug",
   exploit: "Bug",
   general: "General",
+  osint: "OSINT",
+  os: "OSINT",
 };
 
 export function sortCategoryKeys(keys) {
