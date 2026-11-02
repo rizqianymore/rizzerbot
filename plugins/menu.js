@@ -99,7 +99,6 @@ export default {
         return await reply(detailText.trim());
       }
 
-      // Jika argumen diberikan tapi bukan 'all', bukan kategori valid, dan bukan nama command
       return await reply(
         `❌ Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
         `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`

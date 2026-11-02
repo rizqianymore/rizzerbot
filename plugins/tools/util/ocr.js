@@ -21,7 +21,7 @@ export default {
       return reply(`Gagal ambil gambar: ${err?.message || err}`);
     }
     if (!buffer?.length) return reply("Gagal baca gambar.");
-    // gratis via ocr.space helloworld (tanpa key pribadi)
+
     try {
       const b64 = `data:image/jpeg;base64,${buffer.toString("base64")}`;
       const body = new URLSearchParams({
@@ -42,7 +42,7 @@ export default {
       if (text) {
         return reply(`*OCR HASIL:*\n${text.slice(0, 3500)}`);
       }
-      // coba engine 1 fallback
+
       const body2 = new URLSearchParams({
         base64Image: b64,
         language: "eng",

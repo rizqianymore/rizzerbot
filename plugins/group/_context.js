@@ -1,9 +1,6 @@
 import { db } from "@/src/core/database.js";
 import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
 
-/**
- * Helper terpusat untuk verifikasi konteks grup, hak akses Admin pengguna, dan Admin bot.
- */
 export async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || !remoteJid.endsWith("@g.us")) {

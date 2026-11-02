@@ -28,7 +28,7 @@ export default {
     }
 
     try {
-      // Pencarian otomatis via YouTube (yt-dlp ytsearch)
+
       const searchUrl = `ytsearch5:${query}`;
       const search = await probe(searchUrl, { timeoutMs: 45000 }).catch((err) => {
         logger?.warn?.(`[play search] ${err?.message || err}`);
@@ -75,7 +75,6 @@ export default {
         { quoted: msg }
       );
 
-      // Kirim info sebagai teks terpisah agar audio tetap bersih tanpa caption.
       await reply(lines.join("\n"));
     } catch (err) {
       logger?.warn?.(`[play] ${err?.message || err}`);

@@ -1,32 +1,13 @@
-/**
- * Bright Data Scraping Browser (remote browser via WebSocket).
- *
- * Browser sungguhan berjalan di datacenter BrightData: IP bersih, fingerprint
- * asli, jadi challenge Cloudflare/CDN hampir selalu lolos. Dipakai sebagai
- * jalur TERAKHIR pada rantai anti-protection (lihat `scraper/chain.js`) saat
- * Web Unlocker & browser stealth lokal belum berhasil.
- *
- * Contoh endpoint (dari dashboard BrightData):
- *   wss://brd-customer-<CUSTOMER>-zone-scraping_browser1:<PASSWORD>@brd.superproxy.io:9222
- *
- * Konfigurasi .env (pilih salah satu):
- *   BRIGHTDATA_SCRAPING_BROWSER_WS=wss://...            (langsung)
- *   BRIGHTDATA_CUSTOMER=<CUSTOMER> + BRIGHTDATA_PROXY_PASSWORD=<PASSWORD>
- *     + BRIGHTDATA_SCRAPING_BROWSER_ZONE=scraping_browser1
- */
-
 const CONNECT_TIMEOUT_MS = 30000;
 const NAV_TIMEOUT_MS = 45000;
 const SETTLE_MS = 2500;
 
-/** Endpoint WebSocket remote browser (kosong bila belum dikonfigurasi). */
 export function scrapingBrowserEndpoint() {
   const direct = String(process.env.BRIGHTDATA_SCRAPING_BROWSER_WS || "").trim();
   if (direct) return direct;
 
   const customer = String(process.env.BRIGHTDATA_CUSTOMER || "").trim();
-  // Password remote browser = password zone scraping_browser1 (BEDA dari
-  // password zone web_unlocker2). Fallback ke BRIGHTDATA_PROXY_PASSWORD.
+
   const password = String(
     process.env.BRIGHTDATA_SCRAPING_BROWSER_PASSWORD ||
       process.env.BRIGHTDATA_PROXY_PASSWORD ||
@@ -40,13 +21,11 @@ export function scrapingBrowserEndpoint() {
   return "";
 }
 
-/** Remote browser aktif? (umumnya: kredensial zone scraping_browser1 terisi). */
 export function remoteBrowserAvailable() {
   if (String(process.env.BRIGHTDATA_SCRAPING_BROWSER_ENABLED ?? "1").trim() === "0") return false;
   return Boolean(scrapingBrowserEndpoint());
 }
 
-/** Import puppeteer-core (preferred) atau puppeteer. */
 async function loadPuppeteer() {
   try {
     const mod = await import("puppeteer-core");
@@ -60,10 +39,6 @@ async function loadPuppeteer() {
   }
 }
 
-/**
- * Sambung ke remote browser Bright Data.
- * @returns {Promise<{browser: object, close: () => Promise<void>}>}
- */
 export async function connectRemoteBrowser({ timeoutMs = CONNECT_TIMEOUT_MS } = {}) {
   const endpoint = scrapingBrowserEndpoint();
   if (!endpoint) throw new Error("Endpoint BrightData Scraping Browser belum dikonfigurasi.");
@@ -78,7 +53,7 @@ export async function connectRemoteBrowser({ timeoutMs = CONNECT_TIMEOUT_MS } = 
 
   const close = async () => {
     try {
-      // Tutup sesi remote supaya kuota tidak terkuras (default: tutup).
+
       if (String(process.env.BRIGHTDATA_SCRAPING_BROWSER_CLOSE || "1").trim() !== "0") await browser.close();
       else browser.disconnect();
     } catch (_) {
@@ -91,10 +66,6 @@ export async function connectRemoteBrowser({ timeoutMs = CONNECT_TIMEOUT_MS } = 
   return { browser, close };
 }
 
-/**
- * Buka halaman & tunggu Cloudflare clearance (kalau ada).
- * @returns {Promise<{cleared: boolean, content: string, url: string, cookies: object[]}>}
- */
 export async function remoteSolveChallenge(url, { timeoutMs = NAV_TIMEOUT_MS } = {}) {
   const { browser, close } = await connectRemoteBrowser();
   try {
@@ -125,11 +96,6 @@ export async function remoteSolveChallenge(url, { timeoutMs = NAV_TIMEOUT_MS } =
   }
 }
 
-/**
- * Request dari dalam browser remote (bypass CF + bisa pakai header auth).
- * `form` (object) dikirim sebagai multipart/form-data (dipakai untuk login).
- * @returns {Promise<{ok: boolean, status: number, data: any}>}
- */
 export async function remoteInPageFetch(url, { method = "GET", headers = {}, body = null, form = null } = {}) {
   const { browser, close } = await connectRemoteBrowser();
   try {
@@ -170,8 +136,6 @@ export async function remoteInPageFetch(url, { method = "GET", headers = {}, bod
         { method, headers, body, form }
       );
 
-    // Beri waktu challenge Cloudflare selesai di halaman itu, lalu coba ulang
-    // sekali lagi kalau masih kena proteksi.
     await new Promise((r) => setTimeout(r, SETTLE_MS));
     let result = await doFetch();
     if (result && !result.ok && result.status >= 400) {
@@ -189,17 +153,6 @@ export async function remoteInPageFetch(url, { method = "GET", headers = {}, bod
   }
 }
 
-/**
- * Unduh file binary dari dalam browser remote (base64 -> Buffer).
- * Dipakai saat media/CDN hanya bisa diakses lewat browser yang sudah
- *challenges-clear.
- *
- * @param {string} url target
- * @param {object} [options]
- * @param {number} [options.maxBytes] batas ukuran unduhan
- * @param {number} [options.timeoutMs]
- * @returns {Promise<Buffer>}
- */
 export async function remoteFetchBuffer(url, { maxBytes = 100 * 1024 * 1024, timeoutMs = NAV_TIMEOUT_MS } = {}) {
   const { browser, close } = await connectRemoteBrowser();
   try {

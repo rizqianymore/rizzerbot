@@ -21,7 +21,7 @@ export default {
     try {
       const results = await scrapeWebImages(query, 15);
       if (!results?.length) return reply("Gambar tidak ditemukan untuk kata kunci tersebut.");
-      // try up to 3 random images with fallback
+
       let imgBuffer = null;
       let chosen = null;
       const shuffled = [...results].sort(() => Math.random() - 0.5);

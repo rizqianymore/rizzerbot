@@ -61,10 +61,6 @@ export function isGoogleDriveUrl(url) {
   return /drive\.google\.com|docs\.google\.com|drive\.usercontent\.google\.com/i.test(String(url || ""));
 }
 
-/**
- * Mengunduh file publik Google Drive langsung ke buffer.
- * @returns {Promise<{buffer: Buffer, fileName: string, mime: string}>}
- */
 export async function downloadGoogleDrive(url, logger) {
   const match = String(url).match(GOOGLE_DRIVE_ID_REGEX);
   if (!match) throw new Error("ID file Google Drive tidak ditemukan dalam link.");
@@ -96,7 +92,6 @@ export async function downloadGoogleDrive(url, logger) {
   });
   if (!buffer?.length) throw new Error("Google Drive mengembalikan file kosong.");
 
-  // Google Drive kadang mengirim halaman peringatan (virus scan) berupa HTML.
   if (looksLikeHtml(buffer)) {
     const html = buffer.toString("utf8");
     const confirmMatch = html.match(/confirm=([a-zA-Z0-9_-]+)/);
@@ -170,12 +165,6 @@ function findFileName(data, depth = 0) {
   return null;
 }
 
-/**
- * Best-effort mengunduh file dari link share Terabox publik.
- * Terabox membatasi unduhan tanpa login/cookie, sehingga kegagalan
- * dikembalikan sebagai error yang informatif.
- * @returns {Promise<{buffer: Buffer, fileName: string, mime: string}>}
- */
 export async function downloadTerabox(url, logger) {
   const match = String(url).match(TERABOX_REGEX);
   if (!match) throw new Error("Link Terabox tidak valid (contoh: https://terabox.com/s/xxxxxx).");

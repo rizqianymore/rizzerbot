@@ -51,7 +51,6 @@ function memoryCheck() {
   }
 }
 
-/** Status browser stealth: chrome tersedia, batas RAM, idle timeout, BrightData. */
 async function browserCheck() {
   const disabled = ["1", "true", "yes"].includes(String(process.env.BROWSER_DISABLED || "").toLowerCase());
   const idleMs = Number(process.env.BROWSER_IDLE_MS) || 30000;

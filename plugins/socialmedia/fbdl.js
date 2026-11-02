@@ -18,7 +18,7 @@ export default {
       const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
       let dl = null;
       let pInfo = null;
-      // 1. Coba SocialDownloader (BrightData)
+
       try {
         const sd = await downloadSocialMedia(url, { isAudio, logger });
         if (sd?.buffer?.length) {

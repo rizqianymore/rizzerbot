@@ -15,16 +15,16 @@ export default {
     await sendTyping();
     try {
       const html = await request.text(url, { timeout: 15000 });
-      // cari link download: href="https://sfile.mobi/...download..."
+
       const m = html.match(/href="(https:\/\/[^"]*sfile\.mobi[^"]*)"/i) || html.match(/id="download"[^>]*href="([^"]+)"/i);
       let dlUrl = m ? m[1] : null;
       if (!dlUrl) {
-        // fallback cari button
+
         const m2 = html.match(/https:\/\/[^\s"']*download[^\s"']*/i);
         dlUrl = m2 ? m2[0] : null;
       }
       if (!dlUrl) throw new Error("Link download tidak ditemukan (halaman berubah).");
-      // follow redirect dapat direct file
+
       const buffer = await request.buffer(dlUrl, { timeout: 120000, maxBytes: 100 * 1024 * 1024 });
       if (!buffer?.length) throw new Error("Gagal ambil file.");
       const filename = dlUrl.split("/").pop()?.split("?")[0] || `sfile-${Date.now()}`;

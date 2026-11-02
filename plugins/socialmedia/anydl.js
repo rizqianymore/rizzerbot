@@ -28,7 +28,6 @@ export default {
       let info = null;
       let sourceName = "";
 
-      // 1. Coba lewat SocialDownloader (Didukung bypass Cloudflare & BrightData Web Unlocker)
       try {
         const sd = await downloadSocialMedia(url, { isAudio, logger });
         if (sd?.buffer?.length > 0) {
@@ -45,7 +44,6 @@ export default {
         logger?.warn?.(`[anydl socialdownloader] ${sdErr?.message || sdErr}`);
       }
 
-      // 2. Fallback otomatis ke engine yt-dlp jika gagal/diblokir
       if (!buffer) {
         try {
           const [meta, dl] = await Promise.all([

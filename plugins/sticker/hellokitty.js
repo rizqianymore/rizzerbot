@@ -26,7 +26,6 @@ export default {
     const check = validateBratText(text, false);
     if (!check.ok) return reply(check.error);
 
-    // Indikator reaksi & typing untuk respon instan
     Promise.resolve(
       sock.sendMessage(msg.key.remoteJid, {
         react: { text: "🎀", key: msg.key },
@@ -38,7 +37,6 @@ export default {
       const image = await createHelloKittyImage(text);
       await sendStickerBuffer(sock, msg, image);
 
-      // Indikator selesai
       Promise.resolve(
         sock.sendMessage(msg.key.remoteJid, {
           react: { text: "✨", key: msg.key },

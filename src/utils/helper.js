@@ -115,3 +115,39 @@ export function invalidateGroupMeta(jid, sock) {
 }
 
 export const broadcastLock = new Map();
+
+export function isValidUrl(s) {
+  try {
+    const u = new URL(String(s || "").trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+export function sanitizeFilename(name, maxLen = 80) {
+  const base = String(name || "file").replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_").slice(0, maxLen);
+  return base || "file";
+}
+
+export function formatBytes(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(2)} MB`;
+  return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+
+export function parseDuration(str) {
+  const s = String(str || "").trim().toLowerCase();
+  const m = s.match(/^(\d+)\s*([smhd])$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  const mult = m[2] === "s" ? 1000 : m[2] === "m" ? 60000 : m[2] === "h" ? 3600000 : 86400000;
+  return n * mult;
+}
+
+export function getRandomElement(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}

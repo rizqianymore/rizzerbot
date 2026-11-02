@@ -33,7 +33,7 @@ async function getRates(base = "USD") {
   const key = `rates:${base}`;
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
-  // open.er-api.com free no key
+
   const data = await request.json(`https://open.er-api.com/v6/latest/${encodeURIComponent(base)}`, {
     timeout: 12000,
   });

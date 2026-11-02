@@ -46,9 +46,9 @@ async function scrapeGithubProfile(username) {
     });
     if (!html || typeof html !== "string") return null;
     if (html.includes("404") && html.includes("This is not the web page you are looking for")) return { notFound: true };
-    // basic existence check: look for meta property og:title or profile
+
     if (html.toLowerCase().includes("not found") && html.length < 5000) {
-      // heuristic, try also check title
+
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       if (titleMatch && /not found/i.test(titleMatch[1])) return { notFound: true };
     }
@@ -129,7 +129,7 @@ export async function getGithubProfile(username) {
   } catch (err) {
     if (/HTTP 404\b/.test(err?.message || "")) return { notFound: true };
     if (/HTTP 403\b/.test(err?.message || "") || /HTTP 429\b/.test(err?.message || "") || /limit/i.test(err?.message || "")) {
-      // fallback scraping free (tanpa token)
+
       const scraped = await scrapeGithubProfile(user);
       if (scraped) {
         if (scraped.notFound) return { notFound: true };

@@ -167,7 +167,7 @@ export const USERHUNT_PLATFORMS = [
 ];
 
 export function isValidUsername(username) {
-  // GitHub allow 1-39, TikTok 2-24, most 3-30 — use宽 2-39 to avoid false negative
+
   return /^[a-zA-Z0-9_.-]{2,39}$/.test(username || "");
 }
 
@@ -215,7 +215,7 @@ export async function checkUsernameOn(platform, username) {
 }
 
 export async function checkUsernameAll(username) {
-  // concurrency limit 5 untuk hindari rate-limit/IP ban
+
   const CONCURRENCY = 5;
   const queue = [...USERHUNT_PLATFORMS];
   const results = [];
@@ -230,7 +230,7 @@ export async function checkUsernameAll(username) {
     }
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, () => worker()));
-  // sort: HIGH first, then MEDIUM, then LOW
+
   const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
   results.sort((a, b) => (order[a.confidence] ?? 9) - (order[b.confidence] ?? 9));
   return results;

@@ -6,7 +6,6 @@ import { pathToFileURL } from "url";
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
 let failures = 0;
 
-// Alias "@/..." -> root project (dibuat index.js saat bot start; pastikan di sini juga).
 try {
   const aliasPath = path.join(ROOT, "node_modules", "@");
   if (!fs.existsSync(aliasPath)) {

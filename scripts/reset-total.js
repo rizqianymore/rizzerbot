@@ -4,17 +4,16 @@ import readline from "readline";
 
 const ROOT = process.cwd();
 
-// Daftar folder & file data/cache/sesi yang perlu dibersihkan saat total reset
 const TARGETS_TO_CLEAR = [
-  "assets/sessions",          // Sesi login WhatsApp (primary bot & subbots)
-  "database/db.json",         // Cache & database utama
-  "database/users.json",      // Database users
-  "database/settings.json",   // Settings tersimpan di database
-  "database/lidmap.json",     // Pemetaan LID WhatsApp
-  "statuses",                 // Folder unduhan status WhatsApp
-  "logs",                     // Log PM2 / log sistem
-  "tmp",                      // File temporary
-  ".cache",                   // Cache
+  "assets/sessions",
+  "database/db.json",
+  "database/users.json",
+  "database/settings.json",
+  "database/lidmap.json",
+  "statuses",
+  "logs",
+  "tmp",
+  ".cache",
 ];
 
 function deleteTarget(relPath) {
@@ -69,7 +68,6 @@ async function run() {
     deleteTarget(target);
   }
 
-  // Buat kembali folder esensial dalam keadaan kosong
   const ESSENTIAL_DIRS = ["assets/sessions/primary_bot", "logs", "tmp", "statuses"];
   for (const dir of ESSENTIAL_DIRS) {
     const p = path.join(ROOT, dir);

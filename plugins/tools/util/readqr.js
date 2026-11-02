@@ -21,7 +21,6 @@ export default {
     }
     if (!buffer?.length) return reply("Gagal membaca gambar.");
 
-    // coba API gratis dulu (tanpa lokal berat)
     try {
       const form = new FormData();
       form.append("file", new Blob([buffer]), "qr.png");
@@ -37,7 +36,6 @@ export default {
       }
     } catch (_) {}
 
-    // fallback lokal jsqr + sharp
     try {
       const { default: jsqr } = await import("jsqr");
       const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);

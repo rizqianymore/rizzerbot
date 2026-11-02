@@ -37,11 +37,10 @@ function listStatusFiles(filterQuery = "") {
   const matched = files.filter((name) => {
     if (!name.startsWith("status_")) return false;
     if (!/\.(jpe?g|png|webp|mp4|mov|m4a|mp3|ogg)$/i.test(name)) return false;
-    if (!querySuffix) return true; // Tampilkan semua jika tanpa filter
+    if (!querySuffix) return true;
     return name.includes(querySuffix);
   });
 
-  // Urutkan dari status yang paling baru
   matched.sort((a, b) => {
     const ta = Number((a.match(/_(\d+)\./) || [])[1] || 0);
     const tb = Number((b.match(/_(\d+)\./) || [])[1] || 0);
@@ -149,7 +148,6 @@ export default {
       return null;
     };
 
-    // Mode 1: Reply status WhatsApp langsung
     const quotedInfo = msg.message?.extendedTextMessage?.contextInfo;
     const quotedMsg = quotedInfo?.quotedMessage;
     const quotedMedia = getMediaNode(quotedMsg);
@@ -160,7 +158,6 @@ export default {
       return;
     }
 
-    // Mode 2: Cari status tersimpan dari kontak / nomor HP / mention
     const targetJid = getTargetJid?.(args);
     const targetNumber = targetJid ? normalizeNumber(targetJid) : normalizeNumber(args[0]);
 
@@ -187,7 +184,7 @@ export default {
     }
 
     let idx = 1;
-    // Parameter urutan angka jika disediakan di args
+
     const candidateIdx = parseInt(String(args[1] || (!targetNumber ? args[0] : "")).replace(/\D/g, ""), 10);
     if (Number.isFinite(candidateIdx) && candidateIdx >= 1) {
       if (candidateIdx > files.length) {

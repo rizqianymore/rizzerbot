@@ -105,7 +105,7 @@ export const cookieJar = new CookieJar();
 
 export function isCloudflareChallenge(status, headers = {}, body = "") {
   const numStatus = Number(status) || 0;
-  // Jika HTTP status sukses (2xx) dan bukan HTML challenge page, jangan anggap sebagai challenge
+
   if (numStatus >= 200 && numStatus < 300) {
     const text = String(body || "").toLowerCase();
     const isHtmlChallenge =

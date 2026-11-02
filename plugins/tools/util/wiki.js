@@ -13,7 +13,7 @@ export default {
     if (!q) return reply(`Masukkan kata kunci!\nContoh: \`${cur}wiki Jakarta\``);
     await sendTyping();
     try {
-      // opensearch untuk dapat judul paling relevan
+
       const search = await request.json(
         `https://id.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=1&namespace=0&format=json`,
         { timeout: 12000 }

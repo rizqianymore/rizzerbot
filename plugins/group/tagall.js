@@ -21,7 +21,6 @@ export default {
     text += `*Pesan:* ${customMessage}\n`;
     text += `*Total Member:* ${ctx.participants.length}\n\n`;
 
-    // batasi 80 member per pesan biar tidak melebihi 5000 char WA
     const display = ctx.participants.slice(0, 80);
     display.forEach((p, index) => {
       const num = p.id.split("@")[0];

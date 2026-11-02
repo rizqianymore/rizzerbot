@@ -1,14 +1,6 @@
 import { mediaHandlers } from "@/src/core/loader.js";
 import { resolveSenderJid } from "./identity.js";
 
-/**
- * Jalankan handler media (foto) yang didaftarkan plugin.
- *
- * Dipakai untuk aksi otomatis tanpa perintah, contoh: siswa mengirim foto
- * QR guru -> bot scan -> kirim presensi.
- *
- * @returns {Promise<boolean>} true bila ada handler yang menangani pesan.
- */
 export async function runMediaHandlers(sock, msg, logger) {
   if (!mediaHandlers.size) return false;
 

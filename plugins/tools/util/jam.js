@@ -66,17 +66,15 @@ export default {
       return reply(`*JAM ${q.toUpperCase()}*\n${fmt(tz)}\n(${tz})`);
     }
 
-    // coba tebak zone langsung
     try {
       const test = fmt(q);
-      // jika tidak throw, anggap valid IANA
+
       return reply(`*JAM ${q.toUpperCase()}*\n${test}\n(${q})`);
     } catch {}
 
-    // fallback coba worldtimeapi
     try {
       const { request } = await import("@/src/utils/request.js");
-      // map bebas ke Asia/Jakarta style
+
       const guess = `Asia/${q.charAt(0).toUpperCase() + q.slice(1)}`;
       const data = await request.json(`http://worldtimeapi.org/api/timezone/${encodeURIComponent(tz || guess)}`, {
         timeout: 8000,

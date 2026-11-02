@@ -38,7 +38,7 @@ export class StoreBase {
       }
       const norm = this.normalizeUser(normalized, user);
       normalizedUsers[normalized] = norm;
-      // field-level compare instead of JSON.stringify — 10x cheaper
+
       if (
         norm.owner !== user.owner ||
         norm.admin !== user.admin ||

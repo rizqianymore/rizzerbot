@@ -39,7 +39,7 @@ export default {
           if (res.ok) {
             const arr = await res.arrayBuffer();
             if (arr.byteLength > 1000) {
-              // cek bukan JSON error
+
               const head = Buffer.from(arr).slice(0, 20).toString();
               if (!head.includes("error") && !head.includes("Error")) {
                 out = Buffer.from(arr);
@@ -50,11 +50,11 @@ export default {
         } catch (_) {}
       }
       if (!out) {
-        // fallback lokal kasar: hapus putih via sharp (untuk background polos)
+
         try {
           const sharp = (await import("sharp")).default;
           const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-          // threshold putih -> transparan (kasar)
+
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i + 1], b = data[i + 2];
             if (r > 235 && g > 235 && b > 235) data[i + 3] = 0;

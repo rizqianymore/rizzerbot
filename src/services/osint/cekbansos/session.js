@@ -5,7 +5,6 @@ import { BASE, client, newJar, storeCookies, baseHeaders } from "./client.js";
 export async function fetchFormSession() {
   const { apiKey } = getBrightDataConfig();
 
-  // === TRY 1: Bright Data Web Unlocker REST API (PALING CEPAT) ===
   if (apiKey) {
     try {
       const html = await brightDataRequest(BASE, { format: "raw", timeout: 25000 });
@@ -20,7 +19,6 @@ export async function fetchFormSession() {
     } catch (_) {}
   }
 
-  // === TRY 2: Direct fetch (jika BrightData gagal atau disabled) ===
   try {
     const res = await client.get(`${BASE}/`, { headers: baseHeaders(newJar()) });
     storeCookies(newJar(), res.headers["set-cookie"]);
@@ -35,7 +33,6 @@ export async function fetchFormSession() {
     }
   } catch (_) {}
 
-  // === TRY 3: Stealth Browser (JALUR AKHIR, paling berat tapi paling andal) ===
   const page = await stealthBrowser.newPage();
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 20000 });
@@ -49,24 +46,23 @@ export async function fetchFormSession() {
     }
     throw new Error("Gagal membaca token bansos dari browser");
   } finally {
-    // Tutup browser sesi segera setelah dipakai (hemat kuota)
+
     await stealthBrowser.closePage(page);
   }
-  // Error akan melempar ke atas jika page.goto atau evaluate gagal
-} // <-- tutup try block
+
+}
 
 export async function fetchCaptchaImage(session) {
-  // Prioritaskan jalur sesuai marked 'via' di session
+
   if (session?.via === "brightdata") {
     try {
       const buf = await brightDataRequest(session.captchaUrl, { format: "raw", timeout: 20000 });
       return Buffer.from(buf);
     } catch (_) {
-      // Jika gagal lewat BrightData, turun ke browser session
+
     }
   }
 
-  // Fallback: unduh lewat browser session atau client biasa
   try {
     const url = session?.captchaUrl || `${BASE}/captcha/flat?${Math.random().toString(36).slice(2)}`;
     const res = await client.get(url, {
@@ -80,7 +76,6 @@ export async function fetchCaptchaImage(session) {
     }
   } catch (_) {}
 
-  // Fallback terakhir: browser capture
   try {
     const page = await stealthBrowser.newPage();
     try {

@@ -285,7 +285,7 @@ function categoryLabel(cat) {
   if (!cat) return "Semua";
   const k = String(cat).toLowerCase().trim();
   if (KAT_LABEL[k]) return KAT_LABEL[k];
-  // reverse lookup by value
+
   for (const [key, val] of Object.entries(KAT_PENCARIAN)) {
     if (val === k) return KAT_LABEL[key] || key;
   }

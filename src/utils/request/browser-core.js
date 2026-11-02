@@ -5,21 +5,18 @@ function browserDisabledByEnv() {
   return ["1", "true", "yes"].includes(String(process.env.BROWSER_DISABLED || "").toLowerCase());
 }
 
-/** Idle timeout: browser ditutup sendiri setelah tidak dipakai (hemat RAM). */
 function idleTimeoutMs() {
   const raw = Number(process.env.BROWSER_IDLE_MS);
   if (Number.isFinite(raw) && raw >= 5000) return raw;
   return 30000;
 }
 
-/** Batas heap V8 untuk Chrome (MB) — biar browser tidak memakan RAM berlebihan. */
 function maxOldSpaceMb() {
   const raw = Number(process.env.BROWSER_MAX_OLD_SPACE_MB);
   if (Number.isFinite(raw) && raw >= 64) return Math.floor(raw);
   return 192;
 }
 
-/** RSS (MB) proses browser dari /proc (Linux). */
 export function browserMemoryMb(pid) {
   if (!pid) return null;
   try {
@@ -63,7 +60,6 @@ export class StealthBrowserCore {
     this.launches = 0;
   }
 
-  /** Pasang logger (pino) supaya lifecycle browser tercatat. */
   setLogger(logger) {
     this.logger = logger || null;
     return this;
@@ -77,7 +73,6 @@ export class StealthBrowserCore {
     } catch (_) {}
   }
 
-  /** Status ringkas browser (untuk log & monitor). */
   status() {
     const pid = this.browser?.process()?.pid || null;
     return {
@@ -142,7 +137,7 @@ export class StealthBrowserCore {
           "--disable-blink-features=AutomationControlled",
           "--disable-infobars",
           "--window-size=1280,800",
-          // --- hemat RAM & stabilitas ---
+
           `--js-flags=--max-old-space-size=${maxOldSpaceMb()}`,
           "--disable-extensions",
           "--disable-background-networking",

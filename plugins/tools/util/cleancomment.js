@@ -37,7 +37,7 @@ function stripCodeComments(sourceCode) {
       output += char;
       continue;
     }
-    // handle regex literal heuristic: /.../ not division
+
     if (char === "/" && nextChar === "/") {
       inSingleComment = true;
       i++;

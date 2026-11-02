@@ -27,7 +27,6 @@ export default {
       let title = "";
       let artist = "";
 
-      // 1. Coba via API Nexray
       try {
         const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
         const res = await axios.get(apiUrl, { timeout: 15000 });
@@ -46,7 +45,6 @@ export default {
         logger?.warn?.(`[spotifydl api] ${err?.message || err}`);
       }
 
-      // 2. Fallback via engine yt-dlp search jika API direct down
       if (!audioBuffer) {
         try {
           const info = await probe(text, { timeoutMs: 25000 }).catch(() => null);

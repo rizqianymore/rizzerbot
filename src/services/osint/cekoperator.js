@@ -1,5 +1,5 @@
 const PREFIXES = [
-  // Telkomsel (incl. by.U)
+
   { prefix: "0811", operator: "Telkomsel", brand: "kartuHalo" },
   { prefix: "0812", operator: "Telkomsel", brand: "simPATI" },
   { prefix: "0813", operator: "Telkomsel", brand: "simPATI" },
@@ -13,7 +13,6 @@ const PREFIXES = [
   { prefix: "0853", operator: "Telkomsel", brand: "Kartu As" },
   { prefix: "0850", operator: "Telkomsel", brand: "by.U" },
 
-  // Indosat Ooredoo Hutchison
   { prefix: "0814", operator: "Indosat", brand: "Matrix / Mentari" },
   { prefix: "0815", operator: "Indosat", brand: "Matrix / Mentari" },
   { prefix: "0816", operator: "Indosat", brand: "Matrix / Mentari" },
@@ -22,7 +21,6 @@ const PREFIXES = [
   { prefix: "0857", operator: "Indosat", brand: "IM3" },
   { prefix: "0858", operator: "Indosat", brand: "IM3" },
 
-  // XL Axiata
   { prefix: "0817", operator: "XL Axiata", brand: "XL" },
   { prefix: "0818", operator: "XL Axiata", brand: "XL" },
   { prefix: "0819", operator: "XL Axiata", brand: "XL" },
@@ -30,7 +28,6 @@ const PREFIXES = [
   { prefix: "0877", operator: "XL Axiata", brand: "XL" },
   { prefix: "0878", operator: "XL Axiata", brand: "XL" },
 
-  // AXIS (now XL)
   { prefix: "0831", operator: "AXIS", brand: "AXIS" },
   { prefix: "0832", operator: "AXIS", brand: "AXIS" },
   { prefix: "0833", operator: "AXIS", brand: "AXIS" },
@@ -40,7 +37,6 @@ const PREFIXES = [
   { prefix: "0837", operator: "AXIS", brand: "AXIS" },
   { prefix: "0838", operator: "AXIS", brand: "AXIS" },
 
-  // Tri (3)
   { prefix: "0895", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0896", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0897", operator: "Tri", brand: "3 (Tri)" },
@@ -52,7 +48,6 @@ const PREFIXES = [
   { prefix: "0893", operator: "Tri", brand: "3 (Tri)" },
   { prefix: "0894", operator: "Tri", brand: "3 (Tri)" },
 
-  // Smartfren
   { prefix: "0881", operator: "Smartfren", brand: "Smartfren" },
   { prefix: "0882", operator: "Smartfren", brand: "Smartfren" },
   { prefix: "0883", operator: "Smartfren", brand: "Smartfren" },
@@ -63,7 +58,6 @@ const PREFIXES = [
   { prefix: "0888", operator: "Smartfren", brand: "Smartfren" },
   { prefix: "0889", operator: "Smartfren", brand: "Smartfren" },
 
-  // By.U / Telkomsel extended 2023-2025
   { prefix: "0810", operator: "Telkomsel", brand: "simPATI (legacy)" },
   { prefix: "0820", operator: "Telkomsel", brand: "Kartu As" },
 ];

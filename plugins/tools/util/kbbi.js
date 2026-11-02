@@ -56,7 +56,7 @@ export default {
         }
       }
       if (!defs.length) {
-        // fallback ambil meta description
+
         const meta = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
         if (meta) defs = [stripHtml(meta[1]).slice(0, 500)];
       }

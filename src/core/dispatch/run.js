@@ -113,8 +113,7 @@ async function dispatchInner(sock, msg, logger) {
     logger,
   });
   if (resolved.drop) {
-    // Pesan media tanpa perintah -> coba handler media plugin
-    // (mis. scan QR guru -> absen otomatis).
+
     if (resolved.code === "not_command" && (await runMediaHandlers(sock, msg, logger))) {
       return;
     }

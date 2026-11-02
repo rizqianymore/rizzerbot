@@ -4,9 +4,9 @@ import { createSticker } from "@/src/services/fetch/media.js";
 
 function emojiCodepoints(emoji) {
   const str = String(emoji || "");
-  // handle ZWJ sequences correctly via codePoint splitting
+
   const cps = [...str].map((c) => c.codePointAt(0).toString(16)).filter((cp) => cp !== "fe0f" && cp !== "200d");
-  // twemoji expects variation stripped but keep key codepoints
+
   return cps.join("-");
 }
 

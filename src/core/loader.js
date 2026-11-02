@@ -90,7 +90,6 @@ export async function reloadPluginFile(absolutePath, relativePath) {
         loadedAny = true;
       }
 
-      // Handler media opsional (mis. scan QR dari foto -> aksi otomatis).
       if (cmd && cmd.name && typeof cmd.onMedia === "function") {
         cmd.filePath = absolutePath;
         mediaHandlers.set(cmd.name.toLowerCase(), cmd.onMedia);

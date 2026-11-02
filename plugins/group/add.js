@@ -33,7 +33,7 @@ export default {
         const code = await sock.groupInviteCode(ctx.remoteJid).catch(() => null);
         if (code) {
           const inviteUrl = `https://chat.whatsapp.com/${code}`;
-          // coba DM, fallback ke grup
+
           try {
             await sock.sendMessage(targetJid, {
               text: `Kamu diundang ke grup *${ctx.meta.subject}*\n${inviteUrl}`,

@@ -17,7 +17,6 @@ function apiKey() {
   return key;
 }
 
-// ============ FREE MODE (scraping, tanpa API key) ============
 async function checkUrlHaus(targetUrl) {
   try {
     const data = await request.post("https://urlhaus-api.abuse.ch/v1/url/", `url=${encodeURIComponent(targetUrl)}`, {
@@ -49,7 +48,7 @@ async function checkUrlScan(targetUrl) {
       timeout: 15000,
     });
     const results = Array.isArray(data?.results) ? data.results : [];
-    // cari exact url match
+
     const exact = results.find((r) => r?.page?.url === targetUrl || r?.page?.url?.includes(targetUrl));
     const verdict = exact?.verdicts?.overall?.malicious === true || exact?.verdicts?.overall?.score > 0;
     return { found: results.length > 0, malicious: verdict, count: results.length, raw: exact || null };
@@ -60,7 +59,7 @@ async function checkUrlScan(targetUrl) {
 
 async function checkPhishTankFree(targetUrl) {
   try {
-    // PhishTank free check via urlhaus fallback: coba GET phishtank search page (scraping)
+
     const html = await request.text(`https://checkurl.phishtank.com/checkurl/index.php?url=${encodeURIComponent(targetUrl)}`, {
       timeout: 15000,
     });
@@ -101,7 +100,6 @@ export async function scanUrlFree(targetUrl) {
     harmless += 1;
   }
 
-  // heuristic: jika tidak ada yang flag tapi pernah ada di urlscan -> anggap undetected
   if (!haus && !scan) {
     undetected = 1;
   } else if (malicious === 0 && suspicious === 0) {
@@ -110,7 +108,7 @@ export async function scanUrlFree(targetUrl) {
   }
 
   const isClean = malicious === 0 && suspicious === 0;
-  // minimal 1 harmless jika clean
+
   if (isClean && harmless === 0) harmless = 1;
 
   return {
@@ -158,7 +156,7 @@ async function checkHashLookup(hash) {
     if (data?.hash) return { found: true, raw: data };
     return { found: false };
   } catch (e) {
-    // 404 = not found
+
     if (String(e?.message || "").includes("404")) return { found: false };
     return null;
   }
@@ -166,8 +164,7 @@ async function checkHashLookup(hash) {
 
 async function checkVtGuiFree(hash) {
   try {
-    // Coba scrape VT GUI tanpa key: https://www.virustotal.com/gui/file/<hash>/detection (butuh browser)
-    // fallback ke ui search endpoint yang kadang terbuka tanpa key
+
     const data = await request.json(`https://www.virustotal.com/ui/files/${encodeURIComponent(hash)}`, {
       timeout: 15000,
       headers: {
@@ -191,7 +188,7 @@ export async function fileReportFree(buffer, fileName = "file") {
   const [mb, hl, vtGui] = await Promise.all([checkMalwareBazaar(hash), checkHashLookup(hash), checkVtGuiFree(hash)]);
 
   if (vtGui?.found) {
-    // VT GUI berhasil tanpa key -> pakai stats asli
+
     return {
       hash,
       fileName,
@@ -217,7 +214,6 @@ export async function fileReportFree(buffer, fileName = "file") {
     };
   }
 
-  // jika hashlookup found tapi tidak malicious -> anggap known harmless
   if (hl?.found) {
     return {
       hash,
@@ -231,7 +227,6 @@ export async function fileReportFree(buffer, fileName = "file") {
     };
   }
 
-  // tidak ditemukan di free DB -> unknown (mungkin clean, perlu scan manual)
   return {
     hash,
     fileName,

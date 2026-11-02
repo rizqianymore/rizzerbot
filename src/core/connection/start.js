@@ -98,7 +98,7 @@ export async function startBot() {
       auth: state,
       logger: pino({ level: "silent" }),
       printQRInTerminal: !usePairingCode,
-      browser: Browsers.ubuntu("Chrome"), // Ubuntu Chrome standar Baileys yang 100% cocok dengan pairing
+      browser: Browsers.ubuntu("Chrome"),
       markOnlineOnConnect: activeSettings.autoOnline,
       syncFullHistory: false,
       msgRetryCounterCache,
@@ -118,7 +118,6 @@ export async function startBot() {
     sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
-    // Request Pairing Code: JANGAN minta ulang jika sudah pernah meminta kode di sesi ini
     if (usePairingCode && !sock.authState?.creds?.registered) {
       const rawNumber = activeSettings.pairingNumber || activeSettings.ownerNumber;
       const phoneNumber = String(rawNumber || "").replace(/\D/g, "");
@@ -130,7 +129,7 @@ export async function startBot() {
           if (sock.authState?.creds?.registered) {
             return;
           }
-          // Jika sudah ada pairingCode yang aktif di creds.json, tampilkan kode yang SAMA agar tidak invalid!
+
           if (sock.authState?.creds?.pairingCode) {
             const existingCode = sock.authState.creds.pairingCode;
             console.log(`\n\x1b[36m====================================\x1b[0m`);
@@ -153,7 +152,6 @@ export async function startBot() {
           }
         };
 
-        // Tunggu 3 detik agar handshake awal Baileys siap
         timers.pairingTimeout = setTimeout(requestPairing, 3000);
       }
     }

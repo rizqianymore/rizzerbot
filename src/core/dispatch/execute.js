@@ -3,7 +3,7 @@ import { isGroupJid } from "./identity.js";
 import { getUniversalContextInfo, findPhoneJid } from "./message.js";
 import { getGroupAccessError } from "./group.js";
 
-const DEFAULT_CMD_TIMEOUT_MS = 60000; // 60 detik timeout agar tidak hanging/stuck
+const DEFAULT_CMD_TIMEOUT_MS = 60000;
 
 export async function executeCommand(sock, msg, logger, env) {
   const {
@@ -101,7 +101,6 @@ export async function executeCommand(sock, msg, logger, env) {
     const t0 = Date.now();
     const timeoutMs = Number(cmd.timeoutMs) || Number(process.env.COMMAND_TIMEOUT_MS) || DEFAULT_CMD_TIMEOUT_MS;
 
-    // Guard timeout agar perintah yang freeze/stuck tidak menahan antrean queue selamanya
     const runPromise = Promise.resolve(cmd.run(sock, msg, args, context));
     const timerPromise = new Promise((_, reject) => {
       const t = setTimeout(() => {

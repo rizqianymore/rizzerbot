@@ -25,15 +25,11 @@ export async function fetchLyrics(artist, title) {
   return String(data.lyrics).trim();
 }
 
-/**
- * Terjemahkan teks dengan proteksi fallback ganda (Google Translate -> MyMemory API)
- */
 export async function translateText(text, lang = "id") {
   const clean = String(text || "").trim();
   if (!clean) throw new Error("Teks untuk diterjemahkan kosong");
   if (clean.length > 2500) throw new Error("Teks terlalu panjang (maksimal 2500 karakter)");
 
-  // 1. Coba Google Translate Single API
   try {
     const data = await request.json("https://translate.googleapis.com/translate_a/single", {
       params: {
@@ -56,7 +52,6 @@ export async function translateText(text, lang = "id") {
     }
   } catch (_) {}
 
-  // 2. Fallback ke MyMemory Translation API jika Google rate-limited (HTTP 429)
   try {
     const res = await axios.get("https://api.mymemory.translated.net/get", {
       params: { q: clean, langpair: `autodetect|${lang}` },

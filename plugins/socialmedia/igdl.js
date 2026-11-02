@@ -23,14 +23,12 @@ export default {
     try {
       let res = null;
 
-      // 1. Coba kol.id
       try {
         res = await downloadFromKolId(input, { timeoutMs: 25000 });
       } catch (kolErr) {
         logger?.warn?.(`[igdl kol.id] ${kolErr?.message || kolErr}`);
       }
 
-      // 2. Fallback ke engine yt-dlp
       if (!res || !res.media?.length) {
         try {
           const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");

@@ -21,7 +21,7 @@ export default {
       return reply("URL tidak valid.");
     }
     await sendTyping();
-    // tinyurl paling stabil (is.gd sering kena Cloudflare challenge)
+
     try {
       const txt = await request.text(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, {
         timeout: 12000,
@@ -39,7 +39,7 @@ export default {
       }
       if (data?.errormessage) throw new Error(data.errormessage);
     } catch (_) {}
-    // fallback ulvis
+
     try {
       const data = await request.json(`https://ulvis.net/api.php?url=${encodeURIComponent(url)}`, {
         timeout: 12000,

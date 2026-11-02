@@ -41,8 +41,6 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         }
       } catch (_) {}
 
-      // Jika socket terputus saat belum terdaftar (misal user belum selesai memasukkan kode), PERTAHANKAN sesi!
-      // JANGAN hapus authDir agar kredensial pairing code di HP tidak menjadi tidak valid!
       if (!wasRegistered) {
         connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
 
@@ -70,7 +68,6 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         return;
       }
 
-      // Kasus logout resmi dari WhatsApp Web
       connectionState.unregisteredFailures = 0;
       logger.error("Log out terdeteksi dari WhatsApp. Membersihkan seluruh sesi lama...");
       try {
@@ -144,10 +141,7 @@ export function attachMessageHandler(sock) {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
         const rjid = msg.key.remoteJid;
         if (rjid === "status@broadcast") {
-          try {
-            const { handleStatusBroadcast } = await import("@/src/middleware/statusSaver.js");
-            handleStatusBroadcast(sock, msg, logger).catch(() => {});
-          } catch (_) {}
+
           continue;
         }
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;

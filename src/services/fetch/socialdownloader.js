@@ -11,10 +11,6 @@ const DEFAULT_HEADERS = {
     "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
 };
 
-/**
- * Request scraping ke SocialDownloader dengan dukungan proteksi captcha / WAF:
- * Alur: Direct -> Cloudflare Stealth Bypass / Bright Data Web Unlocker
- */
 export async function fetchSocialDownloader(url, opts = {}) {
   const targetUrl = String(url || "").trim();
   if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
@@ -31,7 +27,6 @@ export async function fetchSocialDownloader(url, opts = {}) {
 
   let data = null;
 
-  // 1. Coba lewat Bright Data Web Unlocker jika API Key tersedia
   if (isBrightDataEnabled()) {
     try {
       data = await brightDataRequest(`${BASE_URL}/api/download`, {
@@ -46,7 +41,6 @@ export async function fetchSocialDownloader(url, opts = {}) {
     }
   }
 
-  // 2. Fallback ke request bawaan dengan auto-bypass Cloudflare & captcha solver
   if (!data) {
     const response = await request.post(`${BASE_URL}/api/download`, payload, {
       headers: DEFAULT_HEADERS,
@@ -83,9 +77,6 @@ export async function fetchSocialDownloader(url, opts = {}) {
   };
 }
 
-/**
- * Unduh buffer media dari SocialDownloader dengan proteksi captcha & stream safe
- */
 export async function downloadSocialMedia(targetUrl, opts = {}) {
   const isAudio = opts.type === "audio" || opts.isAudio === true;
   const info = await fetchSocialDownloader(targetUrl, { ...opts, type: isAudio ? "audio" : "video" });

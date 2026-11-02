@@ -20,7 +20,6 @@ export default {
       let author = "";
       let duration = "";
 
-      // 1. Coba lewat SocialDownloader (Bypass Cloudflare / BrightData Web Unlocker)
       try {
         const sd = await downloadSocialMedia(url, { isAudio, logger });
         if (sd?.buffer?.length > 0) {
@@ -33,7 +32,6 @@ export default {
         logger?.warn?.(`[tiktok socialdownloader] ${sdErr?.message || sdErr}`);
       }
 
-      // 2. Coba kol.id sebagai secondary fallback
       if (!buffer) {
         try {
           const { downloadTiktok } = await import("@/src/services/fetch/kolid.js");
@@ -55,7 +53,6 @@ export default {
         }
       }
 
-      // 3. Fallback ke engine yt-dlp
       if (!buffer) {
         const [pInfo, dl] = await Promise.all([
           probe(url, { timeoutMs: 20000 }).catch(() => null),

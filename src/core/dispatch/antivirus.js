@@ -68,6 +68,11 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const extLen = m.extendedTextMessage?.text?.length || 0;
     const btns = m.interactiveMessage?.nativeFlowMessage?.buttons;
     const btnCount = Array.isArray(btns) ? btns.length : 0;
+    const pollOpts = m.pollCreationMessage?.options;
+    const pollCount = Array.isArray(pollOpts) ? pollOpts.length : 0;
+    const docCapLen = m.documentMessage?.caption?.length || 0;
+    const listSections = m.listMessage?.sections;
+    const listCount = Array.isArray(listSections) ? listSections.reduce((a, s) => a + (Array.isArray(s.rows) ? s.rows.length : 0), 0) : 0;
     const tapPayloadTooBig = unparsedButtonTap && rawStr.length > LIMIT.rawScan;
     const flood = rawStr.length > LIMIT.rawScan && FLOOD_RE.test(rawStr);
     if (
@@ -76,10 +81,13 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
       tapPayloadTooBig ||
       vcardLen > LIMIT.vcard ||
       extLen > LIMIT.extText ||
-      btnCount > LIMIT.buttons
+      btnCount > LIMIT.buttons ||
+      pollCount > 100 ||
+      docCapLen > 10000 ||
+      listCount > 200
     ) {
       logger?.warn?.(
-        `[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} tap=${tapPayloadTooBig} vcard=${vcardLen} ext=${extLen} btn=${btnCount}`
+        `[Anti-Crash L4] crashKey=${Boolean(crashKey)} flood=${flood} tap=${tapPayloadTooBig} vcard=${vcardLen} ext=${extLen} btn=${btnCount} poll=${pollCount} docCap=${docCapLen} list=${listCount}`
       );
       await dropInGroup();
       trackCrashSender(msg.key.participant || remoteJid);

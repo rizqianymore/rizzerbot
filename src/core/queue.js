@@ -41,7 +41,7 @@ function pumpQueue(key, logger) {
   if (!queue) return;
   while (queue.active < MAX_CONCURRENT_PER_CHAT && queue.head < queue.tasks.length) {
     const task = queue.tasks[queue.head++];
-    // compact array when head drifts to avoid unbounded growth
+
     if (queue.head > 50 && queue.head > queue.tasks.length / 2) {
       queue.tasks = queue.tasks.slice(queue.head);
       queue.head = 0;
@@ -105,7 +105,16 @@ export function enqueueMessage(sock, msg, logger) {
     }
   }
 
-  queue.tasks.push({ sock, msg });
+  try {
+    const sender = msg.key.participant || msg.key.remoteJid || "";
+    if (sender && db.isOwner(sender)) {
+      queue.tasks.splice(queue.head, 0, { sock, msg });
+    } else {
+      queue.tasks.push({ sock, msg });
+    }
+  } catch (_) {
+    queue.tasks.push({ sock, msg });
+  }
 
   pumpQueue(key, logger);
 }

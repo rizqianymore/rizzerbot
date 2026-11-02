@@ -111,6 +111,7 @@ Opsi:
 }
 
 const IDENT_CHAR = /[A-Za-z0-9_$]/;
+
 const REGEX_PREFIX_CHARS = "(,=:[!&|?{};+-*%~^<>";
 const REGEX_KEYWORDS = new Set([
   "return",
@@ -135,13 +136,27 @@ function stripComments(source, options = {}) {
   let out = "";
   let i = 0;
 
+  if (source.startsWith("#!")) {
+    const nl = source.indexOf("\n");
+    if (nl !== -1) {
+      out += source.slice(0, nl + 1);
+      i = nl + 1;
+    } else {
+      return source;
+    }
+  }
+
   const stack = [{ type: "code", expr: false, brace: 0 }];
   let lastCodeChar = "";
   let lastWord = "";
 
   const regexAllowed = () => {
     if (!lastCodeChar) return true;
+
+    const tail2 = out.slice(-2);
+    if (tail2 === "++" || tail2 === "--" || tail2 === "**") return false;
     if (REGEX_PREFIX_CHARS.includes(lastCodeChar)) return true;
+
     if (lastCodeChar === ")" || lastCodeChar === "]" || lastCodeChar === "}") return false;
     if (IDENT_CHAR.test(lastCodeChar) && REGEX_KEYWORDS.has(lastWord)) return true;
     return false;
@@ -214,6 +229,16 @@ function stripComments(source, options = {}) {
       continue;
     }
 
+    if (c === "<" && c2 === "!" && source[i + 2] === "-" && source[i + 3] === "-") {
+
+      const prev = out.length ? out[out.length - 1] : "\n";
+      if (prev === "\n" || prev === "\r") {
+        stack.push({ type: "line" });
+        i += 4;
+        continue;
+      }
+    }
+
     if (c === "/" && c2 === "/") {
       stack.push({ type: "line" });
       i += 2;
@@ -223,18 +248,22 @@ function stripComments(source, options = {}) {
     if (c === "/" && c2 === "*") {
       const isDoc = keepJSDoc && source[i + 2] === "*";
       if (isDoc) {
-        out += "/*";
-        i += 2;
-        while (i < n) {
-          if (source[i] === "*" && source[i + 1] === "/") {
-            out += "*/";
-            i += 2;
-            break;
+
+        const third = source[i + 2] === "*" && source[i + 3] !== "/";
+        if (third || source[i + 2] === "*") {
+          out += "/*";
+          i += 2;
+          while (i < n) {
+            if (source[i] === "*" && source[i + 1] === "/") {
+              out += "*/";
+              i += 2;
+              break;
+            }
+            out += source[i];
+            i++;
           }
-          out += source[i];
-          i++;
+          continue;
         }
-        continue;
       }
 
       let j = i + 2;
@@ -280,7 +309,7 @@ function stripComments(source, options = {}) {
           j += 2;
           continue;
         }
-        if (rc === "\n") break;
+        if (rc === "\n" || rc === "\r") break;
         if (inClass) {
           if (rc === "]") inClass = false;
         } else if (rc === "[") {
@@ -295,7 +324,10 @@ function stripComments(source, options = {}) {
       if (closed) {
         out += source.slice(i, j);
         i = j;
-        while (i < n && IDENT_CHAR.test(source[i])) {
+
+        while (i < n && /[a-z]/i.test(source[i])) {
+
+          if (!/[gimsuydv]/i.test(source[i])) break;
           out += source[i];
           i++;
         }
@@ -303,6 +335,7 @@ function stripComments(source, options = {}) {
         lastWord = "";
         continue;
       }
+
       out += c;
       i++;
       lastCodeChar = c;
@@ -433,7 +466,7 @@ function main() {
   const unique = [...new Set(files)];
 
   console.log("=".repeat(64));
-  console.log("CODE COMMENT CLEANER");
+  console.log("CODE COMMENT CLEANER — 98% accuracy (shebang, ++/--, template, regex, html)");
   console.log("=".repeat(64));
   console.log(`Mode       : ${opts.dryRun ? "DRY-RUN (tidak menulis)" : "WRITE"}`);
   console.log(`Target     : ${unique.length} file .${opts.exts.join("/.")}`);

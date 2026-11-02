@@ -64,20 +64,16 @@ export async function createHelloKittyImage(rawText, options = {}) {
   const ctx = canvas.getContext("2d");
   ctx.scale(SCALE, SCALE);
 
-  // Background solid putih (bukan transparan)
   ctx.fillStyle = options.bgColor || "#FFFFFF";
   ctx.fillRect(0, 0, SIZE, SIZE);
 
-  // Layout text first to calculate spacing
   const layout = layoutText(ctx, text);
   const totalTextHeight = layout.lines.length * layout.lineHeight;
 
-  // Jarak yang pas & proporsional antara gambar Hello Kitty dan teks
   const gap = 24;
   const bottomMargin = 16;
   const topMargin = 12;
 
-  // Sisa tinggi yang dialokasikan untuk gambar Hello Kitty
   const availableKittyH = SIZE - totalTextHeight - gap - bottomMargin - topMargin;
   const targetKittyHeight = Math.min(320, availableKittyH);
   const scaleKitty = targetKittyHeight / kittyImg.height;
@@ -86,10 +82,8 @@ export async function createHelloKittyImage(rawText, options = {}) {
   const kittyX = (SIZE - kittyW) / 2;
   const kittyY = topMargin;
 
-  // Draw Hello Kitty Image
   ctx.drawImage(kittyImg, kittyX, kittyY, kittyW, kittyH);
 
-  // Position text below Hello Kitty with clean gap
   let y = kittyY + kittyH + gap + layout.size * 0.85;
 
   ctx.font = `bold ${layout.size}px "${FONT}"`;
@@ -97,13 +91,12 @@ export async function createHelloKittyImage(rawText, options = {}) {
   ctx.textBaseline = "alphabetic";
 
   for (const line of layout.lines) {
-    // White text stroke/outline
+
     ctx.lineWidth = 7;
     ctx.strokeStyle = "#FFFFFF";
     ctx.lineJoin = "round";
     ctx.strokeText(line, SIZE / 2, y);
 
-    // Dark text fill
     ctx.fillStyle = options.color || "#111111";
     ctx.fillText(line, SIZE / 2, y);
 

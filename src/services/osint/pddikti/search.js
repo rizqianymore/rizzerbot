@@ -22,8 +22,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
     try {
       const token = await getRecaptchaToken();
 
-      // === CORRECT ORDER: direct → brightdata → stealthbrowser ===
-      // 1. Coba direct fetch dulu (cepat kalau tidak ada proteksi)
       try {
         const res = await fetchWithTimeout(searchUrl, {
           headers: {
@@ -43,7 +41,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         lastErr = fetchErr;
       }
 
-      // 2. Jika direct gagal dan BrightData tersedia, coba Web Unlocker REST API
       if (!data && apiKey && !brightDataTried) {
         brightDataTried = true;
         try {
@@ -62,7 +59,6 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         } catch (_) {}
       }
 
-      // 3. Jika BrightData juga gagal, pakai stealth browser sebagai cadangan
       if (!data) {
         try {
           const inPageRes = await stealthBrowser.inPageFetch(searchUrl, {
@@ -86,13 +82,11 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         return data;
       }
 
-      // Jika error transien (timeout, koneksi), coba lagi dengan backoff
       if (/timeout|ECONNRESET|ETIMEDOUT|ECONNABORTED/.test(String(lastErr?.message || "")) && attempt < retries) {
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         continue;
       }
 
-      // Jika terdeteksi proteksi (403, token expired), langsung lewat BrightData
       if (/403|token|recaptcha/i.test(String(lastErr?.message || "")) && attempt < retries && apiKey && !brightDataTried) {
         brightDataTried = true;
         try {
@@ -117,13 +111,12 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         return data;
       }
 
-      // Wait before retry with exponential backoff
       if (attempt < retries) {
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
       }
     } catch (err) {
       lastErr = err;
-      // Jika error jaringan, coba jalur BrightData di percobaan selanjutnya
+
       if (/ECONN|ENOTFOUND|ETIMEDOUT|network|NETWORK/i.test(err.message || "") && attempt < retries && apiKey && !brightDataTried) {
         brightDataTried = true;
         try {
