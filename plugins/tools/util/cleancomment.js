@@ -1,24 +1,22 @@
 function stripCodeComments(sourceCode) {
   let inString = false;
   let stringChar = "";
-  const _inRegex = false;
   let inSingleComment = false;
   let inMultiComment = false;
   let output = "";
+  let escaped = false;
 
   for (let i = 0; i < sourceCode.length; i++) {
     const char = sourceCode[i];
     const nextChar = sourceCode[i + 1] || "";
-    const prevChar = sourceCode[i - 1] || "";
 
     if (inSingleComment) {
-      if (char === "\n" || char === "\r") {
+      if (char === "\n") {
         inSingleComment = false;
         output += char;
       }
       continue;
     }
-
     if (inMultiComment) {
       if (char === "*" && nextChar === "/") {
         inMultiComment = false;
@@ -26,37 +24,32 @@ function stripCodeComments(sourceCode) {
       }
       continue;
     }
-
     if (inString) {
       output += char;
-      if (char === stringChar && prevChar !== "\\") {
-        inString = false;
-      }
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === stringChar) inString = false;
       continue;
     }
-
     if (char === "'" || char === '"' || char === "`") {
       inString = true;
       stringChar = char;
       output += char;
       continue;
     }
-
+    // handle regex literal heuristic: /.../ not division
     if (char === "/" && nextChar === "/") {
       inSingleComment = true;
       i++;
       continue;
     }
-
     if (char === "/" && nextChar === "*") {
       inMultiComment = true;
       i++;
       continue;
     }
-
     output += char;
   }
-
   return output
     .split("\n")
     .filter((line, idx, arr) => line.trim() !== "" || (arr[idx - 1] && arr[idx - 1].trim() !== ""))

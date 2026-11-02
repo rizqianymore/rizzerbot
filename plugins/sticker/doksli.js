@@ -7,7 +7,11 @@ let baseCache = null;
 
 function getBase() {
   if (baseCache) return baseCache;
-  baseCache = fs.readFileSync(BASE_PATH);
+  try {
+    baseCache = fs.readFileSync(BASE_PATH);
+  } catch (_) {
+    return null;
+  }
   return baseCache;
 }
 
@@ -16,6 +20,8 @@ export default {
   aliases: ["dokslisticker"],
   description: "Stiker Doksli + teks meme",
   usage: "[--font=Nama --size=48 --wrap=4 --tengah/--atas/--bawah --justify] [teks atas | bawah]",
+  premiumOnly: false,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";
@@ -63,7 +69,7 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? 0 : 100;
+    const maxSize = fontSize > 0 ? fontSize : 100;
 
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ").trim();

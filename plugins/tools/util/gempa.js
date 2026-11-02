@@ -1,4 +1,6 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+const gempaCache = createTtlCache({ ttlMs: 5 * 60 * 1000, max: 20 });
 
 export default {
   name: "gempa",
@@ -9,12 +11,15 @@ export default {
   cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
-    let g = null;
-    try {
-      const res = await axios.get("https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json", { timeout: 15000 });
-      g = res?.data?.Infogempa?.gempa || null;
-    } catch (err) {
-      return reply(`Gagal memuat data BMKG: ${err?.message || "network error"}`);
+    let g = gempaCache.get("latest");
+    if (!g) {
+      try {
+        const res = await axios.get("https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json", { timeout: 15000 });
+        g = res?.data?.Infogempa?.gempa || null;
+        if (g) gempaCache.set("latest", g);
+      } catch (err) {
+        return reply(`Gagal memuat data BMKG: ${err?.message || "network error"}`);
+      }
     }
     if (!g) return reply("Data gempa BMKG kosong, coba lagi nanti.");
     const text =

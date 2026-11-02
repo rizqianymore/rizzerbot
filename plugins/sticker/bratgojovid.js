@@ -10,12 +10,13 @@ export default {
   name: "bratgojovid",
   aliases: ["sbratgojovid"],
   description: "Membuat stiker Brat Gojo video animasi berjalan",
-  usage: "<teks>",
+  usage: "<teks> [--green]",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
-    const { text } = parseBratArgs(args);
+    const { text, bgColor } = parseBratArgs(args, { allowVideo: true, allowGreen: true });
     if (!text) {
       return reply(`Harap masukkan teksnya!\nContoh: \`${currentPrefix}bratgojovid Halo semuanya\``);
     }
@@ -26,11 +27,11 @@ export default {
     }
 
     try {
-      const videoBuffer = await createBratVideo(text, TEMPLATES.gojo);
+      const videoBuffer = await createBratVideo(text, TEMPLATES.gojo, { bgColor });
       await sendStickerBuffer(sock, msg, videoBuffer);
     } catch (err) {
       logger?.error?.(`[bratgojovid] ${err?.stack || err?.message || err}`);
-      reply(`Gagal membuat stiker Brat Gojo Video: ${err.message}`);
+      await reply(`Gagal membuat stiker Brat Gojo Video: ${err.message}`);
     }
   },
 };

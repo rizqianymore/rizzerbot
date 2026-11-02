@@ -1,4 +1,6 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+const sholatCache = createTtlCache({ ttlMs: 60 * 60 * 1000, max: 100 });
 
 export default {
   name: "sholat",
@@ -9,16 +11,20 @@ export default {
   cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const city = args.join(" ").trim() || "Jakarta";
-    await sendTyping();
-    let data = null;
-    try {
-      const res = await axios.get("https://api.aladhan.com/v1/timingsByCity", {
-        params: { city, country: "Indonesia", method: 20 },
-        timeout: 15000,
-      });
-      data = res?.data?.data || null;
-    } catch (err) {
-      return reply(`Gagal memuat jadwal sholat ${city}: ${err?.message || "network error"}`);
+    const key = city.toLowerCase();
+    let data = sholatCache.get(key);
+    if (!data) {
+      await sendTyping();
+      try {
+        const res = await axios.get("https://api.aladhan.com/v1/timingsByCity", {
+          params: { city, country: "Indonesia", method: 20 },
+          timeout: 15000,
+        });
+        data = res?.data?.data || null;
+        if (data?.timings) sholatCache.set(key, data);
+      } catch (err) {
+        return reply(`Gagal memuat jadwal sholat ${city}: ${err?.message || "network error"}`);
+      }
     }
     if (!data?.timings) return reply(`Jadwal sholat untuk *${city}* tidak ditemukan.`);
     const t = data.timings;

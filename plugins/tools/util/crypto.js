@@ -1,4 +1,6 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+const cryptoCache = createTtlCache({ ttlMs: 60 * 1000, max: 50 });
 
 const COIN_ALIASES = {
   btc: "bitcoin",
@@ -44,19 +46,24 @@ export default {
     if (!query) {
       try {
         const topCoins = ["bitcoin", "ethereum", "solana", "binancecoin", "ripple", "dogecoin"];
-        const res = await axios.get("https://api.coingecko.com/api/v3/simple/price", {
-          params: {
-            ids: topCoins.join(","),
-            vs_currencies: "usd,idr",
-            include_24hr_change: "true",
-          },
-          timeout: 10000,
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          },
-        });
+        const cacheKey = "top6";
+        let data = cryptoCache.get(cacheKey);
+        if (!data) {
+          const res = await axios.get("https://api.coingecko.com/api/v3/simple/price", {
+            params: {
+              ids: topCoins.join(","),
+              vs_currencies: "usd,idr",
+              include_24hr_change: "true",
+            },
+            timeout: 10000,
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            },
+          });
+          data = res.data;
+          cryptoCache.set(cacheKey, data);
+        }
 
-        const data = res.data;
         let out = `*📊 MARKET CRYPTO TERKINI*\n`;
         out += `_Gunakan \`${currentPrefix}crypto <koin>\` untuk koin spesifik (misal: \`${currentPrefix}crypto btc\`)_\n\n`;
 

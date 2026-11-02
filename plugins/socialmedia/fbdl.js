@@ -1,3 +1,5 @@
+import { downloadSocialMedia } from "@/src/services/fetch/socialdownloader.js";
+
 export default {
   name: "fbdl",
   cooldownMs: 30000,
@@ -5,7 +7,7 @@ export default {
   description: "Download video dari Facebook (postingan, reels, watch)",
   usage: "<url> [mp3]",
   category: "Social Media",
-  run: async (sock, msg, args, { reply, sendTyping }) => {
+  run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
     const url = args[0];
     if (!url) return reply("Masukkan link Facebook! Contoh: *.fbdl https://www.facebook.com/reel/xxxx*");
@@ -14,11 +16,25 @@ export default {
     }
     try {
       const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
-      const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-      const [pInfo, dl] = await Promise.all([
-        probe(url, { timeoutMs: 20000 }).catch(() => null),
-        downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
-      ]);
+      let dl = null;
+      let pInfo = null;
+      // 1. Coba SocialDownloader (BrightData)
+      try {
+        const sd = await downloadSocialMedia(url, { isAudio, logger });
+        if (sd?.buffer?.length) {
+          dl = { buffer: sd.buffer };
+          pInfo = { title: sd.info.title, uploader: sd.info.author, duration: sd.info.duration };
+        }
+      } catch (sdErr) {
+        logger?.warn?.(`[fbdl socialdownloader] ${sdErr?.message}`);
+      }
+      if (!dl) {
+        const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
+        [pInfo, dl] = await Promise.all([
+          probe(url, { timeoutMs: 20000 }).catch(() => null),
+          downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
+        ]);
+      }
       const lines = ["*FACEBOOK DOWNLOADER*"];
       const title = pInfo?.title || "";
       const author = pInfo?.uploader || "";

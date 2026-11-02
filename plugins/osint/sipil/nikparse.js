@@ -3,8 +3,9 @@ import { parseNik, getNikInfoText } from "@/src/services/osint/nikparse.js";
 export default {
   name: "nikparse",
   aliases: ["nik", "ceknik", "parsenik"],
-  description: "Parse NIK KTP: jk, tgl lahir, umur, zodiak, wilayah",
+  description: "Parse NIK KTP: jk, tgl lahir, umur, zodiak, wilayah (offline, gratis)",
   usage: "<nik16>",
+  premiumOnly: false,
   category: "OSINT",
   cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

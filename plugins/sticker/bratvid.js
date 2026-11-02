@@ -12,10 +12,11 @@ export default {
   description: "Membuat stiker teks Brat video animasi teks berjalan",
   usage: "<teks> [--green]",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
-    const { text, bgColor } = parseBratArgs(args, { allowVideo: false, allowGreen: true });
+    const { text, bgColor } = parseBratArgs(args, { allowVideo: true, allowGreen: true });
     if (!text) {
       return reply(`Masukkan teks!\nContoh: \`${currentPrefix}bratvid lagu baru charli xcx\``);
     }
@@ -30,7 +31,7 @@ export default {
       await sendStickerBuffer(sock, msg, videoBuffer);
     } catch (err) {
       logger?.error?.(`[bratvid] ${err?.stack || err?.message || err}`);
-      reply(`Gagal membuat stiker Brat Video: ${err.message}`);
+      await reply(`Gagal membuat stiker Brat Video: ${err.message}`);
     }
   },
 };

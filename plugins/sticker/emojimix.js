@@ -3,13 +3,11 @@ import { requireCanvas } from "@/src/utils/native.js";
 import { createSticker } from "@/src/services/fetch/media.js";
 
 function emojiCodepoints(emoji) {
-  const points = [];
-  for (const ch of String(emoji || "")) {
-    const cp = ch.codePointAt(0).toString(16);
-    if (cp === "fe0f") continue;
-    points.push(cp);
-  }
-  return points.join("-");
+  const str = String(emoji || "");
+  // handle ZWJ sequences correctly via codePoint splitting
+  const cps = [...str].map((c) => c.codePointAt(0).toString(16)).filter((cp) => cp !== "fe0f" && cp !== "200d");
+  // twemoji expects variation stripped but keep key codepoints
+  return cps.join("-");
 }
 
 function splitEmoji(text) {
@@ -40,6 +38,8 @@ export default {
   aliases: ["mixemoji", "emix"],
   description: "Gabung 2 emoji jadi stiker",
   usage: "<emoji1>+<emoji2>",
+  premiumOnly: false,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const raw = args.join(" ").trim();
@@ -61,6 +61,8 @@ export default {
       const canvas = createCanvas(size, size);
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, size, size);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(await loadImage(left), size * 0.06, size * 0.22, size * 0.44, size * 0.44);
       ctx.drawImage(await loadImage(right), size * 0.5, size * 0.34, size * 0.44, size * 0.44);
       const png = Buffer.from(await canvas.encode("png"));

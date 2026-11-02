@@ -14,6 +14,7 @@ export default {
   description: "Membuat stiker teks Brat Classic (lokal generator)",
   usage: "<teks> [--green] [--video]",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, prefix, logger }) => {
     const currentPrefix = prefix || ".";
@@ -37,7 +38,7 @@ export default {
       }
     } catch (err) {
       logger?.error?.(`[brat] ${err?.stack || err?.message || err}`);
-      reply(`Gagal membuat stiker Brat: ${err.message}`);
+      await reply(`Gagal membuat stiker Brat: ${err.message}`);
     }
   },
 };

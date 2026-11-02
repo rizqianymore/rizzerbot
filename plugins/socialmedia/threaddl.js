@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 
 export default {
   name: "threaddl",
@@ -48,9 +48,8 @@ export default {
     };
 
     try {
-      const res = await axios.get(BASE_URL, {
+      const data = await request.json(BASE_URL, {
         timeout: 20000,
-        validateStatus: () => true,
         params: { url, action: "info" },
         headers: {
           "sec-ch-ua-platform": `"Android"`,
@@ -62,9 +61,8 @@ export default {
           referer: "https://threadsvid.com/",
           "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
         },
+        bypassCloudflare: "auto",
       });
-
-      const data = res.data || {};
       const info = data.data || {};
       const videoQualities = uniqueByUrl(info.video?.qualities || []);
       const images = uniqueByUrl(info.images?.urls || []);

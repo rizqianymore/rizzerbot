@@ -3,10 +3,11 @@ import { sendStickerBuffer, validateBratText } from "@/src/services/fetch/brat.j
 
 export default {
   name: "hellokitty",
-  cooldownMs: 5000,
   aliases: ["hk", "kitty"],
   description: "Membuat sticker karakter Hello Kitty dengan teks kustom",
   category: "Sticker",
+  premiumOnly: true,
+  cooldownMs: 5000,
   usage: "<teks>",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const p = prefix || ".";

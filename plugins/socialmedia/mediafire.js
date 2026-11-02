@@ -26,13 +26,13 @@ export default {
     const MAX_INLINE_BYTES = MAX_INLINE_MB * 1024 * 1024;
 
     const sizeInMb = (size = "") => {
-      const text = String(size || "");
+      const text = String(size || "").replace(",", ".");
       const gb = text.match(/([\d.]+)\s*GB/i);
-      if (gb) return parseFloat(gb[1]) * 1024;
+      if (gb) return parseFloat(gb[1].replace(",", ".")) * 1024;
       const mb = text.match(/([\d.]+)\s*MB/i);
-      if (mb) return parseFloat(mb[1]);
+      if (mb) return parseFloat(mb[1].replace(",", ".")) ;
       const kb = text.match(/([\d.]+)\s*KB/i);
-      if (kb) return parseFloat(kb[1]) / 1024;
+      if (kb) return parseFloat(kb[1].replace(",", ".")) / 1024;
       return 0;
     };
 

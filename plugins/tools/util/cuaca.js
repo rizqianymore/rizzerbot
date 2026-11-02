@@ -1,3 +1,6 @@
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+const cuacaCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 100 });
+
 const CITY_PRESETS = {
   jakarta: "31.71.01.1001",
   bandung: "32.73.01.1001",
@@ -6,6 +9,19 @@ const CITY_PRESETS = {
   medan: "12.71.01.1001",
   makassar: "73.71.01.1001",
   denpasar: "51.71.01.1001",
+  yogyakarta: "34.71.01.1001",
+  palembang: "16.71.01.1001",
+  pekanbaru: "14.71.01.1001",
+  balikpapan: "64.71.01.1001",
+  manado: "71.71.01.1001",
+  padang: "13.71.01.1001",
+  malang: "35.73.04.1001",
+  bogor: "32.71.02.1001",
+  bekasi: "32.75.03.1001",
+  tangerang: "36.71.02.1001",
+  batam: "21.71.01.1001",
+  bandarlampung: "18.71.01.1001",
+  banjarmasin: "63.71.01.1001",
 };
 
 export default {
@@ -29,16 +45,21 @@ export default {
       );
     }
 
-    await sendTyping();
-    await reply(`Memuat prakiraan cuaca untuk *${adm4}*...`);
-
-    let data;
-    try {
-      const res = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${encodeURIComponent(adm4)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      data = await res.json();
-    } catch (err) {
-      return reply(`Gagal memuat cuaca: ${err?.message || err}`);
+    const cacheKey = adm4.toLowerCase();
+    let data = cuacaCache.get(cacheKey);
+    if (!data) {
+      await sendTyping();
+      await reply(`Memuat prakiraan cuaca untuk *${adm4}*...`);
+      try {
+        const res = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${encodeURIComponent(adm4)}`, {
+          signal: AbortSignal.timeout(15000),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json();
+        cuacaCache.set(cacheKey, data);
+      } catch (err) {
+        return reply(`Gagal memuat cuaca: ${err?.message || err}`);
+      }
     }
 
     const lokasi = data?.lokasi || {};

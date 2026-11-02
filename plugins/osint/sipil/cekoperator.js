@@ -24,11 +24,14 @@ export default {
 
     await sendTyping();
 
-    const parsed = parseOperator(input);
-    if (!parsed.valid) {
-      return reply(`${parsed.reason || "Nomor tidak valid."}`);
+    try {
+      const parsed = parseOperator(input);
+      if (!parsed.valid) {
+        return reply(`${parsed.reason || "Nomor tidak valid."}`);
+      }
+      return reply(getOperatorInfoText(input));
+    } catch (err) {
+      return reply(`Gagal cek operator: ${err?.message || err}`);
     }
-
-    return reply(getOperatorInfoText(input));
   },
 };

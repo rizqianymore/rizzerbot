@@ -20,15 +20,30 @@ export default {
 
     try {
       const results = await searchPinterest(query);
+      if (!results?.length) return reply("Pinterest tidak menemukan hasil untuk kata kunci tersebut.");
 
-      const randomItem = results[Math.floor(Math.random() * Math.min(results.length, 10))];
+      const shuffled = [...results].sort(() => Math.random() - 0.5).slice(0, 3);
+      let imgBuffer = null;
+      let chosen = null;
+      for (const item of shuffled) {
+        try {
+          if (!item?.image) continue;
+          const buf = await fetchBuffer(item.image, { redirect: "follow", timeout: 15000, maxBytes: 10 * 1024 * 1024 });
+          if (buf && buf.length > 1000) {
+            imgBuffer = buf;
+            chosen = item;
+            break;
+          }
+        } catch (_) {}
+      }
+      if (!imgBuffer || !chosen) return reply("Gagal mengunduh gambar Pinterest, coba lagi.");
 
-      const imgBuffer = await fetchBuffer(randomItem.image, { redirect: "follow" });
       const caption =
         `*PINTEREST SEARCH*\n\n` +
-        `*Judul:* ${randomItem.title.trim()}\n` +
-        `*Pinner:* ${randomItem.author}\n` +
-        `*Tautan:* ${randomItem.pin}`;
+        `*Judul:* ${String(chosen.title || query).trim().slice(0, 200)}\n` +
+        `*Pinner:* ${chosen.author || "-"}\n` +
+        `*Tautan:* ${chosen.pin || "-"}\n` +
+        `*Hasil:* ${results.length} pin`;
 
       await sock.sendMessage(msg.key.remoteJid, { image: imgBuffer, caption }, { quoted: msg });
     } catch (err) {

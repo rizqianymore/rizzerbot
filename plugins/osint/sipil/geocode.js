@@ -6,6 +6,7 @@ export default {
   description:
     "Konversi alamat atau nama tempat menjadi koordinat geolokasi (Latitude & Longitude) dan kirim lokasi pin map",
   usage: "<nama tempat atau alamat lengkap> (contoh: .geocode Monas Jakarta)",
+  premiumOnly: false,
   category: "OSINT",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

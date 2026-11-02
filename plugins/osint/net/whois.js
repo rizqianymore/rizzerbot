@@ -1,4 +1,4 @@
-import { getWhois } from "@/src/services/network/network.js";
+import { getWhois, cleanDomain } from "@/src/services/network/network.js";
 
 export default {
   name: "whois",
@@ -9,12 +9,13 @@ export default {
   cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping }) => {
-    await sendTyping();
-    const domain = args[0];
-    if (!domain) {
+    const raw = (args || []).join(" ").trim() || args[0];
+    if (!raw) {
       return reply("Masukkan nama domain! Contoh: *.whois openai.com*");
     }
-
+    const domain = cleanDomain(raw);
+    if (!domain) return reply("Domain tidak valid! Contoh: *.whois openai.com*");
+    await sendTyping();
     await reply(`Memeriksa data WHOIS untuk *${domain}*...`);
 
     try {

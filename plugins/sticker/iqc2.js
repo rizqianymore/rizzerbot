@@ -4,6 +4,7 @@ export default {
   description: "Maker iPhone quoted chat via deline API",
   usage: "<teks>|<chatTime>|<statusBarTime>",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     const text = args.join(" ").trim();
@@ -24,6 +25,7 @@ export default {
     const autoTime = now.toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Jakarta",
     });
 
     const chatTime = rawChatTime ? rawChatTime.trim() : autoTime;

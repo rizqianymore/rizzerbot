@@ -2,9 +2,11 @@ import { getMediaBuffer, createSticker, findDownloadableTarget } from "@/src/ser
 
 export default {
   name: "stickernowm",
+  aliases: ["snowm", "swm"],
   description: "Create sticker without watermark (support gambar & video)",
   usage: "[teks atas | bawah] (reply gambar/video)",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Premium",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
@@ -26,7 +28,7 @@ export default {
     }
 
     try {
-      const stickerBuffer = await createSticker(buffer, { pack: "", author: "", topText, bottomText });
+      const stickerBuffer = await createSticker(buffer, { topText, bottomText });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       await reply(`Gagal membuat stiker: ${err.message}`);

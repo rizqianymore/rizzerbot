@@ -36,8 +36,10 @@ export default {
           title = res.data.result.title || "";
           artist = res.data.result.artist || "";
           const dlRes = await axios.get(downloadUrl, { responseType: "arraybuffer", timeout: 30000 });
-          if (dlRes.data && dlRes.data.length > 0) {
-            audioBuffer = Buffer.from(dlRes.data);
+          const raw = dlRes.data;
+          const len = raw ? (raw.byteLength ?? raw.length ?? 0) : 0;
+          if (len > 0) {
+            audioBuffer = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
           }
         }
       } catch (err) {

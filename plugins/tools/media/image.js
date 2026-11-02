@@ -19,14 +19,26 @@ export default {
     await reply(`Mengunduh gambar untuk *"${query}"*...`);
 
     try {
-      const results = await scrapeWebImages(query, 10);
+      const results = await scrapeWebImages(query, 15);
       if (!results?.length) return reply("Gambar tidak ditemukan untuk kata kunci tersebut.");
-      const randomItem = results[Math.floor(Math.random() * results.length)];
-      if (!randomItem?.url) return reply("Gambar tidak ditemukan untuk kata kunci tersebut.");
-
-      const imgBuffer = await fetchBuffer(randomItem.url, { redirect: "follow" });
+      // try up to 3 random images with fallback
+      let imgBuffer = null;
+      let chosen = null;
+      const shuffled = [...results].sort(() => Math.random() - 0.5);
+      for (const item of shuffled.slice(0, 3)) {
+        try {
+          if (!item?.url) continue;
+          const buf = await fetchBuffer(item.url, { redirect: "follow", timeout: 15000, maxBytes: 10 * 1024 * 1024 });
+          if (buf && buf.length > 1000) {
+            imgBuffer = buf;
+            chosen = item;
+            break;
+          }
+        } catch (_) {}
+      }
+      if (!imgBuffer || !chosen) return reply("Gagal mengunduh gambar, coba kata kunci lain.");
       const caption =
-        `*WEB IMAGE SEARCH*\n\n` + `*Judul:* ${randomItem.title}\n` + `*Sumber:* ${randomItem.source || "-"}`;
+        `*WEB IMAGE SEARCH*\n\n` + `*Judul:* ${chosen.title}\n` + `*Sumber:* ${chosen.source || "-"}\n` + `*Hasil:* ${results.length} ditemukan`;
 
       await sock.sendMessage(msg.key.remoteJid, { image: imgBuffer, caption }, { quoted: msg });
     } catch (err) {
