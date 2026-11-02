@@ -33,10 +33,10 @@ function stripHtml(html) {
     .replace(/<\/div>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
-    .replace(/&/g, "&")
-    .replace(/</g, "<")
-    .replace(/>/g, ">")
-    .replace(/"/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
@@ -240,12 +240,12 @@ export async function getDetail(produkId) {
   }
 }
 
-export function formatResults(query, result, startTime) {
+export function formatResults(query, result, startTime, category = "nomor_izin_edar") {
   const latency = (Date.now() - startTime).toFixed(0);
   const { data, total, filtered } = result;
 
   if (data.length === 0) {
-    return `🔍 *CEK INFO ALKES/PKRT*\n\nQuery: \`${query}\`\nKategori: \`${categoryLabel(query)}\`\n\n❌ Tidak ditemukan data.\n\n_Query: ${latency} ms_`;
+    return `🔍 *CEK INFO ALKES/PKRT*\n\nQuery: \`${query}\`\nKategori: \`${categoryLabel(category)}\`\n\n❌ Tidak ditemukan data.\n\n_Query: ${latency} ms_`;
   }
 
   const displayed = data.slice(0, 10);
@@ -273,7 +273,21 @@ export function formatResults(query, result, startTime) {
   return text;
 }
 
-function categoryLabel(_query) {
-
-  return "Semua";
+const KAT_LABEL = {
+  nomor_izin_edar: "Nomor Izin Edar",
+  nama_produk: "Nama Produk",
+  pendaftar: "Pendaftar",
+  tipe: "Tipe",
+  produsen: "Produsen",
+  jenis_produk: "Jenis Produk",
+};
+function categoryLabel(cat) {
+  if (!cat) return "Semua";
+  const k = String(cat).toLowerCase().trim();
+  if (KAT_LABEL[k]) return KAT_LABEL[k];
+  // reverse lookup by value
+  for (const [key, val] of Object.entries(KAT_PENCARIAN)) {
+    if (val === k) return KAT_LABEL[key] || key;
+  }
+  return String(cat);
 }

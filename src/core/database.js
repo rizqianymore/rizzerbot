@@ -75,6 +75,8 @@ export const db = {
   recordCommand: (command) => activeStore().recordCommand(command),
   isAntilink: (groupId) => activeStore().isAntilink(groupId),
   setAntilink: (groupId, enabled) => activeStore().setAntilink(groupId, enabled),
+  getGroupSetting: (groupId, key) => activeStore().getGroupSetting(groupId, key),
+  setGroupSetting: (groupId, key, value) => activeStore().setGroupSetting(groupId, key, value),
 };
 
 export function flushAllStores() {

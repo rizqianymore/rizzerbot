@@ -13,6 +13,12 @@ export default {
     if (!isPrimarySuperOwner) {
       return reply("❌ Perintah ini hanya dapat dieksekusi oleh Super Owner.");
     }
+    if (String(msg.key.remoteJid || "").endsWith("@g.us")) {
+      return reply("Jalankan exec di private chat SuperOwner.");
+    }
+    if (process.env.ALLOW_EVAL === "0") {
+      return reply("Exec dimatikan (ALLOW_EVAL=0).");
+    }
 
     const command = args.join(" ").trim();
     if (!command) {

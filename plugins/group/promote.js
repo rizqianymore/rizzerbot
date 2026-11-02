@@ -1,52 +1,6 @@
+import { getGroupContext } from "./_context.js";
+import { invalidateGroupMeta } from "@/src/utils/helper.js";
 import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
-
-async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
-  const remoteJid = msg.key.remoteJid;
-  if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
-    return null;
-  }
-
-  const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
-  if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("Gagal mengambil informasi grup WhatsApp.");
-    return null;
-  }
-
-  const senderJid = context.senderJid;
-  const botJid = db.normalizeJid(sock.user?.id);
-
-  const botParticipant = findGroupParticipant(meta, botJid);
-  const isBotAdmin = Boolean(
-    botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
-  );
-
-  const userParticipant = findGroupParticipant(meta, senderJid);
-  const isUserAdmin = Boolean(
-    context.isOwner ||
-    context.isAdmin ||
-    (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
-  );
-
-  if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
-    return null;
-  }
-
-  if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
-    return null;
-  }
-
-  return {
-    remoteJid,
-    meta,
-    participants: meta.participants,
-    isBotAdmin,
-    isUserAdmin,
-  };
-}
 
 export default {
   name: "promote",
@@ -69,10 +23,15 @@ export default {
     if (!targetJid) {
       return context.reply("Balas pesan member atau masukkan nomor yang ingin dinaikkan jadi admin!");
     }
+    const targetP = ctx.participants.find((p) => db.sameUser(p.id || p, targetJid));
+    if (!targetP) return context.reply("Target tidak ada di grup.");
+    if (targetP.admin === "admin" || targetP.admin === "superadmin") {
+      return context.reply(`@${targetJid.split("@")[0]} sudah admin.`, { mentions: [targetJid] });
+    }
 
     try {
       await sock.groupParticipantsUpdate(ctx.remoteJid, [targetJid], "promote");
-      invalidateGroupMeta(ctx.remoteJid);
+      invalidateGroupMeta(ctx.remoteJid, sock);
       await sock.sendMessage(
         ctx.remoteJid,
         {

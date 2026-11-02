@@ -1,52 +1,6 @@
+import { getGroupContext } from "./_context.js";
+import { invalidateGroupMeta } from "@/src/utils/helper.js";
 import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, invalidateGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
-
-async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
-  const remoteJid = msg.key.remoteJid;
-  if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
-    return null;
-  }
-
-  const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
-  if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("Gagal mengambil informasi grup WhatsApp.");
-    return null;
-  }
-
-  const senderJid = context.senderJid;
-  const botJid = db.normalizeJid(sock.user?.id);
-
-  const botParticipant = findGroupParticipant(meta, botJid);
-  const isBotAdmin = Boolean(
-    botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
-  );
-
-  const userParticipant = findGroupParticipant(meta, senderJid);
-  const isUserAdmin = Boolean(
-    context.isOwner ||
-    context.isAdmin ||
-    (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
-  );
-
-  if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
-    return null;
-  }
-
-  if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
-    return null;
-  }
-
-  return {
-    remoteJid,
-    meta,
-    participants: meta.participants,
-    isBotAdmin,
-    isUserAdmin,
-  };
-}
 
 export default {
   name: "add",
@@ -72,15 +26,30 @@ export default {
 
     try {
       const response = await sock.groupParticipantsUpdate(ctx.remoteJid, [targetJid], "add");
-      invalidateGroupMeta(ctx.remoteJid);
+      invalidateGroupMeta(ctx.remoteJid, sock);
 
       const status = response?.[0]?.status;
       if (status === "403" || status === "408") {
-        const code = await sock.groupInviteCode(ctx.remoteJid);
-        const inviteUrl = `https://chat.whatsapp.com/${code}`;
-        await context.reply(
-          `Tidak dapat menambahkan @${targetJid.split("@")[0]} secara langsung karena pengaturan privasinya.\n\nSilakan bagikan tautan undangan ini ke user:\n${inviteUrl}`
-        );
+        const code = await sock.groupInviteCode(ctx.remoteJid).catch(() => null);
+        if (code) {
+          const inviteUrl = `https://chat.whatsapp.com/${code}`;
+          // coba DM, fallback ke grup
+          try {
+            await sock.sendMessage(targetJid, {
+              text: `Kamu diundang ke grup *${ctx.meta.subject}*\n${inviteUrl}`,
+            });
+            await context.reply(`Undangan dikirim via DM ke @${targetJid.split("@")[0]} (privasi ketat).`, {
+              mentions: [targetJid],
+            });
+          } catch {
+            await context.reply(
+              `Tidak dapat add @${targetJid.split("@")[0]} (privasi). Share link ini:\n${inviteUrl}`,
+              { mentions: [targetJid] }
+            );
+          }
+        } else {
+          await context.reply(`Gagal buat invite link.`);
+        }
       } else if (status === "409") {
         await context.reply(`User @${targetJid.split("@")[0]} sudah berada di dalam grup.`);
       } else {

@@ -109,8 +109,32 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
   });
 }
 
+export function attachWelcomeHandler(sock) {
+  sock.ev.on("group-participants.update", async (update) => {
+    try {
+      const jid = update?.id;
+      if (!jid || !jid.endsWith("@g.us")) return;
+      if (!db.getGroupSetting?.(jid, "welcome")) return;
+      const action = update.action;
+      if (action !== "add") return;
+      const participants = Array.isArray(update.participants) ? update.participants : [];
+      if (!participants.length) return;
+      const meta = await sock.groupMetadata(jid).catch(() => null);
+      const subject = meta?.subject || jid;
+      for (const p of participants) {
+        const num = String(p || "").split("@")[0];
+        const text = `Halo @${num} 👋\nSelamat datang di *${subject}*!\nBaca deskripsi grup ya.`;
+        try {
+          await sock.sendMessage(jid, { text, mentions: [p] });
+        } catch (_) {}
+      }
+    } catch (_) {}
+  });
+}
+
 export function attachMessageHandler(sock) {
   attachEchoTracker(sock);
+  attachWelcomeHandler(sock);
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;

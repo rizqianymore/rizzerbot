@@ -1,52 +1,5 @@
-import { db } from "@/src/core/database.js";
-import { getCachedGroupMeta, findGroupParticipant } from "@/src/utils/helper.js";
-
-async function getGroupContext(sock, msg, context, { requireUserAdmin = true, requireBotAdmin = false } = {}) {
-  const remoteJid = msg.key.remoteJid;
-  if (!remoteJid || !remoteJid.endsWith("@g.us")) {
-    await context.reply("Perintah ini hanya dapat digunakan di dalam grup!");
-    return null;
-  }
-
-  const meta = (await getCachedGroupMeta(sock, remoteJid)) || (await sock.groupMetadata(remoteJid).catch(() => null));
-  if (!meta || !Array.isArray(meta.participants)) {
-    await context.reply("Gagal mengambil informasi grup WhatsApp.");
-    return null;
-  }
-
-  const senderJid = context.senderJid;
-  const botJid = db.normalizeJid(sock.user?.id);
-
-  const botParticipant = findGroupParticipant(meta, botJid);
-  const isBotAdmin = Boolean(
-    botParticipant && (botParticipant.admin === "admin" || botParticipant.admin === "superadmin")
-  );
-
-  const userParticipant = findGroupParticipant(meta, senderJid);
-  const isUserAdmin = Boolean(
-    context.isOwner ||
-    context.isAdmin ||
-    (userParticipant && (userParticipant.admin === "admin" || userParticipant.admin === "superadmin"))
-  );
-
-  if (requireUserAdmin && !isUserAdmin) {
-    await context.reply("Fitur ini hanya untuk Admin Grup, Admin Bot, atau Owner Bot!");
-    return null;
-  }
-
-  if (requireBotAdmin && !isBotAdmin) {
-    await context.reply("Jadikan bot sebagai Admin grup terlebih dahulu untuk menggunakan fitur ini!");
-    return null;
-  }
-
-  return {
-    remoteJid,
-    meta,
-    participants: meta.participants,
-    isBotAdmin,
-    isUserAdmin,
-  };
-}
+import { getGroupContext } from "./_context.js";
+import { invalidateGroupMeta } from "@/src/utils/helper.js";
 
 export default {
   name: "group",
@@ -66,16 +19,25 @@ export default {
     if (!ctx) return;
 
     const action = (args[0] || "").toLowerCase();
-    if (action === "open" || action === "buka") {
-      await sock.groupSettingUpdate(ctx.remoteJid, "not_announcement");
-      await context.reply("*GRUP BERHASIL DIBUKA!* Semua member sekarang dapat mengirim pesan.");
-    } else if (action === "close" || action === "tutup") {
-      await sock.groupSettingUpdate(ctx.remoteJid, "announcement");
-      await context.reply("*GRUP BERHASIL DITUTUP!* Hanya admin yang dapat mengirim pesan.");
-    } else {
-      await context.reply(
-        "Perintah tidak valid! Gunakan: *.group open* (buka grup) atau *.group close* (tutup grup)"
-      );
+    const isAnnounce = Boolean(ctx.meta.announce);
+    try {
+      if (action === "open" || action === "buka") {
+        if (!isAnnounce) return context.reply("Grup sudah dalam keadaan terbuka.");
+        await sock.groupSettingUpdate(ctx.remoteJid, "not_announcement");
+        invalidateGroupMeta(ctx.remoteJid, sock);
+        await context.reply("*GRUP BERHASIL DIBUKA!* Semua member sekarang dapat mengirim pesan.");
+      } else if (action === "close" || action === "tutup") {
+        if (isAnnounce) return context.reply("Grup sudah dalam keadaan tertutup.");
+        await sock.groupSettingUpdate(ctx.remoteJid, "announcement");
+        invalidateGroupMeta(ctx.remoteJid, sock);
+        await context.reply("*GRUP BERHASIL DITUTUP!* Hanya admin yang dapat mengirim pesan.");
+      } else {
+        await context.reply(
+          "Perintah tidak valid! Gunakan: *.group open* (buka grup) atau *.group close* (tutup grup)"
+        );
+      }
+    } catch (err) {
+      await context.reply(`Gagal mengubah pengaturan grup: ${err?.message || err}`);
     }
   },
 };

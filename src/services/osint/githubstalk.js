@@ -38,6 +38,55 @@ function fmtDate(iso) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
+async function scrapeGithubProfile(username) {
+  try {
+    const html = await request.text(`https://github.com/${encodeURIComponent(username)}`, {
+      timeout: 15000,
+      headers: { Accept: "text/html" },
+    });
+    if (!html || typeof html !== "string") return null;
+    if (html.includes("404") && html.includes("This is not the web page you are looking for")) return { notFound: true };
+    // basic existence check: look for meta property og:title or profile
+    if (html.toLowerCase().includes("not found") && html.length < 5000) {
+      // heuristic, try also check title
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (titleMatch && /not found/i.test(titleMatch[1])) return { notFound: true };
+    }
+    const extract = (re) => {
+      const m = html.match(re);
+      return m ? m[1].trim().replace(/\s+/g, " ").slice(0, 200) : "-";
+    };
+    const name = extract(/<span[^>]*class="[^"]*p-name[^"]*"[^>]*>([^<]+)<\/span>/i) || username;
+    const bio = extract(/<div[^>]*class="[^"]*p-note[^"]*"[^>]*>([\s\S]*?)<\/div>/i).replace(/<[^>]+>/g, " ").trim() || "-";
+    const followers = extract(/<span[^>]*class="[^"]*text-bold[^"]*"[^>]*>(\d[\d,.]*)<\/span>\s*followers/i) || "-";
+    const following = extract(/<span[^>]*class="[^"]*text-bold[^"]*"[^>]*>(\d[\d,.]*)<\/span>\s*following/i) || "-";
+    const reposMatch = html.match(/<span[^>]*data-view-component[^>]*>(\d+)<\/span>\s*repositories/i);
+    const detail = {
+      username,
+      name: name || username,
+      bio: bio || "-",
+      company: "-",
+      location: "-",
+      email: "-",
+      blog: "-",
+      twitter: "-",
+      followers: followers === "-" ? "-" : followers,
+      following: following === "-" ? "-" : following,
+      repos: reposMatch ? reposMatch[1] : "-",
+      gists: "-",
+      created: "-",
+      updated: "-",
+      avatar: `https://github.com/${username}.png`,
+      url: `https://github.com/${username}`,
+      _free: true,
+    };
+    cacheSet(username.toLowerCase(), detail);
+    return detail;
+  } catch {
+    return null;
+  }
+}
+
 export async function getGithubProfile(username) {
   const user = String(username || "")
     .trim()
@@ -46,8 +95,11 @@ export async function getGithubProfile(username) {
   if (cached) return cached;
 
   try {
+    const headers = { Accept: "application/vnd.github+json" };
+    const token = String(process.env.GITHUB_TOKEN || "").trim();
+    if (token) headers.Authorization = `Bearer ${token}`;
     const d = await request.json(`${GITHUB_API}/${encodeURIComponent(user)}`, {
-      headers: { Accept: "application/vnd.github+json" },
+      headers,
       timeout: 10000,
     });
     const neat = (v) => {
@@ -76,8 +128,14 @@ export async function getGithubProfile(username) {
     return detail;
   } catch (err) {
     if (/HTTP 404\b/.test(err?.message || "")) return { notFound: true };
-    if (/HTTP 403\b/.test(err?.message || "")) {
-      throw new Error("limit API GitHub habis (60/jam), coba lagi nanti");
+    if (/HTTP 403\b/.test(err?.message || "") || /HTTP 429\b/.test(err?.message || "") || /limit/i.test(err?.message || "")) {
+      // fallback scraping free (tanpa token)
+      const scraped = await scrapeGithubProfile(user);
+      if (scraped) {
+        if (scraped.notFound) return { notFound: true };
+        return scraped;
+      }
+      throw new Error("limit API GitHub habis (60/jam) — coba lagi nanti atau isi GITHUB_TOKEN gratis");
     }
     throw err;
   }

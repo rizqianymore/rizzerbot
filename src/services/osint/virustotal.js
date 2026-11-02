@@ -1,8 +1,13 @@
 import crypto from "crypto";
+import { request } from "@/src/utils/request.js";
 
 const BASE = "https://www.virustotal.com/api/v3";
 const POLL_INTERVAL_MS = 15000;
 const POLL_MAX = 8;
+
+export function hasVtKey() {
+  return Boolean(String(process.env.VT_API_KEY || "").trim());
+}
 
 function apiKey() {
   const key = String(process.env.VT_API_KEY || "").trim();
@@ -10,6 +15,233 @@ function apiKey() {
     throw new Error("VT_API_KEY belum diisi. Daftar gratis di https://www.virustotal.com/ lalu isi key di .env");
   }
   return key;
+}
+
+// ============ FREE MODE (scraping, tanpa API key) ============
+async function checkUrlHaus(targetUrl) {
+  try {
+    const data = await request.post("https://urlhaus-api.abuse.ch/v1/url/", `url=${encodeURIComponent(targetUrl)}`, {
+      timeout: 15000,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      responseType: "json",
+    });
+    if (data?.query_status === "ok") {
+      return {
+        malicious: true,
+        threat: data.threat || data.url_status || "malicious",
+        tags: data.tags || [],
+        reference: data.urlhaus_reference || "",
+        raw: data,
+      };
+    }
+    if (data?.query_status === "no_results") return { malicious: false };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkUrlScan(targetUrl) {
+  try {
+    let host = targetUrl;
+    try { host = new URL(targetUrl).hostname; } catch {}
+    const data = await request.json(`https://urlscan.io/api/v1/search/?q=domain:${encodeURIComponent(host)}`, {
+      timeout: 15000,
+    });
+    const results = Array.isArray(data?.results) ? data.results : [];
+    // cari exact url match
+    const exact = results.find((r) => r?.page?.url === targetUrl || r?.page?.url?.includes(targetUrl));
+    const verdict = exact?.verdicts?.overall?.malicious === true || exact?.verdicts?.overall?.score > 0;
+    return { found: results.length > 0, malicious: verdict, count: results.length, raw: exact || null };
+  } catch {
+    return null;
+  }
+}
+
+async function checkPhishTankFree(targetUrl) {
+  try {
+    // PhishTank free check via urlhaus fallback: coba GET phishtank search page (scraping)
+    const html = await request.text(`https://checkurl.phishtank.com/checkurl/index.php?url=${encodeURIComponent(targetUrl)}`, {
+      timeout: 15000,
+    });
+    if (typeof html === "string" && /phish/i.test(html) && /verified/i.test(html)) {
+      return { maybePhish: html.toLowerCase().includes("phish") };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function scanUrlFree(targetUrl) {
+  let url = String(targetUrl || "").trim();
+  if (!url) throw new Error("URL kosong.");
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+
+  const [haus, scan] = await Promise.all([checkUrlHaus(url), checkUrlScan(url)]);
+
+  let malicious = 0;
+  let suspicious = 0;
+  let harmless = 0;
+  let undetected = 0;
+  const detections = [];
+
+  if (haus?.malicious) {
+    malicious += 1;
+    detections.push(`URLHaus (${haus.threat})`);
+    if (haus.tags?.length) detections.push(`tags: ${haus.tags.slice(0, 3).join(", ")}`);
+  } else if (haus && !haus.malicious) {
+    harmless += 1;
+  }
+
+  if (scan?.malicious) {
+    malicious += 1;
+    detections.push(`urlscan.io (verdict malicious)`);
+  } else if (scan?.found) {
+    harmless += 1;
+  }
+
+  // heuristic: jika tidak ada yang flag tapi pernah ada di urlscan -> anggap undetected
+  if (!haus && !scan) {
+    undetected = 1;
+  } else if (malicious === 0 && suspicious === 0) {
+    harmless = Math.max(harmless, 1);
+    undetected = 0;
+  }
+
+  const isClean = malicious === 0 && suspicious === 0;
+  // minimal 1 harmless jika clean
+  if (isClean && harmless === 0) harmless = 1;
+
+  return {
+    url,
+    free: true,
+    stats: { malicious, suspicious, harmless, undetected },
+    results: Object.fromEntries(detections.map((d, i) => [`free-${i}`, { category: "malicious", result: d }])),
+    detections,
+    sources: {
+      urlhaus: haus,
+      urlscan: scan,
+    },
+  };
+}
+
+async function checkMalwareBazaar(hash) {
+  try {
+    const data = await request.post("https://mb-api.abuse.ch/api/v1/", `query=get_info&hash=${encodeURIComponent(hash)}`, {
+      timeout: 15000,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      responseType: "json",
+    });
+    if (data?.query_status === "ok" && Array.isArray(data.data) && data.data.length > 0) {
+      const info = data.data[0];
+      return {
+        found: true,
+        malicious: true,
+        signature: info.signature || info.file_name || "malware",
+        tags: info.tags || [],
+        raw: info,
+      };
+    }
+    if (data?.query_status === "hash_not_found" || data?.query_status === "no_results") return { found: false, malicious: false };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkHashLookup(hash) {
+  try {
+    const data = await request.json(`https://hashlookup.circl.lu/lookup/sha256/${encodeURIComponent(hash)}`, {
+      timeout: 15000,
+    });
+    if (data?.hash) return { found: true, raw: data };
+    return { found: false };
+  } catch (e) {
+    // 404 = not found
+    if (String(e?.message || "").includes("404")) return { found: false };
+    return null;
+  }
+}
+
+async function checkVtGuiFree(hash) {
+  try {
+    // Coba scrape VT GUI tanpa key: https://www.virustotal.com/gui/file/<hash>/detection (butuh browser)
+    // fallback ke ui search endpoint yang kadang terbuka tanpa key
+    const data = await request.json(`https://www.virustotal.com/ui/files/${encodeURIComponent(hash)}`, {
+      timeout: 15000,
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
+    if (data?.data?.attributes?.last_analysis_stats) {
+      const s = data.data.attributes.last_analysis_stats;
+      return { found: true, stats: s, results: data.data.attributes.last_analysis_results, raw: data };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fileReportFree(buffer, fileName = "file") {
+  if (!Buffer.isBuffer(buffer) || !buffer.length) throw new Error("Buffer file kosong.");
+  const hash = sha256(buffer);
+  const [mb, hl, vtGui] = await Promise.all([checkMalwareBazaar(hash), checkHashLookup(hash), checkVtGuiFree(hash)]);
+
+  if (vtGui?.found) {
+    // VT GUI berhasil tanpa key -> pakai stats asli
+    return {
+      hash,
+      fileName,
+      free: true,
+      known: true,
+      stats: vtGui.stats || { malicious: 0, suspicious: 0, harmless: 0, undetected: 0 },
+      results: vtGui.results || {},
+      detections: ["VirusTotal GUI (free scrape)"],
+      sources: { vtGui, mb, hl },
+    };
+  }
+
+  if (mb?.found && mb.malicious) {
+    return {
+      hash,
+      fileName,
+      free: true,
+      known: true,
+      stats: { malicious: 1, suspicious: 0, harmless: 0, undetected: 0 },
+      results: { "MalwareBazaar": { category: "malicious", result: mb.signature } },
+      detections: [`MalwareBazaar: ${mb.signature} [${(mb.tags || []).slice(0, 3).join(", ")}]`],
+      sources: { mb, hl },
+    };
+  }
+
+  // jika hashlookup found tapi tidak malicious -> anggap known harmless
+  if (hl?.found) {
+    return {
+      hash,
+      fileName,
+      free: true,
+      known: true,
+      stats: { malicious: 0, suspicious: 0, harmless: 1, undetected: 0 },
+      results: {},
+      detections: [],
+      sources: { hl, mb },
+    };
+  }
+
+  // tidak ditemukan di free DB -> unknown (mungkin clean, perlu scan manual)
+  return {
+    hash,
+    fileName,
+    free: true,
+    known: false,
+    stats: { malicious: 0, suspicious: 0, harmless: 0, undetected: 1 },
+    results: {},
+    detections: [],
+    sources: { mb, hl },
+  };
 }
 
 async function vtFetch(path, { method = "GET", body, contentType } = {}) {

@@ -191,6 +191,17 @@ export class StoreAccess extends StoreUsers {
     this.save();
   }
 
+  getGroupSetting(groupId, key) {
+    return this.data.groupSettings?.[groupId]?.[key] ?? null;
+  }
+
+  setGroupSetting(groupId, key, value) {
+    if (!this.data.groupSettings) this.data.groupSettings = {};
+    if (!this.data.groupSettings[groupId]) this.data.groupSettings[groupId] = {};
+    this.data.groupSettings[groupId][key] = value;
+    this.save();
+  }
+
   isExternalBotJid(jid) {
     const normalized = normalizeJid(jid);
     if (!normalized) return false;

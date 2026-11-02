@@ -59,6 +59,8 @@ export class StoreBase {
       usage: isRecord(source.usage) ? source.usage : {},
       nsfw: isRecord(source.nsfw) ? source.nsfw : {},
       lidMap: isRecord(source.lidMap) ? source.lidMap : {},
+      antilink: isRecord(source.antilink) ? source.antilink : {},
+      groupSettings: isRecord(source.groupSettings) ? source.groupSettings : {},
     };
 
     if (this.data.schemaVersion !== schemaVersion) changed = true;

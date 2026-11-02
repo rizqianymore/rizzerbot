@@ -8,9 +8,9 @@ function lastMonth() {
 
 export default {
   name: "crimeuk",
-  aliases: ["ukpolice", "kejahatanuk", "policestats"],
+  aliases: ["ukpolice", "kejahatanuk", "policestats", "polisiuk", "crime-uk"],
   description: "Data kejahatan UK Police (street-level crime) berdasarkan koordinat",
-  usage: "<lat> <lng> [YYYY-MM], cth: polisi 52.6297 -1.1316 2024-01",
+  usage: "<lat> <lng> [YYYY-MM], cth: crimeuk 52.6297 -1.1316 2024-01",
   premiumOnly: true,
   cooldownMs: 5000,
   category: "OSINT",

@@ -1,8 +1,8 @@
 export default {
-  name: "polisi",
-  aliases: ["fbiwanted", "wanted", "buronan", "fbi"],
+  name: "fbiwanted",
+  aliases: ["polisi", "wanted", "buronan", "fbi", "fbiwantedlist"],
   description: "Cari buronan FBI Wanted (most wanted) berdasarkan nama",
-  usage: "<nama>, cth: polisi John | polisi Bin Laden",
+  usage: "<nama>, cth: fbiwanted John | polisi Bin Laden",
   premiumOnly: true,
   cooldownMs: 4000,
   category: "OSINT",

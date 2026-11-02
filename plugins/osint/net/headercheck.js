@@ -1,8 +1,8 @@
 export default {
-  name: "cekheader",
-  aliases: ["headercheck", "securityheaders", "cekheaders", "secscan", "httpsec"],
+  name: "headercheck",
+  aliases: ["cekheader", "securityheaders", "cekheaders", "secscan", "httpsec"],
   description: "Cek header keamanan HTTP (HSTS, CSP, X-Frame-Options, dll) untuk sebuah URL",
-  usage: "<url>, cth: cekheader https://example.com",
+  usage: "<url>, cth: headercheck https://example.com",
   premiumOnly: true,
   cooldownMs: 4000,
   category: "OSINT",
@@ -10,7 +10,7 @@ export default {
     const currentPrefix = prefix || ".";
     const raw = (args[0] || "").trim();
     if (!raw) {
-      return reply(`Masukkan URL!\nContoh: \`${currentPrefix}cekheader https://example.com\``);
+      return reply(`Masukkan URL!\nContoh: \`${currentPrefix}headercheck https://example.com\` atau \`${currentPrefix}cekheader https://example.com\``);
     }
 
     let url = raw;

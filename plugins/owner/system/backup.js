@@ -12,6 +12,9 @@ export default {
     if (!isPrimarySuperOwner) {
       return reply("Perintah backup hanya dapat dijalankan oleh SuperOwner Bot Utama.");
     }
+    if (String(msg.key.remoteJid || "").endsWith("@g.us")) {
+      return reply("Jalankan .backup di private chat SuperOwner. File berisi creds, jangan kirim ke grup.");
+    }
     await sendTyping();
     await reply("Menyiapkan arsip backup...");
     try {

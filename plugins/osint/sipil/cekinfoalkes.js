@@ -70,7 +70,7 @@ export default {
 
     try {
       const result = await searchInfoAlkes(query, category);
-      return reply(formatResults(query, result, startTime));
+      return reply(formatResults(query, result, startTime, category));
     } catch (err) {
       return reply(`Gagal memeriksa: ${err.message}`);
     }

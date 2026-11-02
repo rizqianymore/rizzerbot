@@ -14,6 +14,9 @@ export default {
     if (!isPrimarySuperOwner) {
       return reply("Perintah restore hanya dapat dijalankan oleh SuperOwner Bot Utama.");
     }
+    if (String(msg.key.remoteJid || "").endsWith("@g.us")) {
+      return reply("Jalankan .restore di private chat SuperOwner, reply file backup .tar.gz.");
+    }
     const target = findDownloadableTarget(msg);
     if (!target) {
       return reply("Reply file backup (.tar.gz) dari perintah backup.\nGunakan: reply file lalu ketik `.restore`");
