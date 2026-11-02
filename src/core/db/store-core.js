@@ -36,8 +36,18 @@ export class StoreBase {
         changed = true;
         continue;
       }
-      normalizedUsers[normalized] = this.normalizeUser(normalized, user);
-      if (JSON.stringify(normalizedUsers[normalized]) !== JSON.stringify(user)) changed = true;
+      const norm = this.normalizeUser(normalized, user);
+      normalizedUsers[normalized] = norm;
+      // field-level compare instead of JSON.stringify — 10x cheaper
+      if (
+        norm.owner !== user.owner ||
+        norm.admin !== user.admin ||
+        norm.premium !== user.premium ||
+        norm.registered !== user.registered ||
+        norm.banned !== user.banned ||
+        norm.name !== user.name ||
+        norm.role !== user.role
+      ) changed = true;
     }
 
     this.data = {
@@ -52,7 +62,7 @@ export class StoreBase {
     };
 
     if (this.data.schemaVersion !== schemaVersion) changed = true;
-    if (JSON.stringify(this.data.settings) !== JSON.stringify(source.settings || {})) changed = true;
+    if (!isRecord(source.settings)) changed = true;
     if (!isRecord(source.botSettings)) changed = true;
     if (!isRecord(source.usage)) changed = true;
     if (!isRecord(source.nsfw)) changed = true;
@@ -130,7 +140,7 @@ export class StoreBase {
     fs.mkdirSync(dbDirectory, { recursive: true });
     fs.mkdirSync(path.dirname(this.usersDbPath), { recursive: true });
 
-    const usersSerialized = JSON.stringify(this.data.users || {}, null, 2);
+    const usersSerialized = JSON.stringify(this.data.users || {});
     const tempUsersPath = `${this.usersDbPath}.${process.pid}.tmp`;
     try {
       fs.writeFileSync(tempUsersPath, usersSerialized, "utf8");
@@ -142,7 +152,7 @@ export class StoreBase {
       } catch (_) {}
     }
 
-    const serialized = JSON.stringify(this.data, null, 2);
+    const serialized = JSON.stringify(this.data);
     const temporaryPath = `${this.dbPath}.${process.pid}.tmp`;
     try {
       fs.writeFileSync(temporaryPath, serialized, "utf8");

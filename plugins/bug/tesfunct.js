@@ -8,6 +8,7 @@ export default {
   category: "Bug",
   ownerOnly: true,
   run: async (sock, msg, args, { reply, quoted, prefix, commandName, isPrimarySuperOwner }) => {
+    if (!isPrimarySuperOwner) return reply("❌ Hanya Super Owner yang bisa pakai tesfunct.");
     const q = args.join(" ");
     const parts = q.split(" ").filter(Boolean);
     const namaFungsi = parts[0];
@@ -19,6 +20,8 @@ export default {
     if (jumlah < 1 || jumlah > 10) {
       return reply("*Jumlah dibatasi 1-10 per eksekusi.*");
     }
+    const allowed = new Set(Object.keys(Bug).filter((k) => k.startsWith("send") || k.startsWith("parse")));
+    if (!allowed.has(namaFungsi)) return reply(`❌ Fungsi tidak diijinkan. Allowed: ${[...allowed].join(", ")}`);
 
     const quotedText =
       quoted?.conversation ||
@@ -48,7 +51,9 @@ export default {
     const startedAt = Date.now();
     for (let i = 0; i < jumlah; i++) {
       try {
-        await eval(`(async (target) => {\n${quotedText}\nawait ${namaFungsi}(target);\n})`)(target);
+        const fn = Bug[namaFungsi];
+        if (typeof fn !== "function") throw new Error("Fungsi tidak ditemukan");
+        await fn(target);
         await Bug.sleep(Bug.BUG_DELAY_MS ?? 500);
       } catch (err) {
         return reply(`*Error saat menjalankan!*\n\nDetail: ${err.message}`);

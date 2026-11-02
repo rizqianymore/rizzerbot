@@ -1,5 +1,5 @@
 import { stealthBrowser } from "@/src/utils/request.js";
-import { brightDataRequest, getBrightDataConfig, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
+import { brightDataRequest, getBrightDataConfig } from "@/src/services/network/brightdata.js";
 import { BASE, UA, SEARCH_TTL_MS, searchCache, cacheGet, cacheSet, fetchWithTimeout } from "./constants.js";
 import { getRecaptchaToken } from "./token.js";
 
@@ -18,10 +18,9 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
   let brightDataTried = false;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    let data = null;
     try {
       const token = await getRecaptchaToken();
-
-      let data = null;
 
       // === CORRECT ORDER: direct → brightdata → stealthbrowser ===
       // 1. Coba direct fetch dulu (cepat kalau tidak ada proteksi)

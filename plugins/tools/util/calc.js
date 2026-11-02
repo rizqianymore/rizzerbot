@@ -106,6 +106,7 @@ export default {
   description: "Kalkulator aman (+ - * / % ^ kurung)",
   usage: "<ekspresi>",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, prefix }) => {
     const expr = args.join(" ").trim();
     if (!expr) {

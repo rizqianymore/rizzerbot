@@ -6,6 +6,7 @@ export default {
   description: "Mencari daftar subdomain aktif dari suatu domain",
   usage: "<domain>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

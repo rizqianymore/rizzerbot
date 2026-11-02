@@ -6,6 +6,7 @@ export default {
   description: "Gempa terkini dari BMKG + peta guncangan",
   usage: "",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
     let g = null;

@@ -7,6 +7,7 @@ export default {
   description: "Cek data kendaraan SAMSAT / info plat nomor Indonesia",
   usage: "<plat nomor / NIK>",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

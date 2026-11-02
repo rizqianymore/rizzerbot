@@ -6,6 +6,7 @@ export default {
   description: "Cek catatan DNS domain (A, AAAA, MX, NS, TXT)",
   usage: "<domain>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

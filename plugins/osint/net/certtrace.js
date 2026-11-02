@@ -7,6 +7,7 @@ export default {
   usage: "<domain, cth: example.com>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const input = (args[0] || "").trim();

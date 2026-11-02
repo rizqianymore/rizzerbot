@@ -6,6 +6,7 @@ export default {
   description: "Cek data dosen via PDDikti (nama / NIDN + detail)",
   usage: "<nama atau NIDN, cth: 2013119103>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";

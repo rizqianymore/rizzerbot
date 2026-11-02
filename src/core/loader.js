@@ -11,13 +11,14 @@ export const mediaHandlers = new Map();
 const watchers = new Map();
 
 function getFilesRecursive(dir, baseDir = dir) {
-  let results = [];
+  const results = [];
   if (!fs.existsSync(dir)) return results;
   const list = fs.readdirSync(dir, { withFileTypes: true });
   for (const file of list) {
     const fullPath = path.join(dir, file.name);
     if (file.isDirectory()) {
-      results = results.concat(getFilesRecursive(fullPath, baseDir));
+      const sub = getFilesRecursive(fullPath, baseDir);
+      for (let i = 0; i < sub.length; i++) results.push(sub[i]);
     } else if (file.isFile() && file.name.endsWith(".js")) {
       if (file.name.startsWith("_")) continue;
       results.push({
@@ -30,13 +31,14 @@ function getFilesRecursive(dir, baseDir = dir) {
 }
 
 function getDirectoriesRecursive(dir) {
-  let results = [dir];
+  const results = [dir];
   if (!fs.existsSync(dir)) return results;
   const list = fs.readdirSync(dir, { withFileTypes: true });
   for (const file of list) {
     const fullPath = path.join(dir, file.name);
     if (file.isDirectory()) {
-      results = results.concat(getDirectoriesRecursive(fullPath));
+      const sub = getDirectoriesRecursive(fullPath);
+      for (let i = 0; i < sub.length; i++) results.push(sub[i]);
     }
   }
   return results;
@@ -118,12 +120,22 @@ function debouncedReload(absolutePath, relativePath) {
   reloadDebounceTimers.set(absolutePath, timer);
 }
 
+let _updateWatchersTimer = null;
+function scheduleUpdateDirectoryWatchers() {
+  if (_updateWatchersTimer) return;
+  _updateWatchersTimer = setTimeout(() => {
+    _updateWatchersTimer = null;
+    updateDirectoryWatchers();
+  }, 500);
+  if (_updateWatchersTimer.unref) _updateWatchersTimer.unref();
+}
+
 function watchDirectory(dirPath, baseDir) {
   if (watchers.has(dirPath)) return;
 
   try {
     const watcher = fs.watch(dirPath, async (eventType, filename) => {
-      updateDirectoryWatchers();
+      scheduleUpdateDirectoryWatchers();
 
       if (filename && filename.endsWith(".js") && !filename.startsWith("_")) {
         const absolutePath = path.join(dirPath, filename);

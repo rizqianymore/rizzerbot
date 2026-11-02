@@ -6,6 +6,7 @@ export default {
   description: "Cek data perguruan tinggi via PDDikti (profil, akreditasi, prodi, rasio)",
   usage: "<nama kampus / kode PT, cth: Institut Teknologi Bandung>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";

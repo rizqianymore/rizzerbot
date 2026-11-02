@@ -7,6 +7,7 @@ export default {
   usage: "<domain atau URL, cth: kemkes.go.id>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const raw = (args[0] || "").trim();

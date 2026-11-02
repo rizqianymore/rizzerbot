@@ -7,6 +7,7 @@ const qr = {
   description: "Buat QR code dari teks (100% lokal, tanpa API)",
   usage: "<teks, maks 2000 karakter>",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const text = args.join(" ").trim();
     if (!text) {

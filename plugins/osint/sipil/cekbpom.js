@@ -7,6 +7,7 @@ export default {
   usage: "<nama produk / merk / nomor registrasi / NIE / pendaftar>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const query = (args || []).join(" ").trim();

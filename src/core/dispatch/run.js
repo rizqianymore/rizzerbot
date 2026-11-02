@@ -73,6 +73,7 @@ async function dispatchInner(sock, msg, logger) {
     }
   } catch (_) {}
 
+  const tapText = extractButtonText(msg.message) || "";
   const messageContent =
     msg.message.conversation ||
     msg.message.extendedTextMessage?.text ||
@@ -80,10 +81,8 @@ async function dispatchInner(sock, msg, logger) {
     msg.message.videoMessage?.caption ||
     msg.message.documentMessage?.caption ||
     msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
-    extractButtonText(msg.message) ||
+    tapText ||
     "";
-
-  const tapText = extractButtonText(msg.message);
   if (tapText) logger?.info?.(`[ButtonTap] ${remoteJid} -> ${tapText}`);
 
   if (await checkAntiCrash(sock, msg, logger, remoteJid, messageContent)) return;

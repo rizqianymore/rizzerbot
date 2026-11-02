@@ -6,6 +6,7 @@ export default {
   description: "Cek data mahasiswa via PDDikti (nama / NIM + detail)",
   usage: "<nama atau NIM, cth: 201311413>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";

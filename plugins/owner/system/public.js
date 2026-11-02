@@ -4,19 +4,21 @@ export default {
   name: "public",
   aliases: ["pub"],
   description: "Set bot to public mode (bisa diakses semua orang) atau private",
-  usage: "[--all]",
+  usage: "[--all | --private]",
   ownerOnly: true,
   category: "Owner",
-  run: async (sock, msg, { reply }) => {
-    const mode = args?.[0];
+  run: async (sock, msg, args, { reply }) => {
+    const mode = String(args?.[0] || "").toLowerCase();
+    const botJid = db.normalizeJid(sock.user?.id || "");
     if (mode === "--all") {
-      db?.put("botMode", "public-all");
+      db.updateBotSettings(botJid, { public: true });
       await reply("✅ Bot sekarang mode PUBLIC (semua orang bisa chat)");
     } else if (mode === "--private") {
-      db?.put("botMode", "private");
+      db.updateBotSettings(botJid, { public: false });
       await reply("✅ Bot sekarang mode PRIVATE (hanya owner)");
     } else {
-      const current = db?.get("botMode") || "private";
+      const cur = db.getBotSettings(botJid)?.public;
+      const current = cur ? "public" : "private";
       await reply(`Mode saat ini: ${current}\nGunakan \`.public --all\` untuk public atau \`.public --private\` untuk private`);
     }
   }

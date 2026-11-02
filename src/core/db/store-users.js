@@ -22,9 +22,15 @@ export class StoreUsers extends StoreBase {
   }
 
   applyConfiguredAccess(jid, user, persist = true) {
-    const before = JSON.stringify(user);
     const next = this.normalizeUser(jid, user);
-    const changed = before !== JSON.stringify(next);
+    const changed =
+      next.owner !== user.owner ||
+      next.admin !== user.admin ||
+      next.premium !== user.premium ||
+      next.registered !== user.registered ||
+      next.banned !== user.banned ||
+      next.name !== user.name ||
+      next.role !== user.role;
     if (changed) this.data.users[jid] = next;
     if (changed && persist) this.saveSoon();
     return changed;
@@ -45,7 +51,15 @@ export class StoreUsers extends StoreBase {
 
     for (const [jid, user] of Object.entries(this.data.users)) {
       const next = this.normalizeUser(jid, user);
-      if (JSON.stringify(next) !== JSON.stringify(user)) {
+      if (
+        next.owner !== user.owner ||
+        next.admin !== user.admin ||
+        next.premium !== user.premium ||
+        next.registered !== user.registered ||
+        next.banned !== user.banned ||
+        next.name !== user.name ||
+        next.role !== user.role
+      ) {
         this.data.users[jid] = next;
         changed = true;
       }

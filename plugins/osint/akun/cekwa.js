@@ -34,6 +34,7 @@ export default {
   usage: "<nomor, cth: 087812345678>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     const raw = (args[0] || "").trim();
     if (!raw) return reply("Masukkan nomor!\nContoh: *.cekwa 087812345678*");

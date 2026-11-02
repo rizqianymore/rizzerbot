@@ -15,6 +15,7 @@ export default {
   usage: "(reply media view once)",
   ownerOnly: true,
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, quoted }) => {
     await sendTyping();
 

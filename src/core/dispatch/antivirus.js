@@ -3,6 +3,10 @@ import { isGroupJid } from "./identity.js";
 import { trackCrashSender } from "./guards.js";
 import { extractButtonText } from "@/src/utils/buttons.js";
 
+const ONE_CHAR_FLOOD_RE = /^(.)\1{2500,}$/s;
+const FLOOD_RE = /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/;
+const SPACE_RE = /\s/g;
+
 export async function checkAntiCrash(sock, msg, logger, remoteJid, messageContent) {
   const _s = db.getSettings();
   if (_s.antiVirtex !== false) {
@@ -28,7 +32,7 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
       return true;
     }
 
-    if (/^(.)\1{2500,}$/s.test(messageContent.replace(/\s/g, ""))) {
+    if (messageContent.length >= LIMIT.repeatChar && ONE_CHAR_FLOOD_RE.test(messageContent.replace(SPACE_RE, ""))) {
       logger?.warn?.(`[Anti-Crash L2] Pola 1-char flood`);
       await dropInGroup();
       return true;
@@ -65,7 +69,7 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const btns = m.interactiveMessage?.nativeFlowMessage?.buttons;
     const btnCount = Array.isArray(btns) ? btns.length : 0;
     const tapPayloadTooBig = unparsedButtonTap && rawStr.length > LIMIT.rawScan;
-    const flood = rawStr.length > LIMIT.rawScan && /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/.test(rawStr);
+    const flood = rawStr.length > LIMIT.rawScan && FLOOD_RE.test(rawStr);
     if (
       crashKey ||
       flood ||

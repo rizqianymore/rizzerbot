@@ -18,16 +18,15 @@ const SUBCOMMANDS = {
   crt: "certtrace",
   kodepos: "cekkodepos",
   pos: "cekkodepos",
-  trx: "cektrx",
-  transaksi: "cektrx",
 };
 
 export default {
   name: "cek",
   aliases: [],
-  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/cert/kodepos/trx",
+  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/cert/kodepos",
   usage: "<sub> <query>, cth: cek nim 201311413",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, ctx) => {
     const { reply, prefix } = ctx;
@@ -37,7 +36,7 @@ export default {
 
     if (!target) {
       return reply(
-        `Pilih sub-perintah: nim, dosen, nis, bansos, plat, operator, cert, kodepos, trx\n` +
+        `Pilih sub-perintah: nim, dosen, nis, bansos, plat, operator, cert, kodepos\n` +
           `Contoh: \`${currentPrefix}cek nim 201311413\`, \`${currentPrefix}cek dosen 2013119103\`, \`${currentPrefix}cek cert example.com\`, \`${currentPrefix}cek kodepos Kemanggisan\``
       );
     }

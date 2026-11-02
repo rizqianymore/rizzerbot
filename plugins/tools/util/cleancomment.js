@@ -71,6 +71,7 @@ export default {
   usage: "<kode / reply pesan berisi kode>",
   category: "Tools",
   premiumOnly: true,
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
 

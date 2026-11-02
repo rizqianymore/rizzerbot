@@ -1,4 +1,4 @@
-import { brightDataRequest, getBrightDataConfig, isBrightDataEnabled } from "@/src/services/network/brightdata.js";
+import { brightDataRequest, getBrightDataConfig } from "@/src/services/network/brightdata.js";
 import { stealthBrowser } from "@/src/utils/request.js";
 import { BASE, client, newJar, storeCookies, baseHeaders } from "./client.js";
 
@@ -107,6 +107,9 @@ export async function fetchCaptchaImage(session) {
 }
 
 export async function submitNIK(session, nik, code) {
+  return submitNik(session, nik, code);
+}
+export async function submitNik(session, nik, code) {
   const body = new URLSearchParams({ _token: session.token, nik_input: nik, captcha: code }).toString();
   const res = await client.post(`${BASE}/cekbansos_nik`, body, {
     headers: baseHeaders(session.jar, {

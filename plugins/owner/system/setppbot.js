@@ -15,7 +15,7 @@ export default {
     }
 
     try {
-      const buffer = await getMediaBuffer(target);
+      const buffer = await getMediaBuffer(sock, target);
       if (!buffer || buffer.length === 0) {
         throw new Error("Gagal mengunduh gambar.");
       }

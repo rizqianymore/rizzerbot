@@ -29,6 +29,7 @@ export default {
   usage: "<nama kelurahan / kecamatan / kota / 5 digit kode>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const input = args.join(" ").trim();

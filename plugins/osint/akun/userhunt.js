@@ -7,6 +7,7 @@ export default {
   usage: "<username, cth: torvalds>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const username = (args[0] || "").trim().replace(/^@/, "");

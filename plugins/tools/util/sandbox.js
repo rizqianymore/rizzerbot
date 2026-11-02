@@ -116,6 +116,7 @@ export default {
   description: "Eksekusi kode JS/Python terisolasi (publik terbatas, SuperOwner full)",
   usage: "<--py / --js> <kode>",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid, isPrimarySuperOwner }) => {
     const isFull = Boolean(isPrimarySuperOwner);
     const currentPrefix = prefix || ".";

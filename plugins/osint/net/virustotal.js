@@ -7,6 +7,7 @@ export default {
   description: "Cek URL/file dengan 70+ antivirus via VirusTotal (butuh VT_API_KEY gratis)",
   usage: "<url> atau reply file, cth: vt https://contoh.com/x.apk",
   premiumOnly: true,
+  cooldownMs: 15000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

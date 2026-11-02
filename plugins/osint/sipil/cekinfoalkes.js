@@ -25,6 +25,7 @@ export default {
   usage: "<query> [kategori:1-6]",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const rawArgs = (args || []).join(" ").trim();

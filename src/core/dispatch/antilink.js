@@ -2,14 +2,15 @@ import { db } from "@/src/core/database.js";
 import { getCachedGroupMeta } from "@/src/utils/helper.js";
 import { isGroupJid, resolveSenderJid, findParticipant } from "./identity.js";
 
+const BASE_LINK_PATTERN = "chat\\.whatsapp\\.com\\/[A-Za-z0-9]{16,26}|whatsapp\\.com\\/channel\\/[A-Za-z0-9]+|wa\\.me\\/settings";
+const EXTRA_LINK_PATTERN = "wa\\.me\\/[0-9]{8,16}|t\\.me\\/[A-Za-z0-9_]{3,}|discord\\.(gg|com\\/invite)\\/[A-Za-z0-9]+|telegram\\.me\\/[A-Za-z0-9_]{3,}";
+const BASE_LINK_RE = new RegExp(`(${BASE_LINK_PATTERN})`, "i");
+const EXTRA_LINK_RE = new RegExp(`(${BASE_LINK_PATTERN}|${EXTRA_LINK_PATTERN})`, "i");
+
 export async function checkAntilink(sock, msg, logger, remoteJid, messageContent) {
   if (isGroupJid(remoteJid) && db.isAntilink(remoteJid)) {
-    const basePattern = `chat\\.whatsapp\\.com\\/[A-Za-z0-9]{16,26}|whatsapp\\.com\\/channel\\/[A-Za-z0-9]+|wa\\.me\\/settings`;
-    const extraPattern =
-      db.getSettings()?.antilinkExtra !== false
-        ? `|wa\\.me\\/[0-9]{8,16}|t\\.me\\/[A-Za-z0-9_]{3,}|discord\\.(gg|com\\/invite)\\/[A-Za-z0-9]+|telegram\\.me\\/[A-Za-z0-9_]{3,}`
-        : ``;
-    const linkRegex = new RegExp(`(${basePattern}${extraPattern})`, "i");
+    const extra = db.getSettings()?.antilinkExtra !== false;
+    const linkRegex = extra ? EXTRA_LINK_RE : BASE_LINK_RE;
     if (linkRegex.test(messageContent)) {
       const senderJid = resolveSenderJid(msg);
       const isOwner = db.isOwner(senderJid);

@@ -6,6 +6,7 @@ export default {
   description: "Intip profil GitHub: bio, repo, followers, email publik, lokasi",
   usage: "<username, cth: torvalds>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

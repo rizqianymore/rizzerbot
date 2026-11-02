@@ -10,7 +10,7 @@ export default {
   run: async (sock, msg, args, context) => {
     const { reply, senderJid, logger, isPrimarySuperOwner } = context;
 
-    if (!isPrimarySuperOwner && !context.isOwner) {
+    if (!isPrimarySuperOwner) {
       return reply("❌ Perintah ini hanya dapat dieksekusi oleh Super Owner.");
     }
 

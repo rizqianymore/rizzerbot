@@ -87,6 +87,7 @@ export default {
   usage: "<nama|no STR> [profesi] | [medis <nama> <profesi>] | profesi",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const rawArgs = (args || []).join(" ").trim();

@@ -7,6 +7,7 @@ export default {
   description: "Bypass / decrypt tautan Safelink & shortener ke link asli",
   usage: "<url>",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

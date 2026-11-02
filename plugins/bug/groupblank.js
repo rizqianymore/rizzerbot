@@ -12,6 +12,7 @@ export default {
   description: "Kirim bug blankclickgb double-hit ke grup via link (55 iterasi)",
   usage: "https://chat.whatsapp.com/xxxx",
   category: "Bug",
+  cooldownMs: 30000,
   ownerOnly: true,
   run: async (sock, msg, args, { reply, prefix, commandName, logger }) => {
     const q = args.join(" ").trim();

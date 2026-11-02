@@ -6,6 +6,7 @@ export default {
   description: "Cek data sekolah (SD/SMP/SMA/SMK) via Dapodik Kemendikdasmen",
   usage: "<nama sekolah / NPSN 8 digit>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";

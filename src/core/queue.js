@@ -1,11 +1,17 @@
 import { handleMessage } from "@/src/core/handler.js";
 import { db } from "@/src/core/database.js";
 
-function getTaskBotJid(sock) {
+function getSockJid(sock) {
   try {
     const jid = db.normalizeJid(sock?.user?.id || "");
     if (jid) return jid;
   } catch (_) {}
+  return "";
+}
+
+function getTaskBotJid(sock) {
+  const jid = getSockJid(sock);
+  if (jid) return jid;
   if (sock?.isSubBot && sock?.subBotNumber) {
     return db.normalizeJid(`${String(sock.subBotNumber).replace(/\D/g, "")}@s.whatsapp.net`);
   }
@@ -33,14 +39,19 @@ async function runTask(key, task, logger) {
 function pumpQueue(key, logger) {
   const queue = chatQueues.get(key);
   if (!queue) return;
-  while (queue.active < MAX_CONCURRENT_PER_CHAT && queue.tasks.length > 0) {
-    const task = queue.tasks.shift();
+  while (queue.active < MAX_CONCURRENT_PER_CHAT && queue.head < queue.tasks.length) {
+    const task = queue.tasks[queue.head++];
+    // compact array when head drifts to avoid unbounded growth
+    if (queue.head > 50 && queue.head > queue.tasks.length / 2) {
+      queue.tasks = queue.tasks.slice(queue.head);
+      queue.head = 0;
+    }
     queue.active += 1;
     runTask(key, task, logger).finally(() => {
       const q = chatQueues.get(key);
       if (!q) return;
       q.active -= 1;
-      if (q.tasks.length > 0) {
+      if (q.head < q.tasks.length) {
         if (QUEUE_DELAY_MS > 0) {
           setTimeout(() => pumpQueue(key, logger), QUEUE_DELAY_MS);
         } else {
@@ -54,11 +65,8 @@ function pumpQueue(key, logger) {
 }
 
 function getSockIdentity(sock) {
-  try {
-    const jid = db.normalizeJid(sock?.user?.id || "");
-    if (jid) return jid;
-  } catch (_) {}
-
+  const jid = getSockJid(sock);
+  if (jid) return jid;
   if (sock?.isSubBot) return `sub_${sock?.subBotNumber || "unknown"}`;
   return "main";
 }
@@ -77,18 +85,24 @@ export function enqueueMessage(sock, msg, logger) {
   if (!chatQueues.has(key)) {
     chatQueues.set(key, {
       tasks: [],
+      head: 0,
       active: 0,
     });
   }
 
   const queue = chatQueues.get(key);
-  if (queue.tasks.length >= MAX_QUEUE_PER_CHAT) {
+  const pending = queue.tasks.length - queue.head;
+  if (pending >= MAX_QUEUE_PER_CHAT) {
     if (logger) {
       logger.warn(
         `[Queue Overflow] Chat ${key} exceeded max queue capacity (${MAX_QUEUE_PER_CHAT}). Dropping oldest task.`
       );
     }
-    queue.tasks.shift();
+    queue.head++;
+    if (queue.head > 50 && queue.head > queue.tasks.length / 2) {
+      queue.tasks = queue.tasks.slice(queue.head);
+      queue.head = 0;
+    }
   }
 
   queue.tasks.push({ sock, msg });

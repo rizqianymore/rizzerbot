@@ -134,9 +134,6 @@ export function setupSubBotEvents({
           await sock.readMessages([msg.key]).catch(() => {});
         } catch (_) {}
       }
-      try {
-        recordMessage(sock, msg);
-      } catch (_) {}
       enqueueMessage(sock, msg, logger);
     }
   });

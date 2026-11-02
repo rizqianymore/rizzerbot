@@ -7,6 +7,7 @@ export default {
   description: "Cari foto dan wallpaper berkualitas tinggi dari Pinterest",
   usage: "<kata kunci>",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

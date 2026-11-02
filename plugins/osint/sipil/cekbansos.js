@@ -29,6 +29,7 @@ export default {
   description: "Cek penerima manfaat bansos Kemensos berdasarkan NIK",
   usage: "<nik16> [kode_captcha]",
   premiumOnly: true,
+  cooldownMs: 10000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid, logger }) => {
     const currentPrefix = prefix || ".";

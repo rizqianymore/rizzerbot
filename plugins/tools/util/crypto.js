@@ -35,6 +35,7 @@ export default {
   description: "Cek harga realtime cryptocurrency (USD & IDR) serta perubahan 24 jam",
   usage: "[simbol/nama koin] (contoh: .crypto btc atau .crypto sol)",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();
     const currentPrefix = prefix || ".";

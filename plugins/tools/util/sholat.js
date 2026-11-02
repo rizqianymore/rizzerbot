@@ -6,6 +6,7 @@ export default {
   description: "Jadwal sholat kota Indonesia (Kemenag RI)",
   usage: "<kota>",
   category: "Tools",
+  cooldownMs: 5000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const city = args.join(" ").trim() || "Jakarta";
     await sendTyping();

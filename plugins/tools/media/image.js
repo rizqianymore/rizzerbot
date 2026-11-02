@@ -7,6 +7,7 @@ export default {
   description: "Scrape dan cari gambar beresolusi tinggi langsung dari web",
   usage: "<kata kunci>",
   premiumOnly: true,
+  cooldownMs: 5000,
   category: "Tools",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

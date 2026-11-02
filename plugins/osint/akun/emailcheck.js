@@ -26,6 +26,7 @@ export default {
   usage: "<email, cth: target@domain.com>",
   category: "OSINT",
   premiumOnly: true,
+  cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const email = (args[0] || "").trim().toLowerCase();

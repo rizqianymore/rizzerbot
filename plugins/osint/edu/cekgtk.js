@@ -6,6 +6,7 @@ export default {
   description: "Cek data GTK / Guru SIMPKB (Nama, No. UKG, NUPTK, NIK)",
   usage: "<nama / no ukg / nuptk / nik>",
   premiumOnly: true,
+  cooldownMs: 8000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const currentPrefix = prefix || ".";

@@ -13,8 +13,13 @@ const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, keepAliveM
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_BUFFER_MAX_BYTES = 40 * 1024 * 1024;
 
+let _bdHostsCache = null;
+let _bdHostsCacheKey = "";
 function brightDataFirstHosts() {
-  return String(process.env.BRIGHTDATA_FIRST_HOSTS || "")
+  const raw = String(process.env.BRIGHTDATA_FIRST_HOSTS || "");
+  if (raw === _bdHostsCacheKey && _bdHostsCache !== null) return _bdHostsCache;
+  _bdHostsCacheKey = raw;
+  _bdHostsCache = raw
     .split(",")
     .map(
       (h) =>
@@ -25,6 +30,7 @@ function brightDataFirstHosts() {
           .split("/")[0]
     )
     .filter(Boolean);
+  return _bdHostsCache;
 }
 
 function resolveVia(url, viaOpt) {
@@ -121,7 +127,7 @@ export async function smartRequest(url, options = {}) {
       city: options.city,
     });
     const bdResult = await brightDataRequest(fullUrl, opts);
-    if (responseType === "buffer") return Buffer.from(bdResult);
+    if (responseType === "buffer") return Buffer.isBuffer(bdResult) ? bdResult : Buffer.from(bdResult);
     return bdResult;
   };
 
@@ -173,7 +179,7 @@ export async function smartRequest(url, options = {}) {
       }
       if (res.status >= 200 && res.status < 300) {
         report("direct");
-        return Buffer.from(res.data);
+        return Buffer.isBuffer(res.data) ? res.data : Buffer.from(res.data);
       }
       throw new Error(`HTTP ${res.status} saat mengunduh buffer ${url}`);
     }
@@ -252,7 +258,7 @@ export async function smartRequest(url, options = {}) {
               const bdResult = await tryBrightData();
               report("brightdata");
               if (responseType === "buffer") {
-                return Buffer.from(bdResult);
+                return Buffer.isBuffer(bdResult) ? bdResult : Buffer.from(bdResult);
               }
               return bdResult;
             } catch (_) {}
@@ -269,7 +275,7 @@ export async function smartRequest(url, options = {}) {
               try {
                 const bdLast = await tryBrightData();
                 report("brightdata");
-                if (responseType === "buffer") return Buffer.from(bdLast);
+                if (responseType === "buffer") return Buffer.isBuffer(bdLast) ? bdLast : Buffer.from(bdLast);
                 return bdLast;
               } catch (_) {}
             }
@@ -297,7 +303,7 @@ export async function smartRequest(url, options = {}) {
           });
 
           if (responseType === "buffer") {
-            return Buffer.from(secondRes.data);
+            return Buffer.isBuffer(secondRes.data) ? secondRes.data : Buffer.from(secondRes.data);
           }
           return secondRes.data;
         }
@@ -308,7 +314,7 @@ export async function smartRequest(url, options = {}) {
         }
 
         if (responseType === "buffer") {
-          return Buffer.from(res.data);
+          return Buffer.isBuffer(res.data) ? res.data : Buffer.from(res.data);
         }
         return res.data;
       } catch (err) {
