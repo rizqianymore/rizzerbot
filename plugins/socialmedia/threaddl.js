@@ -1,10 +1,11 @@
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 import { request } from "@/src/utils/request.js";
 
 export default {
   name: "threaddl",
   cooldownMs: 30000,
   aliases: ["tdl", "threads", "threadsdl"],
-  description: "Download foto dan video dari postingan Threads",
+  description: "Download foto dan video dari postingan Threads — auto convert",
   usage: "<url>",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
@@ -21,10 +22,30 @@ export default {
       );
     }
 
-    const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
+    try {
+      // unified dulu (yt-dlp + socialdownloader) — lebih stabil dari workers API
+      const { buffer, info } = await unifiedDownload(url, { mode: "video", logger });
+      if (!buffer?.length) throw new Error("Gagal ambil media Threads");
+      const mime = sniffMime(buffer);
+      const lines = ["*THREADS DOWNLOADER*"];
+      if (info?.title) lines.push(`Deskripsi: ${String(info.title).slice(0, 150)}`);
+      if (info?.uploader) lines.push(`Author: ${info.uploader}`);
+      const caption = lines.join("\n");
+      const remoteJid = msg.key.remoteJid;
+      if (mime.startsWith("image/")) {
+        await sock.sendMessage(remoteJid, { image: buffer, caption }, { quoted: msg });
+      } else {
+        await sock.sendMessage(remoteJid, { video: buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
+      }
+      return;
+    } catch (uniErr) {
+      logger?.warn?.(`[threaddl unified] ${uniErr?.message || uniErr}`);
+    }
 
-    const decodeEntities = (str = "") => {
-      return String(str || "")
+    // fallback lama: workers API hanya sebagai cadangan terakhir
+    const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
+    const decodeEntities = (str = "") =>
+      String(str || "")
         .replace(/&amp;/g, "&")
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
@@ -34,8 +55,6 @@ export default {
         .replace(/[ \t]+\n/g, "\n")
         .replace(/\n{3,}/g, "\n\n")
         .trim();
-    };
-
     const uniqueByUrl = (list = []) => {
       const seen = new Set();
       const result = [];
@@ -46,7 +65,6 @@ export default {
       }
       return result;
     };
-
     try {
       const data = await request.json(BASE_URL, {
         timeout: 20000,
@@ -66,60 +84,40 @@ export default {
       const info = data.data || {};
       const videoQualities = uniqueByUrl(info.video?.qualities || []);
       const images = uniqueByUrl(info.images?.urls || []);
-
       const mediaResults = [
         ...videoQualities.map((item) => ({ type: "video", url: item.url })),
         ...images.map((item) => ({ type: "image", url: item.url })),
       ];
-
       if (data?.success !== true || mediaResults.length === 0) {
         throw new Error(data.message || data.error || "Data API Threads kosong.");
       }
-
       const cleanDesc = decodeEntities(info.title || info.description || "");
       const lines = ["*THREADS DOWNLOADER*"];
       if (info.author) lines.push(`Author: ${info.author}`);
       if (cleanDesc) lines.push(`Deskripsi: ${cleanDesc}`);
       lines.push(`Total Media: ${mediaResults.length} file`);
       const captionText = lines.join("\n");
-
       const remoteJid = msg.key.remoteJid;
-
-      if (mediaResults.length > 1) {
-        await reply(captionText);
-        for (const item of mediaResults) {
-          if (item.type === "image") {
-            await sock.sendMessage(remoteJid, { image: { url: item.url } }, { quoted: msg });
-          } else if (item.type === "video") {
-            await sock.sendMessage(remoteJid, { video: { url: item.url }, mimetype: "video/mp4" }, { quoted: msg });
+      // buffer fetch biar kebuka, jangan url langsung
+      for (const item of mediaResults) {
+        try {
+          const buf = await request.buffer(item.url, { timeout: 25000, bypassCloudflare: "auto" });
+          const mime = sniffMime(buf);
+          if (mime.startsWith("image/")) {
+            await sock.sendMessage(remoteJid, { image: buf, caption: mediaResults.length === 1 ? captionText : "" }, { quoted: msg });
+          } else {
+            const { ensureVideoCompatible } = await import("@/src/services/fetch/downloaderCompat.js");
+            const vbuf = await ensureVideoCompatible(buf);
+            await sock.sendMessage(remoteJid, { video: vbuf, mimetype: "video/mp4", caption: mediaResults.length === 1 ? captionText : "" }, { quoted: msg });
           }
-        }
-      } else {
-        const single = mediaResults[0];
-        if (single.type === "image") {
-          await sock.sendMessage(remoteJid, { image: { url: single.url }, caption: captionText }, { quoted: msg });
-        } else {
-          await sock.sendMessage(
-            remoteJid,
-            { video: { url: single.url }, caption: captionText, mimetype: "video/mp4" },
-            { quoted: msg }
-          );
+        } catch (_) {
+          if (item.type === "image") await sock.sendMessage(remoteJid, { image: { url: item.url } }, { quoted: msg });
+          else await sock.sendMessage(remoteJid, { video: { url: item.url }, mimetype: "video/mp4" }, { quoted: msg });
         }
       }
+      if (mediaResults.length > 1) await reply(captionText);
     } catch (err) {
-      logger?.warn?.(`[threaddl] ${err.message}`);
-      try {
-        const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-        const [pInfo, dl] = await Promise.all([
-          probe(url, { timeoutMs: 20000 }).catch(() => null),
-          downloadMedia(url, { mode: "video" }),
-        ]);
-        const remoteJid = msg.key.remoteJid;
-        const caption = `*THREADS DOWNLOADER*\n\n${pInfo?.title ? `Deskripsi: ${pInfo.title}` : ""}`;
-        await sock.sendMessage(remoteJid, { video: dl.buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
-      } catch (_ytdlpErr) {
-        await reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
-      }
+      await reply(`Terjadi kesalahan saat mengunduh Threads: ${err.message}`);
     }
   },
 };

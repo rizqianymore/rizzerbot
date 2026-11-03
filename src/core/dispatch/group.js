@@ -40,7 +40,7 @@ export async function getGroupAccessError(sock, remoteJid, senderJid, cmd, acces
   return null;
 }
 
-export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
+export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot, _senderJid = "") {
 
   try {
     if (db.getKnownSubDigits().length === 0) {
@@ -61,7 +61,16 @@ export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot) {
   const considerBotJid = (rawJid) => {
     const pj = db.resolvePhoneJid(rawJid);
     if (!pj) return;
-    if (!db.isAnyBotJid(pj)) return;
+    // deteksi bot: my bots + external botNumbers (bot temen)
+    const isMyBot = db.isAnyBotJid(pj);
+    const isExternal = (() => {
+      try {
+        return db.isExternalBotJid ? db.isExternalBotJid(pj) : false;
+      } catch (_) {
+        return false;
+      }
+    })();
+    if (!isMyBot && !isExternal) return;
     const phone = pj.endsWith("@s.whatsapp.net") ? getPhoneDigits(pj) : pj;
     if (phone && seen.has(phone)) return;
     if (phone) seen.add(phone);

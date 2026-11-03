@@ -1,11 +1,10 @@
-import { downloadSocialMedia } from "@/src/services/fetch/socialdownloader.js";
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload, buildCaption, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "tiktok",
   cooldownMs: 30000,
   aliases: ["tt", "tikdl", "ttdl"],
-  description: "Download TikTok video/music (tanpa watermark)",
+  description: "Download TikTok video/music (tanpa watermark) — auto convert biar kebuka di WA",
   usage: "<url> [mp3]",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
@@ -15,66 +14,22 @@ export default {
 
     try {
       const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
-      let buffer = null;
-      let title = "";
-      let author = "";
-      let duration = "";
+      const { buffer, info } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });
+      if (!buffer?.length) throw new Error("Gagal mengunduh media TikTok.");
 
-      try {
-        const sd = await downloadSocialMedia(url, { isAudio, logger });
-        if (sd?.buffer?.length > 0) {
-          buffer = sd.buffer;
-          title = sd.info.title || "";
-          author = sd.info.author || "";
-          duration = sd.info.duration ? `${sd.info.duration}s` : "";
-        }
-      } catch (sdErr) {
-        logger?.warn?.(`[tiktok socialdownloader] ${sdErr?.message || sdErr}`);
-      }
+      const caption = buildCaption("TIKTOK", {
+        title: info?.title || "",
+        author: info?.uploader || info?.author || "",
+        duration: info?.duration || 0,
+      });
 
-      if (!buffer) {
-        try {
-          const { downloadTiktok } = await import("@/src/services/fetch/kolid.js");
-          const { fetchBuffer } = await import("@/src/services/network/scrape.js");
-          const info = await downloadTiktok(url);
-          const dlUrl = isAudio ? info?.mp3 : info?.noWatermark || info?.watermark;
-          if (dlUrl) {
-            buffer = await fetchBuffer(dlUrl, {
-              "User-Agent":
-                "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-              Referer: "https://kol.id/",
-            });
-            title = info.title || "";
-            author = info.author ? `${info.author}${info.uniqueId ? ` (@${info.uniqueId})` : ""}` : "";
-            duration = info.duration ? `${info.duration}s` : "";
-          }
-        } catch (kolErr) {
-          logger?.warn?.(`[tiktok kol.id] ${kolErr?.message || kolErr}`);
-        }
-      }
-
-      if (!buffer) {
-        const [pInfo, dl] = await Promise.all([
-          probe(url, { timeoutMs: 20000 }).catch(() => null),
-          downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
-        ]);
-        if (!dl?.buffer?.length) throw new Error("Gagal mengunduh media TikTok.");
-        buffer = dl.buffer;
-        title = pInfo?.title || "";
-        author = pInfo?.uploader || "";
-        if (pInfo?.duration) duration = `${pInfo.duration}s`;
-      }
-
-      const lines = ["*TIKTOK DOWNLOADER*"];
-      if (title) lines.push(`Judul: ${title}`);
-      if (author) lines.push(`Author: ${author}`);
-      if (duration) lines.push(`Durasi: ${duration}`);
-      const caption = lines.join("\n");
-
+      const mimetype = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await sock.sendMessage(
         msg.key.remoteJid,
         !isAudio
-          ? { video: buffer, caption, mimetype: "video/mp4" }
+          ? mimetype.startsWith("image/")
+            ? { image: buffer, caption }
+            : { video: buffer, caption, mimetype: "video/mp4" }
           : { audio: buffer, mimetype: "audio/mpeg", ptt: false },
         { quoted: msg }
       );

@@ -1,12 +1,12 @@
 import { clean, cleanText } from "@/src/services/fetch/igdl/utils.js";
-import { downloadFromKolId } from "@/src/services/fetch/igdl/providers.js";
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 import { sendImage, sendVideo } from "@/src/services/fetch/igdl/sender.js";
 
 export default {
   name: "igdl",
   cooldownMs: 30000,
   aliases: ["ig", "instagram", "instagramdl", "ig3", "igdl3", "instagram3"],
-  description: "Download video/foto Instagram",
+  description: "Download video/foto Instagram — auto deteksi & convert biar kebuka di WA",
   usage: "<url>",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
@@ -21,54 +21,47 @@ export default {
     await sendTyping();
 
     try {
+      // coba unified (socialdownloader + ytdlp) dengan auto-convert
       let res = null;
-
       try {
-        res = await downloadFromKolId(input, { timeoutMs: 25000 });
-      } catch (kolErr) {
-        logger?.warn?.(`[igdl kol.id] ${kolErr?.message || kolErr}`);
-      }
-
-      if (!res || !res.media?.length) {
-        try {
-          const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-          const info = await probe(input, { timeoutMs: 20000 }).catch(() => null);
-          const dl = await downloadMedia(input, { mode: "video" });
-          if (dl?.buffer?.length) {
-            res = {
-              username: info?.uploader || "",
-              likes: 0,
-              title: info?.title || "",
-              media: [{ type: "mp4", buffer: dl.buffer }],
-            };
-          }
-        } catch (ytdlpErr) {
-          logger?.warn?.(`[igdl ytdlp fallback] ${ytdlpErr?.message || ytdlpErr}`);
+        // untuk carousel, coba fallback manual: ytdlp kadang balikin single file, jadi tetap pakai unified untuk single
+        const { buffer, info } = await unifiedDownload(input, { mode: "video", logger });
+        if (buffer?.length) {
+          const mime = sniffMime(buffer);
+          res = {
+            username: info?.uploader || info?.author || "",
+            title: info?.title || "",
+            likes: 0,
+            media: [{ type: mime.startsWith("image/") ? "image" : "mp4", buffer }],
+          };
         }
+      } catch (uniErr) {
+        logger?.warn?.(`[igdl unified] ${uniErr?.message || uniErr}`);
       }
 
       if (!res || !res.media?.length) {
-        throw new Error("Media tidak ditemukan atau akun di-private.");
+        throw new Error("Media tidak ditemukan atau akun di-private. Coba link publik lain.");
       }
 
       const lines = ["*INSTAGRAM DOWNLOADER*"];
       if (res.username) lines.push(`Author: ${cleanText(res.username)}`);
       if (res.likes) lines.push(`Likes: ${res.likes.toLocaleString()}`);
-      if (res.title) lines.push(`Judul: ${cleanText(res.title)}`);
+      if (res.title) lines.push(`Judul: ${cleanText(res.title.slice(0, 150))}`);
       const caption = lines.join("\n");
 
+      // auto deteksi via buffer mime, bukan cuma url
       const images = [];
       const videos = [];
-
       for (const item of res.media) {
         if (item.buffer && Buffer.isBuffer(item.buffer)) {
-          if (item.type === "mp4") videos.push({ buffer: item.buffer });
-          else images.push({ buffer: item.buffer });
+          const mime = sniffMime(item.buffer);
+          if (mime.startsWith("image/")) images.push({ buffer: item.buffer });
+          else videos.push({ buffer: item.buffer });
           continue;
         }
         const mediaUrl = clean(item.url || item.video || item.image || item.thumbnail || "");
         if (!mediaUrl) continue;
-        const isVideo = item.type === "mp4" || /\.mp4(\?|$)/i.test(mediaUrl) || Boolean(item.video);
+        const isVideo = item.type === "mp4" || /\.mp4(\?|$)/i.test(mediaUrl);
         if (isVideo) videos.push({ url: mediaUrl });
         else images.push({ url: mediaUrl });
       }
@@ -80,9 +73,11 @@ export default {
           await sendImage(sock, remoteJid, msg, images[i], i === 0 ? caption : "");
         }
       }
-
       for (let i = 0; i < videos.length; i++) {
         await sendVideo(sock, remoteJid, msg, videos[i], images.length === 0 && i === 0 ? caption : "");
+      }
+      if (images.length === 0 && videos.length === 0) {
+        throw new Error("Media Instagram kosong setelah deteksi.");
       }
     } catch (e) {
       logger?.warn?.(`[igdl] ${e?.message || e}`);

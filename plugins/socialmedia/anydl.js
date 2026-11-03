@@ -1,11 +1,10 @@
-import { downloadSocialMedia } from "@/src/services/fetch/socialdownloader.js";
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "anydl",
   cooldownMs: 30000,
   aliases: ["yoink", "dl", "down", "get"],
-  description: "Universal Downloader (YouTube, IG, TikTok, X/Twitter, FB, Threads, Reddit) dengan bypass Cloudflare & BrightData",
+  description: "Universal Downloader — auto deteksi platform & auto convert biar kebuka",
   usage: "<url> [mp3]",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
@@ -24,67 +23,34 @@ export default {
     const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
 
     try {
-      let buffer = null;
-      let info = null;
-      let sourceName = "";
-
-      try {
-        const sd = await downloadSocialMedia(url, { isAudio, logger });
-        if (sd?.buffer?.length > 0) {
-          buffer = sd.buffer;
-          info = {
-            title: sd.info.title,
-            uploader: sd.info.author,
-            duration: sd.info.duration,
-            extractor_key: sd.info.platform,
-          };
-          sourceName = "SocialDownloader";
-        }
-      } catch (sdErr) {
-        logger?.warn?.(`[anydl socialdownloader] ${sdErr?.message || sdErr}`);
-      }
-
-      if (!buffer) {
-        try {
-          const [meta, dl] = await Promise.all([
-            probe(url, { timeoutMs: 20000 }).catch((err) => {
-              logger?.warn?.(`[anydl probe] ${err?.message || err}`);
-              return null;
-            }),
-            downloadMedia(url, {
-              mode: isAudio ? "audio" : "video",
-              quality: "720",
-            }),
-          ]);
-          if (dl?.buffer && dl.buffer.length > 0) {
-            buffer = dl.buffer;
-            info = meta;
-            sourceName = "yt-dlp";
-          }
-        } catch (ytdlErr) {
-          logger?.warn?.(`[anydl ytdlp] ${ytdlErr?.message || ytdlErr}`);
-        }
-      }
-
-      if (!buffer) {
-        throw new Error("Gagal mengunduh media dari semua provider (SocialDownloader & yt-dlp).");
-      }
+      const { buffer, info, source } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });
+      if (!buffer?.length) throw new Error("Gagal mengunduh media.");
 
       const lines = ["*DOWNLOADER*"];
-      if (info?.extractor_key) lines.push(`Platform: ${info.extractor_key}`);
-      if (info?.title) lines.push(`Judul: ${info.title}`);
-      if (info?.uploader || info?.channel) lines.push(`Author: ${info.uploader || info.channel}`);
+      if (info?.extractor_key || info?.platform) lines.push(`Platform: ${info.extractor_key || info.platform}`);
+      if (info?.title) lines.push(`Judul: ${String(info.title).slice(0, 150)}`);
+      if (info?.uploader || info?.channel || info?.author) lines.push(`Author: ${info.uploader || info.channel || info.author}`);
       if (info?.duration) {
-        const mins = Math.floor(info.duration / 60);
-        const secs = Math.floor(info.duration % 60);
-        lines.push(`Durasi: ${mins}m ${secs}s`);
+        const d = Number(info.duration);
+        if (Number.isFinite(d) && d > 0) {
+          const mins = Math.floor(d / 60);
+          const secs = Math.floor(d % 60);
+          lines.push(`Durasi: ${mins}m ${secs}s`);
+        }
       }
-      if (sourceName) lines.push(`Engine: ${sourceName}`);
+      if (source) lines.push(`Engine: ${source}`);
       const caption = lines.join("\n");
+      const mimetype = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : { video: buffer, caption, mimetype: "video/mp4" },
+        isAudio
+          ? { audio: buffer, mimetype: "audio/mpeg" }
+          : mimetype.startsWith("image/")
+            ? { image: buffer, caption }
+            : mimetype.startsWith("audio/")
+              ? { audio: buffer, mimetype: "audio/mpeg" }
+              : { video: buffer, caption, mimetype: "video/mp4" },
         { quoted: msg }
       );
     } catch (err) {

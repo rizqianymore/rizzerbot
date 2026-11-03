@@ -1,10 +1,10 @@
-import { downloadSocialMedia } from "@/src/services/fetch/socialdownloader.js";
+import { unifiedDownload, buildCaption, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "fbdl",
   cooldownMs: 30000,
   aliases: ["facebookdl", "fbdown", "fbvideo"],
-  description: "Download video dari Facebook (postingan, reels, watch)",
+  description: "Download video dari Facebook — auto convert biar kebuka di WA",
   usage: "<url> [mp3]",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
@@ -16,37 +16,22 @@ export default {
     }
     try {
       const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
-      let dl = null;
-      let pInfo = null;
+      const { buffer, info } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });
+      if (!buffer?.length) throw new Error("Gagal mengunduh media Facebook.");
 
-      try {
-        const sd = await downloadSocialMedia(url, { isAudio, logger });
-        if (sd?.buffer?.length) {
-          dl = { buffer: sd.buffer };
-          pInfo = { title: sd.info.title, uploader: sd.info.author, duration: sd.info.duration };
-        }
-      } catch (sdErr) {
-        logger?.warn?.(`[fbdl socialdownloader] ${sdErr?.message}`);
-      }
-      if (!dl) {
-        const { downloadMedia, probe } = await import("@/src/services/fetch/ytdlp.js");
-        [pInfo, dl] = await Promise.all([
-          probe(url, { timeoutMs: 20000 }).catch(() => null),
-          downloadMedia(url, { mode: isAudio ? "audio" : "video" }),
-        ]);
-      }
-      const lines = ["*FACEBOOK DOWNLOADER*"];
-      const title = pInfo?.title || "";
-      const author = pInfo?.uploader || "";
-      if (title) lines.push(`Judul: ${title}`);
-      if (author) lines.push(`Author: ${author}`);
-      if (pInfo?.duration) lines.push(`Durasi: ${pInfo.duration}s`);
-
+      const caption = buildCaption("FACEBOOK", {
+        title: info?.title || "",
+        author: info?.uploader || info?.author || "",
+        duration: info?.duration || 0,
+      });
+      const mimetype = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await sock.sendMessage(
         msg.key.remoteJid,
         !isAudio
-          ? { video: dl.buffer, caption: lines.join("\n"), mimetype: "video/mp4" }
-          : { audio: dl.buffer, mimetype: "audio/mpeg", ptt: false },
+          ? mimetype.startsWith("image/")
+            ? { image: buffer, caption }
+            : { video: buffer, caption, mimetype: "video/mp4" }
+          : { audio: buffer, mimetype: "audio/mpeg", ptt: false },
         { quoted: msg }
       );
     } catch (err) {

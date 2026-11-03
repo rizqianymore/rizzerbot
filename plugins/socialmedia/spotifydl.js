@@ -1,11 +1,10 @@
-import axios from "axios";
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "spotifydl",
   cooldownMs: 30000,
   aliases: ["spdl", "spotify", "spotdl", "spotify-dl"],
-  description: "Unduh lagu dari Spotify (via direct API & YouTube Music engine)",
+  description: "Unduh lagu dari Spotify — via yt-dlp audio engine (tanpa API sulit)",
   usage: "<url>",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
@@ -23,54 +22,17 @@ export default {
     }
 
     try {
-      let audioBuffer = null;
-      let title = "";
-      let artist = "";
-
-      try {
-        const apiUrl = `https://api.nexray.eu.cc/downloader/spotify?url=${encodeURIComponent(text)}`;
-        const res = await axios.get(apiUrl, { timeout: 15000 });
-        if (res.data?.status && res.data?.result?.url) {
-          const downloadUrl = res.data.result.url;
-          title = res.data.result.title || "";
-          artist = res.data.result.artist || "";
-          const dlRes = await axios.get(downloadUrl, { responseType: "arraybuffer", timeout: 30000 });
-          const raw = dlRes.data;
-          const len = raw ? (raw.byteLength ?? raw.length ?? 0) : 0;
-          if (len > 0) {
-            audioBuffer = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
-          }
-        }
-      } catch (err) {
-        logger?.warn?.(`[spotifydl api] ${err?.message || err}`);
-      }
-
-      if (!audioBuffer) {
-        try {
-          const info = await probe(text, { timeoutMs: 25000 }).catch(() => null);
-          const trackTitle = info?.title || "Spotify Track";
-          const dl = await downloadMedia(text, { mode: "audio" });
-          if (dl?.buffer?.length > 0) {
-            audioBuffer = dl.buffer;
-            title = trackTitle;
-            artist = info?.uploader || "Spotify";
-          }
-        } catch (ytdlErr) {
-          logger?.warn?.(`[spotifydl ytdlp] ${ytdlErr?.message || ytdlErr}`);
-        }
-      }
-
-      if (!audioBuffer) {
-        throw new Error("Gagal mengambil audio Spotify dari semua engine.");
-      }
-
-      const filename = `${artist || "Spotify"} - ${title || "Audio"}.mp3`;
-      const remoteJid = msg.key.remoteJid;
+      // HAPUS api.nexray yang sering down — langsung yt-dlp (support spotify -> youtube search)
+      const { buffer, info } = await unifiedDownload(text, { mode: "audio", logger });
+      if (!buffer?.length) throw new Error("Gagal mengambil audio Spotify.");
+      const title = info?.title || "Spotify Track";
+      const artist = info?.uploader || "Spotify";
+      const filename = `${artist} - ${title}.mp3`;
 
       await sock.sendMessage(
-        remoteJid,
+        msg.key.remoteJid,
         {
-          audio: audioBuffer,
+          audio: buffer,
           mimetype: "audio/mpeg",
           fileName: filename.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80),
           ptt: false,
