@@ -1,4 +1,4 @@
-import { generateDynamicQris, createQrisBuffer } from "@/src/services/finance/qris.js";
+import { convertQRIS, parseQRISInfo, createQrisBuffer } from "@/src/services/finance/qris.js";
 
 export default {
   name: "qris",
@@ -16,7 +16,7 @@ export default {
         "*QRIS DINAMIS*\n\n" +
           "Format: `.qris <nominal>`\n" +
           "Contoh: `.qris 50000`\n\n" +
-          "Fitur ini mengubah QRIS statis menjadi QRIS dinamis sehingga nominal pembayaran otomatis terkunci dan pembeli tidak salah transfer."
+          "Fitur ini mengubah QRIS statis menjadi QRIS dinamis berbasis EMVCo TLV parsing sehingga nominal pembayaran otomatis terkunci dan pembeli tidak salah transfer."
       );
     }
 
@@ -25,13 +25,14 @@ export default {
       return reply(
         "[!] Pengaturan QRIS belum lengkap.\n" +
           "Owner belum memasang `QRIS_STATIC_PAYLOAD` di file `.env`.\n\n" +
-          "Hubungi owner bot untuk mengonfigurasi kode string QRIS statis toko/bot."
+          "Hubungi owner bot untuk mengonfigurasi string QRIS statis toko/bot."
       );
     }
 
     try {
       const amount = Number(rawAmount);
-      const dynamicPayload = generateDynamicQris(staticQris, amount);
+      const dynamicPayload = convertQRIS(staticQris, { amount });
+      const info = parseQRISInfo(staticQris);
       const qrBuffer = await createQrisBuffer(dynamicPayload);
 
       const formattedNominal = new Intl.NumberFormat("id-ID", {
@@ -42,6 +43,8 @@ export default {
 
       const caption =
         "*QRIS PEMBAYARAN DINAMIS*\n\n" +
+        `• Merchant: *${info.merchantName}*\n` +
+        `• Kota: ${info.merchantCity}\n` +
         `• Nominal: *${formattedNominal}*\n` +
         `• Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
         `• Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n\n` +
