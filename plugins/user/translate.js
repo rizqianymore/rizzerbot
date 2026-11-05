@@ -7,17 +7,23 @@ export default {
   usage: "[kode_bahasa] <teks>",
   premiumOnly: true,
   category: "User",
-  run: async (sock, msg, args, { reply, sendTyping }) => {
+  run: async (sock, msg, args, { reply, sendTyping, quotedText }) => {
     await sendTyping();
-    if (!args.length)
-      return reply("Masukkan teks! Contoh: *.translate hello world* atau *.translate en halo dunia*");
     let lang = "id";
-    let text = args.join(" ");
-    if (args.length >= 2 && /^[a-z]{2}([-_][A-Za-z]{2})?$/.test(args[0])) {
+    let text = args.join(" ").trim();
+
+    if (args.length >= 1 && /^[a-z]{2}([-_][A-Za-z]{2})?$/.test(args[0])) {
       lang = args[0].toLowerCase().replace("_", "-");
-      text = args.slice(1).join(" ");
+      text = args.slice(1).join(" ").trim();
     }
-    if (!text) return reply("Masukkan teks! Contoh: *.translate hello world*");
+
+    if (!text && quotedText) {
+      text = quotedText;
+    }
+
+    if (!text) {
+      return reply("Masukkan teks atau reply pesan yang ingin diterjemahkan!\nContoh: *.translate hello world* atau reply teks lalu ketik *.tr en*");
+    }
     try {
       const result = await translateText(text, lang);
       await reply(`*TERJEMAHAN:*\n\n${result.translated}`);

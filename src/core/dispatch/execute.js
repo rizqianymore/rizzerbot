@@ -66,6 +66,19 @@ export async function executeCommand(sock, msg, logger, env) {
     user,
     msg,
     quoted: getUniversalContextInfo(msg.message)?.quotedMessage || null,
+    get quotedText() {
+      const q = getUniversalContextInfo(msg.message)?.quotedMessage;
+      if (!q || typeof q !== "object") return "";
+      return (
+        q.conversation ||
+        q.extendedTextMessage?.text ||
+        q.imageMessage?.caption ||
+        q.videoMessage?.caption ||
+        q.documentMessage?.caption ||
+        q.documentWithCaptionMessage?.message?.documentMessage?.caption ||
+        ""
+      ).trim();
+    },
     sendTyping: async () => {
       Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
     },

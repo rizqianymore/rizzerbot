@@ -63,6 +63,9 @@ export default {
   cooldownMs: 5000,
   run: async (sock, msg, args, context) => {
     let rawQris = args.join(" ").trim();
+    if (!rawQris && context.quotedText) {
+      rawQris = context.quotedText;
+    }
     const targetMedia = findDownloadableTarget(msg);
 
     if (targetMedia) {
@@ -73,18 +76,39 @@ export default {
           return context.reply("Gagal mengunduh gambar QRIS.");
         }
 
-        const form = new FormData();
-        form.append("file", new Blob([buffer]), "qr.png");
-        const res = await fetch("https://api.qrserver.com/v1/read-qr-code/", {
-          method: "POST",
-          body: form,
-          signal: AbortSignal.timeout(15000),
-        });
-        const data = await res.json();
-        const decoded = data?.[0]?.symbol?.[0]?.data;
-        if (decoded) {
-          rawQris = decoded;
-        } else {
+        // Prioritas 1: Decode offline secara lokal menggunakan sharp + jsqr
+        try {
+          const { default: jsqr } = await import("jsqr");
+          const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
+          if (sharpMod && jsqr) {
+            const { data, info } = await sharpMod(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+            const clamped = new Uint8ClampedArray(data);
+            const decoded = jsqr(clamped, info.width, info.height);
+            if (decoded?.data) {
+              rawQris = decoded.data;
+            }
+          }
+        } catch (_) {}
+
+        // Prioritas 2: Fallback ke api qrserver jika offline scanner belum dapat
+        if (!rawQris) {
+          try {
+            const form = new FormData();
+            form.append("file", new Blob([buffer]), "qr.png");
+            const res = await fetch("https://api.qrserver.com/v1/read-qr-code/", {
+              method: "POST",
+              body: form,
+              signal: AbortSignal.timeout(10000),
+            });
+            const data = await res.json();
+            const decoded = data?.[0]?.symbol?.[0]?.data;
+            if (decoded) {
+              rawQris = decoded;
+            }
+          } catch (_) {}
+        }
+
+        if (!rawQris) {
           return context.reply("Gambar tidak terdeteksi memiliki kode QRIS yang terbaca.");
         }
       } catch (err) {
