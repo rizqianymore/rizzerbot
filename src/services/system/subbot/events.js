@@ -7,7 +7,7 @@ import { db } from "@/src/core/database.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
 import { subBots } from "./store.js";
 
-function shouldSkipBeforeQueue(msg, sock = null) {
+function shouldSkipBeforeQueue(msg, _sock = null) {
   if (!msg?.key?.id || !msg?.key?.remoteJid) return true;
   const rjid = msg.key.remoteJid;
   if (rjid === "status@broadcast") {

@@ -1,5 +1,4 @@
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
-import { request } from "@/src/utils/request.js";
 
 export default {
   name: "removebg",

@@ -14,7 +14,7 @@
  * ==============================================================================
  */
 
-export async function handleCustomCase(command, { sock, msg, args, reply, sendTyping, isOwner, isAdmin, isPremium, prefix }) {
+export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, reply, sendTyping: _sendTyping, isOwner, isAdmin, isPremium, prefix }) {
   const curPrefix = prefix || ".";
   const q = (args || []).join(" ").trim();
 

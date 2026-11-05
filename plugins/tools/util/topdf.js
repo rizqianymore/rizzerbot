@@ -190,22 +190,6 @@ async function createImagePdf(imageBuffer) {
 
   // Build PDF with image XObject (jpeg DCTDecode)
   const header = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
-  let pdfParts = [];
-  let pdfStr = header;
-  const offsets = {};
-
-  function addStrObj(num, content) {
-    offsets[num] = Buffer.byteLength(pdfStr, "latin1") + pdfParts.reduce((a, b) => a + b.length, 0);
-    // offsets calculation with Buffers is tricky; easier to build sequential Buffers
-    pdfStr += `${num} 0 obj\n${content}\nendobj\n`;
-  }
-
-  // We will build header+objects as strings, but image stream needs binary.
-  // Simpler: build all as Buffers concatenated.
-  // Define objects as Buffers.
-
-  // We'll create objects array and then join with offset tracking.
-  const objs = [];
 
   function objToBuf(num, contentBuf) {
     const head = Buffer.from(`${num} 0 obj\n`, "latin1");

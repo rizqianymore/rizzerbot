@@ -50,6 +50,7 @@ export default [
         atob: "readonly",
         performance: "readonly",
         FileReader: "readonly",
+        Blob: "readonly",
         // Global browser — dipakai di dalam callback page.evaluate() Puppeteer.
         window: "readonly",
         navigator: "readonly",

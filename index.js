@@ -103,8 +103,6 @@ startBot()
       startExpiryCron(logger);
     } catch (_) {}
     try {
-    } catch (_) {}
-    try {
       const { startBackupCron } = await import("./src/services/system/backup-cron.js");
       startBackupCron(logger);
     } catch (_) {}

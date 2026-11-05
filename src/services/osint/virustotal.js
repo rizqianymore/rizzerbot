@@ -77,13 +77,18 @@ export async function scanUrlFree(targetUrl) {
   if (!url) throw new Error("URL kosong.");
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
 
-  const [haus, scan] = await Promise.all([checkUrlHaus(url), checkUrlScan(url)]);
+  const [haus, scan, phish] = await Promise.all([checkUrlHaus(url), checkUrlScan(url), checkPhishTankFree(url)]);
 
   let malicious = 0;
-  let suspicious = 0;
+  const suspicious = 0;
   let harmless = 0;
   let undetected = 0;
   const detections = [];
+
+  if (phish?.maybePhish) {
+    malicious += 1;
+    detections.push("PhishTank verified");
+  }
 
   if (haus?.malicious) {
     malicious += 1;

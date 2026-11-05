@@ -1,6 +1,5 @@
 import { getGroupContext } from "./_context.js";
 import { invalidateGroupMeta } from "@/src/utils/helper.js";
-import { db } from "@/src/core/database.js";
 
 export default {
   name: "add",
