@@ -1,18 +1,5 @@
-import fs from "fs";
-import path from "path";
 import { convertQRIS, parseQRISInfo, createQrisBuffer } from "@/src/services/finance/qris.js";
 import { settings } from "@/config/settings.js";
-
-function getStaticQris() {
-  const configPath = path.join(process.cwd(), "config", "config.json");
-  if (fs.existsSync(configPath)) {
-    try {
-      const conf = JSON.parse(fs.readFileSync(configPath, "utf8"));
-      if (conf.qrisPayload) return conf.qrisPayload;
-    } catch (_) {}
-  }
-  return settings.qrisString || "";
-}
 
 export default {
   name: "qris",
@@ -34,11 +21,11 @@ export default {
       );
     }
 
-    const staticQris = getStaticQris();
+    const staticQris = settings.qrisPayload || settings.qrisString || "";
     if (!staticQris) {
       return reply(
         "[!] Pengaturan QRIS belum ada.\n" +
-          "Isi `qrisPayload` di dalam file `config/config.json` dengan string QRIS statis Anda."
+          "Isi `qrisPayload` di dalam file `config/settings.js` dengan string QRIS statis Anda."
       );
     }
 
@@ -56,8 +43,8 @@ export default {
 
       const caption =
         "*QRIS PEMBAYARAN DINAMIS*\n\n" +
-        `• Merchant: *${info.merchantName}*\n` +
-        `• Kota: ${info.merchantCity}\n` +
+        `• Merchant: *${info.merchantName || settings.qrisMerchantName}*\n` +
+        `• Kota: ${info.merchantCity || settings.qrisCity}\n` +
         `• Nominal: *${formattedNominal}*\n` +
         `• Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
         `• Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n\n` +
