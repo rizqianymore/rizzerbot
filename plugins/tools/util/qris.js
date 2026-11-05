@@ -1,4 +1,18 @@
+import fs from "fs";
+import path from "path";
 import { convertQRIS, parseQRISInfo, createQrisBuffer } from "@/src/services/finance/qris.js";
+import { settings } from "@/config/settings.js";
+
+function getStaticQris() {
+  const configPath = path.join(process.cwd(), "config", "config.json");
+  if (fs.existsSync(configPath)) {
+    try {
+      const conf = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      if (conf.qrisPayload) return conf.qrisPayload;
+    } catch (_) {}
+  }
+  return settings.qrisString || "";
+}
 
 export default {
   name: "qris",
@@ -16,16 +30,15 @@ export default {
         "*QRIS DINAMIS*\n\n" +
           "Format: `.qris <nominal>`\n" +
           "Contoh: `.qris 50000`\n\n" +
-          "Fitur ini mengubah QRIS statis menjadi QRIS dinamis berbasis EMVCo TLV parsing sehingga nominal pembayaran otomatis terkunci dan pembeli tidak salah transfer."
+          "Fitur ini mengubah QRIS statis menjadi QRIS dinamis berbasis EMVCo TLV sehingga nominal pembayaran otomatis terkunci dan pembeli tidak salah transfer."
       );
     }
 
-    const staticQris = process.env.QRIS_STATIC_PAYLOAD;
+    const staticQris = getStaticQris();
     if (!staticQris) {
       return reply(
-        "[!] Pengaturan QRIS belum lengkap.\n" +
-          "Owner belum memasang `QRIS_STATIC_PAYLOAD` di file `.env`.\n\n" +
-          "Hubungi owner bot untuk mengonfigurasi string QRIS statis toko/bot."
+        "[!] Pengaturan QRIS belum ada.\n" +
+          "Isi `qrisPayload` di dalam file `config/config.json` dengan string QRIS statis Anda."
       );
     }
 
@@ -48,7 +61,7 @@ export default {
         `• Nominal: *${formattedNominal}*\n` +
         `• Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
         `• Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n\n` +
-        "Silakan scan QR code di atas menggunakan aplikasi M-Banking atau E-Wallet apa saja. Nominal pembayaran akan otomatis terisi tepat tanpa perlu diketik manual.\n\n" +
+        "Silakan scan QR code di atas menggunakan aplikasi M-Banking atau E-Wallet apa saja. Nominal pembayaran otomatis terkunci pas tanpa perlu diketik manual.\n\n" +
         "_Catatan: Harap periksa nama merchant sebelum mengonfirmasi pembayaran._";
 
       const jid = msg.key.remoteJid;
