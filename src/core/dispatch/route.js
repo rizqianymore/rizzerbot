@@ -43,15 +43,14 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
       }
 
       // FIX: kalau bot ini sedang self/private dan sender bukan owner, ngalah ke bot lain
-      // biar ga spam "private" dobel dan biar bot temen yang public yang handle non-owner
+      // KECUALI bila perintah yang dipanggil adalah whitelist (misal: menu, ping)
       try {
         const mySettings = db.getBotSettings(botJid);
-        if (mySettings?.public === false) {
-          // sender sudah pasti bukan owner (dicek diatas), jadi yield
+        const isWhitelisted = Array.isArray(mySettings?.publicCommands) && mySettings.publicCommands.includes(commandName);
+        if (mySettings?.public === false && !isWhitelisted) {
+          // sender sudah pasti bukan owner dan bukan whitelist, jadi yield
           const verdictSelf = await resolveGroupResponder(sock, remoteJid, botJid, isSubBotSock, senderJid);
-          // tetap yield, return true biar ditahan
           if (verdictSelf.mode !== "solo") return true;
-          // solo tapi self -> tetap tahan agar tidak spam, biar bot temen yang jawab
           return true;
         }
       } catch (_) {}

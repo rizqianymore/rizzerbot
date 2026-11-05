@@ -45,6 +45,8 @@ export const CATEGORY_ALIASES = {
   bugs: "Bug",
   exploit: "Bug",
   general: "General",
+  umum: "General",
+  gen: "General",
   osint: "OSINT",
   os: "OSINT",
 };
