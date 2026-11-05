@@ -5,7 +5,7 @@ import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js"
 import { customMenuConfig } from "@/custom/menu.js";
 
 export function renderMenu(data) {
-  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, isPublic } = data;
+  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, isPublic, showAll } = data;
 
   if (customMenuConfig?.enabled) {
     let text = "";
@@ -18,7 +18,7 @@ export function renderMenu(data) {
       if (typeof customMenuConfig.categoryWrapper === "function") {
         text += customMenuConfig.categoryWrapper(targetCategory, cmds, prefix);
       }
-    } else {
+    } else if (showAll) {
       for (const cat of catKeys) {
         const cmds = categories[cat] || [];
         if (!cmds || cmds.length === 0) continue;
@@ -26,6 +26,13 @@ export function renderMenu(data) {
           text += customMenuConfig.categoryWrapper(cat, cmds, prefix);
         }
       }
+    } else if (typeof customMenuConfig.mainMenu === "function") {
+      // Tampilan ringkas (Pecah per Kategori)
+      text += customMenuConfig.mainMenu(
+        { botName, prefix, role, totalCmds, isPublic },
+        categories,
+        prefix
+      );
     }
 
     if (typeof customMenuConfig.footer === "function") {
@@ -175,6 +182,8 @@ export default {
       categories,
       catKeys,
       targetCategory: targetCategory || null,
+      isPublic: activeSettings.public !== false,
+      showAll,
     }).trim();
 
     try {
