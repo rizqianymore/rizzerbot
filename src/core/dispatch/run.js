@@ -13,6 +13,7 @@ import { checkProfanityInput } from "./profanity.js";
 import { checkPermits, checkRateLimit } from "./limits.js";
 import { executeCommand } from "./execute.js";
 import { runMediaHandlers } from "./media.js";
+import { handleCustomCase } from "@/custom/cases.js";
 
 export async function dispatchMessage(sock, msg, logger) {
   return db.runWithBot(resolveBotJid(sock), () => dispatchInner(sock, msg, logger));
@@ -131,9 +132,51 @@ async function dispatchInner(sock, msg, logger) {
     }
     return;
   }
-  const { activeSettings, prefix, args, commandName, cmd, senderJid } = resolved;
+  const { activeSettings, prefix, args, commandName, cmd, senderJid, isCustomCase } = resolved;
   const { isOwner, isAdmin, isPremium } = resolved;
   let { access, user } = resolved;
+
+  // Tangani custom case jika bukan command plugin biasa
+  if (isCustomCase) {
+    const reply = async (text) => sock.sendMessage(remoteJid, { text: String(text) }, { quoted: msg });
+    const sendTyping = async () => sock.sendPresenceUpdate("composing", remoteJid).catch(() => {});
+    
+    try {
+      const handled = await handleCustomCase(commandName, {
+        sock,
+        msg,
+        args,
+        reply,
+        sendTyping,
+        isOwner,
+        isAdmin,
+        isPremium,
+        prefix,
+      });
+
+      if (handled !== false) {
+        logger?.info?.(`[CustomCase] dieksekusi: ${commandName} oleh ${senderJid}`);
+        return;
+      }
+    } catch (err) {
+      logger?.error?.(`[CustomCase-Error] ${commandName}: ${err.message}`);
+      await reply(`[FAIL] Terjadi kesalahan pada case: ${err.message}`);
+      return;
+    }
+
+    // Jika custom case me-return false (tidak cocok), beri tahu unknown command
+    logger?.info?.(`[Drop] ${remoteJid} <- ${msg.pushName || "?"}: perintah tidak dikenal: ${commandName} (cmd: ${commandName})`);
+    if (activeSettings.silentDeny === false) {
+      await sock
+        .sendMessage(
+          remoteJid,
+          { text: `⚠️ Perintah *${commandName}* tidak dikenal.\nKetik ${prefix}menu untuk daftar perintah.` },
+          { quoted: msg }
+        )
+        .catch(() => {});
+    }
+    return;
+  }
 
   const isGroup = isGroupJid(remoteJid);
 

@@ -54,16 +54,23 @@ export async function resolveCommandAccess(
 
   const cmd = commands.get(commandName);
   if (!cmd) {
-    if (activeSettings.silentDeny === false) {
-      await sock
-        .sendMessage(
-          remoteJid,
-          { text: `⚠️ Perintah *${commandName}* tidak dikenal.\nKetik ${prefix}menu untuk daftar perintah.` },
-          { quoted: msg }
-        )
-        .catch(() => {});
-    }
-    return drop(`perintah tidak dikenal: ${commandName}`, { code: "unknown_command" });
+    // Beri kesempatan ke custom case sebelum menolak
+    return {
+      drop: false,
+      isCustomCase: true,
+      activeSettings,
+      prefix,
+      args,
+      commandName,
+      cmd: null,
+      senderJid: isFromMe ? (isGroupJid(remoteJid) ? normalizedRawSender || botJid : botJid || normalizedRawSender) : normalizedRawSender,
+      isOwner: Boolean(db.isOwner(normalizedRawSender) || db.isBotOwner(botJid, normalizedRawSender) || db.getAccess(normalizedRawSender).owner),
+      isAdmin: Boolean(db.getAccess(normalizedRawSender).admin),
+      isPremium: Boolean(db.getAccess(normalizedRawSender).premium),
+      isRegistered: true,
+      access: db.getAccess(normalizedRawSender),
+      user: db.getUser(normalizedRawSender) || {},
+    };
   }
 
   const isSelfMessage = Boolean(isFromMe);

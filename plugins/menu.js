@@ -2,9 +2,38 @@ import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { sortCategoryKeys, resolveCategoryAlias } from "@/src/core/categories.js";
 import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
+import { customMenuConfig } from "@/custom/menu.js";
 
 export function renderMenu(data) {
-  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
+  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, isPublic } = data;
+
+  if (customMenuConfig?.enabled) {
+    let text = "";
+    if (typeof customMenuConfig.header === "function") {
+      text += customMenuConfig.header({ botName, prefix, role, totalCmds, isPublic });
+    }
+
+    if (targetCategory && categories[targetCategory]) {
+      const cmds = categories[targetCategory] || [];
+      if (typeof customMenuConfig.categoryWrapper === "function") {
+        text += customMenuConfig.categoryWrapper(targetCategory, cmds, prefix);
+      }
+    } else {
+      for (const cat of catKeys) {
+        const cmds = categories[cat] || [];
+        if (!cmds || cmds.length === 0) continue;
+        if (typeof customMenuConfig.categoryWrapper === "function") {
+          text += customMenuConfig.categoryWrapper(cat, cmds, prefix);
+        }
+      }
+    }
+
+    if (typeof customMenuConfig.footer === "function") {
+      text += customMenuConfig.footer({ botName, prefix, role, totalCmds, isPublic });
+    }
+    return text;
+  }
+
   let text = "";
 
   text += `╭───「 *${botName.toUpperCase()}* 」\n`;
