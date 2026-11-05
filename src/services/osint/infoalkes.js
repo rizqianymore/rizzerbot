@@ -269,7 +269,7 @@ export function formatResults(query, result, startTime, category = "nomor_izin_e
     text += `    *Pendaftar:* ${item.pendaftar}\n`;
     text += `    *Produsen:* ${item.produsen} (${item.produsenNegara})\n`;
     text += `    *Terbit:* ${item.terbit} | *Expired:* ${item.expired}\n`;
-    text += `   [OK] *Status:* ${item.status}\n\n`;
+    text += `   *Status:* ${item.status}\n\n`;
   });
 
   if (data.length > 10) {

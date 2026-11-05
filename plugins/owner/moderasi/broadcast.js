@@ -22,7 +22,7 @@ export default {
           await new Promise((r) => setTimeout(r, 800));
         } catch (_) {}
       }
-      await reply(`[OK] Broadcast terkirim ke ${sent}/${ids.length} grup`);
+      await reply(`Broadcast terkirim ke ${sent}/${ids.length} grup`);
     } catch (e) {
       await reply(`[FAIL] Gagal broadcast: ${e?.message || e}`);
     }

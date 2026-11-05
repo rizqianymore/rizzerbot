@@ -30,7 +30,7 @@ export default {
       }
 
       await sock.updateProfilePicture(ctx.remoteJid, buffer);
-      await context.reply("[OK] Foto profil grup berhasil diperbarui!");
+      await context.reply("Foto profil grup berhasil diperbarui!");
     } catch (err) {
       await context.reply(`Gagal memperbarui foto profil grup: ${err?.message || err}`);
     }

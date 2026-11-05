@@ -61,7 +61,7 @@ export default {
     }
 
     const secs = Math.round((Date.now() - startedAt) / 1000);
-    await reply(`[OK] *Selesai! ${namaFungsi} sebanyak ${jumlah} kali*\nDurasi: ${secs} detik`);
+    await reply(`*Selesai! ${namaFungsi} sebanyak ${jumlah} kali*\nDurasi: ${secs} detik`);
 
     console.log(`\x1b[31m\x1b[1mSuccess mengeksekusi ${namaFungsi}!\x1b[0m`);
   },

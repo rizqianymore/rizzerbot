@@ -72,7 +72,7 @@ export default {
           if (!item) continue;
           const change24 = item.usd_24h_change ?? 0;
           const sign = change24 >= 0 ? "+" : "";
-          const icon = change24 >= 0 ? "[OK]" : "[!]";
+          const icon = change24 >= 0 ? "" : "[!]";
           const formattedUsd = Number(item.usd).toLocaleString("en-US", { maximumFractionDigits: 4 });
           const formattedIdr = Number(item.idr).toLocaleString("id-ID");
 
@@ -114,7 +114,7 @@ export default {
 
       const change24 = coinData.usd_24h_change ?? 0;
       const sign = change24 >= 0 ? "+" : "";
-      const icon = change24 >= 0 ? "[OK]" : "[!]";
+      const icon = change24 >= 0 ? "" : "[!]";
       const formattedUsd = Number(coinData.usd).toLocaleString("en-US", { maximumFractionDigits: 6 });
       const formattedIdr = Number(coinData.idr).toLocaleString("id-ID");
       const volUsd = coinData.usd_24h_vol

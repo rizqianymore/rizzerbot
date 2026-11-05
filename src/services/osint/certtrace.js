@@ -47,7 +47,7 @@ function certStatus(notAfter) {
   if (isNaN(ms)) return "[?]";
   if (ms < 0) return "[X] kedaluwarsa";
   if (ms < 30 * 86400000) return "[!] <30 hari";
-  return "[OK] aktif";
+  return "aktif";
 }
 
 async function fetchCrtSh(domain) {

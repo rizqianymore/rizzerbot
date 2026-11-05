@@ -19,7 +19,7 @@ export default {
     const { execSync } = await import("child_process");
     try {
       execSync("node scripts/reset-total.js --force", { stdio: "ignore", timeout: 15000 });
-      await reply("[OK] Database berhasil direset. Silakan restart bot.");
+      await reply("Database berhasil direset. Silakan restart bot.");
     } catch (e) {
       await reply(`[FAIL] Gagal reset: ${e?.message || e}`);
     }

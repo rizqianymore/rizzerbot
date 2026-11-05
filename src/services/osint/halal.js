@@ -188,7 +188,7 @@ export function formatResults(query, result, startTime) {
       item.negara ? ` (${item.negara})` : ""
     }${item.kodePos ? " " + item.kodePos : ""}\n`;
     text += `    Terbit: ${item.terbit}\n`;
-    text += `   [OK] Status: *HALAL TERSERTIFIKAT*\n\n`;
+    text += `   Status: *HALAL TERSERTIFIKAT*\n\n`;
   });
 
   if (totalItems > 10) {

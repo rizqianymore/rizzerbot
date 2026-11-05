@@ -19,7 +19,7 @@ export default {
         const botJid = db.normalizeJid(sock.user?.id || "");
         db.updateBotSettings(botJid, { prefix: newPrefix });
       }
-      await reply(`[OK] Prefix berhasil diubah menjadi: "${newPrefix}"${all ? " (semua bot)" : ""}`);
+      await reply(`Prefix berhasil diubah menjadi: "${newPrefix}"${all ? " (semua bot)" : ""}`);
     } catch (e) {
       await reply(`[FAIL] Gagal ubah prefix: ${e?.message || e}`);
     }

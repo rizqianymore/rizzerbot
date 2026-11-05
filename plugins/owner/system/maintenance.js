@@ -13,7 +13,7 @@ export default {
       await reply(" Bot dimasukkan ke mode maintenance");
     } else if (mode === "--off") {
       db.updateBotSettings(botJid, { maintenance: false });
-      await reply("[OK] Bot kembali normal");
+      await reply("Bot kembali normal");
     } else {
       const cur = db.getBotSettings(botJid)?.maintenance ? "ON" : "OFF";
       await reply(`Mode maintenance: ${cur}\nGunakan: .maintenance --on  atau  .maintenance --off`);

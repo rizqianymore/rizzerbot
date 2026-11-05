@@ -36,7 +36,7 @@ export default {
       if (!rec || rec.jid !== msg.key.remoteJid) return reply("ID tidak ditemukan di chat ini.");
       clearTimeout(rec.timer);
       activeReminders.delete(id);
-      return reply(`[OK] Pengingat #${id} dibatalkan.`);
+      return reply(`Pengingat #${id} dibatalkan.`);
     }
 
     const dur = parseDuration(args?.[0]);

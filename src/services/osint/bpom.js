@@ -132,7 +132,7 @@ export function formatProduk(item, index) {
   if (item.komposisi && item.komposisi !== "-") text += `    *Komposisi:* ${item.komposisi}\n`;
   if (item.tanggalTerbit && item.tanggalTerbit !== "-") text += `    *Tgl Terbit:* ${item.tanggalTerbit}\n`;
   if (item.tanggalExpired && item.tanggalExpired !== "-") text += `   ⏰ *Tgl Expired:* ${item.tanggalExpired}\n`;
-  text += `   [OK] *Status:* ${item.status}\n`;
+  text += `   *Status:* ${item.status}\n`;
   return text;
 }
 

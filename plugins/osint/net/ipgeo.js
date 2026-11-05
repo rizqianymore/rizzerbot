@@ -48,8 +48,8 @@ export default {
         ``,
         ` *DETEKSI KEAMANAN & ANCAMAN:*`,
         `• Tipe Jaringan: *${tipeJaringan}*`,
-        `• VPN / Proxy: ${isProxy ? "[!] *TERDETEKSI (Ya)*" : "[OK] Aman (Tidak)"}`,
-        `• Cloud Hosting / VPS: ${isHosting ? "[*] *Ya (Datacenter)*" : "[OK] Bukan Hosting"}`,
+        `• VPN / Proxy: ${isProxy ? "[!] *TERDETEKSI (Ya)*" : "Aman (Tidak)"}`,
+        `• Cloud Hosting / VPS: ${isHosting ? "[*] *Ya (Datacenter)*" : "Bukan Hosting"}`,
         `• Mobile Network: ${isMobile ? " Ya (Seluler)" : "[-] Bukan Seluler"}`,
       ];
 

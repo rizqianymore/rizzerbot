@@ -40,9 +40,9 @@ export async function handleCustomCase(command, { sock, msg, args, reply, sendTy
     case "myrole":
       return reply(
         `*STATUS ROLE ANDA:*\n` +
-        `• Owner: ${isOwner ? "[OK] Ya" : "Bukan"}\n` +
-        `• Admin: ${isAdmin ? "[OK] Ya" : "Bukan"}\n` +
-        `• Premium: ${isPremium ? "[OK] Ya" : "Bukan"}`
+        `• Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
+        `• Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
+        `• Premium: ${isPremium ? "Ya" : "Bukan"}`
       );
 
     // -------------------------------------------------------------
