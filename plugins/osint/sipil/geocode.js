@@ -40,7 +40,7 @@ export default {
 
       const results = res.data;
       if (!Array.isArray(results) || results.length === 0) {
-        return reply(`❌ Alamat/lokasi *"${query}"* tidak ditemukan. Coba ketik nama tempat yang lebih spesifik.`);
+        return reply(`[FAIL] Alamat/lokasi *"${query}"* tidak ditemukan. Coba ketik nama tempat yang lebih spesifik.`);
       }
 
       const place = results[0];
@@ -52,7 +52,7 @@ export default {
       const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
 
       const text =
-        `*📍 HASIL PENCARIAN GEOLOKASI*\n\n` +
+        `* HASIL PENCARIAN GEOLOKASI*\n\n` +
         `• *Nama / Tempat* : ${place.name || place.display_name.split(",")[0] || "-"}\n` +
         `• *Alamat Lengkap*: ${place.display_name}\n` +
         `• *Latitude*       : \`${lat}\`\n` +
@@ -61,8 +61,8 @@ export default {
         `• *Provinsi*       : ${addr.state || addr.province || addr.region || "-"}\n` +
         `• *Kode Pos*       : ${addr.postcode || "-"}\n` +
         `• *Negara*         : ${addr.country || "-"}\n\n` +
-        `🔗 *Google Maps*   : ${mapsLink}\n` +
-        `🌐 *OpenStreetMap* : ${osmLink}`;
+        ` *Google Maps*   : ${mapsLink}\n` +
+        ` *OpenStreetMap* : ${osmLink}`;
 
       if (sock && msg?.key?.remoteJid) {
         try {

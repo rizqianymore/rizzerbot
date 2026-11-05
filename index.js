@@ -1,4 +1,8 @@
 import "./src/utils/log-filter.js";
+import dns from "node:dns";
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch (_) {}
 import fs from "fs";
 import path from "path";
 

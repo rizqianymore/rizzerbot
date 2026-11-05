@@ -55,7 +55,7 @@ export default {
     ];
 
     for (const c of checks) {
-      lines.push(`   ${c.good ? "✅" : "❌"} ${c.label}: ${h(c.key) ? h(c.key).slice(0, 80) : "tidak ada"}`);
+      lines.push(`   ${c.good ? "[OK]" : "[FAIL]"} ${c.label}: ${h(c.key) ? h(c.key).slice(0, 80) : "tidak ada"}`);
     }
 
     lines.push(``, `_Catatan: penilaian dasar berdasarkan keberadaan header._`);

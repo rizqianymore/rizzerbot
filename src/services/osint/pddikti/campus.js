@@ -135,7 +135,7 @@ export async function getKampusInfoText(input) {
 
   const pt = pickPt(pts, raw);
   if (!pt) {
-    const lines = [`🎓 *PILIH PERGURUAN TINGGI*\n`, `Query: \`${raw}\``, `Ditemukan: *${pts.length}* PT\n`];
+    const lines = [` *PILIH PERGURUAN TINGGI*\n`, `Query: \`${raw}\``, `Ditemukan: *${pts.length}* PT\n`];
     pts.slice(0, 10).forEach((p, i) => {
       lines.push(`${i + 1}. *${neat(p.nama)}* (${neat(p.nama_singkat, "-")}) — kode ${neat(p.kode, "-")}`);
     });
@@ -173,7 +173,7 @@ export async function getKampusInfoText(input) {
   ]
     .filter((v) => v && v !== "-")
     .join(", ");
-  const lines = [`🎓 *PERGURUAN TINGGI — PDDIKTI*\n`];
+  const lines = [` *PERGURUAN TINGGI — PDDIKTI*\n`];
   lines.push(
     `• Nama: *${neat(detail.nama_pt || pt.nama)}*${detail.nm_singkat || pt.nama_singkat ? ` (${neat(detail.nm_singkat || pt.nama_singkat)})` : ""}`
   );

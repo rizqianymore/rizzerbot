@@ -11,7 +11,7 @@ export default {
     const { reply, senderJid, logger, isPrimarySuperOwner } = context;
 
     if (!isPrimarySuperOwner) {
-      return reply("❌ Perintah ini hanya dapat dieksekusi oleh Super Owner.");
+      return reply("[FAIL] Perintah ini hanya dapat dieksekusi oleh Super Owner.");
     }
     if (String(msg.key.remoteJid || "").endsWith("@g.us")) {
       return reply("Jalankan eval di private chat SuperOwner.");

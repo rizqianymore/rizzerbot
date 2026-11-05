@@ -73,7 +73,7 @@ export default {
 
       const srcLang = data[2] || data[0]?.[0]?.[2] || "auto";
 
-      return reply(`🌐 Translate ${srcLang} → ${targetLang}:\n${translated}`);
+      return reply(` Translate ${srcLang} → ${targetLang}:\n${translated}`);
     } catch (err) {
       return reply(`Gagal translate: ${err?.message || err}`);
     }

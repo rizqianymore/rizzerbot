@@ -21,10 +21,10 @@ export default {
       .replace(/^[./!]/, "");
     if (["dice", "dadu"].includes(cmd)) {
       const n = crypto.randomInt(1, 7);
-      return reply(`🎲 Dadu: *${n}*`);
+      return reply(` Dadu: *${n}*`);
     }
     if (["coin", "koin"].includes(cmd)) {
-      return reply(`🪙 Koin: *${pickRandom(["Kepala", "Ekor"])}*`);
+      return reply(` Koin: *${pickRandom(["Kepala", "Ekor"])}*`);
     }
     if (!raw) {
       const p = prefix || ".";

@@ -130,14 +130,14 @@ export async function searchGtk(keyword, page = 1) {
 
     if (items.length === 1) {
       const singleText =
-        `🔍 *DATA GTK — SIMPKB*\n\n` +
+        ` *DATA GTK — SIMPKB*\n\n` +
         formatGtkItem(items[0]) +
         `\n\n_Sumber: portal.simpkb.id • ${Date.now() - startTime} ms_`;
       return { text: singleText };
     }
 
     const shown = items.slice(0, 5);
-    const lines = [`🔍 *HASIL PENCARIAN GTK SIMPKB*\n`];
+    const lines = [` *HASIL PENCARIAN GTK SIMPKB*\n`];
     lines.push(`Query: \`${cleanKeyword}\``);
     lines.push(`Total ditemukan: *${total}* data (menampilkan ${shown.length} teratas)\n`);
 

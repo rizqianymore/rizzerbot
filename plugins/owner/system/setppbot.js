@@ -21,7 +21,7 @@ export default {
       }
 
       await sock.updateProfilePicture(sock.user?.id, buffer);
-      await reply("✅ Foto profil bot berhasil diperbarui!");
+      await reply("[OK] Foto profil bot berhasil diperbarui!");
     } catch (err) {
       await reply(`Gagal memperbarui foto profil bot: ${err?.message || err}`);
     }

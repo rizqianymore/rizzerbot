@@ -40,7 +40,7 @@ export default {
           document: result.buffer,
           fileName: result.fileName,
           mimetype: result.mime,
-          caption: `✅ Berhasil mengunduh *${result.fileName}* (${sizeMb} MB)`,
+          caption: `[OK] Berhasil mengunduh *${result.fileName}* (${sizeMb} MB)`,
         },
         { quoted: msg }
       );

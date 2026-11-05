@@ -123,27 +123,27 @@ export async function searchProduk(query) {
 
 export function formatProduk(item, index) {
   let text = `${index}. *${item.namaProduk}*\n`;
-  text += `   📋 *Tipe:* ${item.tipe}\n`;
-  text += `   🔢 *No. Registrasi:* ${item.nomorRegistrasi}\n`;
-  text += `   🏭 *Pendaftar:* ${item.pendaftar}\n`;
-  if (item.merk && item.merk !== "-") text += `   🏷️ *Merk:* ${item.merk}\n`;
-  if (item.kemasan && item.kemasan !== "-") text += `   📦 *Kemasan:* ${item.kemasan}\n`;
-  if (item.bentukSediaan && item.bentukSediaan !== "-") text += `   💊 *Bentuk Sediaan:* ${item.bentukSediaan}\n`;
-  if (item.komposisi && item.komposisi !== "-") text += `   🧪 *Komposisi:* ${item.komposisi}\n`;
-  if (item.tanggalTerbit && item.tanggalTerbit !== "-") text += `   📅 *Tgl Terbit:* ${item.tanggalTerbit}\n`;
+  text += `    *Tipe:* ${item.tipe}\n`;
+  text += `    *No. Registrasi:* ${item.nomorRegistrasi}\n`;
+  text += `    *Pendaftar:* ${item.pendaftar}\n`;
+  if (item.merk && item.merk !== "-") text += `    *Merk:* ${item.merk}\n`;
+  if (item.kemasan && item.kemasan !== "-") text += `    *Kemasan:* ${item.kemasan}\n`;
+  if (item.bentukSediaan && item.bentukSediaan !== "-") text += `    *Bentuk Sediaan:* ${item.bentukSediaan}\n`;
+  if (item.komposisi && item.komposisi !== "-") text += `    *Komposisi:* ${item.komposisi}\n`;
+  if (item.tanggalTerbit && item.tanggalTerbit !== "-") text += `    *Tgl Terbit:* ${item.tanggalTerbit}\n`;
   if (item.tanggalExpired && item.tanggalExpired !== "-") text += `   ⏰ *Tgl Expired:* ${item.tanggalExpired}\n`;
-  text += `   ✅ *Status:* ${item.status}\n`;
+  text += `   [OK] *Status:* ${item.status}\n`;
   return text;
 }
 
 export function formatResults(query, results, startTime) {
   const latency = (Date.now() - startTime).toFixed(0);
   if (results.length === 0) {
-    return `🔍 *CEK BPOM*\n\nQuery: \`${query}\`\n\n❌ Tidak ditemukan produk yang terdaftar.\n\n_Query: ${latency} ms_`;
+    return ` *CEK BPOM*\n\nQuery: \`${query}\`\n\n[FAIL] Tidak ditemukan produk yang terdaftar.\n\n_Query: ${latency} ms_`;
   }
 
   const displayed = results.slice(0, 10);
-  let text = `🔍 *CEK BPOM*\n\n`;
+  let text = ` *CEK BPOM*\n\n`;
   text += `Query: \`${query}\`\n`;
   text += `Ditemukan: *${results.length}* produk (menampilkan ${displayed.length} teratas)\n\n`;
 

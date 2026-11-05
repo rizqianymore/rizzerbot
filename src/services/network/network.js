@@ -149,7 +149,7 @@ export async function getIpGeo(ipOrDomain) {
   const target = cleanDomain(ipOrDomain);
   const hit = ipCache.get(target);
   if (hit !== undefined) return hit;
-  const url = `http://ip-api.com/json/${encodeURIComponent(target)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
+  const url = `http://ip-api.com/json/${encodeURIComponent(target)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query,proxy,hosting,mobile`;
   const data = await request.json(url, { timeout: 15000 });
   if (data.status !== "success") {
     throw new Error(data.message || "Failed to resolve IP details");

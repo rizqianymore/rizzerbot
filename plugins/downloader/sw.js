@@ -87,7 +87,7 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
               ? "document"
               : null;
     if (!type || !inner) {
-      await reply("❌ Media status tidak dikenali.");
+      await reply("[FAIL] Media status tidak dikenali.");
       return;
     }
     const stream = await downloadContentFromMessage(inner, type);
@@ -99,24 +99,24 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
     if (type === "video") {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { video: buf, mimetype: "video/mp4", caption: "✅ Status video berhasil diunduh." },
+        { video: buf, mimetype: "video/mp4", caption: "[OK] Status video berhasil diunduh." },
         { quoted: msg }
       );
     } else if (type === "image") {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { image: buf, mimetype: "image/jpeg", caption: "✅ Status foto berhasil diunduh." },
+        { image: buf, mimetype: "image/jpeg", caption: "[OK] Status foto berhasil diunduh." },
         { quoted: msg }
       );
     } else {
       await sock.sendMessage(
         msg.key.remoteJid,
-        { document: buf, mimetype: mime, fileName: `Status_${Date.now()}${ext}`, caption: "✅ Status berhasil diunduh." },
+        { document: buf, mimetype: mime, fileName: `Status_${Date.now()}${ext}`, caption: "[OK] Status berhasil diunduh." },
         { quoted: msg }
       );
     }
   } catch (err) {
-    await reply(`❌ Gagal mendownload status: ${err?.message || err}`);
+    await reply(`[FAIL] Gagal mendownload status: ${err?.message || err}`);
   }
 }
 
@@ -209,7 +209,7 @@ export default {
     const senderNumber = senderMatch ? senderMatch[1] : "kontak";
 
     await sendTyping();
-    const caption = `✅ *STATUS DOWNLOADER*\n\nDari: *+${senderNumber}*\nStatus: #${idx} dari ${files.length} tersimpan.`;
+    const caption = `[OK] *STATUS DOWNLOADER*\n\nDari: *+${senderNumber}*\nStatus: #${idx} dari ${files.length} tersimpan.`;
 
     if (isVideo) {
       await sock.sendMessage(

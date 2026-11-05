@@ -64,7 +64,7 @@ export default {
           cryptoCache.set(cacheKey, data);
         }
 
-        let out = `*📊 MARKET CRYPTO TERKINI*\n`;
+        let out = `* MARKET CRYPTO TERKINI*\n`;
         out += `_Gunakan \`${currentPrefix}crypto <koin>\` untuk koin spesifik (misal: \`${currentPrefix}crypto btc\`)_\n\n`;
 
         for (const coin of topCoins) {
@@ -72,7 +72,7 @@ export default {
           if (!item) continue;
           const change24 = item.usd_24h_change ?? 0;
           const sign = change24 >= 0 ? "+" : "";
-          const icon = change24 >= 0 ? "🟢" : "🔴";
+          const icon = change24 >= 0 ? "[OK]" : "[!]";
           const formattedUsd = Number(item.usd).toLocaleString("en-US", { maximumFractionDigits: 4 });
           const formattedIdr = Number(item.idr).toLocaleString("id-ID");
 
@@ -107,14 +107,14 @@ export default {
       const coinData = res.data[coinId];
       if (!coinData) {
         return reply(
-          `❌ Koin *"${query}"* tidak ditemukan di CoinGecko.\n` +
+          `[FAIL] Koin *"${query}"* tidak ditemukan di CoinGecko.\n` +
             `Coba gunakan alias seperti: \`btc\`, \`eth\`, \`sol\`, \`bnb\`, \`doge\`, \`xrp\`, dsb.`
         );
       }
 
       const change24 = coinData.usd_24h_change ?? 0;
       const sign = change24 >= 0 ? "+" : "";
-      const icon = change24 >= 0 ? "🟢" : "🔴";
+      const icon = change24 >= 0 ? "[OK]" : "[!]";
       const formattedUsd = Number(coinData.usd).toLocaleString("en-US", { maximumFractionDigits: 6 });
       const formattedIdr = Number(coinData.idr).toLocaleString("id-ID");
       const volUsd = coinData.usd_24h_vol

@@ -10,10 +10,10 @@ export default {
     const botJid = db.normalizeJid(sock.user?.id || "");
     if (mode === "--on") {
       db.updateBotSettings(botJid, { maintenance: true });
-      await reply("🔧 Bot dimasukkan ke mode maintenance");
+      await reply(" Bot dimasukkan ke mode maintenance");
     } else if (mode === "--off") {
       db.updateBotSettings(botJid, { maintenance: false });
-      await reply("✅ Bot kembali normal");
+      await reply("[OK] Bot kembali normal");
     } else {
       const cur = db.getBotSettings(botJid)?.maintenance ? "ON" : "OFF";
       await reply(`Mode maintenance: ${cur}\nGunakan: .maintenance --on  atau  .maintenance --off`);

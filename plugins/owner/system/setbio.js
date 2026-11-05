@@ -14,7 +14,7 @@ export default {
 
     try {
       await sock.updateProfileStatus(text);
-      await reply(`✅ Berhasil memperbarui bio profil bot menjadi:\n*"${text}"*`);
+      await reply(`[OK] Berhasil memperbarui bio profil bot menjadi:\n*"${text}"*`);
     } catch (err) {
       await reply(`Gagal memperbarui bio profil: ${err?.message || err}`);
     }

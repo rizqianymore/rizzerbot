@@ -165,12 +165,12 @@ export function formatResults(query, result, startTime) {
   const keyLabel =
     { produk: "Nama Produk", pelaku: "Pelaku Usaha", sertifikat: "No. Sertifikat" }[result.key] || "Produk";
 
-  let text = `☪️ *CEK PRODUK HALAL — BPJPH*\n\n`;
-  text += `🔍 Pencarian (${keyLabel}): \`${query}\`\n`;
-  text += `📊 Ditemukan: *${totalItems.toLocaleString("id-ID")}* sertifikat\n\n`;
+  let text = ` *CEK PRODUK HALAL — BPJPH*\n\n`;
+  text += ` Pencarian (${keyLabel}): \`${query}\`\n`;
+  text += ` Ditemukan: *${totalItems.toLocaleString("id-ID")}* sertifikat\n\n`;
 
   if (data.length === 0) {
-    text += `❌ *Tidak ditemukan data sertifikat halal.*\n\n`;
+    text += `[FAIL] *Tidak ditemukan data sertifikat halal.*\n\n`;
     text += `_Coba: nama produk lebih spesifik, pelaku usaha, atau No. sertifikat (diawali ID...)._\n\n`;
     text += `_Query: ${latency} ms_`;
     text += `\n\n*Sumber:* bpjph.halal.go.id (BPJPH Kemenag RI)`;
@@ -180,15 +180,15 @@ export function formatResults(query, result, startTime) {
   const displayed = data.slice(0, 10);
   displayed.forEach((item, i) => {
     text += `${i + 1}. *${item.namaProduk}*\n`;
-    text += `   🏷️ Merek: ${item.merekDagang}\n`;
-    text += `   🧾 No. Sertifikat: ${item.noSertifikat}\n`;
-    text += `   🏭 Pelaku Usaha: ${item.pelakuUsaha}\n`;
-    text += `   📍 Pabrik: ${item.pabrik}\n`;
-    text += `   📫 Alamat: ${item.alamat}${item.kota ? `, ${item.kota}` : ""}${
+    text += `    Merek: ${item.merekDagang}\n`;
+    text += `    No. Sertifikat: ${item.noSertifikat}\n`;
+    text += `    Pelaku Usaha: ${item.pelakuUsaha}\n`;
+    text += `    Pabrik: ${item.pabrik}\n`;
+    text += `    Alamat: ${item.alamat}${item.kota ? `, ${item.kota}` : ""}${
       item.negara ? ` (${item.negara})` : ""
     }${item.kodePos ? " " + item.kodePos : ""}\n`;
-    text += `   📅 Terbit: ${item.terbit}\n`;
-    text += `   ✅ Status: *HALAL TERSERTIFIKAT*\n\n`;
+    text += `    Terbit: ${item.terbit}\n`;
+    text += `   [OK] Status: *HALAL TERSERTIFIKAT*\n\n`;
   });
 
   if (totalItems > 10) {

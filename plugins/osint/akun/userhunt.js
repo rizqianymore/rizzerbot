@@ -26,11 +26,11 @@ export default {
     const found = await checkUsernameAll(username);
     const high = found.filter((i) => i.confidence === "HIGH");
 
-    const badge = (c) => (c === "HIGH" ? "✅" : c === "MEDIUM" ? "⚠️" : "❓");
+    const badge = (c) => (c === "HIGH" ? "[OK]" : c === "MEDIUM" ? "[!]" : "[?]");
     const lines = [
       `*OSINT USERNAME SCANNER*`,
       `Target: \`${username}\``,
-      `Hasil: Ditemukan di *${found.length}* dari *${USERHUNT_PLATFORMS.length}* platform (*${high.length}* terverifikasi ✅)`,
+      `Hasil: Ditemukan di *${found.length}* dari *${USERHUNT_PLATFORMS.length}* platform (*${high.length}* terverifikasi [OK])`,
       ``,
     ];
 

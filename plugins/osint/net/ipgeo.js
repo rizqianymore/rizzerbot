@@ -2,8 +2,8 @@ import { getIpGeo } from "@/src/services/network/network.js";
 
 export default {
   name: "ipgeo",
-  aliases: ["ipinfo", "iplookup", "checkip"],
-  description: "Lacak lokasi, negara, ISP, dan info jaringan IP atau domain",
+  aliases: ["ipinfo", "iplookup", "checkip", "iprecon"],
+  description: "Lacak lokasi, ISP, serta deteksi VPN / Proxy / Datacenter IP atau domain",
   usage: "<ip / domain>",
   premiumOnly: true,
   cooldownMs: 8000,
@@ -12,25 +12,45 @@ export default {
     await sendTyping();
     const target = args[0];
     if (!target) {
-      return reply("Masukkan alamat IP atau domain! Contoh: .ipgeo 1.1.1.1 atau .ipgeo github.com");
+      return reply("Masukkan alamat IP atau domain! Contoh: `.ipgeo 1.1.1.1` atau `.iprecon google.com`");
     }
-
-    await reply(`Melacak informasi IP untuk *${target}*...`);
 
     try {
       const geo = await getIpGeo(target);
 
+      const isProxy = geo.proxy === true;
+      const isHosting = geo.hosting === true;
+      const isMobile = geo.mobile === true;
+
+      let tipeJaringan = "Rumahan / Kantor (Residential)";
+      if (isHosting && isProxy) {
+        tipeJaringan = "[!] VPN / Datacenter Proxy";
+      } else if (isHosting) {
+        tipeJaringan = " Cloud Datacenter / Server Hosting";
+      } else if (isProxy) {
+        tipeJaringan = " Anonymous Proxy / VPN";
+      } else if (isMobile) {
+        tipeJaringan = " Jaringan Seluler (Mobile Data)";
+      }
+
       const lines = [
-        `*IP GEOLOCATION LOOKUP*`,
+        ` *IP & THREAT INTEL RECON*`,
         ``,
-        `• Query: \`${geo.query}\``,
+        `• Target IP: \`${geo.query}\``,
         `• Negara: ${geo.country} (${geo.countryCode})`,
         `• Kota/Wilayah: ${geo.city}, ${geo.regionName}`,
         `• Kode Pos: ${geo.zip || "-"}`,
-        `• Koordinat: ${geo.lat}, ${geo.lon}`,
+        `• Koordinat: \`${geo.lat}, ${geo.lon}\``,
         `• Timezone: ${geo.timezone}`,
-        `• ISP / Org: ${geo.isp} (${geo.org || "-"})`,
-        `• AS: ${geo.as || "-"}`,
+        `• ISP: ${geo.isp}`,
+        `• Organisasi: ${geo.org || "-"}`,
+        `• AS Number: ${geo.as || "-"}`,
+        ``,
+        ` *DETEKSI KEAMANAN & ANCAMAN:*`,
+        `• Tipe Jaringan: *${tipeJaringan}*`,
+        `• VPN / Proxy: ${isProxy ? "[!] *TERDETEKSI (Ya)*" : "[OK] Aman (Tidak)"}`,
+        `• Cloud Hosting / VPS: ${isHosting ? "[*] *Ya (Datacenter)*" : "[OK] Bukan Hosting"}`,
+        `• Mobile Network: ${isMobile ? " Ya (Seluler)" : "[-] Bukan Seluler"}`,
       ];
 
       await reply(lines.join("\n"));

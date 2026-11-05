@@ -87,7 +87,7 @@ export default {
       `Baru  : +${newNum}`;
     if (oldStillOwner) {
       text +=
-        `\n\n⚠️ Nomor lama masih punya akses owner karena terdaftar di *config/settings.js*.\n` +
+        `\n\n[!] Nomor lama masih punya akses owner karena terdaftar di *config/settings.js*.\n` +
         `Hapus nomornya dari config lalu restart agar hak owner lama benar-benar dicabut.`;
     }
 

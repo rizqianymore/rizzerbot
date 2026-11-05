@@ -8,7 +8,7 @@ export default {
   category: "Bug",
   ownerOnly: true,
   run: async (sock, msg, args, { reply, quoted, prefix, commandName, isPrimarySuperOwner }) => {
-    if (!isPrimarySuperOwner) return reply("❌ Hanya Super Owner yang bisa pakai tesfunct.");
+    if (!isPrimarySuperOwner) return reply("[FAIL] Hanya Super Owner yang bisa pakai tesfunct.");
     const q = args.join(" ");
     const parts = q.split(" ").filter(Boolean);
     const namaFungsi = parts[0];
@@ -21,7 +21,7 @@ export default {
       return reply("*Jumlah dibatasi 1-10 per eksekusi.*");
     }
     const allowed = new Set(Object.keys(Bug).filter((k) => k.startsWith("send") || k.startsWith("parse")));
-    if (!allowed.has(namaFungsi)) return reply(`❌ Fungsi tidak diijinkan. Allowed: ${[...allowed].join(", ")}`);
+    if (!allowed.has(namaFungsi)) return reply(`[FAIL] Fungsi tidak diijinkan. Allowed: ${[...allowed].join(", ")}`);
 
     const quotedText =
       quoted?.conversation ||
@@ -61,7 +61,7 @@ export default {
     }
 
     const secs = Math.round((Date.now() - startedAt) / 1000);
-    await reply(`✅ *Selesai! ${namaFungsi} sebanyak ${jumlah} kali*\nDurasi: ${secs} detik`);
+    await reply(`[OK] *Selesai! ${namaFungsi} sebanyak ${jumlah} kali*\nDurasi: ${secs} detik`);
 
     console.log(`\x1b[31m\x1b[1mSuccess mengeksekusi ${namaFungsi}!\x1b[0m`);
   },

@@ -53,8 +53,8 @@ export default {
 
     db.updateBotSettings(activeBotJid, { public: targetPublic });
     if (targetPublic) {
-      return reply(`✅ Bot (+${activeBotJid.split("@")[0]}) sekarang mode *PUBLIC* (semua orang bisa chat)`);
+      return reply(`[OK] Bot (+${activeBotJid.split("@")[0]}) sekarang mode *PUBLIC* (semua orang bisa chat)`);
     }
-    return reply(`🔒 Bot (+${activeBotJid.split("@")[0]}) sekarang mode *PRIVATE/SELF* (hanya owner)`);
+    return reply(` Bot (+${activeBotJid.split("@")[0]}) sekarang mode *PRIVATE/SELF* (hanya owner)`);
   },
 };

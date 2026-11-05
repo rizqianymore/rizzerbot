@@ -12,16 +12,16 @@ export default {
     if (!newPrefix || newPrefix.length > 3) {
       return reply(`Gunakan: .setprefix <1-3 karakter> [--all]\nContoh: .setprefix .  atau  .setprefix ! --all`);
     }
-    if (all && !isPrimarySuperOwner) return reply("❌ --all hanya untuk Super Owner.");
+    if (all && !isPrimarySuperOwner) return reply("[FAIL] --all hanya untuk Super Owner.");
     try {
       if (all) db.updateSettings({ prefix: newPrefix });
       else {
         const botJid = db.normalizeJid(sock.user?.id || "");
         db.updateBotSettings(botJid, { prefix: newPrefix });
       }
-      await reply(`✅ Prefix berhasil diubah menjadi: "${newPrefix}"${all ? " (semua bot)" : ""}`);
+      await reply(`[OK] Prefix berhasil diubah menjadi: "${newPrefix}"${all ? " (semua bot)" : ""}`);
     } catch (e) {
-      await reply(`❌ Gagal ubah prefix: ${e?.message || e}`);
+      await reply(`[FAIL] Gagal ubah prefix: ${e?.message || e}`);
     }
   },
 };

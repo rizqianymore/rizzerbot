@@ -1,4 +1,8 @@
 import axios from "axios";
+import dns from "node:dns";
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch (_) {}
 
 const BASE = "https://kki.go.id";
 const SEARCH_URL = `${BASE}/cek_dokter/search`;

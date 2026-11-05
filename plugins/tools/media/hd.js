@@ -45,7 +45,7 @@ export default {
 
       await sock.sendMessage(
         msg.key.remoteJid,
-        { image: out, caption: "✨ HD 2x" },
+        { image: out, caption: " HD 2x" },
         { quoted: msg }
       );
     } catch (err) {

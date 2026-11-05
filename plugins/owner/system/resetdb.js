@@ -13,15 +13,15 @@ export default {
     }
     const confirm = args?.[0];
     if (confirm !== "--confirm") {
-      return reply("⚠️ Perintah reset database!\nGunakan: `.resetdb --confirm` untuk menghapus database. Tindakan tidak dapat dibatalkan.");
+      return reply("[!] Perintah reset database!\nGunakan: `.resetdb --confirm` untuk menghapus database. Tindakan tidak dapat dibatalkan.");
     }
     logger?.warn?.(`[OwnerCmd] resetdb oleh ${msg.key.participant || msg.key.remoteJid}`);
     const { execSync } = await import("child_process");
     try {
       execSync("node scripts/reset-total.js --force", { stdio: "ignore", timeout: 15000 });
-      await reply("✅ Database berhasil direset. Silakan restart bot.");
+      await reply("[OK] Database berhasil direset. Silakan restart bot.");
     } catch (e) {
-      await reply(`❌ Gagal reset: ${e?.message || e}`);
+      await reply(`[FAIL] Gagal reset: ${e?.message || e}`);
     }
   },
 };

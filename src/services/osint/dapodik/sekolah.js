@@ -72,7 +72,7 @@ export function formatSekolah(row) {
   const alamatParts = [neat(row.alamat_jalan, ""), rtRw, neat(row.desa_kelurahan, "")].filter(Boolean);
 
   const lines = [];
-  lines.push(`🏫 *DATA SEKOLAH — DAPODIK*\n`);
+  lines.push(` *DATA SEKOLAH — DAPODIK*\n`);
   lines.push(`• Nama: *${neat(row.nama)}*`);
   lines.push(`• NPSN: ${neat(row.npsn)}`);
   lines.push(`• Jenjang: ${neat(row.jenjang || row.bentuk_pendidikan)} (${neat(row.status_sekolah)})`);
@@ -109,7 +109,7 @@ export function formatSekolah(row) {
 
 function formatList(query, items) {
   const shown = items.slice(0, 10);
-  const lines = [`🏫 *HASIL PENCARIAN SEKOLAH*\n`];
+  const lines = [` *HASIL PENCARIAN SEKOLAH*\n`];
   lines.push(`Query: \`${query}\``);
   lines.push(`Ditemukan: *${items.length}* sekolah (menampilkan ${shown.length} teratas)\n`);
   shown.forEach((item, i) => {

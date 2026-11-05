@@ -44,10 +44,10 @@ function fmtDate(iso) {
 
 function certStatus(notAfter) {
   const ms = new Date(notAfter).getTime() - Date.now();
-  if (isNaN(ms)) return "❓";
-  if (ms < 0) return "⛔ kedaluwarsa";
-  if (ms < 30 * 86400000) return "⚠️ <30 hari";
-  return "✅ aktif";
+  if (isNaN(ms)) return "[?]";
+  if (ms < 0) return "[X] kedaluwarsa";
+  if (ms < 30 * 86400000) return "[!] <30 hari";
+  return "[OK] aktif";
 }
 
 async function fetchCrtSh(domain) {
@@ -156,7 +156,7 @@ export async function getCertTraceText(input) {
   const shown = r.subdomains.slice(0, 30);
 
   const lines = [
-    `🔒 *CERTIFICATE TRANSPARENCY*`,
+    ` *CERTIFICATE TRANSPARENCY*`,
     `Domain: \`${r.domain}\``,
     `Sumber: ${r.sources.join(" + ") || "-"}`,
     `Sertifikat tercatat: *${r.totalCerts}*`,

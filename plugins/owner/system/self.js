@@ -36,6 +36,6 @@ export default {
     }
 
     db.updateBotSettings(activeBotJid, { public: false });
-    return reply(`🔒 Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode *SELF/PRIVATE* (hanya owner).`);
+    return reply(` Bot (+${activeBotJid.split("@")[0]}) sekarang dalam mode *SELF/PRIVATE* (hanya owner).`);
   },
 };

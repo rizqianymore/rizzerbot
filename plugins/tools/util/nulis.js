@@ -226,7 +226,7 @@ export default {
     }
 
     try {
-      await sock.sendMessage(remoteJid, { image: buffer, caption: "✍️ Nulis selesai" }, { quoted: msg });
+      await sock.sendMessage(remoteJid, { image: buffer, caption: " Nulis selesai" }, { quoted: msg });
     } catch (err) {
       return reply(`Gagal mengirim gambar: ${err?.message || err}`);
     }

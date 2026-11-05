@@ -28,7 +28,7 @@ export default {
 
     Promise.resolve(
       sock.sendMessage(msg.key.remoteJid, {
-        react: { text: "🎀", key: msg.key },
+        react: { text: "", key: msg.key },
       })
     ).catch(() => {});
     await sendTyping();
@@ -39,14 +39,14 @@ export default {
 
       Promise.resolve(
         sock.sendMessage(msg.key.remoteJid, {
-          react: { text: "✨", key: msg.key },
+          react: { text: "", key: msg.key },
         })
       ).catch(() => {});
     } catch (err) {
       logger?.error?.(`[hellokitty] ${err?.stack || err?.message || err}`);
       Promise.resolve(
         sock.sendMessage(msg.key.remoteJid, {
-          react: { text: "❌", key: msg.key },
+          react: { text: "[FAIL]", key: msg.key },
         })
       ).catch(() => {});
       await reply(`Gagal membuat sticker Hello Kitty: ${err.message}`);

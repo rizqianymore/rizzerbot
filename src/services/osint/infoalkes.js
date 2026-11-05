@@ -14,6 +14,7 @@ const client = axios.create({
 });
 
 let cachedCookies = "";
+let cachedCsrf = "";
 let cookieExpiry = 0;
 
 const KAT_PENCARIAN = {
@@ -102,16 +103,20 @@ function extractStatus(raw) {
 
 async function ensureCookies() {
   const now = Date.now();
-  if (cachedCookies && now < cookieExpiry) return;
+  if (cachedCookies && cachedCsrf && now < cookieExpiry) return;
 
   try {
-    const res = await client.get(BASE, {
+    const res = await client.get(`${BASE}/cari`, {
       headers: { "User-Agent": UA, Accept: "text/html,*/*" },
     });
     const cookies = res.headers["set-cookie"];
     if (cookies) {
       cachedCookies = cookies.map((c) => c.split(";")[0]).join("; ");
       cookieExpiry = now + 55 * 60 * 1000;
+    }
+    const tokenMatch = String(res.data || "").match(/<meta name="csrf-token" content="([^"]+)">/);
+    if (tokenMatch) {
+      cachedCsrf = tokenMatch[1];
     }
   } catch (err) {
     console.warn("[InfoAlkes] Gagal refresh cookies:", err.message);
@@ -175,11 +180,12 @@ export async function searchInfoAlkes(query, category = "nomor_izin_edar", page 
   params.append("strCari", q);
 
   try {
-    const res = await client.get(SEARCH_URL, {
-      params,
+    const res = await client.post(SEARCH_URL, params.toString(), {
       headers: {
         "User-Agent": UA,
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         Accept: "application/json,*/*",
+        "X-CSRF-TOKEN": cachedCsrf,
         "X-Requested-With": "XMLHttpRequest",
         Referer: `${BASE}/cari`,
         Cookie: cachedCookies,
@@ -189,6 +195,7 @@ export async function searchInfoAlkes(query, category = "nomor_izin_edar", page 
     if (res.status !== 200) {
       if (res.status === 401 || res.status === 419) {
         cachedCookies = "";
+        cachedCsrf = "";
         cookieExpiry = 0;
         await ensureCookies();
         if (cachedCookies) return searchInfoAlkes(query, category, page, perPage);
@@ -245,24 +252,24 @@ export function formatResults(query, result, startTime, category = "nomor_izin_e
   const { data, total, filtered } = result;
 
   if (data.length === 0) {
-    return `🔍 *CEK INFO ALKES/PKRT*\n\nQuery: \`${query}\`\nKategori: \`${categoryLabel(category)}\`\n\n❌ Tidak ditemukan data.\n\n_Query: ${latency} ms_`;
+    return ` *CEK INFO ALKES/PKRT*\n\nQuery: \`${query}\`\nKategori: \`${categoryLabel(category)}\`\n\n[FAIL] Tidak ditemukan data.\n\n_Query: ${latency} ms_`;
   }
 
   const displayed = data.slice(0, 10);
-  let text = `🔍 *CEK INFO ALKES/PKRT*\n\n`;
+  let text = ` *CEK INFO ALKES/PKRT*\n\n`;
   text += `Query: \`${query}\`\n`;
   text += `Total: *${filtered.toLocaleString("id-ID")}* dari ${total.toLocaleString("id-ID")} (halaman ${result.page})\n\n`;
 
   displayed.forEach((item, i) => {
     text += `${i + 1}. *${item.namaProduk}*\n`;
-    text += `   🔢 *No. Izin:* ${item.nomorIzin}\n`;
-    text += `   📦 *Kategori:* ${item.keterangan}\n`;
-    text += `   🏷️ *Jenis:* ${item.jenisProduk}\n`;
-    text += `   📋 *Tipe/Kelas:* ${item.tipe} / ${item.kelas}\n`;
-    text += `   🏭 *Pendaftar:* ${item.pendaftar}\n`;
-    text += `   🏪 *Produsen:* ${item.produsen} (${item.produsenNegara})\n`;
-    text += `   📅 *Terbit:* ${item.terbit} | *Expired:* ${item.expired}\n`;
-    text += `   ✅ *Status:* ${item.status}\n\n`;
+    text += `    *No. Izin:* ${item.nomorIzin}\n`;
+    text += `    *Kategori:* ${item.keterangan}\n`;
+    text += `    *Jenis:* ${item.jenisProduk}\n`;
+    text += `    *Tipe/Kelas:* ${item.tipe} / ${item.kelas}\n`;
+    text += `    *Pendaftar:* ${item.pendaftar}\n`;
+    text += `    *Produsen:* ${item.produsen} (${item.produsenNegara})\n`;
+    text += `    *Terbit:* ${item.terbit} | *Expired:* ${item.expired}\n`;
+    text += `   [OK] *Status:* ${item.status}\n\n`;
   });
 
   if (data.length > 10) {

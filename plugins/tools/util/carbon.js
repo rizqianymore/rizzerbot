@@ -73,7 +73,7 @@ export default {
     }
 
     try {
-      await sock.sendMessage(remoteJid, { image: buffer, caption: "⚡ Carbon.sh" }, { quoted: msg });
+      await sock.sendMessage(remoteJid, { image: buffer, caption: " Carbon.sh" }, { quoted: msg });
     } catch (err) {
       return reply(`Gagal kirim gambar Carbon: ${err?.message || err}`);
     }

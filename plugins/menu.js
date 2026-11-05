@@ -100,7 +100,7 @@ export default {
       }
 
       return await reply(
-        `❌ Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
+        `[FAIL] Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
         `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`
       );
     }

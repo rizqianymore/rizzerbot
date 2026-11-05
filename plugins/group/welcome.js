@@ -32,8 +32,8 @@ export default {
       db.setGroupSetting?.(ctx.remoteJid, "welcome", enable);
       await context.reply(
         enable
-          ? "✅ *WELCOME DIAKTIFKAN*\nBot akan menyapa setiap ada anggota baru yang bergabung ke grup."
-          : "✅ *WELCOME DIMATIKAN*"
+          ? "[OK] *WELCOME DIAKTIFKAN*\nBot akan menyapa setiap ada anggota baru yang bergabung ke grup."
+          : "[OK] *WELCOME DIMATIKAN*"
       );
     } catch (_) {
       await context.reply(`Fitur welcome berhasil diubah menjadi: *${enable ? "AKTIF" : "MATI"}*`);

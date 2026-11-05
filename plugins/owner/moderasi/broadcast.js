@@ -17,14 +17,14 @@ export default {
       let sent = 0;
       for (const id of ids) {
         try {
-          await sock.sendMessage(id, { text: `📢 *Broadcast*\n\n${message}` });
+          await sock.sendMessage(id, { text: ` *Broadcast*\n\n${message}` });
           sent++;
           await new Promise((r) => setTimeout(r, 800));
         } catch (_) {}
       }
-      await reply(`✅ Broadcast terkirim ke ${sent}/${ids.length} grup`);
+      await reply(`[OK] Broadcast terkirim ke ${sent}/${ids.length} grup`);
     } catch (e) {
-      await reply(`❌ Gagal broadcast: ${e?.message || e}`);
+      await reply(`[FAIL] Gagal broadcast: ${e?.message || e}`);
     }
   },
 };

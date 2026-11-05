@@ -94,10 +94,10 @@ export function parseOperator(input) {
 export function getOperatorInfoText(input) {
   const r = parseOperator(input);
   if (!r.valid) {
-    return `❌ ${r.reason || "Nomor tidak valid."}`;
+    return `[FAIL] ${r.reason || "Nomor tidak valid."}`;
   }
   return (
-    `📱 *INFO OPERATOR SELULER*\n` +
+    ` *INFO OPERATOR SELULER*\n` +
     `Nomor: \`${r.normalized}\`\n` +
     `Prefix: \`${r.prefix}*\`\n` +
     `Operator: *${r.operator}*\n` +
