@@ -1,51 +1,70 @@
+import fs from "fs";
+import path from "path";
+
+const configPath = path.join(process.cwd(), "config", "config.json");
+
+function loadConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, "utf8");
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.warn("[Config] Gagal membaca config.json, fallback aktif:", err.message);
+  }
+  return {};
+}
+
+const rawConfig = loadConfig();
+
 export const settings = {
-  botName: "Rizzer Bot",
-  ownerName: "Pentagon",
-  ownerNumber: "6287847566690",
-  pairingNumber: "6287847566690",
-  ownerNumbers: [],
-  premiumNumbers: [],
-  adminNumbers: [],
-  usePairingCode: true,
+  botName: rawConfig.botName || "Rizzer Bot",
+  ownerName: rawConfig.ownerName || "Pentagon",
+  ownerNumber: rawConfig.ownerNumber || "6287847566690",
+  pairingNumber: rawConfig.pairingNumber || "6287847566690",
+  ownerNumbers: rawConfig.ownerNumbers || [],
+  premiumNumbers: rawConfig.premiumNumbers || [],
+  adminNumbers: rawConfig.adminNumbers || [],
+  usePairingCode: rawConfig.usePairingCode ?? true,
 
-  public: true,
-  maintenance: false,
-  maintenanceMessage: "🔧 Bot sedang maintenance. Coba lagi nanti.",
-  prefix: ".",
+  public: rawConfig.public ?? true,
+  maintenance: rawConfig.maintenance ?? false,
+  maintenanceMessage: rawConfig.maintenanceMessage || "[!] Bot sedang maintenance. Coba lagi nanti.",
+  prefix: rawConfig.prefix || ".",
 
-  publicCommands: ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
+  publicCommands: rawConfig.publicCommands || ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
 
-  silentDeny: false,
+  silentDeny: rawConfig.silentDeny ?? false,
 
-  autoRead: false,
-  autoOnline: true,
-  cooldownTime: 0,
-  responseDelay: 0,
+  autoRead: rawConfig.autoRead ?? false,
+  autoOnline: rawConfig.autoOnline ?? true,
+  cooldownTime: rawConfig.cooldownTime || 0,
+  responseDelay: rawConfig.responseDelay || 0,
 
-  antiBotLuar: true,
-  botNumbers: [],
-  antiVirtex: true,
-  maxMessageLength: 5000,
-  antiBurst: true,
-  antilinkExtra: true,
+  antiBotLuar: rawConfig.antiBotLuar ?? true,
+  botNumbers: rawConfig.botNumbers || [],
+  antiVirtex: rawConfig.antiVirtex ?? true,
+  maxMessageLength: rawConfig.maxMessageLength || 5000,
+  antiBurst: rawConfig.antiBurst ?? true,
+  antilinkExtra: rawConfig.antilinkExtra ?? true,
 
-  stickerPackName: "Rizzer Bot Stickers",
-  stickerAuthor: "Rizzer Bot [Private]",
-  image: "assets/image/banner.png",
-  linkTitle: "Rizzer Bot",
-  linkBody: "Simple & Clean WhatsApp Bot",
-  linkUrl: "https://whatsapp.com/",
-  linkImage: "assets/image/banner.png",
+  stickerPackName: rawConfig.stickerPackName || "Rizzer Bot Stickers",
+  stickerAuthor: rawConfig.stickerAuthor || "Rizzer Bot [Private]",
+  image: rawConfig.image || "assets/image/banner.png",
+  linkTitle: rawConfig.linkTitle || "Rizzer Bot",
+  linkBody: rawConfig.linkBody || "Simple & Clean WhatsApp Bot",
+  linkUrl: rawConfig.linkUrl || "https://whatsapp.com/",
+  linkImage: rawConfig.linkImage || "assets/image/banner.png",
 
-  channelJid: "",
-  channelName: "Official Channel",
-  autoForwardTrxToChannel: false,
+  channelJid: rawConfig.channelJid || "",
+  channelName: rawConfig.channelName || "Official Channel",
+  autoForwardTrxToChannel: rawConfig.autoForwardTrxToChannel ?? false,
 
   siswaApiUrl:
+    rawConfig.siswaApiUrl ||
     "https://script.google.com/macros/s/AKfycbzFd_CjY2y6jnle9hmlp71nyxy8mscur2tWF8gz773-IthSVkKF3v3Px3viPhPcA4U2mw/exec",
 
-  qrisString:
-    "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
-  qrisMerchantName: "Rizzer Cloud",
-  qrisCity: "JAKARTA BARAT",
+  qrisString: rawConfig.qrisPayload || rawConfig.qrisString || "",
+  qrisMerchantName: rawConfig.qrisMerchantName || "Rizzer Cloud",
+  qrisCity: rawConfig.qrisCity || "JAKARTA BARAT",
 };
