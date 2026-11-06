@@ -1,4 +1,4 @@
-import { PLAT_WILAYAH, CD_COUNTRY, ZZ_MAP } from "./data.js";
+import { PLAT_WILAYAH, CD_COUNTRY, ZZ_MAP, RI_PEJABAT } from "./data.js";
 
 export function getJenisKendaraan(angka, kodeDepan) {
   const n = Number(angka);
@@ -29,6 +29,28 @@ export function parsePlat(rawInput) {
   const raw = String(rawInput || "").trim();
   if (!raw) return { valid: false, reason: "input kosong" };
   const norm = normalizeInput(raw);
+
+  // 1. Deteksi Plat RI Pejabat Negara (cth: RI 1, RI 2, RI 14)
+  const mRi = norm.match(/^RI\s*(\d{1,3})$/);
+  if (mRi) {
+    const num = Number(mRi[1]);
+    const jabatan = RI_PEJABAT[num] || `Pejabat Negara RI Urutan ${num}`;
+    return {
+      valid: true,
+      kind: "pejabat-ri",
+      formatted: `RI ${num}`,
+      kode: "RI",
+      angka: String(num),
+      suffix: "",
+      provinsi: "Nasional (Pusat Pemerintahan RI)",
+      wilayah: "Kendaraan Dinas Lembaga Kepresidenan / Menteri / Pejabat Tinggi Negara",
+      areas: ["Seluruh Wilayah Republik Indonesia"],
+      jenis: "Mobil Dinas Kepresidenan / Pejabat Tinggi Negara",
+      jabatan,
+      khusus: `Plat Dinas RI (${jabatan})`,
+      note: "Kendaraan dinas kepresidenan / kabinet / lembaga tinggi negara RI (Pelat Hitam/Merah Protokoler).",
+    };
+  }
 
   let m = norm.match(/^(CD|CC)\s*(\d{1,3})(?:\s*P)?\s*(\d{1,4})$/);
   if (m) {

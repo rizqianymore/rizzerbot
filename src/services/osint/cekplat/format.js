@@ -7,6 +7,7 @@ export function formatPlatInfo(p) {
   lines.push(`Kode Wilayah: ${p.kode}`);
   lines.push(`Provinsi: ${p.samsat?.provinsi || p.provinsi}`);
   lines.push(`Wilayah: ${p.wilayah}`);
+  if (p.jabatan) lines.push(`Pejabat: ${p.jabatan}`);
   if (p.negara) lines.push(`Negara: ${p.negara}`);
   if (p.samsat?.daerah) lines.push(`Daerah: ${p.samsat.daerah}`);
   if (p.samsat?.samsat) lines.push(`Samsat: ${p.samsat.samsat}`);
