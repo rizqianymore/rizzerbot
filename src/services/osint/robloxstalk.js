@@ -1,4 +1,7 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const robloxCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 /**
  * Stalker Profil Roblox (Official Roblox Users & Thumbnails API)
@@ -10,6 +13,9 @@ export async function lookupRoblox(rawUsername) {
   if (!username) {
     return { valid: false, reason: "Username Roblox tidak boleh kosong." };
   }
+
+  const cached = robloxCache.get(username.toLowerCase());
+  if (cached) return cached;
 
   try {
     // 1. Dapatkan User ID dari username
@@ -49,7 +55,7 @@ export async function lookupRoblox(rawUsername) {
       createdDate = profileData.created.split("T")[0];
     }
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       userId,
@@ -62,6 +68,8 @@ export async function lookupRoblox(rawUsername) {
       avatarUrl,
       profileUrl: `https://www.roblox.com/users/${userId}/profile`,
     };
+    robloxCache.set(username.toLowerCase(), result);
+    return result;
   } catch (err) {
     return {
       valid: false,

@@ -1,4 +1,7 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const wikiCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 300 });
 
 /**
  * Intelijen Profil Tokoh, Publik Figur, & Entitas dari Ensiklopedia Wikipedia (ID & EN)
@@ -13,6 +16,10 @@ export async function lookupWiki(query, lang = "id") {
   }
 
   const langCode = lang === "en" ? "en" : "id";
+  const cacheKey = `${langCode}:${clean.toLowerCase()}`;
+  const cached = wikiCache.get(cacheKey);
+  if (cached) return cached;
+
   const apiUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&titles=${encodeURIComponent(clean)}&pithumbsize=400&format=json&redirects=1`;
 
   try {
@@ -42,7 +49,7 @@ export async function lookupWiki(query, lang = "id") {
     const extract = page.extract ? page.extract.slice(0, 450) + "..." : "Tidak ada ringkasan biografi.";
     const avatarUrl = page.thumbnail?.source || null;
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       title,
@@ -50,6 +57,8 @@ export async function lookupWiki(query, lang = "id") {
       avatarUrl,
       wikiUrl: `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title)}`,
     };
+    wikiCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     return { valid: false, reason: err.message || "Gagal menghubungi Wikipedia API." };
   }

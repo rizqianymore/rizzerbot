@@ -1,4 +1,7 @@
 import axios from "axios";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const tiktokCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 /**
  * Intelijen Profil TikTok (oEmbed Official API + Bright Data Scraping Fallback)
@@ -15,6 +18,9 @@ export async function lookupTiktok(rawUsername) {
       reason: "Username TikTok tidak valid (harus 2-32 karakter alfanumerik / titik / underscore).",
     };
   }
+
+  const cached = tiktokCache.get(username.toLowerCase());
+  if (cached) return cached;
 
   const profileUrl = `https://www.tiktok.com/@${username}`;
   const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(profileUrl)}`;
@@ -43,7 +49,7 @@ export async function lookupTiktok(rawUsername) {
   const authorUrl = oembedData.author_url || profileUrl;
   const embedTitle = oembedData.title || `${authorName}'s Profile`;
 
-  return {
+  const result = {
     valid: true,
     exists: true,
     username,
@@ -51,4 +57,6 @@ export async function lookupTiktok(rawUsername) {
     embedTitle,
     profileUrl: authorUrl,
   };
+  tiktokCache.set(username.toLowerCase(), result);
+  return result;
 }

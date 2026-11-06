@@ -1,4 +1,7 @@
 import https from "node:https";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const igCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 function fetchIgHtml(username, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
@@ -48,6 +51,9 @@ export async function lookupInstagram(rawUsername) {
   if (!username || !/^[a-zA-Z0-9_.-]{1,30}$/.test(username)) {
     return { valid: false, reason: "Username Instagram tidak valid." };
   }
+
+  const cached = igCache.get(username.toLowerCase());
+  if (cached) return cached;
 
   let html = null;
   try {
@@ -109,7 +115,7 @@ export async function lookupInstagram(rawUsername) {
   const imgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i);
   let avatarUrl = imgMatch ? imgMatch[1].replace(/&amp;/g, "&") : null;
 
-  return {
+  const result = {
     valid: true,
     exists: true,
     username,
@@ -120,4 +126,6 @@ export async function lookupInstagram(rawUsername) {
     avatarUrl,
     profileUrl: `https://www.instagram.com/${username}/`,
   };
+  igCache.set(username.toLowerCase(), result);
+  return result;
 }
