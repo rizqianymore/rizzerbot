@@ -151,3 +151,147 @@ export function parseImei(rawImei) {
     kemenperinCheckUrl: "https://imei.kemenperin.go.id/",
   };
 }
+
+/**
+ * Helper untuk membersihkan tag HTML
+ */
+function stripHtml(html = "") {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Web scraping IMEI online lookup menggunakan Bright Data Web Unlocker / Scraping API
+ * @param {string} rawImei 
+ * @param {object} [options]
+ * @returns {Promise<object>}
+ */
+export async function scrapeImeiOnline(rawImei, options = {}) {
+  const baseParsed = parseImei(rawImei);
+  if (!baseParsed.valid) {
+    return {
+      ...baseParsed,
+      scraped: false,
+      scrapeSource: null,
+      details: null,
+    };
+  }
+
+  const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
+  if (!isBrightDataEnabled()) {
+    return {
+      ...baseParsed,
+      scraped: false,
+      scrapeSource: null,
+      scrapeError: "Bright Data tidak aktif atau BRIGHTDATA_API_KEY belum dikonfigurasi.",
+      details: null,
+    };
+  }
+
+  const targetImei = baseParsed.imei;
+  const timeout = options.timeout || 35000;
+
+  // 1. Coba Scraping via IMEI24 (Target utama detail device & blacklist check)
+  try {
+    const imei24Url = `https://imei24.com/check/${targetImei}`;
+    const rawHtml = await brightDataRequest(imei24Url, {
+      format: "raw",
+      timeout,
+    });
+
+    if (rawHtml && typeof rawHtml === "string" && rawHtml.length > 200) {
+      const details = {};
+      
+      // Ekstrak info penting dari tabel/div spesifikasi
+      const rowRegex = /<(?:tr|div|li)[^>]*>\s*<(?:th|td|span|b|strong)[^>]*>([^<:]+)<\/(?:th|td|span|b|strong)>[\s:]*<(?:td|span|div)[^>]*>([\s\S]*?)<\/(?:td|span|div)>/gi;
+      let match;
+      while ((match = rowRegex.exec(rawHtml)) !== null) {
+        const key = stripHtml(match[1]).trim();
+        const val = stripHtml(match[2]).trim();
+        if (key && val && key.length < 50 && val.length < 200 && !details[key]) {
+          details[key] = val;
+        }
+      }
+
+      // Cari judul model / brand
+      const titleMatch = rawHtml.match(/<h[1-3][^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/h[1-3]>/i) ||
+                         rawHtml.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      const scrapedTitle = titleMatch ? stripHtml(titleMatch[1]) : null;
+
+      const brand = details["Brand"] || details["Make"] || (scrapedTitle ? scrapedTitle.split(" ")[0] : null) || baseParsed.brand;
+      const model = details["Model"] || details["Device"] || scrapedTitle || baseParsed.model;
+
+      if (Object.keys(details).length > 0 || scrapedTitle) {
+        return {
+          ...baseParsed,
+          scraped: true,
+          scrapeSource: "imei24.com",
+          brand,
+          model,
+          details,
+        };
+      }
+    }
+  } catch (err) {
+    // Lanjut fallback bila attempt 1 gagal
+  }
+
+  // 2. Fallback ke IMEICheck / IMEI.info via Bright Data
+  try {
+    const imeiInfoUrl = `https://www.imei.info/check/${targetImei}/`;
+    const rawHtml = await brightDataRequest(imeiInfoUrl, {
+      format: "raw",
+      timeout,
+    });
+
+    if (rawHtml && typeof rawHtml === "string" && rawHtml.length > 200) {
+      const details = {};
+      const rowRegex = /<tr[^>]*>\s*<td[^>]*>([^<:]+)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/gi;
+      let match;
+      while ((match = rowRegex.exec(rawHtml)) !== null) {
+        const key = stripHtml(match[1]).trim();
+        const val = stripHtml(match[2]).trim();
+        if (key && val && key.length < 50 && val.length < 200 && !details[key]) {
+          details[key] = val;
+        }
+      }
+
+      const brand = details["Brand"] || details["Producer"] || baseParsed.brand;
+      const model = details["Model"] || details["Device"] || baseParsed.model;
+
+      if (Object.keys(details).length > 0) {
+        return {
+          ...baseParsed,
+          scraped: true,
+          scrapeSource: "imei.info",
+          brand,
+          model,
+          details,
+        };
+      }
+    }
+  } catch (err) {
+    return {
+      ...baseParsed,
+      scraped: false,
+      scrapeSource: null,
+      scrapeError: err.message || "Gagal scraping data IMEI online",
+      details: null,
+    };
+  }
+
+  return {
+    ...baseParsed,
+    scraped: false,
+    scrapeSource: null,
+    details: null,
+  };
+}

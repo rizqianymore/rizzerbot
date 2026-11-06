@@ -1,4 +1,5 @@
-import { parseImei } from "@/src/services/osint/imei.js";
+import { parseImei, scrapeImeiOnline } from "@/src/services/osint/imei.js";
+import { isBrightDataEnabled } from "@/src/services/network/brightdata.js";
 
 export default {
   name: "imei",
@@ -26,7 +27,13 @@ export default {
 
     await context.sendTyping();
 
-    const result = parseImei(input);
+    let result;
+    if (isBrightDataEnabled()) {
+      result = await scrapeImeiOnline(input);
+    } else {
+      result = parseImei(input);
+    }
+
     if (!result.valid) {
       return context.reply(`Format IMEI tidak valid: ${result.reason}`);
     }
@@ -50,12 +57,23 @@ export default {
       `• Merek       : ${result.brand}`,
       `• Model / Seri: ${result.model}`,
       `• Serial Number: ${result.serialNumber}`,
+    ];
+
+    if (result.scraped && result.details && Object.keys(result.details).length > 0) {
+      out.push(``, `*Spesifikasi & Live Data (${result.scrapeSource}):*`);
+      const topKeys = Object.keys(result.details).slice(0, 10);
+      for (const k of topKeys) {
+        out.push(`• ${k}: ${result.details[k]}`);
+      }
+    }
+
+    out.push(
       ``,
       `*Pengecekan Legalitas Kemenperin / Bea Cukai RI:*`,
       `• Bea Cukai   : ${result.beacukaiCheckUrl}`,
-      `• Kemenperin  : ${result.kemenperinCheckUrl}`,
-    ].join("\n");
+      `• Kemenperin  : ${result.kemenperinCheckUrl}`
+    );
 
-    return context.reply(out);
+    return context.reply(out.join("\n"));
   },
 };
