@@ -6,7 +6,7 @@
  * 1. Menentukan dan mendesain 100% tampilan Menu Bot (`renderCustomMenu`).
  * 2. Menambahkan perintah/case non-plugin mandiri (`handleCustomCase`).
  *
- * Tanpa perlu file terpisah seperti custom/menu.js. Semua terpusat di sini!
+ * Desain bersih, rapi, dan minimalis tanpa emoji berlebihan / aneh-aneh.
  * ==============================================================================
  */
 
@@ -25,12 +25,12 @@
 export function renderCustomMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
 
-  // Header Kustom
+  // Header Kustom Bersih & Minimalis
   let out = `╭━━━━━━━『 *${botName.toUpperCase()}* 』━━━━━━━\n`;
-  out += `┃ 🌐 *Status:* Active & Connected\n`;
-  out += `┃ ⚡ *Prefix:* [ ${prefix} ]\n`;
-  out += `┃ 👤 *Role:* ${role}\n`;
-  out += `┃ 📦 *Total Fitur:* ${totalCmds} Perintah\n`;
+  out += `│ • Status: Online\n`;
+  out += `│ • Prefix: [ ${prefix} ]\n`;
+  out += `│ • Role: ${role}\n`;
+  out += `│ • Total: ${totalCmds} Perintah\n`;
   out += `╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
@@ -41,7 +41,7 @@ export function renderCustomMenu(data) {
       out += `│ • \`${prefix}${cmd.name}\`\n`;
     }
     out += `└───\n\n`;
-    out += `_💡 Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    out += `_Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
     return out;
   }
 
@@ -56,7 +56,7 @@ export function renderCustomMenu(data) {
       }
       out += `└───\n\n`;
     }
-    out += `_💡 Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    out += `_Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
     return out;
   }
 
@@ -65,11 +65,11 @@ export function renderCustomMenu(data) {
   for (const cat of catKeys) {
     const count = categories[cat]?.length || 0;
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
-    out += `│ ✦ \`${prefix}menu ${alias}\` ➜ *${cat}* (${count})\n`;
+    out += `│ • \`${prefix}menu ${alias}\` -> *${cat}* (${count})\n`;
   }
   out += `└───\n\n`;
-  out += `• \`${prefix}menu all\` ➜ Buka seluruh menu lengkap\n\n`;
-  out += `_💡 Ketik \`${prefix}menu <kategori>\` untuk membuka daftar perintah._`;
+  out += `• \`${prefix}menu all\` -> Buka seluruh menu lengkap\n\n`;
+  out += `_Ketik \`${prefix}menu <kategori>\` untuk membuka daftar perintah._`;
 
   return out;
 }
@@ -85,11 +85,11 @@ export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, 
   switch (cmd) {
     case "tes":
     case "test":
-      return reply("⚡ Bot aktif, online, dan berjalan normal!");
+      return reply("Bot aktif, online, dan berjalan normal.");
 
     case "say":
     case "echo":
-      if (!q) return reply(`Ketik teks yang ingin diulangi! Contoh: \`${p}say halo dunia\``);
+      if (!q) return reply(`Ketik teks yang ingin diulangi. Contoh: \`${p}say halo dunia\``);
       return reply(q);
 
     case "myrole":
