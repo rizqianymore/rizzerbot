@@ -8,8 +8,12 @@ import { askMistral, isMistralConfigured } from "./mistral.js";
 import { askGithubModels, isGithubModelsConfigured } from "./github-models.js";
 import { askNvidia, isNvidiaConfigured } from "./nvidia.js";
 import { askPollinations } from "./pollinations.js";
+import { askScrapedAI, scrapeDeepSeekR1, scrapeDuckAI } from "./aiscrape.js";
 
 export const AI_SOURCES = [
+  "scrape",
+  "deepseek-scrape",
+  "duckai-scrape",
   "gemini",
   "groq",
   "deepseek",
@@ -23,6 +27,12 @@ export const AI_SOURCES = [
 ];
 
 const ALIASES = {
+  scrape: "scrape",
+  web: "scrape",
+  free: "scrape",
+  nokey: "scrape",
+  duckai: "duckai-scrape",
+  r1scrape: "deepseek-scrape",
   gm: "gemini",
   google: "gemini",
   gq: "groq",
@@ -60,6 +70,9 @@ function keyedChain() {
 }
 
 async function runSource(source, clean, options) {
+  if (source === "scrape") return await askScrapedAI(clean);
+  if (source === "deepseek-scrape") return await scrapeDeepSeekR1(clean);
+  if (source === "duckai-scrape") return await scrapeDuckAI(clean);
   if (source === "gemini") return { ...(await askGemini(clean, options)), source };
   if (source === "groq") return { ...(await askGroq(clean, options)), source };
   if (source === "deepseek") return { ...(await askDeepSeek(clean, options)), source };
@@ -81,6 +94,10 @@ export async function askAI(prompt, options = {}) {
 
   const chain = [];
   if (prefer) chain.push(prefer);
+
+  // Utamakan AI Web Scraping (Gratis, Akurat, Tanpa API Key)
+  if (!chain.includes("scrape")) chain.push("scrape");
+
   for (const s of keyedChain()) {
     if (!chain.includes(s)) chain.push(s);
   }
@@ -107,6 +124,7 @@ export async function askAI(prompt, options = {}) {
 
 export function getAIStatus() {
   return {
+    "web-scraping": "Siap (DeepSeek-R1 / DuckAI / Meta AI - Tanpa API Key)",
     gemini: isGeminiConfigured() ? "Siap (GEMINI_API_KEY aktif)" : "Belum aktif (aistudio.google.com/apikey)",
     groq: isGroqConfigured() ? "Siap (GROQ_API_KEY aktif)" : "Belum aktif (console.groq.com/keys)",
     deepseek: isDeepSeekConfigured() ? "Siap (DEEPSEEK_API_KEY aktif)" : "Belum aktif (platform.deepseek.com)",
