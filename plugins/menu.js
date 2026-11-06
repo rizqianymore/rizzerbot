@@ -7,7 +7,12 @@ import { customMenuConfig } from "@/custom/menu.js";
 export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, isPublic, showAll } = data;
 
+  // Prioritas utama: Custom Menu dari custom/menu.js
   if (customMenuConfig?.enabled) {
+    if (typeof customMenuConfig.renderMenu === "function") {
+      return customMenuConfig.renderMenu(data);
+    }
+
     let text = "";
     if (typeof customMenuConfig.header === "function") {
       text += customMenuConfig.header({ botName, prefix, role, totalCmds, isPublic });
@@ -27,7 +32,6 @@ export function renderMenu(data) {
         }
       }
     } else if (typeof customMenuConfig.mainMenu === "function") {
-      // Tampilan ringkas (Pecah per Kategori)
       text += customMenuConfig.mainMenu(
         { botName, prefix, role, totalCmds, isPublic },
         categories,
