@@ -5,6 +5,7 @@ import {
   getOrder,
   updateOrderStatus,
 } from "@/src/services/shop/shop.js";
+import { forwardTestimonyToChannel } from "@/src/services/shop/testimony.js";
 
 function formatRupiah(num) {
   return "Rp" + Number(num).toLocaleString("id-ID");
@@ -124,7 +125,17 @@ export default {
       if (!ord) return reply(`Pesanan dengan ID *${orderId}* tidak ditemukan.`);
 
       updateOrderStatus(orderId, status);
-      return reply(`Status pesanan *${orderId}* berhasil diubah menjadi: *${status}*.`);
+
+      // Jika status diset ke COMPLETED atau PAID, tanyakan atau otomatis forward jika aktif
+      let extraNotice = "";
+      if (status === "COMPLETED" || status === "PAID") {
+        const posted = await forwardTestimonyToChannel(sock, ord);
+        if (posted) {
+          extraNotice = "\n• Testimoni transaksi otomatis diposting ke Saluran.";
+        }
+      }
+
+      return reply(`Status pesanan *${orderId}* berhasil diubah menjadi: *${status}*.${extraNotice}`);
     }
 
     return reply(`Perintah tidak dikenal. Ketik \`${p}manageproduct\` untuk panduan.`);
