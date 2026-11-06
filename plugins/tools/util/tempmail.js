@@ -109,8 +109,16 @@ export default {
           `• *Dari:* ${fullMsg.from}\n` +
           `• *Kepada:* \`${emailToRead}\`\n` +
           `• *Subjek:* ${fullMsg.subject || "(Tanpa Subjek)"}\n` +
-          `• *Waktu:* ${fullMsg.date}\n\n` +
-          `*Isi Pesan:*\n${content || "(Pesan kosong)"}`;
+          `• *Waktu:* ${fullMsg.date}\n\n`;
+
+        // Ekstraksi otomatis kode verifikasi / OTP (angka 4-8 digit)
+        const combined = `${fullMsg.subject || ""} ${content || ""}`;
+        const otpMatch = combined.match(/\b(?<!\w)(\d{4,8})\b/);
+        if (otpMatch) {
+          result += `🔑 *KODE OTP TERDETEKSI:* \`${otpMatch[1]}\`\n\n`;
+        }
+
+        result += `*Isi Pesan:*\n${content || "(Pesan kosong)"}`;
 
         if (fullMsg.attachments && fullMsg.attachments.length > 0) {
           result += `\n\n*Lampiran (${fullMsg.attachments.length}):*\n`;
