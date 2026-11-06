@@ -1,39 +1,11 @@
 import { askAI, getAIStatus, normalizeSource } from "@/src/services/ai/router.js";
 import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
 
-const MODEL_FLAGS = [
-  "--r1",
-  "--deepseek",
-  "--ds",
-  "--duckai",
-  "--duck",
-  "--scrape",
-  "--gemini",
-  "--gm",
-  "--groq",
-  "--gq",
-  "--opencode",
-  "--oc",
-  "--zen",
-  "--cerebras",
-  "--cb",
-  "--mistral",
-  "--mis",
-  "--openrouter",
-  "--or",
-  "--github",
-  "--gh",
-  "--nvidia",
-  "--nv",
-  "--polli",
-  "--pl",
-];
-
 export default {
   name: "ai",
   aliases: ["tanya", "chatai", "ask"],
-  description: "Tanya AI dengan format model pilihan dan pertanyaan teks",
-  usage: "[model] <pertanyaan> | contoh: .ai r1 jelaskan gravitasi",
+  description: "Tanya AI cerdas 100% Free Web Scraped (Tanpa API Key)",
+  usage: "[model] <pertanyaan> | contoh: .ai r1 jelaskan black hole",
   premiumOnly: true,
   category: "AI",
   run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
@@ -42,65 +14,48 @@ export default {
 
     if (!args || args.length === 0) {
       return reply(
-        `*CARA PENGGUNAAN AI*\n\n` +
+        `*AI ENGINE (100% BEBAS API KEY)*\n\n` +
           `Format:\n` +
           `• *${p}ai <pertanyaan>*\n` +
           `• *${p}ai <model> <pertanyaan>*\n\n` +
-          `Pilihan Model Populer:\n` +
-          `• *r1* / *deepseek* : DeepSeek R1 Reasoning (Gratis Scrape)\n` +
-          `• *duckai* : DuckAI Web (Gratis Scrape)\n` +
-          `• *opencode* / *oc* : OpenCode Zen (Free Coding Models)\n` +
-          `• *gemini* : Google Gemini AI\n` +
-          `• *groq* : Groq Llama Ultra-Fast\n\n` +
+          `Daftar Model Non-API Key:\n` +
+          `• *r1* / *deepseek* : DeepSeek R1 Reasoning (Web Scraped)\n` +
+          `• *duckai* : DuckAI Web Intelligence\n` +
+          `• *opencode* / *oc* : OpenCode Zen Free Coding Engine\n` +
+          `• *meta* / *llama* : Meta Llama 3 Web\n` +
+          `• *pollinations* : Pollinations Public Node\n\n` +
           `Contoh:\n` +
-          `• *${p}ai r1 Buatkan kode async retry di JavaScript*\n` +
-          `• *${p}ai Siapakah presiden pertama Indonesia?*\n` +
-          `• *${p}ai --models* (Cek status semua provider)`
+          `• *${p}ai r1 Buatkan kode async crawler di Node.js*\n` +
+          `• *${p}ai Siapakah penemu komputer?*\n` +
+          `• *${p}ai models* (Cek status model aktif)`
       );
     }
 
-    const firstWord = (args[0] || "").toLowerCase();
+    const firstWord = (args[0] || "").toLowerCase().replace(/^--/, "");
 
-    if (firstWord === "--models" || firstWord === "-m" || firstWord === "--status" || firstWord === "models") {
-      try {
-        const s = getAIStatus();
-        return reply(
-          `*STATUS AI PROVIDERS*\n\n` +
-            Object.entries(s)
-              .map(([k, v]) => `• *${k.toUpperCase()}*: ${v}`)
-              .join("\n")
-        );
-      } catch (err) {
-        return reply(`*STATUS GAGAL*\n${err?.message || "error"}`);
-      }
+    if (firstWord === "models" || firstWord === "status" || firstWord === "-m") {
+      const s = getAIStatus();
+      return reply(
+        `*STATUS MODEL AI (NON-API KEY)*\n\n` +
+          Object.entries(s)
+            .map(([k, v]) => `• *${k.toUpperCase()}*: ${v}`)
+            .join("\n")
+      );
     }
 
     let prefer = null;
     let queryArgs = [...args];
 
-    // 1. Cek apakah kata pertama adalah nama model langsung (misal: .ai r1 ..., .ai deepseek ..., .ai opencode ...)
-    const cleanFirst = firstWord.replace(/^--/, "");
-    const recognizedFirst = normalizeSource(cleanFirst);
-
-    if (recognizedFirst && args.length > 1) {
-      prefer = recognizedFirst;
-      queryArgs.shift(); // Buang kata pertama karena itu nama model
-    } else {
-      // 2. Cek apakah ada flag --model di tengah teks
-      let fullText = args.join(" ").trim();
-      for (const flag of MODEL_FLAGS) {
-        if (fullText.toLowerCase().includes(flag)) {
-          prefer = normalizeSource(flag.replace(/^--/, ""));
-          fullText = fullText.replace(new RegExp(flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "").trim();
-          break;
-        }
-      }
-      queryArgs = fullText.split(/\s+/).filter(Boolean);
+    // Cek apakah argumen pertama adalah nama model
+    const matchedModel = normalizeSource(firstWord);
+    if (matchedModel && args.length > 1) {
+      prefer = matchedModel;
+      queryArgs.shift();
     }
 
     const promptText = queryArgs.join(" ").trim();
     if (!promptText) {
-      return reply(`Silakan tuliskan teks pertanyaan setelah model! Contoh:\n*${p}ai ${prefer || "r1"} Halo apa kabar?*`);
+      return reply(`Silakan tulis pertanyaan kamu setelah model! Contoh:\n*${p}ai ${prefer || "r1"} Halo apa kabar?*`);
     }
 
     await reply("Memproses jawaban...");

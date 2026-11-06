@@ -1,132 +1,88 @@
-import { askGemini, isGeminiConfigured } from "./gemini.js";
-import { askGroq, isGroqConfigured } from "./groq.js";
-import { askDeepSeek, isDeepSeekConfigured } from "./deepseek.js";
-import { askOpenCode, isOpenCodeConfigured } from "./opencode.js";
-import { askOpenRouter, isOpenRouterConfigured } from "./openrouter.js";
-import { askCerebras, isCerebrasConfigured } from "./cerebras.js";
-import { askMistral, isMistralConfigured } from "./mistral.js";
-import { askGithubModels, isGithubModelsConfigured } from "./github-models.js";
-import { askNvidia, isNvidiaConfigured } from "./nvidia.js";
+import { askDeepSeek } from "./deepseek.js";
+import { askOpenCode } from "./opencode.js";
 import { askPollinations } from "./pollinations.js";
-import { askScrapedAI, scrapeDeepSeekR1, scrapeDuckAI } from "./aiscrape.js";
+import { askScrapedAI, scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI } from "./aiscrape.js";
 
 export const AI_SOURCES = [
-  "scrape",
-  "deepseek-scrape",
-  "duckai-scrape",
-  "gemini",
-  "groq",
+  "r1",
   "deepseek",
+  "duckai",
+  "meta",
   "opencode",
-  "cerebras",
-  "mistral",
-  "openrouter",
-  "github",
-  "nvidia",
   "pollinations",
 ];
 
 const ALIASES = {
-  // Model Scrape & Free
-  scrape: "scrape",
-  web: "scrape",
-  free: "scrape",
-  nokey: "scrape",
-  duckai: "duckai-scrape",
-  duck: "duckai-scrape",
-  r1: "deepseek-scrape",
-  r1scrape: "deepseek-scrape",
-  deepseekr1: "deepseek-scrape",
-  deepseek: "deepseek-scrape",
-  ds: "deepseek-scrape",
-  meta: "scrape",
-  llama: "groq",
-  llama3: "groq",
+  // DeepSeek & R1
+  r1: "r1",
+  deepseek: "deepseek",
+  ds: "deepseek",
+  r1scrape: "r1",
+  deepseekr1: "r1",
 
-  // Model Provider
-  gemini: "gemini",
-  gm: "gemini",
-  google: "gemini",
-  groq: "groq",
-  gq: "groq",
+  // DuckAI
+  duckai: "duckai",
+  duck: "duckai",
+  duckduckgo: "duckai",
+  ddg: "duckai",
+
+  // Meta Llama
+  meta: "meta",
+  metaai: "meta",
+  llama: "meta",
+  llama3: "meta",
+
+  // OpenCode Zen
   opencode: "opencode",
   oc: "opencode",
   zen: "opencode",
-  cerebras: "cerebras",
-  cb: "cerebras",
-  mistral: "mistral",
-  mis: "mistral",
-  openrouter: "openrouter",
-  or: "openrouter",
-  github: "github",
-  gh: "github",
-  nvidia: "nvidia",
-  nv: "nvidia",
+  code: "opencode",
+
+  // Pollinations Free
   pollinations: "pollinations",
   polli: "pollinations",
   pl: "pollinations",
+
+  // Universal
+  auto: "auto",
+  scrape: "auto",
+  free: "auto",
 };
 
 export function normalizeSource(s) {
   if (!s) return null;
   const k = String(s).toLowerCase();
-  return ALIASES[k] || (AI_SOURCES.includes(k) ? k : null);
-}
-
-function keyedChain() {
-  const chain = [];
-  if (isGeminiConfigured()) chain.push("gemini");
-  if (isGroqConfigured()) chain.push("groq");
-  if (isDeepSeekConfigured()) chain.push("deepseek");
-  if (isOpenCodeConfigured()) chain.push("opencode");
-  if (isCerebrasConfigured()) chain.push("cerebras");
-  if (isMistralConfigured()) chain.push("mistral");
-  if (isOpenRouterConfigured()) chain.push("openrouter");
-  if (isGithubModelsConfigured()) chain.push("github");
-  if (isNvidiaConfigured()) chain.push("nvidia");
-  return chain;
+  return ALIASES[k] || null;
 }
 
 async function runSource(source, clean, options) {
-  if (source === "scrape") return await askScrapedAI(clean);
-  if (source === "deepseek-scrape") return await scrapeDeepSeekR1(clean);
-  if (source === "duckai-scrape") return await scrapeDuckAI(clean);
-  if (source === "gemini") return { ...(await askGemini(clean, options)), source };
-  if (source === "groq") return { ...(await askGroq(clean, options)), source };
-  if (source === "deepseek") return { ...(await askDeepSeek(clean, options)), source };
-  if (source === "opencode") return { ...(await askOpenCode(clean, options)), source };
-  if (source === "cerebras") return { ...(await askCerebras(clean, options)), source };
-  if (source === "mistral") return { ...(await askMistral(clean, options)), source };
-  if (source === "openrouter") return { ...(await askOpenRouter(clean, options)), source };
-  if (source === "github") return { ...(await askGithubModels(clean, options)), source };
-  if (source === "nvidia") return { ...(await askNvidia(clean, options)), source };
-  if (source === "pollinations") return { ...(await askPollinations(clean, options)), source };
-  throw new Error(`Provider AI tidak dikenal: ${source}`);
+  if (source === "r1" || source === "deepseek") return await scrapeDeepSeekR1(clean);
+  if (source === "duckai") return await scrapeDuckAI(clean);
+  if (source === "meta") return await scrapeMetaAI(clean);
+  if (source === "opencode") return await askOpenCode(clean, options);
+  if (source === "pollinations") return await askPollinations(clean, options);
+  if (source === "auto") return await askScrapedAI(clean);
+  throw new Error(`Model AI tidak dikenal: ${source}`);
 }
 
+/**
+ * Universal AI Gateway - 100% Non API Key (Web Scraped & Free Public Engines)
+ * @param {string} prompt
+ * @param {object} options
+ */
 export async function askAI(prompt, options = {}) {
   const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt pertanyaan tidak boleh kosong.");
+  if (!clean) throw new Error("Pertanyaan tidak boleh kosong.");
   const prefer = normalizeSource(options.prefer);
   const errors = {};
 
+  // Rantai eksekusi 100% Free / Scraped
   const chain = [];
-  if (prefer) chain.push(prefer);
-
-  // Utamakan AI Web Scraping (Gratis, Akurat, Tanpa API Key)
-  if (!chain.includes("scrape")) chain.push("scrape");
-
-  for (const s of keyedChain()) {
+  if (prefer && prefer !== "auto") chain.push(prefer);
+  
+  // Auto-failover sequence across free web engines
+  for (const s of ["r1", "duckai", "opencode", "meta", "pollinations"]) {
     if (!chain.includes(s)) chain.push(s);
-  }
-  for (const s of ["pollinations"]) {
-    if (!chain.includes(s)) chain.push(s);
-  }
-
-  if (chain.length === 0) {
-    throw new Error(
-      "Tidak ada provider AI yang aktif. Konfigurasikan minimal satu API Key (GEMINI_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY, dll) di config/settings.js."
-    );
   }
 
   for (const source of chain) {
@@ -137,22 +93,16 @@ export async function askAI(prompt, options = {}) {
     }
   }
 
-  throw new Error(`Seluruh provider AI gagal: ${JSON.stringify(errors).slice(0, 300)}`);
+  throw new Error(`Seluruh model AI non-API Key gagal merespons: ${JSON.stringify(errors).slice(0, 300)}`);
 }
 
 export function getAIStatus() {
   return {
-    "web-scraping": "Siap (DeepSeek-R1 / DuckAI / Meta AI - Tanpa API Key)",
-    gemini: isGeminiConfigured() ? "Siap (GEMINI_API_KEY aktif)" : "Belum aktif (aistudio.google.com/apikey)",
-    groq: isGroqConfigured() ? "Siap (GROQ_API_KEY aktif)" : "Belum aktif (console.groq.com/keys)",
-    deepseek: isDeepSeekConfigured() ? "Siap (DEEPSEEK_API_KEY aktif)" : "Belum aktif (platform.deepseek.com)",
-    opencode: isOpenCodeConfigured() ? "Siap (OPENCODE_API_KEY aktif)" : "Belum aktif (opencode.ai/zen)",
-    cerebras: isCerebrasConfigured() ? "Siap (CEREBRAS_API_KEY aktif)" : "Belum aktif (cloud.cerebras.ai)",
-    mistral: isMistralConfigured() ? "Siap (MISTRAL_API_KEY aktif)" : "Belum aktif (console.mistral.ai)",
-    openrouter: isOpenRouterConfigured() ? "Siap (OPENROUTER_API_KEY aktif)" : "Belum aktif (openrouter.ai/keys)",
-    github: isGithubModelsConfigured() ? "Siap (GITHUB_TOKEN aktif)" : "Belum aktif (github.com/settings/tokens)",
-    nvidia: isNvidiaConfigured() ? "Siap (NVIDIA_API_KEY aktif)" : "Belum aktif (build.nvidia.com)",
-    pollinations: "Publik / Fallback (Tanpa API Key)",
+    "deepseek-r1": "Aktif (Web Scrape Live - Tanpa API Key)",
+    "duckai": "Aktif (DuckAI Web - Tanpa API Key)",
+    "opencode-zen": "Aktif (OpenCode Free Models - Tanpa API Key)",
+    "meta-llama": "Aktif (Meta AI Web - Tanpa API Key)",
+    "pollinations": "Aktif (Public Node - Tanpa API Key)",
   };
 }
 

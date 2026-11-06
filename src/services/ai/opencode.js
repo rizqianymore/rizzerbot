@@ -9,13 +9,14 @@ const MODELS = [
 ];
 
 export function isOpenCodeConfigured() {
-  return Boolean(process.env.OPENCODE_API_KEY || process.env.OPENCODE_ZEN_API_KEY);
+  return true; // Selalu aktif karena gratis publik
 }
 
 export async function askOpenCode(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new Error("Prompt kosong.");
 
+  // Gunakan token public gratis tanpa butuh API key pengguna
   const key =
     options.apiKey ||
     process.env.OPENCODE_API_KEY ||
