@@ -1,4 +1,4 @@
-import { lookupWayback } from "@/src/services/osint/wayback/index.js";
+import { lookupWayback } from "@/src/services/osint/wayback.js";
 
 export default {
   name: "wayback",

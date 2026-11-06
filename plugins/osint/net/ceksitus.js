@@ -1,4 +1,4 @@
-import { analyzeWebsite } from "@/src/services/osint/ceksitus/index.js";
+import { analyzeWebsite } from "@/src/services/osint/ceksitus.js";
 
 export default {
   name: "ceksitus",

@@ -1,4 +1,4 @@
-import { lookupTelegram } from "@/src/services/osint/telegram/index.js";
+import { lookupTelegram } from "@/src/services/osint/telegram.js";
 
 export default {
   name: "tgstalk",

@@ -1,4 +1,4 @@
-import { checkEmailBreach } from "@/src/services/osint/leakcheck/index.js";
+import { checkEmailBreach } from "@/src/services/osint/leakcheck.js";
 
 export default {
   name: "leakcheck",

@@ -1,4 +1,4 @@
-import { trackResi, COURIERS } from "@/src/services/osint/resi/index.js";
+import { trackResi, COURIERS } from "@/src/services/osint/resi.js";
 
 export default {
   name: "cekresi",

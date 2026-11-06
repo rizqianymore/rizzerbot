@@ -1,4 +1,4 @@
-import { checkRekening } from "@/src/services/osint/cekrekening/index.js";
+import { checkRekening } from "@/src/services/osint/cekrekening.js";
 
 export default {
   name: "cekrekening",
