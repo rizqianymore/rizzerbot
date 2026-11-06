@@ -1,42 +1,97 @@
 /**
  * ==============================================================================
- * CUSTOM CASES & COMMANDS (User Playground)
+ * CUSTOM CASES & MANDIRI DISPLAY (100% User Playground)
  * ==============================================================================
- * Di file ini Anda bisa menambahkan perintah/case Anda sendiri dengan sintaks
- * yang sangat mudah tanpa perlu membongkar core bot.
+ * Di file ini Anda bisa:
+ * 1. Menentukan dan mendesain 100% tampilan Menu Bot (`renderCustomMenu`).
+ * 2. Menambahkan perintah/case non-plugin mandiri (`handleCustomCase`).
  *
- * Contoh cara menambah perintah:
- * case "halo":
- *   return reply("Halo juga! Selamat datang di bot.");
- *
- * case "info":
- *   return reply(`Waktu sekarang: ${new Date().toLocaleTimeString("id-ID")}`);
+ * Tanpa perlu file terpisah seperti custom/menu.js. Semua terpusat di sini!
  * ==============================================================================
  */
 
+/**
+ * 1. TAMPILAN MENU KUSTOM MANDIRI (100% Desain Sendiri)
+ * @param {object} data
+ * - data.botName        : Nama bot
+ * - data.prefix         : Prefix aktif (misal: .)
+ * - data.role           : Role pengguna (Owner/Admin/Premium/User)
+ * - data.totalCmds      : Total seluruh perintah
+ * - data.categories     : Object array perintah { AI: [...], Tools: [...] }
+ * - data.catKeys        : Array nama kategori
+ * - data.targetCategory : Kategori yang sedang dibuka user (misal: 'AI')
+ * - data.showAll        : Boolean true jika user mengetik .menu all
+ */
+export function renderCustomMenu(data) {
+  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
+
+  // Header Kustom
+  let out = `╭━━━━━━━『 *${botName.toUpperCase()}* 』━━━━━━━\n`;
+  out += `┃ 🌐 *Status:* Active & Connected\n`;
+  out += `┃ ⚡ *Prefix:* [ ${prefix} ]\n`;
+  out += `┃ 👤 *Role:* ${role}\n`;
+  out += `┃ 📦 *Total Fitur:* ${totalCmds} Perintah\n`;
+  out += `╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
+  if (targetCategory && categories[targetCategory]) {
+    const cmds = categories[targetCategory] || [];
+    out += `┌───『 *KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length}) 』\n`;
+    for (const cmd of cmds) {
+      out += `│ • \`${prefix}${cmd.name}\`\n`;
+    }
+    out += `└───\n\n`;
+    out += `_💡 Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    return out;
+  }
+
+  // Tampilan 2: User meminta seluruh menu (.menu all)
+  if (showAll) {
+    for (const cat of catKeys) {
+      const cmds = categories[cat] || [];
+      if (!cmds || cmds.length === 0) continue;
+      out += `┌───『 *${cat.toUpperCase()}* (${cmds.length}) 』\n`;
+      for (const cmd of cmds) {
+        out += `│ • \`${prefix}${cmd.name}\`\n`;
+      }
+      out += `└───\n\n`;
+    }
+    out += `_💡 Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    return out;
+  }
+
+  // Tampilan 3: Menu Utama (Daftar Kategori Ringkas)
+  out += `┌───『 *DAFTAR KATEGORI MENU* 』\n`;
+  for (const cat of catKeys) {
+    const count = categories[cat]?.length || 0;
+    const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
+    out += `│ ✦ \`${prefix}menu ${alias}\` ➜ *${cat}* (${count})\n`;
+  }
+  out += `└───\n\n`;
+  out += `• \`${prefix}menu all\` ➜ Buka seluruh menu lengkap\n\n`;
+  out += `_💡 Ketik \`${prefix}menu <kategori>\` untuk membuka daftar perintah._`;
+
+  return out;
+}
+
+/**
+ * 2. CUSTOM CASES & PERINTAH MANDIRI
+ */
 export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, reply, sendTyping: _sendTyping, isOwner, isAdmin, isPremium, prefix }) {
-  const curPrefix = prefix || ".";
+  const p = prefix || ".";
+  const cmd = command.toLowerCase();
   const q = (args || []).join(" ").trim();
 
-  switch (command.toLowerCase()) {
-    // -------------------------------------------------------------
-    // CONTOH 1: Perintah sederhana teks balasan
-    // -------------------------------------------------------------
+  switch (cmd) {
     case "tes":
     case "test":
-      return reply("Bot aktif dan siap merespons!");
+      return reply("⚡ Bot aktif, online, dan berjalan normal!");
 
-    // -------------------------------------------------------------
-    // CONTOH 2: Perintah dengan argumen
-    // -------------------------------------------------------------
     case "say":
     case "echo":
-      if (!q) return reply(`Ketik teks yang ingin diulangi! Contoh: \`${curPrefix}say halo dunia\``);
+      if (!q) return reply(`Ketik teks yang ingin diulangi! Contoh: \`${p}say halo dunia\``);
       return reply(q);
 
-    // -------------------------------------------------------------
-    // CONTOH 3: Perintah cek status user
-    // -------------------------------------------------------------
     case "myrole":
       return reply(
         `*STATUS ROLE ANDA:*\n` +
@@ -45,12 +100,10 @@ export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, 
         `• Premium: ${isPremium ? "Ya" : "Bukan"}`
       );
 
-    // -------------------------------------------------------------
-    // Silakan tambahkan case Anda sendiri di bawah ini:
-    // -------------------------------------------------------------
-
     default:
-      // Kembalikan false jika command bukan custom case (agar diteruskan ke plugin biasa)
+      // Kembalikan false agar diteruskan ke plugin biasa jika tidak ada case yang cocok
       return false;
   }
 }
+
+export default { renderCustomMenu, handleCustomCase };
