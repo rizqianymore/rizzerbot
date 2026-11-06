@@ -1,4 +1,5 @@
 export const CATEGORY_ORDER = [
+  "AI",
   "Social Media",
   "Downloader & Media",
   "Tools",
@@ -13,6 +14,10 @@ export const CATEGORY_ORDER = [
 ];
 
 export const CATEGORY_ALIASES = {
+  ai: "AI",
+  "artificial intelligence": "AI",
+  chatgpt: "AI",
+  gpt: "AI",
   "social media": "Social Media",
   socialmedia: "Social Media",
   socmed: "Social Media",
