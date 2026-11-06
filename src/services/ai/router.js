@@ -1,6 +1,7 @@
 import { askGemini, isGeminiConfigured } from "./gemini.js";
 import { askGroq, isGroqConfigured } from "./groq.js";
 import { askDeepSeek, isDeepSeekConfigured } from "./deepseek.js";
+import { askOpenCode, isOpenCodeConfigured } from "./opencode.js";
 import { askOpenRouter, isOpenRouterConfigured } from "./openrouter.js";
 import { askCerebras, isCerebrasConfigured } from "./cerebras.js";
 import { askMistral, isMistralConfigured } from "./mistral.js";
@@ -12,6 +13,7 @@ export const AI_SOURCES = [
   "gemini",
   "groq",
   "deepseek",
+  "opencode",
   "cerebras",
   "mistral",
   "openrouter",
@@ -26,6 +28,8 @@ const ALIASES = {
   gq: "groq",
   ds: "deepseek",
   r1: "deepseek",
+  oc: "opencode",
+  zen: "opencode",
   cb: "cerebras",
   mis: "mistral",
   or: "openrouter",
@@ -46,6 +50,7 @@ function keyedChain() {
   if (isGeminiConfigured()) chain.push("gemini");
   if (isGroqConfigured()) chain.push("groq");
   if (isDeepSeekConfigured()) chain.push("deepseek");
+  if (isOpenCodeConfigured()) chain.push("opencode");
   if (isCerebrasConfigured()) chain.push("cerebras");
   if (isMistralConfigured()) chain.push("mistral");
   if (isOpenRouterConfigured()) chain.push("openrouter");
@@ -58,6 +63,7 @@ async function runSource(source, clean, options) {
   if (source === "gemini") return { ...(await askGemini(clean, options)), source };
   if (source === "groq") return { ...(await askGroq(clean, options)), source };
   if (source === "deepseek") return { ...(await askDeepSeek(clean, options)), source };
+  if (source === "opencode") return { ...(await askOpenCode(clean, options)), source };
   if (source === "cerebras") return { ...(await askCerebras(clean, options)), source };
   if (source === "mistral") return { ...(await askMistral(clean, options)), source };
   if (source === "openrouter") return { ...(await askOpenRouter(clean, options)), source };
@@ -104,6 +110,7 @@ export function getAIStatus() {
     gemini: isGeminiConfigured() ? "Siap (GEMINI_API_KEY aktif)" : "Belum aktif (aistudio.google.com/apikey)",
     groq: isGroqConfigured() ? "Siap (GROQ_API_KEY aktif)" : "Belum aktif (console.groq.com/keys)",
     deepseek: isDeepSeekConfigured() ? "Siap (DEEPSEEK_API_KEY aktif)" : "Belum aktif (platform.deepseek.com)",
+    opencode: isOpenCodeConfigured() ? "Siap (OPENCODE_API_KEY aktif)" : "Belum aktif (opencode.ai/zen)",
     cerebras: isCerebrasConfigured() ? "Siap (CEREBRAS_API_KEY aktif)" : "Belum aktif (cloud.cerebras.ai)",
     mistral: isMistralConfigured() ? "Siap (MISTRAL_API_KEY aktif)" : "Belum aktif (console.mistral.ai)",
     openrouter: isOpenRouterConfigured() ? "Siap (OPENROUTER_API_KEY aktif)" : "Belum aktif (openrouter.ai/keys)",

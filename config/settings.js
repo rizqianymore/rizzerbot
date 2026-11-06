@@ -63,6 +63,7 @@ export const settings = {
     DEEPSEEK_COOKIE_TOKEN: "",
     GROQ_API_KEY: "",
     OPENROUTER_API_KEY: "",
+    OPENCODE_API_KEY: "",
     CEREBRAS_API_KEY: "",
     MISTRAL_API_KEY: "",
     GITHUB_TOKEN: "",
