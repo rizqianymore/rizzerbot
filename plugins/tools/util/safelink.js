@@ -3,7 +3,7 @@ import { fetchBuffer } from "@/src/services/network/scrape.js";
 
 export default {
   name: "safelink",
-  aliases: ["bypass", "unshorten", "unshort"],
+  aliases: ["bypass", "safelinkpass"],
   description: "Bypass / decrypt tautan Safelink & shortener ke link asli",
   usage: "<url>",
   premiumOnly: true,
