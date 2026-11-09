@@ -54,6 +54,7 @@ export const CATEGORY_ALIASES = {
   gen: "General",
   osint: "OSINT",
   os: "OSINT",
+  sipil: "Sipil",
 };
 
 export function sortCategoryKeys(keys) {
