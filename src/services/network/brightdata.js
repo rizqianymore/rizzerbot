@@ -14,22 +14,42 @@ export function getBrightDataProxy() {
   if (direct) return direct;
   const customer = (process.env.BRIGHTDATA_CUSTOMER || "").trim();
   const password = (process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
-  const { zone } = getBrightDataConfig();
+  const zone = (process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim();
+  const host = (process.env.BRIGHTDATA_PROXY_HOST || "brd.superproxy.io").trim();
+  const port = (process.env.BRIGHTDATA_PROXY_PORT || "44445").trim();
   if (customer && password && zone) {
-    return `http://brd-customer-${customer}-zone-${zone}:${password}@brd.superproxy.io:44445`;
+    return `http://brd-customer-${customer}-zone-${zone}:${password}@${host}:${port}`;
   }
   return "";
 }
 
 export function isBrightDataEnabled() {
   if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
-  return Boolean(getBrightDataConfig().apiKey);
+  // Aktif jika memiliki API Key ATAU memiliki kredensial Native Proxy (Customer + Password)
+  const hasApiKey = Boolean(getBrightDataConfig().apiKey);
+  const hasProxy = Boolean(getBrightDataProxy());
+  return hasApiKey || hasProxy;
 }
 
 export async function brightDataRequest(targetUrl, options = {}) {
   const { apiKey, zone: defaultZone } = getBrightDataConfig();
+
+  // Jika API key tidak ada tapi proxy ada, alihkan secara otomatis ke native proxy request
   if (!apiKey) {
-    throw new Error("BRIGHTDATA_API_KEY belum diisi di .env");
+    if (getBrightDataProxy()) {
+      const { proxyRequest } = await import("./unlocker-proxy.js");
+      const { format = "raw", binary = false, method = "GET", headers = {}, data = null, timeout = 60000 } = options;
+      const res = await proxyRequest(targetUrl, {
+        method,
+        headers,
+        body: data,
+        timeoutMs: timeout,
+        raw: binary || format === "raw",
+      });
+      if (binary) return Buffer.from(res.data || []);
+      return res.data;
+    }
+    throw new Error("BRIGHTDATA_API_KEY atau kredensial Proxy belum diisi di .env / settings.js");
   }
   if (!targetUrl || !/^https?:\/\//i.test(String(targetUrl))) {
     throw new Error("URL target tidak valid (harus http/https)");
