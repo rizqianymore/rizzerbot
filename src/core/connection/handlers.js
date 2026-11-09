@@ -4,7 +4,7 @@ import qrcode from "qrcode-terminal";
 import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
-import { deleteFolderRecursive } from "@/src/utils/helper.js";
+import { deleteFolderRecursive, invalidateGroupMeta } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
 
@@ -111,6 +111,10 @@ export function attachWelcomeHandler(sock) {
     try {
       const jid = update?.id;
       if (!jid || !jid.endsWith("@g.us")) return;
+
+      // Invalidate metadata grup seketika saat ada perubahan anggota (add/remove/promote/demote)
+      invalidateGroupMeta(jid, sock);
+
       if (!db.getGroupSetting?.(jid, "welcome")) return;
       const action = update.action;
       if (action !== "add") return;
@@ -153,6 +157,14 @@ export function attachMessageHandler(sock) {
           )
             continue;
         }
+
+        // Auto-read pesan jika diaktifkan di konfigurasi
+        try {
+          const autoRead = Boolean(db.getSettings?.()?.autoRead);
+          if (autoRead && !msg.key.fromMe) {
+            sock.readMessages([msg.key]).catch(() => {});
+          }
+        } catch (_) {}
 
         enqueueMessage(sock, msg, logger);
       } catch (err) {
