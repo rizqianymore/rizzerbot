@@ -52,6 +52,20 @@ export async function resolveCommandAccess(
   commandName = args.shift()?.toLowerCase() || "";
   if (!commandName) return drop("perintah kosong", { silent: true, code: "not_command" });
 
+  const isSelfMessage = Boolean(isFromMe);
+  const senderJid = isSelfMessage
+    ? isGroupJid(remoteJid)
+      ? normalizedRawSender || botJid
+      : botJid || normalizedRawSender
+    : normalizedRawSender;
+
+  const isSenderOwner = db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
+  const access = db.getAccess(senderJid);
+  const isOwner = Boolean(isSenderOwner || access.owner);
+  const isAdmin = Boolean(isOwner || access.admin);
+  const isPremium = Boolean(isOwner || isAdmin || access.premium);
+  const isRegistered = Boolean(isOwner || isAdmin || isPremium);
+
   const cmd = commands.get(commandName);
   if (!cmd) {
     // Beri kesempatan ke custom case sebelum menolak
@@ -63,34 +77,19 @@ export async function resolveCommandAccess(
       args,
       commandName,
       cmd: null,
-      senderJid: isFromMe ? (isGroupJid(remoteJid) ? normalizedRawSender || botJid : botJid || normalizedRawSender) : normalizedRawSender,
-      isOwner: Boolean(db.isOwner(normalizedRawSender) || db.isBotOwner(botJid, normalizedRawSender) || db.getAccess(normalizedRawSender).owner),
-      isAdmin: Boolean(db.getAccess(normalizedRawSender).admin),
-      isPremium: Boolean(db.getAccess(normalizedRawSender).premium),
-      isRegistered: true,
-      access: db.getAccess(normalizedRawSender),
-      user: db.getUser(normalizedRawSender) || {},
+      senderJid,
+      isOwner,
+      isAdmin,
+      isPremium,
+      isRegistered,
+      access,
+      user: db.getUser(senderJid) || {},
     };
   }
-
-  const isSelfMessage = Boolean(isFromMe);
-  const senderJid = isSelfMessage
-    ? isGroupJid(remoteJid)
-      ? normalizedRawSender || botJid
-      : botJid || normalizedRawSender
-    : normalizedRawSender;
 
   if (isSelfMessage && isBotEchoMessage({ id: msg.key?.id, text: messageContent })) {
     return drop("echo balasan bot sendiri", { silent: true });
   }
-
-  const isSenderOwner = db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
-
-  const access = db.getAccess(senderJid);
-  const isOwner = Boolean(isSenderOwner || access.owner);
-  const isAdmin = Boolean(isOwner || access.admin);
-  const isPremium = Boolean(isOwner || isAdmin || access.premium);
-  const isRegistered = Boolean(isOwner || isAdmin || isPremium);
 
   const isWhitelisted = isWhitelistedCommand(commandName, cmd, activeSettings);
 
