@@ -43,7 +43,7 @@ class CookieJar {
       const u = new URL(urlOrHost.startsWith("http") ? urlOrHost : `https://${urlOrHost}`);
       return u.hostname.toLowerCase();
     } catch (_) {
-      return String(urlOrHost).toLowerCase();
+      return String(urlOrHost).toLowerCase().split("/")[0].split(":")[0];
     }
   }
 
@@ -59,30 +59,55 @@ class CookieJar {
   addCookiesFromHeader(domainOrUrl, setCookieHeader) {
     if (!setCookieHeader) return;
     const list = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
-    const domain = this.getDomainKey(domainOrUrl);
-    if (!this.cookies.has(domain)) {
-      this.cookies.set(domain, new Map());
-    }
-    const jar = this.cookies.get(domain);
+    const defaultDomain = this.getDomainKey(domainOrUrl);
 
     for (const c of list) {
       if (typeof c !== "string") continue;
-      const parts = c.split(";")[0].trim();
-      const eqIdx = parts.indexOf("=");
-      if (eqIdx > 0) {
-        const key = parts.slice(0, eqIdx).trim();
-        const val = parts.slice(eqIdx + 1).trim();
-        jar.set(key, val);
+      const attributes = c.split(";").map((p) => p.trim());
+      const firstPart = attributes.shift();
+      if (!firstPart) continue;
+
+      const eqIdx = firstPart.indexOf("=");
+      if (eqIdx <= 0) continue;
+
+      const key = firstPart.slice(0, eqIdx).trim();
+      const val = firstPart.slice(eqIdx + 1).trim();
+
+      let targetDomain = defaultDomain;
+      for (const attr of attributes) {
+        if (/^domain=/i.test(attr)) {
+          const customDomain = attr.replace(/^domain=/i, "").trim().replace(/^\./, "").toLowerCase();
+          if (customDomain) targetDomain = customDomain;
+          break;
+        }
       }
+
+      if (!this.cookies.has(targetDomain)) {
+        this.cookies.set(targetDomain, new Map());
+      }
+      this.cookies.get(targetDomain).set(key, val);
     }
     this._save();
   }
 
   getCookieString(domainOrUrl) {
-    const domain = this.getDomainKey(domainOrUrl);
-    const jar = this.cookies.get(domain);
-    if (!jar || jar.size === 0) return "";
-    return Array.from(jar.entries())
+    const targetDomain = this.getDomainKey(domainOrUrl);
+    const combined = new Map();
+
+    for (const [cookieDomain, jar] of this.cookies.entries()) {
+      if (
+        cookieDomain === targetDomain ||
+        targetDomain.endsWith(`.${cookieDomain}`) ||
+        cookieDomain.endsWith(`.${targetDomain}`)
+      ) {
+        for (const [k, v] of jar.entries()) {
+          combined.set(k, v);
+        }
+      }
+    }
+
+    if (combined.size === 0) return "";
+    return Array.from(combined.entries())
       .map(([k, v]) => `${k}=${v}`)
       .join("; ");
   }

@@ -85,7 +85,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
             }
           } catch (_) {}
         } else if (isCacheDir) {
-          if (item === ".gitkeep") continue;
+          if (item === ".gitkeep" || item === "session_cookies.json") continue;
           if (maxAgeMs <= 0 || now - stat.mtimeMs > maxAgeMs) {
             freedBytes += stat.size || 0;
             if (stat.isDirectory()) {

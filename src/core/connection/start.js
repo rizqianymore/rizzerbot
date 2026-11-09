@@ -78,11 +78,29 @@ export async function startBot() {
           throw new Error("Format creds.json korup");
         }
       } catch (err) {
-        logger.warn(`Sesi lama tidak valid (${err.message}). Menghapus sesi lama...`);
+        logger.warn(`Sesi lama tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru secara bersih...`);
         deleteFolderRecursive(authDir);
         fs.mkdirSync(authDir, { recursive: true });
       }
     }
+
+    // Auto-clean pre-keys usang agar folder sesi tidak membengkak dan koneksi tetap ringan
+    try {
+      const files = fs.readdirSync(authDir);
+      const preKeyFiles = files.filter((f) => f.startsWith("pre-key-") && f.endsWith(".json"));
+      if (preKeyFiles.length > 100) {
+        // Urutkan berdasarkan waktu modifikasi, sisakan 80 pre-key terbaru
+        preKeyFiles
+          .map((f) => ({ name: f, time: fs.statSync(path.join(authDir, f)).mtimeMs }))
+          .sort((a, b) => a.time - b.time)
+          .slice(0, preKeyFiles.length - 80)
+          .forEach((item) => {
+            try {
+              fs.unlinkSync(path.join(authDir, item.name));
+            } catch (_) {}
+          });
+      }
+    } catch (_) {}
 
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
