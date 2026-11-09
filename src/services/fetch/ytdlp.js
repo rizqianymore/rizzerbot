@@ -235,116 +235,131 @@ export async function downloadMedia(
   await fsp.mkdir(tmpDir, { recursive: true });
 
   const isAudio = mode === "audio";
-  const outputTemplate = path.join(tmpDir, `dl-${Date.now()}-%(title).50s.%(ext)s`);
 
-  const args = [
-    url,
-    "--no-playlist",
-    "--no-warnings",
-    "--no-quiet",
-    "--print",
-    "after_move:filepath",
-    "--no-simulate",
-    ...proxyArgs(),
-    "-o",
-    outputTemplate,
-  ];
+  const runDownload = async (withProxy = false) => {
+    const outputTemplate = path.join(tmpDir, `dl-${Date.now()}-%(title).50s.%(ext)s`);
+    const args = [
+      url,
+      "--no-playlist",
+      "--no-warnings",
+      "--no-quiet",
+      "--print",
+      "after_move:filepath",
+      "--no-simulate",
+      ...(withProxy ? proxyArgs() : []),
+      "-o",
+      outputTemplate,
+    ];
 
-  if (isAudio) {
-    args.push("-f", "ba/b", "-x", "--audio-format", "mp3", "--audio-quality", "0");
-  } else {
-    const h = parseInt(quality) || 720;
-    args.push("-f", `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`, "--merge-output-format", "mp4");
-  }
+    if (isAudio) {
+      args.push("-f", "ba/b", "-x", "--audio-format", "mp3", "--audio-quality", "0");
+    } else {
+      const h = parseInt(quality) || 720;
+      args.push("-f", `bv*[height<=${h}]+ba/b[height<=${h}]/bv*+ba/b`, "--merge-output-format", "mp4");
+    }
 
-  const ffmpegPath = resolveFfmpegPath();
-  if (ffmpegPath && ffmpegPath !== "ffmpeg") {
-    args.push("--ffmpeg-location", ffmpegPath);
-  } else if (await commandWorks("ffmpeg", ["-version"])) {
-    args.push("--ffmpeg-location", "ffmpeg");
-  }
+    const ffmpegPath = resolveFfmpegPath();
+    if (ffmpegPath && ffmpegPath !== "ffmpeg") {
+      args.push("--ffmpeg-location", ffmpegPath);
+    } else if (await commandWorks("ffmpeg", ["-version"])) {
+      args.push("--ffmpeg-location", "ffmpeg");
+    }
 
-  const limit = Number(timeoutMs) > 0 ? Number(timeoutMs) : DOWNLOAD_TIMEOUT_MS;
-  const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(args, limit, signal);
-  if (spawnError) {
-    cleanup();
-    throw spawnError;
-  }
-
-  return new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
-    let filepath = "";
-
-    const discard = () => {
-      if (filepath) fsp.unlink(filepath).catch(() => {});
-    };
-
-    child.stdout.on("data", (chunk) => {
-      const text = chunk.toString();
-      stdout += text;
-      const lines = text.split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (
-          path.isAbsolute(trimmed) &&
-          !trimmed.endsWith(".part") &&
-          !trimmed.endsWith(".ytdl") &&
-          fs.existsSync(trimmed)
-        ) {
-          filepath = trimmed;
-        }
-      }
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("error", (err) => {
+    const limit = Number(timeoutMs) > 0 ? Number(timeoutMs) : DOWNLOAD_TIMEOUT_MS;
+    const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(args, limit, signal);
+    if (spawnError) {
       cleanup();
-      reject(timedOut() ? timeoutError : err);
-    });
-    child.on("close", async (code) => {
-      cleanup();
-      if (timedOut()) {
-        discard();
-        return reject(timeoutError);
-      }
-      if (code !== 0) {
-        discard();
-        return reject(new Error(cleanYtDlpError(stderr) || `Download gagal (yt-dlp exit code ${code})`));
-      }
+      throw spawnError;
+    }
 
-      if (!filepath) {
-        const matches = stdout
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => path.isAbsolute(l));
-        const existing = matches.filter((l) => fs.existsSync(l));
-        if (existing.length > 0) {
-          filepath = existing[existing.length - 1];
-        } else if (matches.length > 0) {
-          filepath = matches[matches.length - 1];
+    return new Promise((resolve, reject) => {
+      let stdout = "";
+      let stderr = "";
+      let filepath = "";
+
+      const discard = () => {
+        if (filepath) fsp.unlink(filepath).catch(() => {});
+      };
+
+      child.stdout.on("data", (chunk) => {
+        const text = chunk.toString();
+        stdout += text;
+        const lines = text.split("\n");
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (
+            path.isAbsolute(trimmed) &&
+            !trimmed.endsWith(".part") &&
+            !trimmed.endsWith(".ytdl") &&
+            fs.existsSync(trimmed)
+          ) {
+            filepath = trimmed;
+          }
         }
-      }
+      });
 
-      if (!filepath) {
-        return reject(new Error("File hasil download tidak ditemukan."));
-      }
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
 
+      child.on("error", (err) => {
+        cleanup();
+        reject(timedOut() ? timeoutError : err);
+      });
+      child.on("close", async (code) => {
+        cleanup();
+        if (timedOut()) {
+          discard();
+          return reject(timeoutError);
+        }
+        if (code !== 0) {
+          discard();
+          return reject(new Error(cleanYtDlpError(stderr) || `Download gagal (yt-dlp exit code ${code})`));
+        }
+
+        if (!filepath) {
+          const matches = stdout
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => path.isAbsolute(l));
+          const existing = matches.filter((l) => fs.existsSync(l));
+          if (existing.length > 0) {
+            filepath = existing[existing.length - 1];
+          } else if (matches.length > 0) {
+            filepath = matches[matches.length - 1];
+          }
+        }
+
+        if (!filepath) {
+          return reject(new Error("File hasil download tidak ditemukan."));
+        }
+
+        try {
+          const buffer = await fsp.readFile(filepath);
+          await fsp.unlink(filepath).catch(() => {});
+          resolve({
+            filepath,
+            buffer,
+            isAudio,
+          });
+        } catch (err) {
+          discard();
+          reject(err);
+        }
+      });
+    });
+  };
+
+  // Coba unduh direct dulu (tanpa proxy) agar situs yang memblokir proxy no-KYC (seperti TikTok/IG) bisa terdownload
+  try {
+    return await runDownload(false);
+  } catch (directErr) {
+    const pArgs = proxyArgs();
+    if (pArgs.length > 0) {
       try {
-        const buffer = await fsp.readFile(filepath);
-        await fsp.unlink(filepath).catch(() => {});
-        resolve({
-          filepath,
-          buffer,
-          isAudio,
-        });
-      } catch (err) {
-        discard();
-        reject(err);
-      }
-    });
-  });
+        return await runDownload(true);
+      } catch (_) {}
+    }
+    throw directErr;
+  }
 }
