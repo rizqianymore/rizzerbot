@@ -93,7 +93,7 @@ async function dispatchInner(sock, msg, logger) {
   const isFromMe = Boolean(msg.key?.fromMe);
   const botJid = botJidEarly || db.normalizeJid(sock.user?.id || "");
 
-  const normalizedRawSender = resolveSenderJid(msg);
+  const normalizedRawSender = resolveSenderJid(msg, botJid);
 
   if (botJid) {
     db.registerBotJid(botJid);

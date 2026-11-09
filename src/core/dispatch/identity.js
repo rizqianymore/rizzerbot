@@ -28,8 +28,16 @@ export function findParticipant(meta, jid) {
   return null;
 }
 
-export function resolveSenderJid(msg) {
+export function resolveSenderJid(msg, botJid = "") {
   const key = msg?.key || {};
+  const isFromMe = Boolean(key.fromMe);
+  const normalizedBot = botJid ? db.normalizeJid(botJid) : "";
+
+  // Bila pesan dikirim oleh bot/self (fromMe: true), pengirim adalah akun bot itu sendiri
+  if (isFromMe && normalizedBot) {
+    return normalizedBot;
+  }
+
   const primary = db.normalizeJid(key.participant || "");
   const remote = db.normalizeJid(key.remoteJid || "");
   const alt = db.pickPhoneJid(key.participantAlt, key.remoteJidAlt, key.participantPn, key.senderPn);
@@ -47,6 +55,7 @@ export function resolveSenderJid(msg) {
     return primary;
   }
   if (!isGroupJid(key.remoteJid) && remote) return db.resolvePhoneJid(remote);
+  if (isFromMe && normalizedBot) return normalizedBot;
   return remote;
 }
 

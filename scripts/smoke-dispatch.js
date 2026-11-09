@@ -135,6 +135,21 @@ clearSentMessageCache();
 {
   clearSentMessageCache();
   const sock = makeSock();
+  const sent = await dispatch(sock, {
+    text: ".menu",
+    remoteJid: GROUP_JID,
+    fromMe: true,
+    participant: undefined,
+  });
+  assert(sent.length > 0, "owner (fromMe) tanpa participant tetap dilayani .menu di grup");
+  const menuText = sent[0]?.content?.caption || sent[0]?.content?.text || "";
+  assert(menuText.includes("Role: Owner"), "owner (fromMe) di grup terdeteksi Role: Owner", menuText.slice(0, 80));
+  assert(menuText.includes("Total: 246 Perintah"), "owner (fromMe) di grup mendapatkan total perintah owner", menuText.slice(0, 100));
+}
+
+{
+  clearSentMessageCache();
+  const sock = makeSock();
   const sent = await dispatch(sock, { text: ".menu", remoteJid: USER_JID });
   assert(sent.length > 0, "user biasa bisa .menu walau bot private");
   assert(sent.length === 1, "`.menu` user biasa juga 1 pesan", `terkirim ${sent.length} pesan`);

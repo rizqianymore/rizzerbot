@@ -54,12 +54,13 @@ export async function resolveCommandAccess(
 
   const isSelfMessage = Boolean(isFromMe);
   const senderJid = isSelfMessage
-    ? isGroupJid(remoteJid)
-      ? normalizedRawSender || botJid
-      : botJid || normalizedRawSender
+    ? (botJid || (isGroupJid(remoteJid) ? normalizedRawSender : remoteJid))
     : normalizedRawSender;
 
-  const isSenderOwner = db.isOwner(senderJid) || db.isBotOwner(botJid, senderJid);
+  const isSenderOwner =
+    db.isOwner(senderJid) ||
+    db.isBotOwner(botJid, senderJid) ||
+    (isSelfMessage && (db.isOwner(botJid) || db.isBotOwner(botJid, botJid)));
   const access = db.getAccess(senderJid);
   const isOwner = Boolean(isSenderOwner || access.owner);
   const isAdmin = Boolean(isOwner || access.admin);

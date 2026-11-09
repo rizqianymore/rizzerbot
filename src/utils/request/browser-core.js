@@ -1,5 +1,6 @@
 import fs from "fs";
 import { isTermux, isAndroid } from "@/src/utils/termux.js";
+import { remoteBrowserAvailable, connectRemoteBrowser } from "@/src/services/network/scraping-browser.js";
 
 function browserDisabledByEnv() {
   return ["1", "true", "yes"].includes(String(process.env.BROWSER_DISABLED || "").toLowerCase());
@@ -110,6 +111,33 @@ export class StealthBrowserCore {
           await this.browser.close().catch(() => {});
         } catch (_) {}
         this.browser = null;
+      }
+
+      // Prioritas 1: Gunakan BrightData Scraping Browser jika tersedia
+      if (remoteBrowserAvailable()) {
+        try {
+          const startedAt = Date.now();
+          const { browser } = await connectRemoteBrowser();
+          this.browser = browser;
+          this.isRemote = true;
+          this.launches += 1;
+          this._log("info", "terhubung ke BrightData Scraping Browser", {
+            endpoint: "brightdata",
+            launches: this.launches,
+            ms: Date.now() - startedAt,
+          });
+
+          this.browser.on("disconnected", () => {
+            this._log("warn", "BrightData Scraping Browser terputus", { pages: this.activePages });
+            this.browser = null;
+            this.activePages = 0;
+            this.isRemote = false;
+          });
+
+          return this.browser;
+        } catch (remoteErr) {
+          this._log("warn", `gagal konek BrightData Scraping Browser: ${remoteErr?.message}. Fallback ke browser lokal.`);
+        }
       }
 
       let puppeteer;
