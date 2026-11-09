@@ -25,23 +25,21 @@
 export function renderCustomMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
 
-  // Header Kustom Bersih & Minimalis
-  let out = `╭━━━━━━━『 *${botName.toUpperCase()}* 』━━━━━━━\n`;
-  out += `│ • Status: Online\n`;
-  out += `│ • Prefix: [ ${prefix} ]\n`;
-  out += `│ • Role: ${role}\n`;
-  out += `│ • Total: ${totalCmds} Perintah\n`;
-  out += `╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  // Header Simpel & Bersih tanpa ornamen aneh-aneh
+  let out = `*${botName.toUpperCase()}*\n`;
+  out += `• Status: Online\n`;
+  out += `• Prefix: [ ${prefix} ]\n`;
+  out += `• Role: ${role}\n`;
+  out += `• Total: ${totalCmds} Perintah\n\n`;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    out += `┌───『 *KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length}) 』\n`;
+    out += `*KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length})\n`;
     for (const cmd of cmds) {
-      out += `│ • \`${prefix}${cmd.name}\`\n`;
+      out += `• ${prefix}${cmd.name}\n`;
     }
-    out += `└───\n\n`;
-    out += `_Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    out += `\n_Ketik ${prefix}menu <nama_perintah> untuk panduan detail._`;
     return out;
   }
 
@@ -50,26 +48,25 @@ export function renderCustomMenu(data) {
     for (const cat of catKeys) {
       const cmds = categories[cat] || [];
       if (!cmds || cmds.length === 0) continue;
-      out += `┌───『 *${cat.toUpperCase()}* (${cmds.length}) 』\n`;
+      out += `*${cat.toUpperCase()}* (${cmds.length})\n`;
       for (const cmd of cmds) {
-        out += `│ • \`${prefix}${cmd.name}\`\n`;
+        out += `• ${prefix}${cmd.name}\n`;
       }
-      out += `└───\n\n`;
+      out += `\n`;
     }
-    out += `_Ketik \`${prefix}menu <nama_perintah>\` untuk melihat panduan detail._`;
+    out += `_Ketik ${prefix}menu <nama_perintah> untuk panduan detail._`;
     return out;
   }
 
   // Tampilan 3: Menu Utama (Daftar Kategori Ringkas)
-  out += `┌───『 *DAFTAR KATEGORI MENU* 』\n`;
+  out += `*DAFTAR KATEGORI MENU*\n`;
   for (const cat of catKeys) {
     const count = categories[cat]?.length || 0;
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
-    out += `│ • \`${prefix}menu ${alias}\` -> *${cat}* (${count})\n`;
+    out += `• ${prefix}menu ${alias} -> *${cat}* (${count})\n`;
   }
-  out += `└───\n\n`;
-  out += `• \`${prefix}menu all\` -> Buka seluruh menu lengkap\n\n`;
-  out += `_Ketik \`${prefix}menu <kategori>\` untuk membuka daftar perintah._`;
+  out += `\n• ${prefix}menu all -> Tampilkan seluruh menu\n\n`;
+  out += `_Ketik ${prefix}menu <kategori> untuk membuka daftar perintah._`;
 
   return out;
 }

@@ -1,9 +1,9 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "snackvideo",
   aliases: ["snackdl", "snack", "svdl"],
-  description: "Download video SnackVideo (no watermark via yt-dlp)",
+  description: "Download video SnackVideo (no watermark)",
   usage: "<url snackvideo>, cth: snackvideo https://www.snackvideo.com/@user/video/xxx",
   category: "Downloader & Media",
   cooldownMs: 15000,
@@ -14,12 +14,12 @@ export default {
     }
     await sendTyping();
     try {
-      const info = await probe(url, { timeoutMs: 30000 }).catch(() => null);
-      const dl = await downloadMedia(url, { mode: "video", quality: "720" });
-      if (!dl?.buffer?.length) throw new Error("Gagal download SnackVideo.");
+      const { buffer, info } = await unifiedDownload(url, { mode: "video", logger });
+      if (!buffer?.length) throw new Error("Gagal mengunduh SnackVideo.");
+      const mime = sniffMime(buffer, "video/mp4");
       await sock.sendMessage(
         msg.key.remoteJid,
-        { video: dl.buffer, mimetype: "video/mp4", caption: `*SNACKVIDEO*\n${info?.title || ""}`.trim() },
+        { video: buffer, mimetype: mime, caption: `*SNACKVIDEO*\n${info?.title || ""}`.trim() },
         { quoted: msg }
       );
     } catch (err) {

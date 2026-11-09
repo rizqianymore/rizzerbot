@@ -68,7 +68,7 @@ export default {
     const catKeys = sortCategoryKeys(Object.keys(categories));
 
     for (const cat of catKeys) {
-      text += `┌───「 *${cat}* (${categories[cat].length}) 」\n`;
+      text += `*KATEGORI ${cat.toUpperCase()}* (${categories[cat].length})\n`;
       for (const p of categories[cat]) {
         const badges = [];
         if (p.ownerOnly) badges.push("Owner");
@@ -79,13 +79,12 @@ export default {
         if (p.botAdminOnly) badges.push("BAdmin");
         const badgeStr = badges.length ? ` [${badges.join(", ")}]` : "";
         const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map((a) => `${prefix}${a}`).join(", ")}` : "";
-        text += `│ • ${prefix}${p.name}${badgeStr}\n`;
-        text += `│   ├ Desc: ${p.description}\n`;
-        if (p.usage) text += `│   ├ Usage: ${prefix}${p.name} ${p.usage}\n`;
-        text += `│   ├ File: ${p.file}${aliasStr}\n`;
-        text += `│   └\n`;
+        text += `• ${prefix}${p.name}${badgeStr}\n`;
+        text += `  Deskripsi: ${p.description}\n`;
+        if (p.usage) text += `  Format: ${prefix}${p.name} ${p.usage}\n`;
+        text += `  File: ${p.file}${aliasStr}\n`;
       }
-      text += `└───\n\n`;
+      text += `\n`;
     }
 
     text += `_Gunakan \`${prefix}help <command>\` untuk info detail._`;

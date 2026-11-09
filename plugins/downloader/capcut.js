@@ -1,9 +1,9 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "capcut",
   aliases: ["capcutdl", "ccdl", "capcutdownload"],
-  description: "Download video CapCut template (tanpa watermark via yt-dlp)",
+  description: "Download video CapCut template (tanpa watermark)",
   usage: "<url capcut>, cth: capcut https://www.capcut.com/template-detail/xxx",
   category: "Downloader & Media",
   cooldownMs: 15000,
@@ -14,12 +14,12 @@ export default {
     }
     await sendTyping();
     try {
-      const info = await probe(url, { timeoutMs: 30000 }).catch(() => null);
-      const dl = await downloadMedia(url, { mode: "video", quality: "720" });
-      if (!dl?.buffer?.length) throw new Error("Gagal download CapCut.");
+      const { buffer, info } = await unifiedDownload(url, { mode: "video", logger });
+      if (!buffer?.length) throw new Error("Gagal mengunduh video CapCut.");
+      const mime = sniffMime(buffer, "video/mp4");
       await sock.sendMessage(
         msg.key.remoteJid,
-        { video: dl.buffer, mimetype: "video/mp4", caption: `*CAPCUT*\n${info?.title || ""}`.trim() },
+        { video: buffer, mimetype: mime, caption: `*CAPCUT*\n${info?.title || ""}`.trim() },
         { quoted: msg }
       );
     } catch (err) {

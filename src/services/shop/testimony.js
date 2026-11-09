@@ -31,10 +31,9 @@ export function formatTestimonyMessage({
   const buyerMasked = maskPhone(buyerJid);
   const totalStr = "Rp" + Number(totalPrice).toLocaleString("id-ID");
 
-  let out = `╭━━━━━━━『 *TESTIMONI TRANSAKSI* 』━━━━━━━\n`;
-  out += `│ • Toko: *${(shopName || "STORE").toUpperCase()}*\n`;
-  out += `│ • Status: *SUKSES / COMPLETED*\n`;
-  out += `╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  let out = `*TESTIMONI TRANSAKSI*\n`;
+  out += `• Toko: *${(shopName || "STORE").toUpperCase()}*\n`;
+  out += `• Status: *SUKSES / COMPLETED*\n\n`;
 
   out += `*RINCIAN TRANSAKSI:*\n`;
   out += `• ID Order  : \`${orderId}\`\n`;

@@ -23,10 +23,9 @@ export default {
 
     if (!sub || sub === "list") {
       const prods = listProducts();
-      let text = `╭━━━━━━━『 *${(config.shopName || "STORE").toUpperCase()}* 』━━━━━━━\n`;
-      text += `│ • Status: Buka\n`;
-      text += `│ • Total Produk: ${prods.length}\n`;
-      text += `╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+      let text = `*${(config.shopName || "STORE").toUpperCase()}*\n`;
+      text += `• Status: Buka\n`;
+      text += `• Total Produk: ${prods.length}\n\n`;
 
       if (prods.length === 0) {
         text += `_Belum ada produk yang dijual saat ini._\n`;

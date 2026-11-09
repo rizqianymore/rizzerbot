@@ -12,32 +12,30 @@ export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
   let text = "";
 
-  text += `╭───「 *${botName.toUpperCase()}* 」\n`;
-  text += `│ • Status: Aktif (Online)\n`;
-  text += `│ • Prefix: [ ${prefix} ]\n`;
-  text += `│ • Role: ${role}\n`;
-  text += `│ • Total: ${totalCmds} Perintah\n`;
-  text += `╰───\n\n`;
+  text += `*${botName.toUpperCase()}*\n`;
+  text += `• Status: Online\n`;
+  text += `• Prefix: [ ${prefix} ]\n`;
+  text += `• Role: ${role}\n`;
+  text += `• Total: ${totalCmds} Perintah\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    text += `╭───「 *${targetCategory.toUpperCase()}* (${cmds.length}) 」\n`;
+    text += `*KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length})\n`;
     for (const c of cmds) {
-      text += `│ • ${prefix}${c.name}\n`;
+      text += `• ${prefix}${c.name}\n`;
     }
-    text += `╰───\n\n`;
-    text += `_Ketik ${prefix}menu <command> untuk panduan detail_`;
+    text += `\n_Ketik ${prefix}menu <command> untuk panduan detail_`;
     return text;
   }
 
   for (const cat of catKeys) {
     const cmds = categories[cat] || [];
     if (!cmds || cmds.length === 0) continue;
-    text += `╭───「 *${cat.toUpperCase()}* (${cmds.length}) 」\n`;
+    text += `*${cat.toUpperCase()}* (${cmds.length})\n`;
     for (const c of cmds) {
-      text += `│ • ${prefix}${c.name}\n`;
+      text += `• ${prefix}${c.name}\n`;
     }
-    text += `╰───\n\n`;
+    text += `\n`;
   }
 
   text += `_Ketik ${prefix}menu <command> untuk panduan detail perintah_`;
