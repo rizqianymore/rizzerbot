@@ -67,24 +67,8 @@ export function isDukcapilReady() {
   }
 }
 
-export function cleanLocationQuery(kelurahan, kecamatan, kota_kab) {
-  const cleanCity = String(kota_kab || "")
-    .replace(/KOTA\s+ADM\.?\s*/i, "")
-    .replace(/KABUPATEN\s*/i, "")
-    .replace(/KAB\.?\s*/i, "")
-    .trim();
-
-  const parts = [];
-  if (kelurahan) parts.push(kelurahan.trim());
-  else if (kecamatan) parts.push(kecamatan.trim());
-  if (cleanCity) parts.push(cleanCity);
-  else parts.push("Jakarta");
-
-  return parts.join(", ");
-}
-
 /**
- * Geocoding sederhana & cepat untuk mencari latitude & longitude wilayah/alamat
+ * Geocoding OpenStreetMap dengan in-memory cache
  */
 export async function getCoordinates(query) {
   if (!query) return null;
@@ -114,6 +98,57 @@ export async function getCoordinates(query) {
       return coord;
     }
   } catch {}
+
+  return null;
+}
+
+/**
+ * Penentuan titik koordinat akurat bertingkat (Jalan -> Kelurahan -> Kecamatan -> Kota)
+ */
+export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, kota_kab) {
+  const cleanCity = String(kota_kab || "")
+    .replace(/KOTA\s+ADM\.?\s*/i, "")
+    .replace(/KABUPATEN\s*/i, "")
+    .replace(/KAB\.?\s*/i, "")
+    .trim();
+
+  // 1. Coba ekstraksi nama jalan
+  if (alamat) {
+    const streetPart = String(alamat)
+      .split(/\s+RT\s+/i)[0]
+      .split(/\s+RW\s+/i)[0]
+      .replace(/^(JL|JLN|JALAN)\.?\s+/i, "")
+      .trim();
+
+    if (streetPart.length > 3) {
+      const qStreetKel = `Jalan ${streetPart}, ${kelurahan || cleanCity || "Jakarta"}`;
+      const resStreetKel = await getCoordinates(qStreetKel);
+      if (resStreetKel) return resStreetKel;
+
+      const qStreetCity = `Jalan ${streetPart}, ${cleanCity || "Jakarta"}`;
+      const resStreetCity = await getCoordinates(qStreetCity);
+      if (resStreetCity) return resStreetCity;
+    }
+  }
+
+  // 2. Coba Kelurahan + Kota
+  if (kelurahan) {
+    const qKel = `${kelurahan.trim()}, ${cleanCity || "Jakarta"}`;
+    const resKel = await getCoordinates(qKel);
+    if (resKel) return resKel;
+  }
+
+  // 3. Coba Kecamatan + Kota
+  if (kecamatan) {
+    const qKec = `${kecamatan.trim()}, ${cleanCity || "Jakarta"}`;
+    const resKec = await getCoordinates(qKec);
+    if (resKec) return resKec;
+  }
+
+  // 4. Fallback ke Kota
+  if (cleanCity) {
+    return await getCoordinates(cleanCity);
+  }
 
   return null;
 }
@@ -194,8 +229,12 @@ export async function searchByNik(rawNik) {
 
   let location = null;
   if (record) {
-    const geoQuery = cleanLocationQuery(record.kelurahan, record.kecamatan, record.kota_kab);
-    location = await getCoordinates(geoQuery);
+    location = await resolveAccurateCoordinates(
+      record.alamat,
+      record.kelurahan,
+      record.kecamatan,
+      record.kota_kab
+    );
   }
 
   return {
@@ -212,13 +251,24 @@ export async function searchByNik(rawNik) {
 export async function searchByPhone(rawPhone) {
   const db = getDatabase();
   const phones = normalizePhone(rawPhone);
-  if (!phones.intl) return { records: [], operatorInfo: null };
+  if (!phones.intl) return { records: [], operatorInfo: null, location: null };
 
   const operatorInfo = parseOperator(phones.local);
 
   let records = [];
   if (db && queryPhoneStmt) {
     records = queryPhoneStmt.all(phones.intl, phones.local);
+  }
+
+  let location = null;
+  if (records.length > 0) {
+    const primary = records[0];
+    location = await resolveAccurateCoordinates(
+      primary.alamat,
+      primary.kelurahan,
+      primary.kecamatan,
+      primary.kota_kab
+    );
   }
 
   const enrichedRecords = await Promise.all(
@@ -230,12 +280,9 @@ export async function searchByPhone(rawPhone) {
           nikInfo = await enrichWilayah(parsed);
         }
       }
-      const geoQuery = cleanLocationQuery(row.kelurahan, row.kecamatan, row.kota_kab);
-      const location = await getCoordinates(geoQuery);
       return {
         ...row,
         nikInfo,
-        location,
       };
     })
   );
@@ -243,6 +290,7 @@ export async function searchByPhone(rawPhone) {
   return {
     records: enrichedRecords,
     operatorInfo: operatorInfo.valid ? operatorInfo : null,
+    location,
   };
 }
 

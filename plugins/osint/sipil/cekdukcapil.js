@@ -4,7 +4,6 @@ import {
   searchByPhone,
   searchByName,
   isDukcapilReady,
-  getCoordinates,
 } from "@/src/services/osint/dukcapilService.js";
 
 const cache = new Map();
@@ -141,7 +140,7 @@ export default {
 
       // KASUS 2: PHONE
       if (classification.type === "phone") {
-        const { records, operatorInfo } = await searchByPhone(rawQuery);
+        const { records, operatorInfo, location } = await searchByPhone(rawQuery);
 
         if (records.length === 0) {
           const msgOut = [
@@ -157,15 +156,17 @@ export default {
 
         if (records.length === 1) {
           const rec = records[0];
-          const text = formatSingleRecord(rec, rec.nikInfo, operatorInfo, rec.location);
+          const text = formatSingleRecord(rec, rec.nikInfo, operatorInfo, location);
           setCachedResult(cacheKey, text);
           return reply(text);
         }
 
+        const primary = records[0];
         const listText = [
-          `*DUKCAPIL - HASIL NO. HP*`,
-          `MSISDN: \`${rawQuery}\`${operatorInfo ? ` (${operatorInfo.operator})` : ""}`,
-          `Ditemukan ${records.length} data:`,
+          `*INFO OPERATOR & DUKCAPIL*`,
+          `• MSISDN: \`${primary.nohp || rawQuery}\``,
+          operatorInfo ? `• Operator: ${operatorInfo.operator} (${operatorInfo.brand})` : null,
+          `• Terhubung: ${records.length} data Dukcapil`,
           ``,
         ];
 
@@ -173,14 +174,28 @@ export default {
           listText.push(
             `${idx + 1}. *${rec.nama}*`,
             `• NIK: \`${rec.nik}\``,
-            `• Gender: ${rec.gender}`,
-            `• Alamat: ${rec.alamat || "-"}`,
-            rec.location?.lat ? `• Koordinat: \`${rec.location.lat}, ${rec.location.lon}\`` : null,
+            `• Gender: ${rec.gender || "-"}`,
+            `• TTL: ${rec.ttl_umur || rec.ttl || "-"}`,
             ``
           );
         });
 
-        listText.push(`Gunakan \`${currentPrefix}cekdukcapil <NIK>\` untuk melihat detail.`);
+        listText.push(
+          `*LOKASI & DOMISILI*`,
+          `• Alamat: ${primary.alamat || "-"}`,
+          `• Kelurahan: ${primary.kelurahan || "-"}`,
+          `• Kecamatan: ${primary.kecamatan || "-"}`,
+          `• Kota/Kab: ${primary.kota_kab || "-"}`
+        );
+
+        if (location?.lat && location?.lon) {
+          listText.push(
+            `• Latitude: \`${location.lat}\``,
+            `• Longitude: \`${location.lon}\``,
+            `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
+          );
+        }
+
         const resultString = listText.filter((line) => line !== null).join("\n");
         setCachedResult(cacheKey, resultString);
         return reply(resultString);

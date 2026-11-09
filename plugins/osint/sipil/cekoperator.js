@@ -8,18 +8,18 @@ export default {
   usage: "<nomor HP, cth: 081212345678>",
   category: "OSINT",
   premiumOnly: true,
-  cooldownMs: 5000,
+  cooldownMs: 4000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";
     const input = (args[0] || "").trim();
 
     if (!input) {
       return reply(
-        `*CEK OPERATOR*\n\n` +
-        `Masukkan nomor HP Indonesia (format 08xx / 628xx / +628xx).\n\n` +
-        `*Contoh:*\n` +
-        `• \`${currentPrefix}cekoperator 081317464364\`\n` +
-        `• \`${currentPrefix}cekoperator 6281293269631\``
+        `*CEK OPERATOR & DUKCAPIL*\n\n` +
+          `Masukkan nomor HP (format 08xx / 628xx / +628xx).\n\n` +
+          `*Contoh:*\n` +
+          `• \`${currentPrefix}cekoperator 081317464364\`\n` +
+          `• \`${currentPrefix}cekoperator 6281293269631\``
       );
     }
 
@@ -31,14 +31,15 @@ export default {
         return reply(`Nomor tidak valid: ${op.reason || "periksa kembali nomor HP"}`);
       }
 
-      let dukcapilData = { records: [] };
+      let dukcapilData = { records: [], location: null };
       if (isDukcapilReady()) {
         dukcapilData = await searchByPhone(input);
       }
 
       const records = dukcapilData.records || [];
+      const location = dukcapilData.location;
 
-      // Jika data ditemukan di database Dukcapil
+      // KASUS 1: Data ditemukan di database Dukcapil
       if (records.length > 0) {
         if (records.length === 1) {
           const r = records[0];
@@ -56,39 +57,22 @@ export default {
             `• Kota/Kab: ${r.kota_kab || "-"}`,
           ];
 
-          if (r.location?.lat && r.location?.lon) {
+          if (location?.lat && location?.lon) {
             lines.push(
-              `• Latitude: \`${r.location.lat}\``,
-              `• Longitude: \`${r.location.lon}\``,
-              `• Maps: https://www.google.com/maps?q=${r.location.lat},${r.location.lon}`
+              `• Latitude: \`${location.lat}\``,
+              `• Longitude: \`${location.lon}\``,
+              `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
             );
-
-            // Kirim lokasi pin peta WhatsApp jika memungkinkan
-            if (sock && msg?.key?.remoteJid) {
-              try {
-                await sock.sendMessage(
-                  msg.key.remoteJid,
-                  {
-                    location: {
-                      degreesLatitude: r.location.lat,
-                      degreesLongitude: r.location.lon,
-                      name: r.nama || "Lokasi Dukcapil",
-                      address: `${r.kelurahan || ""}, ${r.kecamatan || ""}, ${r.kota_kab || ""}`,
-                    },
-                  },
-                  { quoted: msg }
-                );
-              } catch (_) { }
-            }
           }
 
           return reply(lines.join("\n"));
         }
 
-        // Jika terhubung ke beberapa profil di Dukcapil
+        // Jika terhubung ke beberapa profil kependudukan (misal satu keluarga / no sama)
+        const primary = records[0];
         const lines = [
           `*INFO OPERATOR & DUKCAPIL*`,
-          `• MSISDN: \`${op.normalized}\``,
+          `• MSISDN: \`${primary.nohp || op.normalized}\``,
           `• Operator: ${op.operator} (${op.brand})`,
           `• Terhubung: ${records.length} data Dukcapil`,
           ``,
@@ -98,38 +82,32 @@ export default {
           lines.push(
             `${idx + 1}. *${r.nama}*`,
             `• NIK: \`${r.nik || "-"}\``,
-            `• Alamat: ${r.alamat || "-"}`,
-            `• Wilayah: ${r.kelurahan || "-"}, ${r.kota_kab || "-"}`,
-            r.location?.lat ? `• Latitude: \`${r.location.lat}\`` : null,
-            r.location?.lon ? `• Longitude: \`${r.location.lon}\`` : null,
-            r.location?.lat ? `• Maps: https://www.google.com/maps?q=${r.location.lat},${r.location.lon}` : null,
+            `• Gender: ${r.gender || "-"}`,
+            `• TTL: ${r.ttl_umur || r.ttl || "-"}`,
             ``
           );
         });
 
-        // Kirim pin untuk record pertama jika ada koordinat
-        const firstWithLoc = records.find((x) => x.location?.lat);
-        if (firstWithLoc && sock && msg?.key?.remoteJid) {
-          try {
-            await sock.sendMessage(
-              msg.key.remoteJid,
-              {
-                location: {
-                  degreesLatitude: firstWithLoc.location.lat,
-                  degreesLongitude: firstWithLoc.location.lon,
-                  name: firstWithLoc.nama,
-                  address: `${firstWithLoc.kelurahan || ""}, ${firstWithLoc.kota_kab || ""}`,
-                },
-              },
-              { quoted: msg }
-            );
-          } catch (_) { }
+        lines.push(
+          `*LOKASI & DOMISILI*`,
+          `• Alamat: ${primary.alamat || "-"}`,
+          `• Kelurahan: ${primary.kelurahan || "-"}`,
+          `• Kecamatan: ${primary.kecamatan || "-"}`,
+          `• Kota/Kab: ${primary.kota_kab || "-"}`
+        );
+
+        if (location?.lat && location?.lon) {
+          lines.push(
+            `• Latitude: \`${location.lat}\``,
+            `• Longitude: \`${location.lon}\``,
+            `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
+          );
         }
 
-        return reply(lines.filter((l) => l !== null).join("\n"));
+        return reply(lines.join("\n"));
       }
 
-      // Jika nomor valid tetapi tidak ada dalam database Dukcapil
+      // KASUS 2: Nomor valid tapi tidak tercatat di DB kependudukan
       const lines = [
         `*INFO OPERATOR*`,
         `• MSISDN: \`${op.normalized}\``,
