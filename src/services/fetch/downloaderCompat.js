@@ -118,7 +118,7 @@ export function isProbablyPlayable(buffer, mode) {
   return true;
 }
 
-// Unified downloader: socialdownloader -> ytdlp, auto convert
+// Unified downloader: socialdownloader -> kol.id -> ytdlp, auto convert
 export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 60000 } = {}) {
   const isAudio = mode === "audio";
   let lastErr = null;
@@ -140,7 +140,43 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     logger?.warn?.(`[compat socialdownloader] ${err?.message || err}`);
   }
 
-  // 2) yt-dlp (paling stabil, support >1000 site)
+  // 2) Kol.id (khusus TikTok / Instagram / YouTube bila SocialDownloader gagal/limit)
+  if (!rawBuffer) {
+    try {
+      const lower = String(url).toLowerCase();
+      const { request } = await import("@/src/utils/request.js");
+      if (/tiktok\.com/i.test(lower)) {
+        const { downloadTiktok } = await import("./kolid.js");
+        const kd = await downloadTiktok(url);
+        const targetDl = isAudio ? kd?.mp3 : (kd?.noWatermark || kd?.watermark);
+        if (targetDl) {
+          const buf = await request.buffer(targetDl, { timeout: 35000, bypassCloudflare: "auto" });
+          if (buf?.length > 100) {
+            rawBuffer = buf;
+            info = { title: kd.title, uploader: kd.author, duration: kd.duration };
+            source = "kol.id";
+          }
+        }
+      } else if (/instagram\.com/i.test(lower)) {
+        const { downloadInstagram } = await import("./kolid.js");
+        const kd = await downloadInstagram(url);
+        const firstMedia = kd?.media?.[0]?.url;
+        if (firstMedia) {
+          const buf = await request.buffer(firstMedia, { timeout: 35000, bypassCloudflare: "auto" });
+          if (buf?.length > 100) {
+            rawBuffer = buf;
+            info = { title: kd.title, uploader: kd.username };
+            source = "kol.id";
+          }
+        }
+      }
+    } catch (err) {
+      lastErr = err;
+      logger?.warn?.(`[compat kol.id] ${err?.message || err}`);
+    }
+  }
+
+  // 3) yt-dlp (paling stabil & komprehensif, support >1000 site)
   if (!rawBuffer) {
     try {
       const { downloadMedia, probe } = await import("./ytdlp.js");
@@ -158,7 +194,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
   }
 
   if (!rawBuffer) {
-    throw lastErr || new Error("Gagal mengunduh media dari semua engine (socialdownloader & yt-dlp).");
+    throw lastErr || new Error("Gagal mengunduh media dari semua engine (socialdownloader, kol.id & yt-dlp).");
   }
 
   // 3) Auto convert biar bisa dibuka di WA
