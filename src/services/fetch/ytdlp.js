@@ -177,39 +177,53 @@ function guardedSpawn(args, timeoutMs, externalSignal) {
 export async function probe(url, options = {}) {
   await ensureYtDlp(options.onStatus);
   const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : PROBE_TIMEOUT_MS;
-  const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(
-    ["-J", "--no-playlist", "--no-warnings", ...proxyArgs(), url],
-    timeoutMs,
-    options.signal
-  );
-  if (spawnError) {
-    cleanup();
-    throw spawnError;
+
+  const runWithArgs = (extraArgs = []) => {
+    const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(
+      ["-J", "--no-playlist", "--no-warnings", ...extraArgs, url],
+      timeoutMs,
+      options.signal
+    );
+    if (spawnError) {
+      cleanup();
+      throw spawnError;
+    }
+
+    return new Promise((resolve, reject) => {
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout.on("data", (chunk) => (stdout += chunk));
+      child.stderr.on("data", (chunk) => (stderr += chunk));
+      child.on("error", (err) => {
+        cleanup();
+        reject(timedOut() ? timeoutError : err);
+      });
+      child.on("close", (code) => {
+        cleanup();
+        if (timedOut()) return reject(timeoutError);
+        if (code !== 0) {
+          return reject(new Error(cleanYtDlpError(stderr) || `yt-dlp keluar dengan kode ${code}`));
+        }
+        try {
+          resolve(JSON.parse(stdout));
+        } catch (_err) {
+          reject(new Error("Gagal parsing response metadata yt-dlp"));
+        }
+      });
+    });
+  };
+
+  // Coba langsung dulu, jika diblokir/rate-limit baru fallback ke proxy
+  try {
+    return await runWithArgs([]);
+  } catch (directErr) {
+    const pArgs = proxyArgs();
+    if (pArgs.length > 0) {
+      return await runWithArgs(pArgs);
+    }
+    throw directErr;
   }
-
-  return new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (chunk) => (stdout += chunk));
-    child.stderr.on("data", (chunk) => (stderr += chunk));
-    child.on("error", (err) => {
-      cleanup();
-      reject(timedOut() ? timeoutError : err);
-    });
-    child.on("close", (code) => {
-      cleanup();
-      if (timedOut()) return reject(timeoutError);
-      if (code !== 0) {
-        return reject(new Error(cleanYtDlpError(stderr) || `yt-dlp keluar dengan kode ${code}`));
-      }
-      try {
-        resolve(JSON.parse(stdout));
-      } catch (_err) {
-        reject(new Error("Gagal parsing response metadata yt-dlp"));
-      }
-    });
-  });
 }
 
 export async function downloadMedia(

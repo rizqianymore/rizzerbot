@@ -72,10 +72,13 @@ export const settings = {
     BRIGHTDATA_ZONE: "web_unlocker2",
 
     BRIGHTDATA_PROXY_ZONE: "web_unlocker2",
-    BRIGHTDATA_PROXY_PASSWORD: "5c85a566-7c59-456a-a081-aac51e3d1ae7",
+    BRIGHTDATA_PROXY_PASSWORD: "g3rcwgbqusu6",
     BRIGHTDATA_PROXY: "",
     BRIGHTDATA_PROXY_HOST: "brd.superproxy.io",
     BRIGHTDATA_PROXY_PORT: "44445",
+
+    BRIGHTDATA_ISP_ZONE: "isp_proxy1",
+    BRIGHTDATA_ISP_PASSWORD: "g0rh6l0cvv2w",
 
     BRIGHTDATA_SCRAPING_BROWSER_ENABLED: "1",
     BRIGHTDATA_SCRAPING_BROWSER_ZONE: "scraping_browser1",
