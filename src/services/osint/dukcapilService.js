@@ -136,9 +136,8 @@ export async function getCoordinates(query) {
 
   const cleanQuery = query.replace(/[^\w\s,.-]/gi, " ").trim();
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 1; attempt++) {
     try {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, 300));
       const res = await axios.get("https://nominatim.openstreetmap.org/search", {
         params: {
           q: cleanQuery,
@@ -150,7 +149,7 @@ export async function getCoordinates(query) {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept-Language": "id,en;q=0.9",
         },
-        timeout: 5000,
+        timeout: 900,
       });
 
       if (Array.isArray(res.data) && res.data.length > 0) {
@@ -164,7 +163,7 @@ export async function getCoordinates(query) {
       }
       break;
     } catch {
-      if (attempt === 1) return null;
+      return null;
     }
   }
 
@@ -216,11 +215,13 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
   const candidates = [];
   if (street.length >= 3) {
     candidates.push(prefix + street + ", " + cleanCity);
-    if (cleanKel) candidates.push(prefix + street + ", " + cleanKel + ", " + cleanCity);
+  } else if (cleanKel) {
+    candidates.push(cleanKel + ", " + cleanCity);
+  } else if (cleanKec) {
+    candidates.push(cleanKec + ", " + cleanCity);
+  } else {
+    candidates.push(cleanCity);
   }
-  if (cleanKel) candidates.push(cleanKel + ", " + cleanCity);
-  if (cleanKec) candidates.push(cleanKec + ", " + cleanCity);
-  candidates.push(cleanCity);
 
   for (const q of candidates) {
     const coord = await getCoordinates(q);

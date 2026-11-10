@@ -1,3 +1,4 @@
+import axios from "axios";
 import { request } from "@/src/utils/request.js";
 
 const PROVINCES = {
@@ -144,14 +145,18 @@ const WILAYAH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 async function fetchWilayah(path) {
   const hit = wilayahCache.get(path);
   if (hit && hit.expires > Date.now()) return hit.data;
-  const raw = await request.json(`${WILAYAH_BASE}/${path}`, { timeout: 12000 });
-  const data = Array.isArray(raw) ? raw : [];
-  wilayahCache.set(path, { data, expires: Date.now() + WILAYAH_TTL_MS });
-  if (wilayahCache.size > 50) {
-    const firstKey = wilayahCache.keys().next().value;
-    wilayahCache.delete(firstKey);
+  try {
+    const res = await axios.get(`${WILAYAH_BASE}/${path}`, { timeout: 1500 });
+    const data = Array.isArray(res.data) ? res.data : [];
+    wilayahCache.set(path, { data, expires: Date.now() + WILAYAH_TTL_MS });
+    if (wilayahCache.size > 50) {
+      const firstKey = wilayahCache.keys().next().value;
+      wilayahCache.delete(firstKey);
+    }
+    return data;
+  } catch {
+    return [];
   }
-  return data;
 }
 
 export async function enrichWilayah(parsed) {
