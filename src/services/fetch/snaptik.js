@@ -1,6 +1,6 @@
 import { ProxyAgent, fetch } from "undici";
 
-const DEFAULT_PROXY = "http://brd-customer-hl_66a04297-zone-web_unlocker2:lahl63zlmvrs@brd.superproxy.io:44445";
+const DEFAULT_PROXY = "http://brd-customer-hl_66a04297-zone-web_unlocker2:lahl63zlmvrs@brd.superproxy.io:22225";
 
 let proxyAgentInstance = null;
 

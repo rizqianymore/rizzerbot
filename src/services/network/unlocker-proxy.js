@@ -8,7 +8,7 @@ if (!Object.prototype.hasOwnProperty.call(HttpsProxyAgent.prototype || {}, "conn
 }
 
 const DEFAULT_HOST = "brd.superproxy.io";
-const DEFAULT_PORT = 44445;
+const DEFAULT_PORT = 22225;
 const DEFAULT_CUSTOMER = "hl_66a04297";
 const DEFAULT_ZONE = "web_unlocker2";
 const DEFAULT_PASSWORD = "lahl63zlmvrs";
