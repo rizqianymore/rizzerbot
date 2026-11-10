@@ -1,10 +1,16 @@
 import fs from "fs";
 import path from "path";
+import dns from "node:dns";
 import { fileURLToPath } from "url";
 import { DatabaseSync } from "node:sqlite";
 import axios from "axios";
 import { parseNik, enrichWilayah } from "@/src/services/osint/nikparse.js";
 import { parseOperator } from "@/src/services/osint/cekoperator.js";
+
+// Prioritaskan IPv4 untuk menghindari delay/timeout IPv6 pada Node.js
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch (_) {}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,86 +127,104 @@ export function formatTtlWithCurrentAge(rawTtl, nikInfo) {
 }
 
 /**
- * Geocoding OpenStreetMap dengan in-memory cache
+ * Geocoding OpenStreetMap dengan in-memory cache dan retry aman
  */
 export async function getCoordinates(query) {
   if (!query) return null;
   const key = String(query).toLowerCase().trim();
   if (geoCache.has(key)) return geoCache.get(key);
 
-  try {
-    const res = await axios.get("https://nominatim.openstreetmap.org/search", {
-      params: {
-        q: query,
-        format: "json",
-        limit: 1,
-      },
-      headers: {
-        "User-Agent": "RizzerBot/1.0 (OSINT Geo)",
-        "Accept-Language": "id,en;q=0.9",
-      },
-      timeout: 5000,
-    });
+  const cleanQuery = query.replace(/[^\w\s,.-]/gi, " ").trim();
 
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      const coord = {
-        lat: parseFloat(res.data[0].lat),
-        lon: parseFloat(res.data[0].lon),
-      };
-      geoCache.set(key, coord);
-      return coord;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 300));
+      const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+        params: {
+          q: cleanQuery,
+          format: "json",
+          limit: 1,
+        },
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept-Language": "id,en;q=0.9",
+        },
+        timeout: 5000,
+      });
+
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const coord = {
+          lat: parseFloat(res.data[0].lat),
+          lon: parseFloat(res.data[0].lon),
+          displayName: res.data[0].display_name,
+        };
+        geoCache.set(key, coord);
+        return coord;
+      }
+      break;
+    } catch {
+      if (attempt === 1) return null;
     }
-  } catch {}
+  }
 
   return null;
 }
 
 /**
- * Penentuan titik koordinat akurat bertingkat (Jalan -> Kelurahan -> Kecamatan -> Kota)
+ * Penentuan titik koordinat akurat bertingkat (Jalan spesifik -> Kelurahan -> Kecamatan -> Kota)
  */
 export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, kota_kab) {
   const cleanCity = String(kota_kab || "")
     .replace(/KOTA\s+ADM\.?\s*/i, "")
     .replace(/KABUPATEN\s*/i, "")
     .replace(/KAB\.?\s*/i, "")
+    .trim() || "Jakarta";
+
+  const cleanKel = String(kelurahan || "").trim();
+  const cleanKec = String(kecamatan || "").trim();
+
+  let addr = String(alamat || "").trim();
+  let streetRaw = addr.split(/\s+RT\s+/i)[0].split(/\s+RW\s+/i)[0];
+
+  // Pisahkan pengulangan kelurahan jika tercantum di bagian awal
+  if (cleanKel && cleanKel.length > 3) {
+    const kelRegex = new RegExp("\\b" + cleanKel + "\\b", "i");
+    const idx = streetRaw.search(kelRegex);
+    if (idx > 4) streetRaw = streetRaw.slice(0, idx).trim();
+  }
+
+  const isGang = /^(GG|GANG)\.?\s*/i.test(streetRaw);
+  let street = streetRaw.replace(/^(JL|JLN|JALAN|GG|GANG)\.?\s*/i, "").trim();
+
+  // Pisahkan nomor rumah dan slash (cth: V/75 -> V)
+  street = street
+    .replace(/\/\d+[A-Za-z]?$/, "")
+    .replace(/\s+(?:NO\.?|NOMOR)\s*\d+[A-Za-z]?/i, "")
     .trim();
 
-  // 1. Coba ekstraksi nama jalan
-  if (alamat) {
-    const streetPart = String(alamat)
-      .split(/\s+RT\s+/i)[0]
-      .split(/\s+RW\s+/i)[0]
-      .replace(/^(JL|JLN|JALAN)\.?\s+/i, "")
-      .trim();
+  // Normalisasi singkatan kata umum alamat di Indonesia
+  street = street
+    .replace(/\bKAMP\b/gi, "Kampung")
+    .replace(/\bKP\b/gi, "Kampung")
+    .replace(/\bKOMP\b/gi, "Komplek")
+    .replace(/\bPERUM\b/gi, "Perumahan")
+    .trim();
 
-    if (streetPart.length > 3) {
-      const qStreetKel = `Jalan ${streetPart}, ${kelurahan || cleanCity || "Jakarta"}`;
-      const resStreetKel = await getCoordinates(qStreetKel);
-      if (resStreetKel) return resStreetKel;
+  const prefix = isGang ? "Gang " : "Jalan ";
 
-      const qStreetCity = `Jalan ${streetPart}, ${cleanCity || "Jakarta"}`;
-      const resStreetCity = await getCoordinates(qStreetCity);
-      if (resStreetCity) return resStreetCity;
-    }
+  const candidates = [];
+  if (street.length >= 3) {
+    candidates.push(prefix + street + ", " + cleanCity);
+    if (cleanKel) candidates.push(prefix + street + ", " + cleanKel + ", " + cleanCity);
   }
+  if (cleanKel) candidates.push(cleanKel + ", " + cleanCity);
+  if (cleanKec) candidates.push(cleanKec + ", " + cleanCity);
+  candidates.push(cleanCity);
 
-  // 2. Coba Kelurahan + Kota
-  if (kelurahan) {
-    const qKel = `${kelurahan.trim()}, ${cleanCity || "Jakarta"}`;
-    const resKel = await getCoordinates(qKel);
-    if (resKel) return resKel;
-  }
-
-  // 3. Coba Kecamatan + Kota
-  if (kecamatan) {
-    const qKec = `${kecamatan.trim()}, ${cleanCity || "Jakarta"}`;
-    const resKec = await getCoordinates(qKec);
-    if (resKec) return resKec;
-  }
-
-  // 4. Fallback ke Kota
-  if (cleanCity) {
-    return await getCoordinates(cleanCity);
+  for (const q of candidates) {
+    const coord = await getCoordinates(q);
+    if (coord) return coord;
   }
 
   return null;
