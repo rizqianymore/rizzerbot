@@ -47,10 +47,25 @@ export class StealthBrowserManager extends StealthBrowserCore {
     })();
   }
 
-  async solveChallengeOnPage(page, targetUrl, { timeoutMs = 25000, preferredDevice = "desktop" } = {}) {
+  async solveChallengeOnPage(page, targetUrl, { timeoutMs = 25000, preferredDevice = "desktop", blockHeavyMedia = true } = {}) {
     const device = getRandomDevice(preferredDevice);
     await this.preparePage(page, device);
     await this.restoreCookies(page, targetUrl);
+
+    // Blokir video, audio, dan custom font yang rakus memori saat bypass challenge
+    if (blockHeavyMedia) {
+      try {
+        await page.setRequestInterception(true);
+        page.on("request", (req) => {
+          const type = req.resourceType();
+          if (["media", "font"].includes(type)) {
+            req.abort().catch(() => {});
+          } else {
+            req.continue().catch(() => {});
+          }
+        });
+      } catch (_) {}
+    }
 
     await page.goto(targetUrl, {
       waitUntil: "domcontentloaded",

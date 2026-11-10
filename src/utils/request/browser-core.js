@@ -8,14 +8,16 @@ function browserDisabledByEnv() {
 
 function idleTimeoutMs() {
   const raw = Number(process.env.BROWSER_IDLE_MS);
-  if (Number.isFinite(raw) && raw >= 5000) return raw;
-  return 30000;
+  if (Number.isFinite(raw) && raw >= 1000) return raw;
+  // Default agresif 3 detik: browser langsung ditutup jika idle agar RAM hemat
+  return 3000;
 }
 
 function maxOldSpaceMb() {
   const raw = Number(process.env.BROWSER_MAX_OLD_SPACE_MB);
-  if (Number.isFinite(raw) && raw >= 64) return Math.floor(raw);
-  return 192;
+  if (Number.isFinite(raw) && raw >= 48) return Math.floor(raw);
+  // Default hemat RAM: 80 MB
+  return 80;
 }
 
 export function browserMemoryMb(pid) {
@@ -59,6 +61,19 @@ export class StealthBrowserCore {
     this.activePages = 0;
     this.logger = null;
     this.launches = 0;
+
+    // Bersihkan zombie process saat Node keluar
+    const cleanExit = () => {
+      if (this.browser) {
+        try {
+          this.browser.process()?.kill("SIGKILL");
+        } catch (_) {}
+        this.browser = null;
+      }
+    };
+    process.once("exit", cleanExit);
+    process.once("SIGINT", cleanExit);
+    process.once("SIGTERM", cleanExit);
   }
 
   setLogger(logger) {
@@ -152,37 +167,66 @@ export class StealthBrowserCore {
           { cause: err }
         );
       }
+
+      // Flags optimasi ekstrem: matikan semua subsistem berat yang tidak berguna untuk bot
       const launchOpts = {
         headless: true,
         args: [
+          // Keamanan & Sandbox
           "--no-sandbox",
           "--disable-setuid-sandbox",
           "--disable-dev-shm-usage",
+
+          // Matikan GPU & 3D / Hardware Acceleration (Hemat 100MB+ RAM)
+          "--disable-gpu",
+          "--disable-software-rasterizer",
           "--disable-accelerated-2d-canvas",
+          "--disable-accelerated-video-decode",
+          "--disable-accelerated-mjpeg-decode",
+          "--disable-webgl",
+          "--disable-3d-apis",
+
+          // Batasi proses renderer (Hanya 1 proses render, bukan 4-8 proses terpisah)
+          "--renderer-process-limit=1",
           "--no-first-run",
           "--no-zygote",
-          "--disable-gpu",
-          "--disable-blink-features=AutomationControlled",
-          "--disable-infobars",
-          "--window-size=1280,800",
 
-          `--js-flags=--max-old-space-size=${maxOldSpaceMb()}`,
+          // Matikan fitur suara & speech
+          "--mute-audio",
+          "--disable-speech-api",
+          "--disable-speech-synthesis-api",
+
+          // Matikan background services & extensions yang membebani CPU
           "--disable-extensions",
           "--disable-background-networking",
           "--disable-background-timer-throttling",
           "--disable-backgrounding-occluded-windows",
           "--disable-renderer-backgrounding",
           "--disable-component-update",
+          "--disable-component-extensions-with-background-pages",
           "--disable-default-apps",
           "--disable-sync",
+          "--disable-translate",
           "--disable-client-side-phishing-detection",
+          "--disable-notifications",
+          "--disable-desktop-notifications",
+          "--disable-domain-reliability",
+          "--disable-ipc-flooding-protection",
+          "--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication",
+
+          // Ukuran viewport & alokasi memori JS V8 minimum
+          "--window-size=1280,800",
+          `--js-flags=--max-old-space-size=${maxOldSpaceMb()}`,
           "--metrics-recording-only",
-          "--mute-audio",
+          "--no-default-browser-check",
           "--no-service-autorun",
           "--password-store=basic",
           "--use-mock-keychain",
+          "--disable-blink-features=AutomationControlled",
+          "--disable-infobars",
         ],
       };
+
       const systemChrome = findSystemChrome();
       if (systemChrome) {
         launchOpts.executablePath = systemChrome;
@@ -201,7 +245,7 @@ export class StealthBrowserCore {
 
       this.launches += 1;
       const pid = this.browser.process()?.pid || null;
-      this._log("info", "launch", {
+      this._log("info", "launch (ultra-lightweight)", {
         pid,
         launches: this.launches,
         maxOldSpaceMb: maxOldSpaceMb(),
@@ -283,11 +327,22 @@ export class StealthBrowserCore {
       this.idleTimer = null;
     }
     if (this.browser) {
-      const pid = this.browser.process()?.pid || null;
+      const childProc = this.browser.process();
+      const pid = childProc?.pid || null;
       const rssMb = browserMemoryMb(pid);
+
       try {
-        await this.browser.close();
-      } catch (_) {}
+        // Beri waktu 2 detik untuk tutup dengan rapi, jika gantung langsung kill SIGKILL
+        await Promise.race([
+          this.browser.close(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Close timeout")), 2000)),
+        ]);
+      } catch (_) {
+        try {
+          childProc?.kill("SIGKILL");
+        } catch (_) {}
+      }
+
       this.browser = null;
       this.activePages = 0;
       this._log("info", "browser ditutup", { pid, rssMb });
