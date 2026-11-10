@@ -1,5 +1,9 @@
 import { parseOperator } from "@/src/services/osint/cekoperator.js";
-import { searchByPhone, isDukcapilReady } from "@/src/services/osint/dukcapilService.js";
+import {
+  searchByPhone,
+  isDukcapilReady,
+  formatTtlWithCurrentAge,
+} from "@/src/services/osint/dukcapilService.js";
 
 export default {
   name: "cekoperator",
@@ -18,8 +22,8 @@ export default {
         `*CEK OPERATOR & DUKCAPIL*\n\n` +
           `Masukkan nomor HP (format 08xx / 628xx / +628xx).\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekoperator 081317464364\`\n` +
-          `• \`${currentPrefix}cekoperator 6281293269631\``
+          `• \`${currentPrefix}cekoperator 081310321726\`\n` +
+          `• \`${currentPrefix}cekoperator 081317464364\``
       );
     }
 
@@ -43,6 +47,7 @@ export default {
       if (records.length > 0) {
         if (records.length === 1) {
           const r = records[0];
+          const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           const lines = [
             `*INFO OPERATOR & DUKCAPIL*`,
             `• MSISDN: \`${r.nohp || op.normalized}\``,
@@ -50,12 +55,24 @@ export default {
             `• NIK: \`${r.nik || "-"}\``,
             `• Nama: ${r.nama || "-"}`,
             `• Gender: ${r.gender || "-"}`,
-            `• TTL: ${r.ttl_umur || r.ttl || "-"}`,
+            `• TTL: ${ttlFormatted}`,
+          ];
+
+          if (r.nikInfo?.zodiac) {
+            lines.push(`• Zodiak: ${r.nikInfo.zodiac} (${r.nikInfo.generation || "-"})`);
+          }
+
+          lines.push(
             `• Alamat: ${r.alamat || "-"}`,
             `• Kelurahan: ${r.kelurahan || "-"}`,
             `• Kecamatan: ${r.kecamatan || "-"}`,
-            `• Kota/Kab: ${r.kota_kab || "-"}`,
-          ];
+            `• Kota/Kab: ${r.kota_kab || "-"}`
+          );
+
+          if (r.nikInfo && (r.nikInfo.province || r.nikInfo.city || r.nikInfo.district)) {
+            const origin = [r.nikInfo.province, r.nikInfo.city, r.nikInfo.district].filter(Boolean).join(", ");
+            lines.push(`• Wilayah KTP: ${origin}`);
+          }
 
           if (location?.lat && location?.lon) {
             lines.push(
@@ -79,11 +96,12 @@ export default {
         ];
 
         records.forEach((r, idx) => {
+          const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           lines.push(
             `${idx + 1}. *${r.nama}*`,
             `• NIK: \`${r.nik || "-"}\``,
             `• Gender: ${r.gender || "-"}`,
-            `• TTL: ${r.ttl_umur || r.ttl || "-"}`,
+            `• TTL: ${ttlFormatted}`,
             ``
           );
         });

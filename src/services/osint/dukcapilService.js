@@ -68,6 +68,59 @@ export function isDukcapilReady() {
 }
 
 /**
+ * Parsing tanggal lahir dari string TTL database (cth: "26 APR 1988 (35 TH 2 BLN)")
+ */
+export function parseBirthDate(ttl) {
+  if (!ttl) return null;
+  const MONTHS = {
+    JAN: 0, FEB: 1, MAR: 2, APR: 3, MEI: 4, MAY: 4, JUN: 5, JUL: 6,
+    AGU: 7, AUG: 7, SEP: 8, OKT: 9, OCT: 9, NOV: 10, DES: 11, DEC: 11
+  };
+  const match = String(ttl).match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
+  if (!match) return null;
+  const day = parseInt(match[1], 10);
+  const monStr = match[2].toUpperCase();
+  const year = parseInt(match[3], 10);
+  const month = MONTHS[monStr];
+  if (month === undefined) return null;
+  return new Date(year, month, day);
+}
+
+/**
+ * Menghitung umur terkini secara akurat dan otomatis (real-time)
+ */
+export function formatTtlWithCurrentAge(rawTtl, nikInfo) {
+  let birthDate = parseBirthDate(rawTtl);
+  let baseDateStr = rawTtl ? String(rawTtl).split("(")[0].trim() : "";
+
+  if (!birthDate && nikInfo?.birthStr) {
+    const parts = nikInfo.birthStr.split("-");
+    if (parts.length === 3) {
+      birthDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      baseDateStr = nikInfo.birthStr;
+    }
+  }
+
+  if (!birthDate || isNaN(birthDate.getTime())) return rawTtl || "-";
+
+  const now = new Date();
+  let years = now.getFullYear() - birthDate.getFullYear();
+  let months = now.getMonth() - birthDate.getMonth();
+  let days = now.getDate() - birthDate.getDate();
+
+  if (days < 0) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  const ageStr = months > 0 ? `${years} Th ${months} Bln` : `${years} Th`;
+  return `${baseDateStr} (${ageStr})`;
+}
+
+/**
  * Geocoding OpenStreetMap dengan in-memory cache
  */
 export async function getCoordinates(query) {

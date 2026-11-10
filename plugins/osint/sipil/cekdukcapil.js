@@ -4,6 +4,7 @@ import {
   searchByPhone,
   searchByName,
   isDukcapilReady,
+  formatTtlWithCurrentAge,
 } from "@/src/services/osint/dukcapilService.js";
 
 const cache = new Map();
@@ -31,36 +32,40 @@ function setCachedResult(key, data) {
 }
 
 function formatSingleRecord(record, nikInfo, operatorInfo, location) {
+  const ttlFormatted = formatTtlWithCurrentAge(record.ttl_umur || record.ttl, nikInfo);
+
   const lines = [
     `*DATA DUKCAPIL*`,
     `• NIK: \`${record.nik}\``,
     `• Nama: ${record.nama || "-"}`,
     `• Gender: ${record.gender || "-"}`,
-    `• TTL: ${record.ttl_umur || record.ttl || "-"}`,
+    `• TTL: ${ttlFormatted}`,
+  ];
+
+  if (nikInfo?.zodiac) {
+    lines.push(`• Zodiak: ${nikInfo.zodiac} (${nikInfo.generation || "-"})`);
+  }
+
+  lines.push(
     `• No. HP: \`${record.nohp || "-"}\`${
       operatorInfo ? ` (${operatorInfo.operator} - ${operatorInfo.brand})` : ""
     }`,
     `• Alamat: ${record.alamat || "-"}`,
     `• Kelurahan: ${record.kelurahan || "-"}`,
     `• Kecamatan: ${record.kecamatan || "-"}`,
-    `• Kota/Kab: ${record.kota_kab || "-"}`,
-  ];
+    `• Kota/Kab: ${record.kota_kab || "-"}`
+  );
+
+  if (nikInfo && (nikInfo.province || nikInfo.city || nikInfo.district)) {
+    const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
+    lines.push(`• Wilayah KTP: ${origin}`);
+  }
 
   if (location?.lat && location?.lon) {
     lines.push(
       `• Latitude: \`${location.lat}\``,
       `• Longitude: \`${location.lon}\``,
       `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
-    );
-  }
-
-  if (nikInfo && nikInfo.valid) {
-    lines.push(
-      `\n*INFO NIK*`,
-      `• Asal: ${nikInfo.province || "-"} / ${nikInfo.city || "-"} / ${nikInfo.district || "-"}`,
-      `• Tgl Lahir: ${nikInfo.birthStr} (${nikInfo.dayName})`,
-      `• Umur: ${nikInfo.age} Tahun`,
-      `• Zodiak: ${nikInfo.zodiac} (${nikInfo.generation})`
     );
   }
 
@@ -86,9 +91,9 @@ export default {
           `• \`${currentPrefix}cekdukcapil <No. HP>\`\n` +
           `• \`${currentPrefix}cekdukcapil <Nama>\`\n\n` +
           `Contoh:\n` +
-          `• \`${currentPrefix}cekdukcapil 3603174712670005\`\n` +
-          `• \`${currentPrefix}cekdukcapil 081317464364\`\n` +
-          `• \`${currentPrefix}cekdukcapil LATIF SUKATMI\``
+          `• \`${currentPrefix}cekdukcapil 3171072604880003\`\n` +
+          `• \`${currentPrefix}cekdukcapil 081310321726\`\n` +
+          `• \`${currentPrefix}cekdukcapil APDANIEL ALAMSYAH\``
       );
     }
 
@@ -118,15 +123,15 @@ export default {
         }
 
         if (nikInfo && nikInfo.valid) {
+          const ttlFormatted = formatTtlWithCurrentAge(null, nikInfo);
+          const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
           const fallbackText = [
             `*INFO NIK (DI LUAR DATABASE JAKARTA)*`,
             `• NIK: \`${nikInfo.nik}\``,
-            `• Format: \`${nikInfo.formatted}\``,
             `• Gender: ${nikInfo.gender}`,
-            `• TTL: ${nikInfo.birthStr} (${nikInfo.dayName})`,
-            `• Umur: ${nikInfo.age} Tahun`,
+            `• TTL: ${ttlFormatted}`,
             `• Zodiak: ${nikInfo.zodiac} (${nikInfo.generation})`,
-            `• Wilayah: ${nikInfo.province || "-"}, ${nikInfo.city || "-"}, ${nikInfo.district || "-"}`,
+            `• Wilayah KTP: ${origin || "-"}`,
             `• No. Urut: ${nikInfo.sequence}`,
             `\n_Catatan: NIK valid tetapi tidak ada dalam database kependudukan DKI Jakarta._`,
           ].join("\n");
@@ -171,11 +176,12 @@ export default {
         ];
 
         records.forEach((rec, idx) => {
+          const ttlFormatted = formatTtlWithCurrentAge(rec.ttl_umur || rec.ttl, rec.nikInfo);
           listText.push(
             `${idx + 1}. *${rec.nama}*`,
             `• NIK: \`${rec.nik}\``,
             `• Gender: ${rec.gender || "-"}`,
-            `• TTL: ${rec.ttl_umur || rec.ttl || "-"}`,
+            `• TTL: ${ttlFormatted}`,
             ``
           );
         });
