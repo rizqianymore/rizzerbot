@@ -3,20 +3,26 @@ import axios from "axios";
 const BRIGHTDATA_API_URL = "https://api.brightdata.com/request";
 const DEFAULT_TEST_URL = "https://geo.brdtest.com/welcome.txt?product=unlocker&method=api";
 
+const DEFAULT_HOST = "brd.superproxy.io";
+const DEFAULT_PORT = "44445";
+const DEFAULT_CUSTOMER = "hl_66a04297";
+const DEFAULT_ZONE = "web_unlocker2";
+const DEFAULT_PASSWORD = "lahl63zlmvrs";
+
 export function getBrightDataConfig() {
   const apiKey = (process.env.BRIGHTDATA_API_KEY || "").trim();
-  const zone = (process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim() || "web_unlocker2";
+  const zone = (process.env.BRIGHTDATA_ZONE || DEFAULT_ZONE).trim();
   return { apiKey, zone };
 }
 
 export function getBrightDataProxy() {
   const direct = (process.env.BRIGHTDATA_PROXY || "").trim();
   if (direct) return direct;
-  const customer = (process.env.BRIGHTDATA_CUSTOMER || "").trim();
-  const password = (process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
-  const zone = (process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim();
-  const host = (process.env.BRIGHTDATA_PROXY_HOST || "brd.superproxy.io").trim();
-  const port = (process.env.BRIGHTDATA_PROXY_PORT || "44445").trim();
+  const customer = (process.env.BRIGHTDATA_CUSTOMER || DEFAULT_CUSTOMER).trim();
+  const password = (process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || DEFAULT_PASSWORD).trim();
+  const zone = (process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || DEFAULT_ZONE).trim();
+  const host = (process.env.BRIGHTDATA_PROXY_HOST || DEFAULT_HOST).trim();
+  const port = (process.env.BRIGHTDATA_PROXY_PORT || DEFAULT_PORT).trim();
   if (customer && password && zone) {
     return `http://brd-customer-${customer}-zone-${zone}:${password}@${host}:${port}`;
   }

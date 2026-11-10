@@ -9,6 +9,9 @@ if (!Object.prototype.hasOwnProperty.call(HttpsProxyAgent.prototype || {}, "conn
 
 const DEFAULT_HOST = "brd.superproxy.io";
 const DEFAULT_PORT = 44445;
+const DEFAULT_CUSTOMER = "hl_66a04297";
+const DEFAULT_ZONE = "web_unlocker2";
+const DEFAULT_PASSWORD = "lahl63zlmvrs";
 
 export function nativeProxyConfig() {
   const direct = String(process.env.BRIGHTDATA_PROXY || "").trim();
@@ -26,10 +29,9 @@ export function nativeProxyConfig() {
     }
   }
 
-  const customer = String(process.env.BRIGHTDATA_CUSTOMER || "").trim();
-  const password = String(process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || "").trim();
-
-  const zone = String(process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || "web_unlocker2").trim();
+  const customer = String(process.env.BRIGHTDATA_CUSTOMER || DEFAULT_CUSTOMER).trim();
+  const password = String(process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || DEFAULT_PASSWORD).trim();
+  const zone = String(process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || DEFAULT_ZONE).trim();
   if (!customer || !password) return null;
 
   return {

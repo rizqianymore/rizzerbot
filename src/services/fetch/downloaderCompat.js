@@ -126,18 +126,36 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
   let info = null;
   let source = "";
 
-  // 1) SocialDownloader (cepat, support banyak platform)
-  try {
-    const { downloadSocialMedia } = await import("./socialdownloader.js");
-    const sd = await downloadSocialMedia(url, { isAudio, logger, timeout: 30000 });
-    if (sd?.buffer?.length > 100) {
-      rawBuffer = sd.buffer;
-      info = sd.info;
-      source = "socialdownloader";
+  // 0) Web Unlocker Engine (khusus TikTok via Snaptik / TikWM)
+  if (/tiktok\.com|douyin\.com/i.test(String(url))) {
+    try {
+      const { downloadViaSnaptik } = await import("./snaptik.js");
+      const snap = await downloadViaSnaptik(url, { isAudio });
+      if (snap?.buffer?.length > 100) {
+        rawBuffer = snap.buffer;
+        info = snap.info;
+        source = snap.source || "web-unlocker";
+      }
+    } catch (err) {
+      lastErr = err;
+      logger?.warn?.(`[compat web-unlocker] ${err?.message || err}`);
     }
-  } catch (err) {
-    lastErr = err;
-    logger?.warn?.(`[compat socialdownloader] ${err?.message || err}`);
+  }
+
+  // 1) SocialDownloader (cepat, support banyak platform)
+  if (!rawBuffer) {
+    try {
+      const { downloadSocialMedia } = await import("./socialdownloader.js");
+      const sd = await downloadSocialMedia(url, { isAudio, logger, timeout: 30000 });
+      if (sd?.buffer?.length > 100) {
+        rawBuffer = sd.buffer;
+        info = sd.info;
+        source = "socialdownloader";
+      }
+    } catch (err) {
+      lastErr = err;
+      logger?.warn?.(`[compat socialdownloader] ${err?.message || err}`);
+    }
   }
 
   // 2) Kol.id (khusus TikTok / Instagram / YouTube bila SocialDownloader gagal/limit)
