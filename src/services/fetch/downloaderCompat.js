@@ -119,8 +119,27 @@ export function isProbablyPlayable(buffer, mode) {
 }
 
 // Unified downloader: socialdownloader -> kol.id -> ytdlp, auto convert
-export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 60000 } = {}) {
+export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 60000, skipCache = false } = {}) {
   const isAudio = mode === "audio";
+  const cacheKey = `${mode}:${String(url).trim()}`;
+
+  // Cek Smart Cache SQLite terlebih dahulu
+  if (!skipCache) {
+    try {
+      const { getCachedMedia } = await import("./mediaCache.js");
+      const cached = await getCachedMedia(cacheKey);
+      if (cached?.buffer?.length > 100) {
+        logger?.info?.(`[downloader cache HIT] ${url}`);
+        return {
+          buffer: cached.buffer,
+          info: cached.info,
+          source: "smart-cache",
+          rawBuffer: cached.buffer,
+        };
+      }
+    } catch (_) {}
+  }
+
   let lastErr = null;
   let rawBuffer = null;
   let info = null;
@@ -237,6 +256,15 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     } else if (t === "audio") {
       // mode video tapi dapet audio -> biarin, nanti kirim sebagai audio
     }
+  }
+
+  // Simpan hasil ke cache SQLite jika berhasil diunduh dan valid
+  if (buffer && buffer.length > 100 && !skipCache) {
+    try {
+      const { setCachedMedia } = await import("./mediaCache.js");
+      const mime = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
+      await setCachedMedia(cacheKey, buffer, { mime, info });
+    } catch (_) {}
   }
 
   return { buffer, info, source, rawBuffer };
