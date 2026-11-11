@@ -119,6 +119,22 @@ export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
         const d = body.data;
         const targetDl = isAudio ? d.music : d.play || d.wmplay || d.music;
 
+        if (Array.isArray(d.images) && d.images.length > 0) {
+          const imageUrls = d.images.map((img) => (img.startsWith("http") ? img : `https://www.tikwm.com${img}`));
+          return {
+            buffer: null,
+            images: imageUrls,
+            isSlide: true,
+            info: {
+              title: d.title || "TikTok Slide",
+              uploader: d.author?.nickname || d.author?.unique_id || "",
+              duration: 0,
+              thumbnail: d.cover || imageUrls[0] || "",
+            },
+            source: "tikwm-slide",
+          };
+        }
+
         if (targetDl) {
           const dlUrl = targetDl.startsWith("http") ? targetDl : `https://www.tikwm.com${targetDl}`;
           const buffer = await fetchMediaBuffer(dlUrl);

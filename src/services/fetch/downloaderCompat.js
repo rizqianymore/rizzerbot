@@ -242,6 +242,117 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
   return { buffer, info, source, rawBuffer };
 }
 
+/**
+ * Parsing opsi pemilihan nomor index slide/gambar (cth: "1", "2", "1,3,4", "1-3", "all")
+ */
+export function parseMediaIndexSelection(text, totalCount) {
+  if (!text || typeof text !== "string") return null;
+  const str = text.trim().toLowerCase();
+  if (str === "all" || str === "semua") return null; // download semua
+
+  const indices = new Set();
+  const parts = str.split(/[,\s]+/);
+
+  for (const part of parts) {
+    if (part.includes("-")) {
+      const [startStr, endStr] = part.split("-");
+      const start = parseInt(startStr, 10);
+      const end = parseInt(endStr, 10);
+      if (!isNaN(start) && !isNaN(end)) {
+        for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
+          if (i >= 1 && i <= totalCount) indices.add(i - 1);
+        }
+      }
+    } else {
+      const num = parseInt(part, 10);
+      if (!isNaN(num) && num >= 1 && num <= totalCount) {
+        indices.add(num - 1);
+      }
+    }
+  }
+
+  if (indices.size === 0) return null;
+  return Array.from(indices).sort((a, b) => a - b);
+}
+
+/**
+ * Ekstraksi multi-media carousel (Instagram, TikTok, Threads, dll)
+ * Mengembalikan list item: [{ type: "image" | "video", url?: string, buffer?: Buffer }]
+ */
+export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
+  const targetUrl = String(url || "").trim();
+  const items = [];
+  let meta = null;
+
+  // 1) Cek TikTok slide via Web Unlocker
+  if (/tiktok\.com|douyin\.com/i.test(targetUrl)) {
+    try {
+      const { downloadViaSnaptik } = await import("./snaptik.js");
+      const snap = await downloadViaSnaptik(targetUrl, { isAudio });
+      if (snap?.isSlide && Array.isArray(snap.images) && snap.images.length > 0) {
+        snap.images.forEach((imgUrl) => {
+          items.push({ type: "image", url: imgUrl });
+        });
+        return {
+          items,
+          info: snap.info,
+          source: "tiktok-slide",
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 2) Cek SocialDownloader metadata (mendukung isPhotoCarousel & array images)
+  try {
+    const { fetchSocialDownloader } = await import("./socialdownloader.js");
+    const sdInfo = await fetchSocialDownloader(targetUrl, { isAudio, logger, timeout: 25000 });
+    meta = sdInfo;
+    if (Array.isArray(sdInfo.images) && sdInfo.images.length > 0) {
+      sdInfo.images.forEach((img) => {
+        const u = typeof img === "string" ? img : img.url || img.image || "";
+        if (u) items.push({ type: "image", url: u });
+      });
+    }
+    if (sdInfo.directVideoUrl || (!items.length && sdInfo.downloadUrl)) {
+      items.push({ type: isAudio ? "audio" : "video", url: sdInfo.directVideoUrl || sdInfo.downloadUrl });
+    }
+    if (items.length > 0) {
+      return {
+        items,
+        info: meta,
+        source: "socialdownloader",
+      };
+    }
+  } catch (_) {}
+
+  // 3) Cek via yt-dlp probe (jika Instagram carousel balikin format playlist/entries)
+  try {
+    const { probe } = await import("./ytdlp.js");
+    const pInfo = await probe(targetUrl, { timeoutMs: 25000 }).catch(() => null);
+    if (pInfo) {
+      meta = meta || pInfo;
+      if (Array.isArray(pInfo.entries) && pInfo.entries.length > 0) {
+        for (const entry of pInfo.entries) {
+          const isV = entry.vcodec && entry.vcodec !== "none";
+          items.push({
+            type: isV ? "video" : "image",
+            url: entry.url || entry.thumbnail || "",
+          });
+        }
+      }
+      if (items.length > 0) {
+        return {
+          items,
+          info: meta,
+          source: "yt-dlp-entries",
+        };
+      }
+    }
+  } catch (_) {}
+
+  return { items, info: meta, source: "none" };
+}
+
 export function buildCaption(platform, info) {
   const lines = [`*${platform.toUpperCase()} DOWNLOADER*`];
   if (info?.title) lines.push(`Judul: ${String(info.title).slice(0, 150)}`);
