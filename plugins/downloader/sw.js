@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { downloadContentFromMessage } from "ourin-baileys";
+import { downloadContentFromMessage } from "baileys";
 
 const STATUSES_DIR = path.join(process.cwd(), "statuses");
 
@@ -127,7 +127,7 @@ export default {
   usage: "[nomor/kontak] [urutan] (atau reply status)",
   category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, getTargetJid }) => {
-    const { extractMessageContent } = await import("ourin-baileys");
+    const { extractMessageContent } = await import("baileys");
 
     const getMediaNode = (m) => {
       if (!m) return null;

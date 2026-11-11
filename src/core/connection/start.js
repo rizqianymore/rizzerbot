@@ -1,4 +1,4 @@
-import makeWASocket, { useMultiFileAuthState, Browsers } from "ourin-baileys";
+import makeWASocket, { useMultiFileAuthState, Browsers } from "baileys";
 import pino from "pino";
 import path from "path";
 import fs from "fs";

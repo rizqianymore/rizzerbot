@@ -1,5 +1,5 @@
 import { Boom } from "@hapi/boom";
-import { DisconnectReason } from "ourin-baileys";
+import { DisconnectReason } from "baileys";
 import qrcode from "qrcode-terminal";
 import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";

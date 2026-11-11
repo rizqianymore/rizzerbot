@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent } from "ourin-baileys";
+import { generateWAMessageFromContent } from "baileys";
 import { sleep, resolveGroupTarget, runGroupSpam } from "./helpers.js";
 import { BUG_DELAY_MS, makeProgressLogger } from "./progress.js";
 

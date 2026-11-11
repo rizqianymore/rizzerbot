@@ -32,7 +32,6 @@
     "axios": "^1.20.0",
     "baileys": "7.0.0-rc14",
     "https-proxy-agent": "^7.0.6",
-    "ourin-baileys": "file:vendor/ourin-baileys-9.0.21.tgz",
     "parse5": "^8.0.1",
     "pino": "^10.4.0",
     "pino-pretty": "^13.1.1",

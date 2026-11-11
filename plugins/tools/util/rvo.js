@@ -1,4 +1,4 @@
-import { downloadContentFromMessage } from "ourin-baileys";
+import { downloadContentFromMessage } from "baileys";
 
 async function streamToBuffer(stream) {
   let buffer = Buffer.from([]);

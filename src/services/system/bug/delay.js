@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent } from "ourin-baileys";
+import { generateWAMessageFromContent } from "baileys";
 import { sleep } from "./helpers.js";
 import { BUG_DELAY_MS } from "./progress.js";
 
@@ -25,7 +25,7 @@ export async function DelayV5(sock, target) {
                   title: "vault!nspect",
                   body: "superior3xplanation",
                   thumbnailUrl: "https://files.catbox.moe/ur8m20.jpg",
-                  sourceUrl: "https://vsp-killer.gov/",
+                  sourceUrl: "https://usa.gov/",
                   mediaType: 1,
                   renderLargerThumbnail: true,
                 },
