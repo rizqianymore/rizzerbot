@@ -179,7 +179,7 @@ export default {
         return reply(lines.join("\n"));
       }
 
-      // KASUS 2: Nomor tidak tercatat di dukcapil.db tapi ada di simcard.db
+      // KASUS 2: Nomor tidak tercatat di dukcapil tapi ada di simcard.db
       if (simcardRecords.length > 0) {
         const lines = [
           `*INFO OPERATOR & SIMCARD*`,
@@ -188,7 +188,7 @@ export default {
           `Terdaftar: ${simcardRecords.length} catatan simcard`,
           ...simLines,
           ``,
-          `Catatan Dukcapil: Profil lengkap kependudukan belum terindeks di Dukcapil Jakarta`,
+          `Catatan Dukcapil: Profil lengkap kependudukan belum terindeks di database Dukcapil`,
         ];
         return reply(lines.join("\n"));
       }

@@ -4,6 +4,9 @@
   "description": "Professional and Modular WhatsApp Bot built with Baileys",
   "main": "index.js",
   "type": "module",
+  "imports": {
+    "@/*": "./*"
+  },
   "scripts": {
     "start": "bun run index.js",
     "start:node": "node index.js",

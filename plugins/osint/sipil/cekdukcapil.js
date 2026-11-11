@@ -126,14 +126,14 @@ export default {
           const ttlFormatted = formatTtlWithCurrentAge(null, nikInfo);
           const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
           const fallbackText = [
-            `*INFO NIK (DI LUAR DATABASE JAKARTA)*`,
+            `*INFO NIK (DI LUAR DATABASE DUKCAPIL)*`,
             `NIK: \`${nikInfo.nik}\``,
             `Gender: ${nikInfo.gender}`,
             `TTL: ${ttlFormatted}`,
             `Zodiak: ${nikInfo.zodiac} (${nikInfo.generation})`,
             `Wilayah KTP: ${origin || "-"}`,
             `No. Urut: ${nikInfo.sequence}`,
-            `\n_Catatan: NIK valid tetapi tidak ada dalam database kependudukan DKI Jakarta._`,
+            `\n_Catatan: NIK valid tetapi belum ada dalam database kependudukan terindeks._`,
           ].join("\n");
 
           setCachedResult(cacheKey, fallbackText);

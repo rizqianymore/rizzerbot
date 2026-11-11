@@ -14,47 +14,74 @@ try {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DB_PATH = path.resolve(__dirname, "../../../database/dukcapil.db");
+const DB_TOP_PATH = path.resolve(__dirname, "../../../database/dukcapil_top.db");
+const DB_FALLBACK_PATH = path.resolve(__dirname, "../../../database/dukcapil.db");
 
 let dbInstance = null;
-let queryNikStmt = null;
-let queryPhoneStmt = null;
-let queryNameStmt = null;
+let activeDbPath = null;
+let detectedTables = [];
+const nikStmts = new Map();
+const phoneStmts = new Map();
+const nameStmts = new Map();
+
+const TABLE_PREFIX_MAP = {
+  "31": "dki_jakarta",
+  "32": "jawa_barat",
+  "33": "jawa_tengah",
+  "35": "jawa_timur",
+  "36": "banten",
+  "12": "sumatera_utara",
+};
 
 const geoCache = new Map();
 
+function getActiveDbPath() {
+  if (fs.existsSync(DB_TOP_PATH)) {
+    try {
+      const stat = fs.statSync(DB_TOP_PATH);
+      if (stat.isFile() && stat.size >= 1024) return DB_TOP_PATH;
+    } catch (_) {}
+  }
+  if (fs.existsSync(DB_FALLBACK_PATH)) {
+    try {
+      const stat = fs.statSync(DB_FALLBACK_PATH);
+      if (stat.isFile() && stat.size >= 1024) return DB_FALLBACK_PATH;
+    } catch (_) {}
+  }
+  return null;
+}
+
 function getDatabase() {
   if (dbInstance) return dbInstance;
-  if (!fs.existsSync(DB_PATH)) {
-    return null;
-  }
-  try {
-    const stat = fs.statSync(DB_PATH);
-    if (!stat.isFile() || stat.size < 1024) {
-      console.warn("[DukcapilService] Database file too small/empty:", stat.size);
-      return null;
-    }
-  } catch {
-    return null;
-  }
+  const targetPath = getActiveDbPath();
+  if (!targetPath) return null;
 
   try {
-    dbInstance = new DatabaseSync(DB_PATH, { readOnly: true });
+    dbInstance = new DatabaseSync(targetPath, { readOnly: true });
+    activeDbPath = targetPath;
 
     dbInstance.exec("PRAGMA query_only = 1;");
     dbInstance.exec("PRAGMA synchronous = NORMAL;");
 
-    queryNikStmt = dbInstance.prepare(`
-      SELECT * FROM jakarta WHERE nik = ? LIMIT 1
-    `);
+    const tableRows = dbInstance
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+      .all();
+    detectedTables = tableRows.map((r) => r.name);
 
-    queryPhoneStmt = dbInstance.prepare(`
-      SELECT * FROM jakarta WHERE nohp = ? OR nohp = ? LIMIT 10
-    `);
-
-    queryNameStmt = dbInstance.prepare(`
-      SELECT * FROM jakarta WHERE nama LIKE ? LIMIT 10
-    `);
+    for (const table of detectedTables) {
+      nikStmts.set(
+        table,
+        dbInstance.prepare(`SELECT * FROM ${table} WHERE nik = ? LIMIT 1`)
+      );
+      phoneStmts.set(
+        table,
+        dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp = ? OR nohp = ? LIMIT 10`)
+      );
+      nameStmts.set(
+        table,
+        dbInstance.prepare(`SELECT * FROM ${table} WHERE nama LIKE ? LIMIT 10`)
+      );
+    }
 
     return dbInstance;
   } catch (err) {
@@ -64,13 +91,16 @@ function getDatabase() {
 }
 
 export function isDukcapilReady() {
-  try {
-    if (!fs.existsSync(DB_PATH)) return false;
-    const stat = fs.statSync(DB_PATH);
-    return stat.isFile() && stat.size >= 1024;
-  } catch {
-    return false;
-  }
+  return Boolean(getActiveDbPath());
+}
+
+export function getDukcapilInfo() {
+  const active = getActiveDbPath();
+  return {
+    path: active,
+    name: active ? path.basename(active) : null,
+    tables: detectedTables,
+  };
 }
 
 /**
@@ -295,8 +325,31 @@ export async function searchByNik(rawNik) {
   }
 
   let record = null;
-  if (db && queryNikStmt) {
-    record = queryNikStmt.get(nik) || null;
+  if (db && detectedTables.length > 0) {
+    // 1. Prioritaskan tabel berdasarkan 2 digit awal NIK (prefix provinsi)
+    const prefix = nik.slice(0, 2);
+    const targetTable = TABLE_PREFIX_MAP[prefix];
+
+    if (targetTable && nikStmts.has(targetTable)) {
+      const row = nikStmts.get(targetTable).get(nik);
+      if (row) {
+        record = { ...row, tableSource: targetTable };
+      }
+    }
+
+    // 2. Jika belum ketemu, cari di seluruh tabel lain yang terdeteksi
+    if (!record) {
+      for (const table of detectedTables) {
+        if (table === targetTable) continue;
+        const stmt = nikStmts.get(table);
+        if (!stmt) continue;
+        const row = stmt.get(nik);
+        if (row) {
+          record = { ...row, tableSource: table };
+          break;
+        }
+      }
+    }
   }
 
   let operatorInfo = null;
@@ -334,8 +387,18 @@ export async function searchByPhone(rawPhone) {
   const operatorInfo = parseOperator(phones.local);
 
   let records = [];
-  if (db && queryPhoneStmt) {
-    records = queryPhoneStmt.all(phones.intl, phones.local);
+  if (db && detectedTables.length > 0) {
+    for (const table of detectedTables) {
+      const stmt = phoneStmts.get(table);
+      if (!stmt) continue;
+      const rows = stmt.all(phones.intl, phones.local);
+      if (rows && rows.length > 0) {
+        for (const row of rows) {
+          records.push({ ...row, tableSource: table });
+        }
+        if (records.length >= 10) break;
+      }
+    }
   }
 
   let location = null;
@@ -378,10 +441,23 @@ export async function searchByPhone(rawPhone) {
 export async function searchByName(rawName, limit = 5) {
   const db = getDatabase();
   const name = String(rawName).trim();
-  if (!name || !db || !queryNameStmt) return [];
+  if (!name || !db || detectedTables.length === 0) return [];
 
   const pattern = `%${name.toUpperCase()}%`;
-  const records = queryNameStmt.all(pattern);
+  const records = [];
+
+  for (const table of detectedTables) {
+    const stmt = nameStmts.get(table);
+    if (!stmt) continue;
+    const rows = stmt.all(pattern);
+    if (rows && rows.length > 0) {
+      for (const row of rows) {
+        records.push({ ...row, tableSource: table });
+        if (records.length >= limit) break;
+      }
+    }
+    if (records.length >= limit) break;
+  }
 
   return records.slice(0, limit);
 }
