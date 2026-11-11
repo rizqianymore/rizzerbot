@@ -27,7 +27,8 @@ export async function fetchSocialDownloader(url, opts = {}) {
 
   let data = null;
 
-  if (isBrightDataEnabled()) {
+  // Jangan lewatkan proxy residential BrightData untuk YouTube karena dibatasi robots.txt tanpa KYC
+  if (isBrightDataEnabled() && !/youtube\.com|youtu\.be/i.test(targetUrl)) {
     try {
       data = await brightDataRequest(`${BASE_URL}/api/download`, {
         method: "POST",

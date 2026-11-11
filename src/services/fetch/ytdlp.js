@@ -178,9 +178,15 @@ export async function probe(url, options = {}) {
   await ensureYtDlp(options.onStatus);
   const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : PROBE_TIMEOUT_MS;
 
+  const isYoutube = /youtube\.com|youtu\.be/i.test(url);
+  const baseArgs = ["-J", "--no-playlist", "--no-warnings"];
+  if (isYoutube) {
+    baseArgs.push("--extractor-args", "youtube:player_client=android,web");
+  }
+
   const runWithArgs = (extraArgs = []) => {
     const { child, spawnError, cleanup, timedOut, timeoutError } = guardedSpawn(
-      ["-J", "--no-playlist", "--no-warnings", ...extraArgs, url],
+      [...baseArgs, ...extraArgs, url],
       timeoutMs,
       options.signal
     );
@@ -235,6 +241,7 @@ export async function downloadMedia(
   await fsp.mkdir(tmpDir, { recursive: true });
 
   const isAudio = mode === "audio";
+  const isYoutube = /youtube\.com|youtu\.be/i.test(url);
 
   const runDownload = async (withProxy = false) => {
     const outputTemplate = path.join(tmpDir, `dl-${Date.now()}-%(title).50s.%(ext)s`);
@@ -246,6 +253,7 @@ export async function downloadMedia(
       "--print",
       "after_move:filepath",
       "--no-simulate",
+      ...(isYoutube ? ["--extractor-args", "youtube:player_client=android,web"] : []),
       ...(withProxy ? proxyArgs() : []),
       "-o",
       outputTemplate,
