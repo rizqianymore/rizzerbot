@@ -3,6 +3,8 @@ export const CATEGORY_ORDER = [
   "Social Media",
   "Downloader & Media",
   "Tools",
+  "Tools & Media",
+  "Stalk",
   "Sticker",
   "Group",
   "User",
@@ -11,6 +13,7 @@ export const CATEGORY_ORDER = [
   "Bug",
   "General",
   "OSINT",
+  "Store",
 ];
 
 export const CATEGORY_ALIASES = {
@@ -31,6 +34,13 @@ export const CATEGORY_ALIASES = {
   tools: "Tools",
   tool: "Tools",
   alat: "Tools",
+  "tools & media": "Tools & Media",
+  "tools and media": "Tools & Media",
+  toolsmedia: "Tools & Media",
+  toolmedia: "Tools & Media",
+  stalk: "Stalk",
+  stalking: "Stalk",
+  stalker: "Stalk",
   sticker: "Sticker",
   stiker: "Sticker",
   group: "Group",
@@ -54,7 +64,10 @@ export const CATEGORY_ALIASES = {
   gen: "General",
   osint: "OSINT",
   os: "OSINT",
-  sipil: "Sipil",
+  sipil: "OSINT",
+  store: "Store",
+  toko: "Store",
+  shop: "Store",
 };
 
 export function sortCategoryKeys(keys) {
@@ -65,7 +78,33 @@ export function sortCategoryKeys(keys) {
   });
 }
 
-export function resolveCategoryAlias(raw) {
-  if (!raw) return null;
-  return CATEGORY_ALIASES[raw.toLowerCase()] || null;
+export function resolveCategoryAlias(raw, existingCategories = []) {
+  if (!raw || typeof raw !== "string") return null;
+  const clean = raw.trim().toLowerCase();
+  if (!clean) return null;
+
+  if (CATEGORY_ALIASES[clean]) {
+    return CATEGORY_ALIASES[clean];
+  }
+
+  const alphaOnly = clean.replace(/[^a-z0-9]/g, "");
+  if (CATEGORY_ALIASES[alphaOnly]) {
+    return CATEGORY_ALIASES[alphaOnly];
+  }
+
+  const candidatePool = new Set([
+    ...CATEGORY_ORDER,
+    ...(Array.isArray(existingCategories) ? existingCategories : []),
+  ]);
+
+  for (const cat of candidatePool) {
+    if (!cat) continue;
+    const catLower = cat.toLowerCase();
+    const catAlpha = catLower.replace(/[^a-z0-9]/g, "");
+    if (catLower === clean || catAlpha === alphaOnly) {
+      return cat;
+    }
+  }
+
+  return null;
 }

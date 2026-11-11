@@ -15,8 +15,8 @@ export default {
         `*UNIVERSAL DOWNLOADER*\n\n` +
           `Mendukung: YouTube, Instagram, TikTok, X (Twitter), Facebook, Threads, Reddit, Vimeo, dll.\n\n` +
           `*Penggunaan:*\n` +
-          `• \`${prefix || "."}dl <url>\` (Video)\n` +
-          `• \`${prefix || "."}dl <url> mp3\` (Audio Only)`
+          `${prefix || "."}dl <url> (Video)\n` +
+          `${prefix || "."}dl <url> mp3 (Audio Only)`
       );
     }
 

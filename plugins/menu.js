@@ -13,16 +13,16 @@ export function renderMenu(data) {
   let text = "";
 
   text += `*${botName.toUpperCase()}*\n`;
-  text += `• Status: Online\n`;
-  text += `• Prefix: [ ${prefix} ]\n`;
-  text += `• Role: ${role}\n`;
-  text += `• Total: ${totalCmds} Perintah\n\n`;
+  text += `Status: Online\n`;
+  text += `Prefix: [ ${prefix} ]\n`;
+  text += `Role: ${role}\n`;
+  text += `Total: ${totalCmds} Perintah\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
     text += `*KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length})\n`;
     for (const c of cmds) {
-      text += `• ${prefix}${c.name}\n`;
+      text += `${prefix}${c.name}\n`;
     }
     text += `\n_Ketik ${prefix}menu <command> untuk panduan detail_`;
     return text;
@@ -33,7 +33,7 @@ export function renderMenu(data) {
     if (!cmds || cmds.length === 0) continue;
     text += `*${cat.toUpperCase()}* (${cmds.length})\n`;
     for (const c of cmds) {
-      text += `• ${prefix}${c.name}\n`;
+      text += `${prefix}${c.name}\n`;
     }
     text += `\n`;
   }
@@ -62,7 +62,8 @@ export default {
     if (rawArg.startsWith(prefix)) rawArg = rawArg.slice(prefix.length).trim();
 
     const showAll = rawArg === "all" || rawArg === "semua" || rawArg === "full";
-    const targetCategory = rawArg && !showAll ? resolveCategoryAlias(rawArg) : null;
+    const allKnownCategories = [...new Set([...commands.values()].map((c) => c.category || "General"))];
+    const targetCategory = rawArg && !showAll ? resolveCategoryAlias(rawArg, allKnownCategories) : null;
 
     if (rawArg && !showAll && !targetCategory) {
       const targetCmd = commands.get(rawArg);
@@ -83,25 +84,24 @@ export default {
         }
 
         const usageArgs = targetCmd.usage || "";
-        const usage = usageArgs ? ` *${prefix}${targetCmd.name} ${usageArgs}*` : ` *${prefix}${targetCmd.name}*`;
+        const usage = usageArgs ? ` ${prefix}${targetCmd.name} ${usageArgs}` : ` ${prefix}${targetCmd.name}`;
         const aliases =
           targetCmd.aliases && targetCmd.aliases.length > 0
-            ? targetCmd.aliases.map((a) => `*${prefix}${a}*`).join(", ")
+            ? targetCmd.aliases.map((a) => `${prefix}${a}`).join(", ")
             : "-";
 
         const detailText =
           `*PANDUAN PERINTAH: ${prefix}${targetCmd.name}*\n\n` +
-          `• *Kategori:* ${targetCmd.category || "General"}\n` +
-          `• *Deskripsi:* ${targetCmd.description || "Tidak ada deskripsi."}\n` +
-          `• *Format Penggunaan:*${usage}\n` +
-          `• *Alias Singkat:* ${aliases}\n` +
-          (targetCmd.premiumOnly ? `• *Akses:* Khusus Premium User\n` : "") +
-          (targetCmd.adminOnly ? `• *Akses:* Khusus Admin Bot\n` : "") +
-          (targetCmd.ownerOnly ? `• *Akses:* Khusus Pemilik Bot\n` : "");
+          `Kategori: ${targetCmd.category || "General"}\n` +
+          `Deskripsi: ${targetCmd.description || "Tidak ada deskripsi."}\n` +
+          `Format: *${usage.trim()}*\n` +
+          `Alias: ${aliases}\n` +
+          (targetCmd.premiumOnly ? `Akses: Khusus Premium User\n` : "") +
+          (targetCmd.adminOnly ? `Akses: Khusus Admin Bot\n` : "") +
+          (targetCmd.ownerOnly ? `Akses: Khusus Pemilik Bot\n` : "");
 
         return await reply(detailText.trim());
       }
-
       return await reply(
         `[FAIL] Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
         `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`

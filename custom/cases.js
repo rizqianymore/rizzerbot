@@ -27,17 +27,17 @@ export function renderCustomMenu(data) {
 
   // Header Simpel & Bersih tanpa ornamen aneh-aneh
   let out = `*${botName.toUpperCase()}*\n`;
-  out += `• Status: Online\n`;
-  out += `• Prefix: [ ${prefix} ]\n`;
-  out += `• Role: ${role}\n`;
-  out += `• Total: ${totalCmds} Perintah\n\n`;
+  out += `Status: Online\n`;
+  out += `Prefix: [ ${prefix} ]\n`;
+  out += `Role: ${role}\n`;
+  out += `Total: ${totalCmds} Perintah\n\n`;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
     out += `*KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length})\n`;
     for (const cmd of cmds) {
-      out += `• ${prefix}${cmd.name}\n`;
+      out += `${prefix}${cmd.name}\n`;
     }
     out += `\n_Ketik ${prefix}menu <nama_perintah> untuk panduan detail._`;
     return out;
@@ -50,7 +50,7 @@ export function renderCustomMenu(data) {
       if (!cmds || cmds.length === 0) continue;
       out += `*${cat.toUpperCase()}* (${cmds.length})\n`;
       for (const cmd of cmds) {
-        out += `• ${prefix}${cmd.name}\n`;
+        out += `${prefix}${cmd.name}\n`;
       }
       out += `\n`;
     }
@@ -63,9 +63,9 @@ export function renderCustomMenu(data) {
   for (const cat of catKeys) {
     const count = categories[cat]?.length || 0;
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
-    out += `• ${prefix}menu ${alias} -> *${cat}* (${count})\n`;
+    out += `${prefix}menu ${alias} -> *${cat}* (${count})\n`;
   }
-  out += `\n• ${prefix}menu all -> Tampilkan seluruh menu\n\n`;
+  out += `\n${prefix}menu all -> Tampilkan seluruh menu\n\n`;
   out += `_Ketik ${prefix}menu <kategori> untuk membuka daftar perintah._`;
 
   return out;
@@ -92,9 +92,9 @@ export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, 
     case "myrole":
       return reply(
         `*STATUS ROLE ANDA:*\n` +
-        `• Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
-        `• Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
-        `• Premium: ${isPremium ? "Ya" : "Bukan"}`
+        `Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
+        `Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
+        `Premium: ${isPremium ? "Ya" : "Bukan"}`
       );
 
     default:

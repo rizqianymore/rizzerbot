@@ -36,36 +36,36 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location) {
 
   const lines = [
     `*DATA DUKCAPIL*`,
-    `• NIK: \`${record.nik}\``,
-    `• Nama: ${record.nama || "-"}`,
-    `• Gender: ${record.gender || "-"}`,
-    `• TTL: ${ttlFormatted}`,
+    `NIK: \`${record.nik}\``,
+    `Nama: ${record.nama || "-"}`,
+    `Gender: ${record.gender || "-"}`,
+    `TTL: ${ttlFormatted}`,
   ];
 
   if (nikInfo?.zodiac) {
-    lines.push(`• Zodiak: ${nikInfo.zodiac} (${nikInfo.generation || "-"})`);
+    lines.push(`Zodiak: ${nikInfo.zodiac} (${nikInfo.generation || "-"})`);
   }
 
   lines.push(
-    `• No. HP: \`${record.nohp || "-"}\`${
+    `No. HP: \`${record.nohp || "-"}\`${
       operatorInfo ? ` (${operatorInfo.operator} - ${operatorInfo.brand})` : ""
     }`,
-    `• Alamat: ${record.alamat || "-"}`,
-    `• Kelurahan: ${record.kelurahan || "-"}`,
-    `• Kecamatan: ${record.kecamatan || "-"}`,
-    `• Kota/Kab: ${record.kota_kab || "-"}`
+    `Alamat: ${record.alamat || "-"}`,
+    `Kelurahan: ${record.kelurahan || "-"}`,
+    `Kecamatan: ${record.kecamatan || "-"}`,
+    `Kota/Kab: ${record.kota_kab || "-"}`
   );
 
   if (nikInfo && (nikInfo.province || nikInfo.city || nikInfo.district)) {
     const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
-    lines.push(`• Wilayah KTP: ${origin}`);
+    lines.push(`Wilayah KTP: ${origin}`);
   }
 
   if (location?.lat && location?.lon) {
     lines.push(
-      `• Latitude: \`${location.lat}\``,
-      `• Longitude: \`${location.lon}\``,
-      `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
+      `Latitude: \`${location.lat}\``,
+      `Longitude: \`${location.lon}\``,
+      `Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
     );
   }
 
@@ -87,13 +87,13 @@ export default {
       return reply(
         `*CEK DUKCAPIL*\n\n` +
           `Penggunaan:\n` +
-          `• \`${currentPrefix}cekdukcapil <NIK 16 digit>\`\n` +
-          `• \`${currentPrefix}cekdukcapil <No. HP>\`\n` +
-          `• \`${currentPrefix}cekdukcapil <Nama>\`\n\n` +
+          `${currentPrefix}cekdukcapil <NIK 16 digit>\n` +
+          `${currentPrefix}cekdukcapil <No. HP>\n` +
+          `${currentPrefix}cekdukcapil <Nama>\n\n` +
           `Contoh:\n` +
-          `• \`${currentPrefix}cekdukcapil 3171072604880003\`\n` +
-          `• \`${currentPrefix}cekdukcapil 081310321726\`\n` +
-          `• \`${currentPrefix}cekdukcapil APDANIEL ALAMSYAH\``
+          `${currentPrefix}cekdukcapil 3171072604880003\n` +
+          `${currentPrefix}cekdukcapil 081310321726\n` +
+          `${currentPrefix}cekdukcapil APDANIEL ALAMSYAH`
       );
     }
 
@@ -127,12 +127,12 @@ export default {
           const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
           const fallbackText = [
             `*INFO NIK (DI LUAR DATABASE JAKARTA)*`,
-            `• NIK: \`${nikInfo.nik}\``,
-            `• Gender: ${nikInfo.gender}`,
-            `• TTL: ${ttlFormatted}`,
-            `• Zodiak: ${nikInfo.zodiac} (${nikInfo.generation})`,
-            `• Wilayah KTP: ${origin || "-"}`,
-            `• No. Urut: ${nikInfo.sequence}`,
+            `NIK: \`${nikInfo.nik}\``,
+            `Gender: ${nikInfo.gender}`,
+            `TTL: ${ttlFormatted}`,
+            `Zodiak: ${nikInfo.zodiac} (${nikInfo.generation})`,
+            `Wilayah KTP: ${origin || "-"}`,
+            `No. Urut: ${nikInfo.sequence}`,
             `\n_Catatan: NIK valid tetapi tidak ada dalam database kependudukan DKI Jakarta._`,
           ].join("\n");
 
@@ -150,9 +150,9 @@ export default {
         if (records.length === 0) {
           const msgOut = [
             `*INFO NO. HP*`,
-            `• MSISDN: \`${rawQuery}\``,
-            operatorInfo ? `• Operator: ${operatorInfo.operator} (${operatorInfo.brand})` : null,
-            `• Status Dukcapil: Tidak ditemukan di database`,
+            `MSISDN: \`${rawQuery}\``,
+            operatorInfo ? `Operator: ${operatorInfo.operator} (${operatorInfo.brand})` : null,
+            `Status Dukcapil: Tidak ditemukan di database`,
           ]
             .filter(Boolean)
             .join("\n");
@@ -169,9 +169,9 @@ export default {
         const primary = records[0];
         const listText = [
           `*INFO OPERATOR & DUKCAPIL*`,
-          `• MSISDN: \`${primary.nohp || rawQuery}\``,
-          operatorInfo ? `• Operator: ${operatorInfo.operator} (${operatorInfo.brand})` : null,
-          `• Terhubung: ${records.length} data Dukcapil`,
+          `MSISDN: \`${primary.nohp || rawQuery}\``,
+          operatorInfo ? `Operator: ${operatorInfo.operator} (${operatorInfo.brand})` : null,
+          `Terhubung: ${records.length} data Dukcapil`,
           ``,
         ];
 
@@ -179,26 +179,26 @@ export default {
           const ttlFormatted = formatTtlWithCurrentAge(rec.ttl_umur || rec.ttl, rec.nikInfo);
           listText.push(
             `${idx + 1}. *${rec.nama}*`,
-            `• NIK: \`${rec.nik}\``,
-            `• Gender: ${rec.gender || "-"}`,
-            `• TTL: ${ttlFormatted}`,
+            `NIK: \`${rec.nik}\``,
+            `Gender: ${rec.gender || "-"}`,
+            `TTL: ${ttlFormatted}`,
             ``
           );
         });
 
         listText.push(
           `*LOKASI & DOMISILI*`,
-          `• Alamat: ${primary.alamat || "-"}`,
-          `• Kelurahan: ${primary.kelurahan || "-"}`,
-          `• Kecamatan: ${primary.kecamatan || "-"}`,
-          `• Kota/Kab: ${primary.kota_kab || "-"}`
+          `Alamat: ${primary.alamat || "-"}`,
+          `Kelurahan: ${primary.kelurahan || "-"}`,
+          `Kecamatan: ${primary.kecamatan || "-"}`,
+          `Kota/Kab: ${primary.kota_kab || "-"}`
         );
 
         if (location?.lat && location?.lon) {
           listText.push(
-            `• Latitude: \`${location.lat}\``,
-            `• Longitude: \`${location.lon}\``,
-            `• Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
+            `Latitude: \`${location.lat}\``,
+            `Longitude: \`${location.lon}\``,
+            `Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
           );
         }
 
@@ -230,9 +230,9 @@ export default {
       records.forEach((rec, idx) => {
         listText.push(
           `${idx + 1}. *${rec.nama}*`,
-          `• NIK: \`${rec.nik}\``,
-          `• No. HP: \`${rec.nohp || "-"}\``,
-          `• Lokasi: ${rec.kelurahan || "-"}, ${rec.kota_kab || "-"}`,
+          `NIK: \`${rec.nik}\``,
+          `No. HP: \`${rec.nohp || "-"}\``,
+          `Lokasi: ${rec.kelurahan || "-"}, ${rec.kota_kab || "-"}`,
           ``
         );
       });

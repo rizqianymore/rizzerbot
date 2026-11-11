@@ -25,8 +25,8 @@ export default {
       return reply(
         `*INSTAGRAM DOWNLOADER*\n\n` +
           `Masukkan link Instagram.\n` +
-          `• Unduh semua: \`${currentPrefix}igdl <url>\`\n` +
-          `• Pilih slide tertentu: \`${currentPrefix}igdl <url> 2\` atau \`${currentPrefix}igdl <url> 1,3\``
+          `Unduh semua: \`${currentPrefix}igdl <url>\`\n` +
+          `Pilih slide tertentu: \`${currentPrefix}igdl <url> 2\` atau \`${currentPrefix}igdl <url> 1,3\``
       );
     }
 
