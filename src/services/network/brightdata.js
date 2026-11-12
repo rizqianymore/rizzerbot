@@ -31,7 +31,13 @@ export function getBrightDataProxy() {
 
 export function isBrightDataEnabled() {
   if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
-  // Aktif jika memiliki API Key ATAU memiliki kredensial Native Proxy (Customer + Password)
+  // Aktif HANYA jika pengguna secara eksplisit mengisi BRIGHTDATA_API_KEY atau BRIGHTDATA_PROXY di environment
+  const hasExplicitEnv = Boolean(
+    process.env.BRIGHTDATA_API_KEY ||
+    process.env.BRIGHTDATA_PROXY ||
+    process.env.BRIGHTDATA_CUSTOMER
+  );
+  if (!hasExplicitEnv) return false;
   const hasApiKey = Boolean(getBrightDataConfig().apiKey);
   const hasProxy = Boolean(getBrightDataProxy());
   return hasApiKey || hasProxy;

@@ -1,6 +1,33 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload } from "@/src/services/fetch/downloaderCompat.js";
+import { request } from "@/src/utils/request.js";
 
 const MAX_QUERY_LENGTH = 120;
+
+async function searchYoutube(query) {
+  const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+  const html = await request.text(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept-Language": "id,en;q=0.9",
+    },
+    timeout: 10000,
+  });
+
+  const videoIdMatch = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+  if (!videoIdMatch) return null;
+
+  const videoId = videoIdMatch[1];
+  const titleMatch = html.match(/"title":\{"runs":\[\{"text":"([^"]+)"/);
+  const uploaderMatch = html.match(/"ownerText":\{"runs":\[\{"text":"([^"]+)"/);
+
+  return {
+    videoId,
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    title: titleMatch ? titleMatch[1] : query,
+    channel: uploaderMatch ? uploaderMatch[1] : "",
+  };
+}
 
 export default {
   name: "play",
@@ -28,40 +55,25 @@ export default {
     }
 
     try {
-
-      const searchUrl = `ytsearch5:${query}`;
-      const search = await probe(searchUrl, { timeoutMs: 45000 }).catch((err) => {
+      const result = await searchYoutube(query).catch((err) => {
         logger?.warn?.(`[play search] ${err?.message || err}`);
         return null;
       });
 
-      const entries = Array.isArray(search?.entries) ? search.entries.filter(Boolean) : [];
-      if (entries.length === 0) {
+      if (!result?.url) {
         throw new Error("Lagu tidak ditemukan. Coba judul atau nama penyanyi yang lebih spesifik.");
       }
 
-      const entry = entries[0];
-      const videoUrl = entry.webpage_url || entry.original_url || entry.url;
-      if (!videoUrl || !/^https?:\/\//i.test(videoUrl)) {
-        throw new Error("Hasil pencarian tidak memiliki link yang valid.");
-      }
-
-      const title = (entry.title || query).toString().trim();
-      const channel = (entry.uploader || entry.channel || "").toString().trim();
-      const durationSec = Number(entry.duration) || 0;
+      const title = (result.title || query).toString().trim();
+      const channel = (result.channel || "").toString().trim();
 
       await sendTyping();
-      const dl = await downloadMedia(videoUrl, { mode: "audio" });
+      const dl = await unifiedDownload(result.url, { mode: "audio", logger, timeoutMs: 15000 });
       if (!dl?.buffer?.length) throw new Error("Audio kosong / gagal diunduh.");
 
       const lines = ["*MUSIC PLAYER*"];
       if (title) lines.push(`Judul: ${title}`);
       if (channel) lines.push(`Channel: ${channel}`);
-      if (durationSec > 0) {
-        const minutes = Math.floor(durationSec / 60);
-        const seconds = String(durationSec % 60).padStart(2, "0");
-        lines.push(`Durasi: ${minutes}:${seconds}`);
-      }
       lines.push(`Sumber: YouTube (pencarian judul)`);
 
       await sock.sendMessage(

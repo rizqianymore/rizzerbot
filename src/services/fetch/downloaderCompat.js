@@ -118,10 +118,11 @@ export function isProbablyPlayable(buffer, mode) {
   return true;
 }
 
-// Unified downloader: socialdownloader -> kol.id -> ytdlp, auto convert
-export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 60000, skipCache = false } = {}) {
+// Unified downloader: snaptik -> kol.id -> socialdownloader -> direct link (100% pure link system, NO yt-dlp)
+export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 20000, skipCache = false } = {}) {
   const isAudio = mode === "audio";
   const cacheKey = `${mode}:${String(url).trim()}`;
+  const targetUrl = String(url || "").trim();
 
   // Cek Smart Cache SQLite terlebih dahulu
   if (!skipCache) {
@@ -129,7 +130,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
       const { getCachedMedia } = await import("./mediaCache.js");
       const cached = await getCachedMedia(cacheKey);
       if (cached?.buffer?.length > 100) {
-        logger?.info?.(`[downloader cache HIT] ${url}`);
+        logger?.info?.(`[downloader cache HIT] ${targetUrl}`);
         return {
           buffer: cached.buffer,
           info: cached.info,
@@ -145,27 +146,75 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
   let info = null;
   let source = "";
 
-  // 0) Web Unlocker Engine (khusus TikTok via Snaptik / TikWM)
-  if (/tiktok\.com|douyin\.com/i.test(String(url))) {
+  const lower = targetUrl.toLowerCase();
+
+  // 1) Link Engine TikTok: Snaptik & TikWM API
+  if (/tiktok\.com|douyin\.com/i.test(lower)) {
     try {
       const { downloadViaSnaptik } = await import("./snaptik.js");
-      const snap = await downloadViaSnaptik(url, { isAudio });
+      const snap = await downloadViaSnaptik(targetUrl, { isAudio });
       if (snap?.buffer?.length > 100) {
         rawBuffer = snap.buffer;
         info = snap.info;
-        source = snap.source || "web-unlocker";
+        source = snap.source || "snaptik-link";
       }
     } catch (err) {
       lastErr = err;
-      logger?.warn?.(`[compat web-unlocker] ${err?.message || err}`);
+      logger?.warn?.(`[compat snaptik] ${err?.message || err}`);
     }
   }
 
-  // 1) SocialDownloader (cepat, support banyak platform)
+  // 2) Link Engine Kol.id (khusus TikTok / Instagram / YouTube)
+  if (!rawBuffer) {
+    try {
+      const { request } = await import("@/src/utils/request.js");
+      if (/tiktok\.com/i.test(lower)) {
+        const { downloadTiktok } = await import("./kolid.js");
+        const kd = await downloadTiktok(targetUrl);
+        const targetDl = isAudio ? kd?.mp3 : (kd?.noWatermark || kd?.watermark);
+        if (targetDl) {
+          const buf = await request.buffer(targetDl, { timeout: 15000, bypassCloudflare: "auto" });
+          if (buf?.length > 100) {
+            rawBuffer = buf;
+            info = { title: kd.title, uploader: kd.author, duration: kd.duration };
+            source = "kol.id";
+          }
+        }
+      } else if (/instagram\.com/i.test(lower)) {
+        const { downloadInstagram } = await import("./kolid.js");
+        const kd = await downloadInstagram(targetUrl);
+        const firstMedia = kd?.media?.[0]?.url;
+        if (firstMedia) {
+          const buf = await request.buffer(firstMedia, { timeout: 15000, bypassCloudflare: "auto" });
+          if (buf?.length > 100) {
+            rawBuffer = buf;
+            info = { title: kd.title, uploader: kd.username };
+            source = "kol.id";
+          }
+        }
+      } else if (/youtube\.com|youtu\.be/i.test(lower)) {
+        const { downloadYoutube } = await import("./kolid.js");
+        const kd = await downloadYoutube(targetUrl);
+        if (kd?.videoUrl) {
+          const buf = await request.buffer(kd.videoUrl, { timeout: 20000, bypassCloudflare: "auto" });
+          if (buf?.length > 100) {
+            rawBuffer = buf;
+            info = { title: kd.title, uploader: kd.channelName, duration: kd.duration };
+            source = "kol.id";
+          }
+        }
+      }
+    } catch (err) {
+      lastErr = err;
+      logger?.warn?.(`[compat kol.id] ${err?.message || err}`);
+    }
+  }
+
+  // 3) Link Engine SocialDownloader (cepat & multi-platform)
   if (!rawBuffer) {
     try {
       const { downloadSocialMedia } = await import("./socialdownloader.js");
-      const sd = await downloadSocialMedia(url, { isAudio, logger, timeout: 30000 });
+      const sd = await downloadSocialMedia(targetUrl, { isAudio, logger, timeout: 8000, downloadTimeout: 15000 });
       if (sd?.buffer?.length > 100) {
         rawBuffer = sd.buffer;
         info = sd.info;
@@ -177,61 +226,23 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     }
   }
 
-  // 2) Kol.id (khusus TikTok / Instagram / YouTube bila SocialDownloader gagal/limit)
-  if (!rawBuffer) {
+  // 4) Direct Link fallback jika URL adalah direct media stream (mp4/mp3/m3u8/dll)
+  if (!rawBuffer && /\.(mp4|mp3|m4a|wav|mov|webm|webp|png|jpg|jpeg)(\?.*)?$/i.test(targetUrl)) {
     try {
-      const lower = String(url).toLowerCase();
       const { request } = await import("@/src/utils/request.js");
-      if (/tiktok\.com/i.test(lower)) {
-        const { downloadTiktok } = await import("./kolid.js");
-        const kd = await downloadTiktok(url);
-        const targetDl = isAudio ? kd?.mp3 : (kd?.noWatermark || kd?.watermark);
-        if (targetDl) {
-          const buf = await request.buffer(targetDl, { timeout: 35000, bypassCloudflare: "auto" });
-          if (buf?.length > 100) {
-            rawBuffer = buf;
-            info = { title: kd.title, uploader: kd.author, duration: kd.duration };
-            source = "kol.id";
-          }
-        }
-      } else if (/instagram\.com/i.test(lower)) {
-        const { downloadInstagram } = await import("./kolid.js");
-        const kd = await downloadInstagram(url);
-        const firstMedia = kd?.media?.[0]?.url;
-        if (firstMedia) {
-          const buf = await request.buffer(firstMedia, { timeout: 35000, bypassCloudflare: "auto" });
-          if (buf?.length > 100) {
-            rawBuffer = buf;
-            info = { title: kd.title, uploader: kd.username };
-            source = "kol.id";
-          }
-        }
+      const buf = await request.buffer(targetUrl, { timeout: 15000, bypassCloudflare: "auto" });
+      if (buf?.length > 100) {
+        rawBuffer = buf;
+        info = { title: targetUrl.split("/").pop().split("?")[0] };
+        source = "direct-link";
       }
     } catch (err) {
       lastErr = err;
-      logger?.warn?.(`[compat kol.id] ${err?.message || err}`);
-    }
-  }
-
-  // 3) yt-dlp (paling stabil & komprehensif, support >1000 site)
-  if (!rawBuffer) {
-    try {
-      const { downloadMedia, probe } = await import("./ytdlp.js");
-      const pInfo = await probe(url, { timeoutMs: 20000 }).catch(() => null);
-      const dl = await downloadMedia(url, { mode: isAudio ? "audio" : "video", timeoutMs });
-      if (dl?.buffer?.length > 100) {
-        rawBuffer = dl.buffer;
-        info = pInfo || info;
-        source = "yt-dlp";
-      }
-    } catch (err) {
-      lastErr = err;
-      logger?.warn?.(`[compat ytdlp] ${err?.message || err}`);
     }
   }
 
   if (!rawBuffer) {
-    throw lastErr || new Error("Gagal mengunduh media dari semua engine (socialdownloader, kol.id & yt-dlp).");
+    throw lastErr || new Error("Gagal mengunduh media dari seluruh link engine.");
   }
 
   // 3) Auto convert biar bisa dibuka di WA
@@ -353,30 +364,28 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
     }
   } catch (_) {}
 
-  // 3) Cek via yt-dlp probe (jika Instagram carousel balikin format playlist/entries)
-  try {
-    const { probe } = await import("./ytdlp.js");
-    const pInfo = await probe(targetUrl, { timeoutMs: 25000 }).catch(() => null);
-    if (pInfo) {
-      meta = meta || pInfo;
-      if (Array.isArray(pInfo.entries) && pInfo.entries.length > 0) {
-        for (const entry of pInfo.entries) {
-          const isV = entry.vcodec && entry.vcodec !== "none";
+  // 3) Cek via Kol.id Instagram (jika Instagram carousel)
+  if (/instagram\.com/i.test(targetUrl)) {
+    try {
+      const { downloadInstagram } = await import("./kolid.js");
+      const kd = await downloadInstagram(targetUrl);
+      if (Array.isArray(kd?.media) && kd.media.length > 0) {
+        for (const m of kd.media) {
           items.push({
-            type: isV ? "video" : "image",
-            url: entry.url || entry.thumbnail || "",
+            type: m.type === "mp4" ? "video" : "image",
+            url: m.url,
           });
         }
       }
       if (items.length > 0) {
         return {
           items,
-          info: meta,
-          source: "yt-dlp-entries",
+          info: { title: kd.title, uploader: kd.username },
+          source: "kol.id-carousel",
         };
       }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
   return { items, info: meta, source: "none" };
 }

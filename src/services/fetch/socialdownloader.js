@@ -27,7 +27,6 @@ export async function fetchSocialDownloader(url, opts = {}) {
 
   let data = null;
 
-  // Jangan lewatkan proxy residential BrightData untuk YouTube karena dibatasi robots.txt tanpa KYC
   if (isBrightDataEnabled() && !/youtube\.com|youtu\.be/i.test(targetUrl)) {
     try {
       data = await brightDataRequest(`${BASE_URL}/api/download`, {
@@ -35,7 +34,7 @@ export async function fetchSocialDownloader(url, opts = {}) {
         format: "json",
         headers: DEFAULT_HEADERS,
         data: payload,
-        timeout: opts.timeout || 30000,
+        timeout: opts.timeout || 8000,
       });
     } catch (bdErr) {
       opts.logger?.warn?.(`[socialdownloader brightdata] ${bdErr?.message || bdErr}`);
@@ -45,7 +44,7 @@ export async function fetchSocialDownloader(url, opts = {}) {
   if (!data) {
     const response = await request.post(`${BASE_URL}/api/download`, payload, {
       headers: DEFAULT_HEADERS,
-      timeout: opts.timeout || 35000,
+      timeout: opts.timeout || 8000,
       bypassCloudflare: "auto",
     });
     data = response?.data || response;
@@ -97,7 +96,7 @@ export async function downloadSocialMedia(targetUrl, opts = {}) {
       "user-agent": DEFAULT_HEADERS["user-agent"],
     },
     bypassCloudflare: "auto",
-    timeout: opts.downloadTimeout || 45000,
+    timeout: opts.downloadTimeout || 15000,
   });
 
   if (!buffer || buffer.length === 0) {
