@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { normalizeJid, samePhoneJidStrict } from "./utils.js";
 
 export const lidToPnMemory = new Map();
@@ -65,7 +67,22 @@ export function resolvePhoneJid(jid) {
   if (!n) return "";
   if (n.endsWith("@s.whatsapp.net")) return n;
   if (n.endsWith("@lid")) {
-    const mapped = lidToPnMemory.get(lidKeyOf(n));
+    const key = lidKeyOf(n);
+    let mapped = lidToPnMemory.get(key);
+    if (!mapped && key) {
+      try {
+        const authDir = path.resolve(process.cwd(), "assets", "sessions", "primary_bot");
+        const filePath = path.join(authDir, `lid-mapping-${key}_reverse.json`);
+        if (fs.existsSync(filePath)) {
+          const raw = JSON.parse(fs.readFileSync(filePath, "utf8"));
+          const digits = String(raw || "").replace(/\D/g, "");
+          if (digits && digits.length >= 8) {
+            mapped = `${digits}@s.whatsapp.net`;
+            lidToPnMemory.set(key, mapped);
+          }
+        }
+      } catch (_) {}
+    }
     if (mapped) return mapped;
   }
   return n;

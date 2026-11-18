@@ -144,7 +144,7 @@ export function attachMessageHandler(sock) {
   attachWelcomeHandler(sock);
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
-    if (type !== "notify") return;
+    if (type !== "notify" && type !== "append") return;
 
     let ciphertextStreak = 0;
 

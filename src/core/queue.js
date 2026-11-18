@@ -5,7 +5,7 @@ function getSockJid(sock) {
   try {
     const jid = db.normalizeJid(sock?.user?.id || "");
     if (jid) return jid;
-  } catch (_) {}
+  } catch (_) { }
   return "";
 }
 
