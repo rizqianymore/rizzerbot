@@ -2,13 +2,13 @@ import { unifiedDownload } from "@/src/services/fetch/downloaderCompat.js";
 
 export default {
   name: "spotifydl",
-  cooldownMs: 30000,
+  cooldownMs: 15000,
   aliases: ["spdl", "spotify", "spotdl", "spotify-dl"],
-  description: "Unduh lagu dari Spotify — via yt-dlp audio engine (tanpa API sulit)",
+  description: "Unduh lagu dari Spotify via pure link engine.",
   usage: "<url>",
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
-    await sendTyping();
+    sendTyping();
     const text = args[0]?.trim();
     const currentPrefix = prefix || ".";
 
@@ -22,8 +22,7 @@ export default {
     }
 
     try {
-      // HAPUS api.nexray yang sering down — langsung yt-dlp (support spotify -> youtube search)
-      const { buffer, info } = await unifiedDownload(text, { mode: "audio", logger });
+      const { buffer, info } = await unifiedDownload(text, { mode: "audio", logger, timeoutMs: 15000 });
       if (!buffer?.length) throw new Error("Gagal mengambil audio Spotify.");
       const title = info?.title || "Spotify Track";
       const artist = info?.uploader || "Spotify";

@@ -1,37 +1,18 @@
-import { downloadMedia, probe } from "@/src/services/fetch/ytdlp.js";
+import { unifiedDownload, sniffMime } from "@/src/services/fetch/downloaderCompat.js";
 import { request } from "@/src/utils/request.js";
 
 const UA =
   "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36";
 
-function isVideoInfo(info) {
-  if (!info) return false;
-  if (/^(mp4|mov|webm|mkv|m4v)$/i.test(info.ext || "")) return true;
-  if (info.vcodec && info.vcodec !== "none") return true;
-  return Array.isArray(info.formats) && info.formats.some((f) => f.vcodec && f.vcodec !== "none");
-}
-
-function pickImageUrl(info) {
-  if (!info) return null;
-  if (info.url && /^https?:\/\//i.test(info.url)) return info.url;
-  if (Array.isArray(info.formats)) {
-    const images = info.formats
-      .filter((f) => f.url && /^https?:\/\//i.test(f.url) && (!f.vcodec || f.vcodec === "none"))
-      .sort((a, b) => (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0));
-    if (images.length > 0) return images[0].url;
-  }
-  return info.thumbnail || null;
-}
-
 export default {
   name: "pindl",
-  cooldownMs: 30000,
+  cooldownMs: 15000,
   aliases: ["pindownload", "pinurl", "pintdl"],
   description: "Download video & gambar Pinterest (pin.it / pinterest.com) resolusi asli.",
   usage: "<url>",
   category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
-    await sendTyping();
+    sendTyping();
 
     const url = (args[0] || "").trim();
     const currentPrefix = prefix || ".";
@@ -48,56 +29,59 @@ export default {
     }
 
     try {
-      const info = await probe(url, { timeoutMs: 45000 }).catch((err) => {
-        logger?.warn?.(`[pindl probe] ${err?.message || err}`);
-        return null;
-      });
-      if (!info) {
-        throw new Error("Gagal memuat informasi pin. Pastikan link publik dan dapat diakses.");
+      // 1. Coba download via pure link downloader (SocialDownloader / direct link)
+      const res = await unifiedDownload(url, { mode: "video", logger, timeoutMs: 15000 }).catch(() => null);
+      if (res?.buffer?.length > 100) {
+        const mime = sniffMime(res.buffer);
+        const title = res.info?.title || "Pinterest Media";
+        const caption = `*PINTEREST DOWNLOADER*\nJudul: ${title}`;
+
+        if (mime.startsWith("image/")) {
+          return await sock.sendMessage(remoteJid, { image: res.buffer, caption }, { quoted: msg });
+        } else {
+          return await sock.sendMessage(
+            remoteJid,
+            { video: res.buffer, mimetype: "video/mp4", caption },
+            { quoted: msg }
+          );
+        }
       }
 
-      const title = (info.title || "Pinterest").toString().trim();
-      const uploader = (info.uploader || info.creator || info.channel || "").toString().trim();
+      // 2. Fallback: Direct scrape halaman Pinterest untuk ekstrak gambar/video resolusi tinggi
+      const html = await request
+        .text(url, {
+          headers: { "User-Agent": UA, Referer: "https://www.pinterest.com/" },
+          timeout: 8000,
+        })
+        .catch(() => "");
 
-      const lines = ["*PINTEREST DOWNLOADER*"];
-      if (title) lines.push(`Judul: ${title}`);
-      if (uploader) lines.push(`Pembuat: ${uploader}`);
-      const caption = lines.join("\n");
+      const origImg = html.match(/https:\/\/i\.pinimg\.com\/originals\/[a-zA-Z0-9_\/.]+\.(jpg|png|webp|jpeg)/i)?.[0];
+      const videoMatch = html.match(/https:\/\/[^"'\s]+\.mp4/i)?.[0];
+      const targetMedia = videoMatch || origImg;
 
-      if (isVideoInfo(info)) {
-        await sendTyping();
-        const dl = await downloadMedia(url, { mode: "video", quality: "1080" });
-        if (!dl?.buffer?.length) throw new Error("Video Pinterest kosong / gagal diunduh.");
+      if (!targetMedia) {
+        throw new Error("Media tidak ditemukan atau pin bersifat privat.");
+      }
 
-        await sock.sendMessage(
+      const mediaBuf = await request.buffer(targetMedia, {
+        timeout: 15000,
+        headers: { "User-Agent": UA, Referer: "https://www.pinterest.com/" },
+      });
+
+      if (!mediaBuf?.length) throw new Error("Gagal mengunduh buffer media Pinterest.");
+
+      const mime = sniffMime(mediaBuf);
+      const caption = `*PINTEREST DOWNLOADER*`;
+
+      if (mime.startsWith("image/")) {
+        return await sock.sendMessage(remoteJid, { image: mediaBuf, caption }, { quoted: msg });
+      } else {
+        return await sock.sendMessage(
           remoteJid,
-          {
-            video: dl.buffer,
-            mimetype: "video/mp4",
-            fileName: `Pinterest_${Date.now()}.mp4`,
-            caption,
-          },
+          { video: mediaBuf, mimetype: "video/mp4", caption },
           { quoted: msg }
         );
-        return;
       }
-
-      const imageUrl = pickImageUrl(info);
-      if (!imageUrl) throw new Error("URL gambar Pinterest tidak ditemukan.");
-
-      await sendTyping();
-      const buffer = await request.buffer(imageUrl, {
-        timeout: 60000,
-        maxBytes: 25 * 1024 * 1024,
-        headers: {
-          "User-Agent": UA,
-          Referer: "https://www.pinterest.com/",
-          Accept: "image/avif,image/webp,image/*,*/*;q=0.8",
-        },
-      });
-      if (!buffer?.length) throw new Error("Gambar Pinterest kosong / gagal diunduh.");
-
-      await sock.sendMessage(remoteJid, { image: buffer, caption }, { quoted: msg });
     } catch (err) {
       logger?.warn?.(`[pindl] ${err?.message || err}`);
       await reply(`Gagal mengunduh Pinterest: ${err?.message || "Media tidak ditemukan atau link privat."}`);

@@ -86,8 +86,6 @@ export async function checkEnvironment() {
   const ffmpeg = resolveFfmpegPath();
   const ffmpegOk = ffmpeg !== "ffmpeg" || probe("ffmpeg", ["-version"]);
 
-  const ytdlpBin = probe("yt-dlp", ["--version"]) || probe(process.env.YTDLP_PATH || "__unset__", ["--version"]);
-  const ytdlpPy = probe("python3", ["-m", "yt_dlp", "--version"]) || probe("python", ["-m", "yt_dlp", "--version"]);
   const pythonOk = probe("python3", ["--version"]) || probe("python", ["--version"]);
 
   const core = [
@@ -100,11 +98,6 @@ export async function checkEnvironment() {
       name: `ffmpeg (${ffmpeg})`,
       ok: ffmpegOk,
       hint: termux ? "pkg install ffmpeg" : "Install ffmpeg.",
-    },
-    {
-      name: "yt-dlp (binary / python module)",
-      ok: ytdlpBin || ytdlpPy,
-      hint: termux ? "pkg install yt-dlp  ATAU  pip install -U yt-dlp" : "Install yt-dlp atau: pip install -U yt-dlp.",
     },
   ];
 

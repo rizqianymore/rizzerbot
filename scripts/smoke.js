@@ -103,13 +103,20 @@ try {
   assert(false, "EXIF stiker JS murni valid", err.message);
 }
 
-console.log("[4/5] Downloader core engine (kol.id & ytdlp) termuat...");
+console.log("[4/5] Downloader core engine (kol.id & link engine) termuat...");
 try {
   const { KolIdError } = await import("../src/services/fetch/kolid.js");
   const { downloadMedia, probe } = await import("../src/services/fetch/ytdlp.js");
-  assert(typeof KolIdError === "function" && typeof downloadMedia === "function" && typeof probe === "function", "kolid & ytdlp termuat");
+  const { unifiedDownload } = await import("../src/services/fetch/downloaderCompat.js");
+  assert(
+    typeof KolIdError === "function" &&
+      typeof downloadMedia === "function" &&
+      typeof probe === "function" &&
+      typeof unifiedDownload === "function",
+    "kolid & link engine termuat"
+  );
 } catch (err) {
-  assert(false, "kolid & ytdlp termuat", err.message);
+  assert(false, "kolid & link engine termuat", err.message);
 }
 
 console.log("[5/5] Simulasi dispatch perintah (proses terpisah, db dummy)...");
