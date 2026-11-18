@@ -126,25 +126,7 @@ export async function startBot() {
 
     connectionState.primarySock = sock;
 
-    // Wrapper saveCreds: selama belum registered, jangan simpan 'me' ke disk agar
-    // jika terjadi restart/reconnect sebelum user selesai input di HP, socket tidak
-    // terjebak dalam login 401 loop.
-    const safeSaveCreds = async () => {
-      try {
-        if (state.creds && !state.creds.registered && state.creds.me) {
-          const inMemoryMe = state.creds.me;
-          delete state.creds.me;
-          await saveCreds();
-          state.creds.me = inMemoryMe; // Kembalikan ke memori untuk companion_finish Baileys
-          return;
-        }
-        await saveCreds();
-      } catch (err) {
-        logger.error("Gagal menyimpan creds:", err);
-      }
-    };
-
-    sock.ev.on("creds.update", safeSaveCreds);
+    sock.ev.on("creds.update", saveCreds);
     const timers = { pairingTimeout: null };
 
     if (usePairingCode && !sock.authState?.creds?.registered) {
