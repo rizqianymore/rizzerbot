@@ -52,11 +52,11 @@ export default {
     const lines = [
       `*INFORMASI PROFIL PENGGUNA*`,
       ``,
-      `• *Nama:* ${displayName}`,
-      `• *Nomor:* +${phoneNum}`,
-      `• *Status Bot:* ${targetIsOwner ? "Owner Bot" : targetAccess.admin ? "Admin Bot" : targetIsPremium ? "Premium User" : "Free User"}`,
-      `• *Status Akun:* ${targetUser.banned ? "Diblokir (Banned)" : "Aktif"}`,
-      `• *Terdaftar Bot:* ${regDate}`,
+      `Nama: ${displayName}`,
+      `Nomor: +${phoneNum}`,
+      `Status Bot: ${targetIsOwner ? "Owner Bot" : targetAccess.admin ? "Admin Bot" : targetIsPremium ? "Premium User" : "Free User"}`,
+      `Status Akun: ${targetUser.banned ? "Diblokir (Banned)" : "Aktif"}`,
+      `Terdaftar Bot: ${regDate}`,
       ``,
       `*Bio / Status WhatsApp:*`,
       `"${waStatus}"${waStatusSetAt ? ` _(Diperbarui: ${waStatusSetAt})_` : ""}`,
@@ -68,7 +68,7 @@ export default {
 
     lines.push(
       ``,
-      `• *Tautan Langsung:* wa.me/${phoneNum}`,
+      `Tautan Langsung: wa.me/${phoneNum}`,
       ``,
       `_Ketik \`${prefix}profile @tag\` atau \`${prefix}profile 628xxx\` untuk lookup pengguna lain._`
     );

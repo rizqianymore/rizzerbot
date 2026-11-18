@@ -21,12 +21,12 @@ export default {
 
     const text =
       `*STATUS SISTEM*\n\n` +
-      `• Uptime: ${hours}j ${minutes}m ${seconds}s\n` +
-      `• RAM RSS: ${rssMB} MB\n` +
-      `• Heap: ${heapUsedMB} MB / ${heapTotalMB} MB\n` +
-      `• Primary Bot: Online\n` +
-      `• Sub-Bot Aktif: ${activeSubBots} bot\n` +
-      `• Node.js: ${process.version}`;
+      `Uptime: ${hours}j ${minutes}m ${seconds}s\n` +
+      `RAM RSS: ${rssMB} MB\n` +
+      `Heap: ${heapUsedMB} MB / ${heapTotalMB} MB\n` +
+      `Primary Bot: Online\n` +
+      `Sub-Bot Aktif: ${activeSubBots} bot\n` +
+      `Node.js: ${process.version}`;
     reply(text);
   },
 };

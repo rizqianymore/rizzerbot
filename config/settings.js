@@ -91,6 +91,10 @@ export const settings = {
     SLOW_CMD_MS: "3000",
     COMMAND_TIMEOUT_MS: "30000",
     PUPPETEER_EXECUTABLE_PATH: "",
+
+    CCTV_BASE_URL: "",
+    CCTV_USER: "",
+    CCTV_PASS: "",
   },
 };
 
