@@ -81,3 +81,5 @@ OmniRoute/
 
 # OpenCode local config (path lokal + MCP pribadi)
 opencode.json
+
+config/settings.js

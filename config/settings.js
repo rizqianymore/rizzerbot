@@ -92,9 +92,9 @@ export const settings = {
     COMMAND_TIMEOUT_MS: "30000",
     PUPPETEER_EXECUTABLE_PATH: "",
 
-    CCTV_BASE_URL: "",
-    CCTV_USER: "",
-    CCTV_PASS: "",
+    CCTV_BASE_URL: "https://103.119.145.66:7002/",
+    CCTV_USER: "DPR",
+    CCTV_PASS: "JagaJakarta+",
   },
 };
 
