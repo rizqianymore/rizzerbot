@@ -7,9 +7,20 @@ const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
 let failures = 0;
 
 try {
-  const aliasPath = path.join(ROOT, "node_modules", "@");
-  if (!fs.existsSync(aliasPath)) {
-    fs.symlinkSync(ROOT, aliasPath, process.platform === "win32" ? "junction" : "dir");
+  const atDir = path.join(ROOT, "node_modules", "@");
+  if (fs.existsSync(atDir) && fs.lstatSync(atDir).isSymbolicLink()) {
+    fs.unlinkSync(atDir);
+  }
+  if (!fs.existsSync(atDir)) {
+    fs.mkdirSync(atDir, { recursive: true });
+  }
+  for (const t of ["src", "config", "custom"]) {
+    const linkPath = path.join(atDir, t);
+    if (!fs.existsSync(linkPath)) {
+      try {
+        fs.symlinkSync(path.join("..", "..", t), linkPath, process.platform === "win32" ? "junction" : "dir");
+      } catch (_) {}
+    }
   }
 } catch (_) {}
 

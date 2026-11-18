@@ -2,24 +2,36 @@ import "./src/utils/log-filter.js";
 import dns from "node:dns";
 try {
   dns.setDefaultResultOrder("ipv4first");
-} catch (_) {}
+} catch (_) { }
 import fs from "fs";
 import path from "path";
 
-const symlinkPath = path.join(process.cwd(), "node_modules", "@");
+// Pastikan alias scoping @ (src, config, custom) ada tanpa circular symlink ke root node_modules
 try {
-  const resolves = (() => {
-    try {
-      return fs.existsSync(path.join(symlinkPath, "package.json"));
-    } catch {
-      return false;
+  const atDir = path.join(process.cwd(), "node_modules", "@");
+  if (fs.existsSync(atDir) && fs.lstatSync(atDir).isSymbolicLink()) {
+    fs.unlinkSync(atDir);
+  }
+  if (!fs.existsSync(atDir)) {
+    fs.mkdirSync(atDir, { recursive: true });
+  }
+  for (const t of ["src", "config", "custom"]) {
+    const linkPath = path.join(atDir, t);
+    if (!fs.existsSync(linkPath)) {
+      try {
+        fs.symlinkSync(path.join("..", "..", t), linkPath, process.platform === "win32" ? "junction" : "dir");
+      } catch (_) {}
     }
-  })();
-  if (!resolves) {
-    try {
-      fs.rmSync(symlinkPath, { recursive: true, force: true });
-    } catch (_) {}
-    fs.symlinkSync(process.cwd(), symlinkPath, process.platform === "win32" ? "junction" : "dir");
+  }
+
+  // Bersihkan folder orphan .node_modules-* jika pernah terbuat oleh npm
+  const cwdFiles = fs.readdirSync(process.cwd());
+  for (const f of cwdFiles) {
+    if (f.startsWith(".node_modules-")) {
+      try {
+        fs.rmSync(path.join(process.cwd(), f), { recursive: true, force: true });
+      } catch (_) {}
+    }
   }
 } catch (_) {}
 
@@ -42,7 +54,7 @@ if (fs.existsSync(envPath)) {
         }
       }
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 const termuxPrefix = process.env.PREFIX || "/data/data/com.termux/files/usr";
@@ -81,7 +93,7 @@ try {
 
   const { stealthBrowser } = await import("./src/utils/request/browser.js");
   stealthBrowser.setLogger?.(logger);
-} catch (_) {}
+} catch (_) { }
 
 try {
   const { checkEnvironment, formatDoctorReport } = await import("./src/utils/doctor.js");
@@ -89,7 +101,7 @@ try {
   if (!report.coreOk) {
     logger?.warn?.(`[Doctor] Ada dependensi inti yang hilang:\n${formatDoctorReport(report)}`);
   }
-} catch (_) {}
+} catch (_) { }
 
 startBot()
   .then(async () => {
@@ -97,23 +109,23 @@ startBot()
       const { autoRestoreSubBots, syncSubBotsDatabase } = await import("./src/services/system/subbot/subbot.js");
       await syncSubBotsDatabase();
       await autoRestoreSubBots();
-    } catch (_) {}
+    } catch (_) { }
     try {
       const { startExpiryCron } = await import("./src/services/system/expiry.js");
       startExpiryCron(logger);
-    } catch (_) {}
+    } catch (_) { }
     try {
       const { startBackupCron } = await import("./src/services/system/backup-cron.js");
       startBackupCron(logger);
-    } catch (_) {}
+    } catch (_) { }
     try {
       const { startActiveCheck } = await import("./src/services/system/active-check.js");
       startActiveCheck(logger);
-    } catch (_) {}
+    } catch (_) { }
     try {
       const { startHealthServer } = await import("./src/services/system/health-server.js");
       startHealthServer(logger);
-    } catch (_) {}
+    } catch (_) { }
   })
   .catch((err) => {
     logger?.error?.("Fatal initialization error:", err);
@@ -127,7 +139,7 @@ async function gracefulShutdown(signal) {
   try {
     const { cleanOrphanChromeProcesses } = await import("./src/utils/cleaner.js");
     cleanOrphanChromeProcesses(logger);
-  } catch (_) {}
+  } catch (_) { }
   setTimeout(() => {
     process.exit(0);
   }, 1000);
@@ -140,7 +152,7 @@ process.on("unhandledRejection", async (reason) => {
   try {
     const { shouldSuppressLog } = await import("./src/utils/log-filter.js");
     if (shouldSuppressLog(reason)) return;
-  } catch (_) {}
+  } catch (_) { }
   logger?.error?.("[Unhandled Rejection Trapped]", reason?.message || reason);
 });
 
@@ -148,7 +160,7 @@ process.on("uncaughtException", async (err) => {
   try {
     const { shouldSuppressLog } = await import("./src/utils/log-filter.js");
     if (shouldSuppressLog(err)) return;
-  } catch (_) {}
+  } catch (_) { }
   logger?.error?.("[Uncaught Exception Trapped]", err?.message || err);
 });
 

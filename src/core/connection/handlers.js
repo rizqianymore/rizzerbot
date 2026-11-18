@@ -7,6 +7,12 @@ import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
 import { deleteFolderRecursive, invalidateGroupMeta } from "@/src/utils/helper.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
+import {
+  recordDecryptionFailure,
+  resetSessionIfThresholdReached,
+  emergencyResetAllSessions,
+  SESSION_FAILURE_THRESHOLD,
+} from "@/src/core/session-recovery.js";
 
 export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, restart }) {
   sock.ev.on("connection.update", async (update) => {
@@ -140,6 +146,8 @@ export function attachMessageHandler(sock) {
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
 
+    let ciphertextStreak = 0;
+
     for (const msg of messages) {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
@@ -165,6 +173,50 @@ export function attachMessageHandler(sock) {
             sock.readMessages([msg.key]).catch(() => {});
           }
         } catch (_) {}
+
+        // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
+        // Pesan yang gagal didekripsi oleh libsignal muncul sebagai CIPHERTEXT stub (stubType 2).
+        const stubType = Number(msg.messageStubType) || 0;
+        const stubStr = String(msg.messageStubType || "").toLowerCase();
+        const isDecryptionFailure =
+          stubType === 2 ||
+          stubStr === "ciphertext" ||
+          (!msg.message && stubType !== 0 && stubType <= 3);
+
+        let isCiphertextStub = false;
+        if (isDecryptionFailure) {
+          isCiphertextStub = true;
+          const senderJid = msg.key.participant || msg.key.remoteJid;
+          const decryptErr =
+            Array.isArray(msg.messageStubParameters) && msg.messageStubParameters.length > 0
+              ? String(msg.messageStubParameters[0] || "")
+              : "Decryption failure (Ciphertext)";
+
+          const failureCount = recordDecryptionFailure(senderJid, decryptErr);
+          if (failureCount) {
+            logger.warn(
+              `[Session] Gagal dekripsi dari ${senderJid} (${failureCount}/${SESSION_FAILURE_THRESHOLD}): ${decryptErr}`
+            );
+            await resetSessionIfThresholdReached(senderJid, sock, failureCount);
+            continue;
+          }
+        }
+
+        // Jika terlalu banyak pesan ciphertext berurutan, kemungkinan seluruh sesi Signal korup.
+        // Lakukan emergency reset agar sesi baru dibentuk pada pesan berikutnya.
+        if (isCiphertextStub) {
+          ciphertextStreak += 1;
+          if (ciphertextStreak >= 5) {
+            logger.warn(
+              `[Session Recovery] ${ciphertextStreak} pesan ciphertext berurutan. Memicu reset darurat semua sesi.`
+            );
+            await emergencyResetAllSessions(sock);
+            ciphertextStreak = 0;
+            continue;
+          }
+        } else {
+          ciphertextStreak = 0;
+        }
 
         enqueueMessage(sock, msg, logger);
       } catch (err) {
