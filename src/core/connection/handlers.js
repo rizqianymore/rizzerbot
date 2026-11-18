@@ -50,8 +50,41 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       if (!wasRegistered) {
         connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
 
-        const waitMs = 3000;
-        logger.info(`Mempertahankan sesi pairing. Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`);
+        // Jika 401 (loggedOut) saat belum terdaftar → pairing code ditolak WA server.
+        // Setelah 3x gagal 401 berturut-turut, hapus session agar fresh pairing code baru.
+        const is401Reject = statusCode === DisconnectReason.loggedOut;
+        const MAX_PAIRING_RETRIES = 3;
+
+        if (is401Reject && connectionState.unregisteredFailures >= MAX_PAIRING_RETRIES) {
+          logger.warn(
+            `[Pairing] Gagal pairing ${connectionState.unregisteredFailures}x berturut-turut (401). ` +
+            `Menghapus sesi lama dan memulai pairing baru...`
+          );
+          connectionState.unregisteredFailures = 0;
+          try {
+            deleteFolderRecursive(authDir);
+          } catch (e) {
+            logger.error("Gagal menghapus folder sesi pairing:", e.message);
+          }
+          logger.info("Sesi pairing lama dihapus. Memulai pairing baru dalam 3 detik...");
+          if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
+          connectionState.reconnectTimer = setTimeout(() => {
+            connectionState.reconnectTimer = null;
+            restart().catch((err) => {
+              logger.error("Gagal inisialisasi sesi baru:", err);
+            });
+          }, 3000);
+          return;
+        }
+
+        // Backoff: semakin lama tunggu setelah beberapa kali gagal
+        const waitMs = is401Reject
+          ? Math.min(3000 * connectionState.unregisteredFailures, 15000)
+          : 3000;
+        logger.info(
+          `Mempertahankan sesi pairing (attempt ${connectionState.unregisteredFailures}). ` +
+          `Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`
+        );
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;

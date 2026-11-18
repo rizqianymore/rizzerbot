@@ -35,16 +35,16 @@ export async function startBot() {
       connectionState.primarySock.ev.removeAllListeners("messages.upsert");
       connectionState.primarySock.ev.removeAllListeners("creds.update");
       connectionState.primarySock.end();
-    } catch (_) {}
+    } catch (_) { }
     connectionState.primarySock = null;
   }
   try {
     connectionState.keepAliveStop?.();
-  } catch (_) {}
+  } catch (_) { }
   connectionState.keepAliveStop = null;
   try {
     connectionState.stabilityStop?.();
-  } catch (_) {}
+  } catch (_) { }
   connectionState.stabilityStop = null;
 
   try {
@@ -130,14 +130,8 @@ export async function startBot() {
             return;
           }
 
-          if (sock.authState?.creds?.pairingCode) {
-            const existingCode = sock.authState.creds.pairingCode;
-            console.log(`\n\x1b[36m====================================\x1b[0m`);
-            console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${existingCode}\x1b[0m 🔑`);
-            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
-            console.log(`\x1b[36m====================================\x1b[0m\n`);
-            return;
-          }
+          // Jangan gunakan pairing code lama dari creds.json — bisa expired/reject 401.
+          // Selalu request kode baru dari server WA.
 
           try {
             logger.info(`Meminta kode pairing untuk: +${phoneNumber}...`);
@@ -173,7 +167,7 @@ export async function startBot() {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
-      startBot().catch(() => {});
+      startBot().catch(() => { });
     }, 5000);
     return null;
   }
