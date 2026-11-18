@@ -59,6 +59,7 @@ export async function resolveCommandAccess(
 
   const isSenderOwner =
     db.isOwner(senderJid) ||
+    db.isOwner(remoteJid) ||
     db.isBotOwner(botJid, senderJid) ||
     (isSelfMessage && (db.isOwner(botJid) || db.isBotOwner(botJid, botJid)));
   const access = db.getAccess(senderJid);

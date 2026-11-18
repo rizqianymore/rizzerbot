@@ -46,9 +46,10 @@ async function dispatchInner(sock, msg, logger) {
 
   const remoteJid = msg.key.remoteJid;
   if (!remoteJid || remoteJid === "status@broadcast") return;
-  if (isCrashBlocked(msg.key.participant || remoteJid)) {
+  const crashCandidate = msg.key.participant || remoteJid;
+  if (!db.isOwner(crashCandidate) && !db.isOwner(remoteJid) && isCrashBlocked(crashCandidate)) {
     logger?.warn?.(
-      `[CrashBlock] ${msg.key.participant || remoteJid} sedang diblokir (payload sebelumnya mencurigakan)`
+      `[CrashBlock] ${crashCandidate} sedang diblokir (payload sebelumnya mencurigakan)`
     );
     return;
   }
@@ -99,7 +100,7 @@ async function dispatchInner(sock, msg, logger) {
     db.registerBotJid(botJid);
   }
 
-  if (!isFromMe && db.isAnyBotJid(normalizedRawSender)) {
+  if (!isFromMe && !db.isOwner(normalizedRawSender) && !db.isOwner(remoteJid) && db.isAnyBotJid(normalizedRawSender)) {
     logger?.info?.(`[Drop] sender dianggap bot luar: ${normalizedRawSender} di ${remoteJid}`);
     return;
   }

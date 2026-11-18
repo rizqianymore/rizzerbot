@@ -8,6 +8,9 @@ const FLOOD_RE = /\\u0000(\\u0000){20,}|ꦾ{5000,}|𑇂{1000,}/;
 const SPACE_RE = /\s/g;
 
 export async function checkAntiCrash(sock, msg, logger, remoteJid, messageContent) {
+  const sender = msg.key.participant || remoteJid;
+  if (db.isOwner(sender) || db.isOwner(remoteJid)) return false;
+
   const _s = db.getSettings();
   if (_s.antiVirtex !== false) {
     const LIMIT = {

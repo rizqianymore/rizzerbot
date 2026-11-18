@@ -168,20 +168,41 @@ export function attachMessageHandler(sock) {
   attachEchoTracker(sock);
   attachWelcomeHandler(sock);
 
+  // Rekam pemetaan LID -> PN secara real time saat Baileys menerimanya
+  sock.ev.on("lid-mapping.update", (mapping) => {
+    try {
+      if (mapping && typeof mapping === "object") {
+        const { lid, pn } = mapping;
+        if (lid && pn) db.rememberLidPn(lid, pn);
+      }
+    } catch (_) {}
+  });
+
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify" && type !== "append") return;
-
-    let ciphertextStreak = 0;
 
     for (const msg of messages) {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
         const rjid = msg.key.remoteJid;
-        if (rjid === "status@broadcast") {
-
-          continue;
-        }
+        if (rjid === "status@broadcast") continue;
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
+
+        // Otomatis tangkap dan simpan pemetaan LID -> PN dari pesan yang masuk
+        try {
+          const pLid = msg.key.participant?.endsWith("@lid")
+            ? msg.key.participant
+            : msg.key.remoteJid?.endsWith("@lid")
+            ? msg.key.remoteJid
+            : null;
+          const pPn = [msg.key.participantPn, msg.key.participantAlt, msg.key.remoteJidAlt, msg.key.senderPn].find(
+            (x) => typeof x === "string" && x.endsWith("@s.whatsapp.net")
+          );
+          if (pLid && pPn) {
+            db.rememberLidPn(pLid, pPn);
+          }
+        } catch (_) {}
+
         if (msg.message) {
           const keys = Object.keys(msg.message);
           if (
@@ -200,17 +221,13 @@ export function attachMessageHandler(sock) {
         } catch (_) { }
 
         // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
-        // Pesan yang gagal didekripsi oleh libsignal muncul sebagai CIPHERTEXT stub (stubType 2).
+        // Pesan yang gagal didekripsi oleh libsignal muncul HANYA sebagai CIPHERTEXT stub (stubType 2).
+        // PENTING: Jangan masukkan stubType 1 (REVOKE) atau stubType 3 (FUTUREPROOF) ke failure recovery.
         const stubType = Number(msg.messageStubType) || 0;
         const stubStr = String(msg.messageStubType || "").toLowerCase();
-        const isDecryptionFailure =
-          stubType === 2 ||
-          stubStr === "ciphertext" ||
-          (!msg.message && stubType !== 0 && stubType <= 3);
+        const isDecryptionFailure = stubType === 2 || stubStr === "ciphertext";
 
-        let isCiphertextStub = false;
         if (isDecryptionFailure) {
-          isCiphertextStub = true;
           const senderJid = msg.key.participant || msg.key.remoteJid;
           const decryptErr =
             Array.isArray(msg.messageStubParameters) && msg.messageStubParameters.length > 0
@@ -227,20 +244,9 @@ export function attachMessageHandler(sock) {
           }
         }
 
-        // Jika terlalu banyak pesan ciphertext berurutan, kemungkinan seluruh sesi Signal korup.
-        // Lakukan emergency reset agar sesi baru dibentuk pada pesan berikutnya.
-        if (isCiphertextStub) {
-          ciphertextStreak += 1;
-          if (ciphertextStreak >= 5) {
-            logger.warn(
-              `[Session Recovery] ${ciphertextStreak} pesan ciphertext berurutan. Memicu reset darurat semua sesi.`
-            );
-            await emergencyResetAllSessions(sock);
-            ciphertextStreak = 0;
-            continue;
-          }
-        } else {
-          ciphertextStreak = 0;
+        // Jika pesan tidak memiliki isi dan bukan kegagalan dekripsi (misal: revoke/status stub), abaikan
+        if (!msg.message && !isDecryptionFailure) {
+          continue;
         }
 
         enqueueMessage(sock, msg, logger);

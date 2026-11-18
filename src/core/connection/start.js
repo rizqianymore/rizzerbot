@@ -31,9 +31,7 @@ export async function startBot() {
 
   if (connectionState.primarySock) {
     try {
-      connectionState.primarySock.ev.removeAllListeners("connection.update");
-      connectionState.primarySock.ev.removeAllListeners("messages.upsert");
-      connectionState.primarySock.ev.removeAllListeners("creds.update");
+      connectionState.primarySock.ev.removeAllListeners();
       connectionState.primarySock.end();
     } catch (_) { }
     connectionState.primarySock = null;
