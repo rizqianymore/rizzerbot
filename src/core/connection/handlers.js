@@ -30,8 +30,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       logger.warn(
-        `Primary connection closed. Reason: ${reason} (Status Code: ${
-          statusCode || "N/A"
+        `Primary connection closed. Reason: ${reason} (Status Code: ${statusCode || "N/A"
         }). Reconnecting: ${shouldReconnect}`
       );
 
@@ -43,44 +42,37 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         setPrimaryOnline(false);
 
         if (!shouldReconnect && wasRegistered) {
-          notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => {});
+          notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => { });
         }
-      } catch (_) {}
+      } catch (_) { }
 
       if (!wasRegistered) {
-        connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
-
-        // Jika 401 (loggedOut) saat belum terdaftar → pairing code ditolak WA server.
-        // Setelah 3x gagal 401 berturut-turut, hapus session agar fresh pairing code baru.
         const is401Reject = statusCode === DisconnectReason.loggedOut;
-        const MAX_PAIRING_RETRIES = 3;
 
-        if (is401Reject && connectionState.unregisteredFailures >= MAX_PAIRING_RETRIES) {
-          logger.warn(
-            `[Pairing] Gagal pairing ${connectionState.unregisteredFailures}x berturut-turut (401). ` +
-            `Menghapus sesi lama dan memulai pairing baru...`
-          );
+        // Jika 401 (loggedOut) saat belum terdaftar → sesi pairing ditolak WA server.
+        // Langsung hapus sesi lama agar fresh pairing code baru dapat dibuat secara bersih.
+        if (is401Reject) {
           connectionState.unregisteredFailures = 0;
+          logger.warn(
+            `[Pairing] Sesi pairing ditolak WhatsApp (Status 401). Membersihkan sesi lama dan meminta pairing baru...`
+          );
           try {
             deleteFolderRecursive(authDir);
           } catch (e) {
             logger.error("Gagal menghapus folder sesi pairing:", e.message);
           }
-          logger.info("Sesi pairing lama dihapus. Memulai pairing baru dalam 3 detik...");
           if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
           connectionState.reconnectTimer = setTimeout(() => {
             connectionState.reconnectTimer = null;
             restart().catch((err) => {
-              logger.error("Gagal inisialisasi sesi baru:", err);
+              logger.error("Gagal inisialisasi sesi pairing baru:", err);
             });
           }, 3000);
           return;
         }
 
-        // Backoff: semakin lama tunggu setelah beberapa kali gagal
-        const waitMs = is401Reject
-          ? Math.min(3000 * connectionState.unregisteredFailures, 15000)
-          : 3000;
+        connectionState.unregisteredFailures = (connectionState.unregisteredFailures || 0) + 1;
+        const waitMs = 3000;
         logger.info(
           `Mempertahankan sesi pairing (attempt ${connectionState.unregisteredFailures}). ` +
           `Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`
@@ -131,15 +123,15 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         setPrimaryOnline(true);
         if (connectionState.lastDisconnectAt && Date.now() - connectionState.lastDisconnectAt > 60 * 1000) {
           const menit = Math.round((Date.now() - connectionState.lastDisconnectAt) / 60000);
-          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => {});
+          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => { });
         }
-      } catch (_) {}
+      } catch (_) { }
       connectionState.lastDisconnectAt = 0;
       if (sock.user?.id) {
         db.registerBotJid(sock.user.id);
         try {
           if (typeof db.setMainBotJid === "function") db.setMainBotJid(sock.user.id);
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   });
@@ -166,9 +158,9 @@ export function attachWelcomeHandler(sock) {
         const text = `Halo @${num} 👋\nSelamat datang di *${subject}*!\nBaca deskripsi grup ya.`;
         try {
           await sock.sendMessage(jid, { text, mentions: [p] });
-        } catch (_) {}
+        } catch (_) { }
       }
-    } catch (_) {}
+    } catch (_) { }
   });
 }
 
@@ -203,9 +195,9 @@ export function attachMessageHandler(sock) {
         try {
           const autoRead = Boolean(db.getSettings?.()?.autoRead);
           if (autoRead && !msg.key.fromMe) {
-            sock.readMessages([msg.key]).catch(() => {});
+            sock.readMessages([msg.key]).catch(() => { });
           }
-        } catch (_) {}
+        } catch (_) { }
 
         // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
         // Pesan yang gagal didekripsi oleh libsignal muncul sebagai CIPHERTEXT stub (stubType 2).

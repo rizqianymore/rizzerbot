@@ -77,6 +77,14 @@ export async function startBot() {
         if (!parsed || typeof parsed !== "object" || !parsed.noiseKey) {
           throw new Error("Format creds.json korup");
         }
+
+        // Jika sesi belum sukses terdaftar (registered !== true), pastikan 'me' tidak
+        // ada di disk. Jika 'me' tertinggal, Baileys akan salah mengirim generateLoginNode
+        // saat validateConnection, yang langsung ditolak oleh WhatsApp dengan Status 401.
+        if (!parsed.registered && parsed.me) {
+          delete parsed.me;
+          fs.writeFileSync(credsPath, JSON.stringify(parsed, null, 2));
+        }
       } catch (err) {
         logger.warn(`Sesi lama tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru secara bersih...`);
         deleteFolderRecursive(authDir);
@@ -85,6 +93,11 @@ export async function startBot() {
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
+
+    // Sanitasi in-memory: jika belum registered, jangan pernah biarkan 'me' ada saat socket handshake
+    if (state.creds && !state.creds.registered && state.creds.me) {
+      delete state.creds.me;
+    }
 
     logger.info(
       `Initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`
@@ -115,7 +128,25 @@ export async function startBot() {
 
     connectionState.primarySock = sock;
 
-    sock.ev.on("creds.update", saveCreds);
+    // Wrapper saveCreds: selama belum registered, jangan simpan 'me' ke disk agar
+    // jika terjadi restart/reconnect sebelum user selesai input di HP, socket tidak
+    // terjebak dalam login 401 loop.
+    const safeSaveCreds = async () => {
+      try {
+        if (state.creds && !state.creds.registered && state.creds.me) {
+          const inMemoryMe = state.creds.me;
+          delete state.creds.me;
+          await saveCreds();
+          state.creds.me = inMemoryMe; // Kembalikan ke memori untuk companion_finish Baileys
+          return;
+        }
+        await saveCreds();
+      } catch (err) {
+        logger.error("Gagal menyimpan creds:", err);
+      }
+    };
+
+    sock.ev.on("creds.update", safeSaveCreds);
     const timers = { pairingTimeout: null };
 
     if (usePairingCode && !sock.authState?.creds?.registered) {
