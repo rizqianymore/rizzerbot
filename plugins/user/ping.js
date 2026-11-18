@@ -3,11 +3,13 @@ export default {
   description: "Check bot speed",
   usage: "",
   category: "User",
-  run: async (sock, msg, args, { sendTyping }) => {
-    await sendTyping();
+  run: async (sock, msg, args, { reply, sendTyping }) => {
+    sendTyping();
     const start = Date.now();
-    await sock.sendMessage(msg.key.remoteJid, { text: "Ping..." }, { quoted: msg });
+    const sent = await sock.sendMessage(msg.key.remoteJid, { text: "Ping..." }, { quoted: msg });
     const speed = Date.now() - start;
-    await sock.sendMessage(msg.key.remoteJid, { text: `*PONG!*\nKecepatan: *${speed}ms*` }, { quoted: msg });
+    if (sent?.key) {
+      await sock.sendMessage(msg.key.remoteJid, { text: `*PONG!*\nKecepatan: *${speed}ms*`, edit: sent.key }).catch(() => {});
+    }
   },
 };

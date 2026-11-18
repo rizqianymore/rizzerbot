@@ -80,11 +80,11 @@ export async function executeCommand(sock, msg, logger, env) {
       ).trim();
     },
     sendTyping: async () => {
-      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
+      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
     },
     reply: async (text) => {
       if (responseDelay > 0) {
-        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
+        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
         await delay(responseDelay);
       }
       return sock.sendMessage(remoteJid, { text }, { quoted: msg }).catch((e) => {
@@ -133,6 +133,6 @@ export async function executeCommand(sock, msg, logger, env) {
     logger?.error?.(`[Command Error] ${cmd.name}:`, err?.message || err);
     try {
       await context.reply(`❌ Error: ${err?.message || "Terjadi kesalahan saat mengeksekusi perintah."}`);
-    } catch (_) {}
+    } catch (_) { }
   }
 }

@@ -1,7 +1,6 @@
 import { commands } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { sortCategoryKeys } from "@/src/core/categories.js";
-import { resolveImagePayload, sendWithImage } from "@/src/utils/imagePayload.js";
 import path from "path";
 
 export default {
@@ -89,7 +88,6 @@ export default {
 
     text += `_Gunakan \`${prefix}help <command>\` untuk info detail._`;
 
-    const imagePayload = await resolveImagePayload(activeSettings);
-    await sendWithImage(sock, msg.key.remoteJid, imagePayload, text, msg);
+    return await reply(text);
   },
 };

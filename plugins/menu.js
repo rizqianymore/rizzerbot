@@ -55,7 +55,7 @@ export default {
     args,
     { reply, sendTyping, isOwner, isAdmin, isPremium, prefix, activeSettings: ctxSettings }
   ) => {
-    await sendTyping();
+    sendTyping();
 
     const activeSettings = ctxSettings || db.getSettings();
     let rawArg = args.join(" ").trim().toLowerCase();
@@ -153,11 +153,15 @@ export default {
       showAll,
     }).trim();
 
-    try {
-      const imagePayload = await resolveImagePayload(activeSettings);
-      return await sendWithImage(sock, jid, imagePayload, body, msg);
-    } catch (_) {
-      return await reply(body);
+    if (activeSettings.menuImage === true) {
+      try {
+        const imagePayload = await resolveImagePayload(activeSettings);
+        if (imagePayload) {
+          return await sendWithImage(sock, jid, imagePayload, body, msg);
+        }
+      } catch (_) { }
     }
+
+    return await reply(body);
   },
 };
