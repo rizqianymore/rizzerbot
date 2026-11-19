@@ -9,10 +9,11 @@ export function renderMenu(data) {
     return renderCustomMenu(data);
   }
 
-  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory } = data;
+  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
   let text = "";
 
   text += `*${botName.toUpperCase()}*\n`;
+  text += `OS: Linux (x86_64)\n`;
   text += `Status: Online\n`;
   text += `Prefix: [ ${prefix} ]\n`;
   text += `Role: ${role}\n`;
@@ -20,25 +21,36 @@ export function renderMenu(data) {
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    text += `*KATEGORI ${targetCategory.toUpperCase()}* (${cmds.length})\n`;
+    text += `*${targetCategory.toUpperCase()}* [${cmds.length}]\n`;
     for (const c of cmds) {
-      text += `${prefix}${c.name}\n`;
+      text += `├── ${prefix}${c.name}\n`;
     }
-    text += `\n_Ketik ${prefix}menu <command> untuk panduan detail_`;
+    text += `\nKetik ${prefix}menu <perintah> untuk detail panduan.`;
     return text;
   }
 
-  for (const cat of catKeys) {
-    const cmds = categories[cat] || [];
-    if (!cmds || cmds.length === 0) continue;
-    text += `*${cat.toUpperCase()}* (${cmds.length})\n`;
-    for (const c of cmds) {
-      text += `${prefix}${c.name}\n`;
+  if (showAll) {
+    for (const cat of catKeys) {
+      const cmds = categories[cat] || [];
+      if (!cmds || cmds.length === 0) continue;
+      text += `*${cat.toUpperCase()}* [${cmds.length}]\n`;
+      for (const c of cmds) {
+        text += `├── ${prefix}${c.name}\n`;
+      }
+      text += `\n`;
     }
-    text += `\n`;
+    text += `Ketik ${prefix}menu <perintah> untuk detail panduan.`;
+    return text;
   }
 
-  text += `_Ketik ${prefix}menu <command> untuk panduan detail perintah_`;
+  text += `*DAFTAR KATEGORI*\n`;
+  for (const cat of catKeys) {
+    const count = categories[cat]?.length || 0;
+    const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
+    text += `├── ${prefix}menu ${alias} -> ${cat} (${count})\n`;
+  }
+  text += `\n├── ${prefix}menu all -> Tampilkan seluruh menu\n\n`;
+  text += `Ketik ${prefix}menu <kategori> untuk membuka daftar perintah.`;
 
   return text;
 }
@@ -103,7 +115,7 @@ export default {
         return await reply(detailText.trim());
       }
       return await reply(
-        `[FAIL] Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
+        `Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
         `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`
       );
     }
@@ -153,7 +165,8 @@ export default {
       showAll,
     }).trim();
 
-    if (activeSettings.menuImage === true) {
+    const showImage = activeSettings.menuImage !== false;
+    if (showImage) {
       try {
         const imagePayload = await resolveImagePayload(activeSettings);
         if (imagePayload) {

@@ -18,6 +18,7 @@ export const settings = {
   autoOnline: true,
   cooldownTime: 0,
   responseDelay: 0,
+  menuImage: true,
 
   antiBotLuar: true,
   botNumbers: [],

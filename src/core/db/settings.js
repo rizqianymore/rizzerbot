@@ -36,6 +36,7 @@ export function normalizeSettings(storedSettings = {}) {
     "antiBurst",
     "antilinkExtra",
     "silentDeny",
+    "menuImage",
   ]) {
     result[key] = toBoolean(result[key], configDefaults[key]);
   }
