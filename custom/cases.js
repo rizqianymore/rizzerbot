@@ -25,21 +25,25 @@
 export function renderCustomMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
 
-  // Header Simpel Gaya Terminal Linux (tanpa backtick / quotes)
-  let out = `*${botName.toUpperCase()}*\n`;
-  out += `OS: Linux (x86_64)\n`;
-  out += `Status: Online\n`;
-  out += `Prefix: [ ${prefix} ]\n`;
-  out += `Role: ${role}\n`;
-  out += `Total: ${totalCmds} Perintah\n\n`;
+  // Header Simpel Gaya Terminal Linux (Box Unicode bersih tanpa backtick)
+  let out = `╭───────────────[ *SYSTEM INFO* ]──────────╮\n`;
+  out += `│ Bot: ${botName}\n`;
+  out += `│ OS: Linux (x86_64)\n`;
+  out += `│ Status: Online\n`;
+  out += `│ Prefix: [ ${prefix} ]\n`;
+  out += `│ Role: ${role}\n`;
+  out += `│ Total: ${totalCmds} Perintah\n`;
+  out += `╰──────────────────────────────────────╯\n\n`;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    out += `*${targetCategory.toUpperCase()}* [${cmds.length}]\n`;
-    for (const cmd of cmds) {
-      out += `├── ${prefix}${cmd.name}\n`;
-    }
+    out += `╭────[ *${targetCategory.toUpperCase()}* (${cmds.length}) ]\n`;
+    cmds.forEach((cmd, i) => {
+      const isLast = i === cmds.length - 1;
+      const branch = isLast ? "└──" : "├──";
+      out += `${branch} ${prefix}${cmd.name}\n`;
+    });
     out += `\nKetik ${prefix}menu <perintah> untuk detail panduan.`;
     return out;
   }
@@ -49,10 +53,12 @@ export function renderCustomMenu(data) {
     for (const cat of catKeys) {
       const cmds = categories[cat] || [];
       if (!cmds || cmds.length === 0) continue;
-      out += `*${cat.toUpperCase()}* [${cmds.length}]\n`;
-      for (const cmd of cmds) {
-        out += `├── ${prefix}${cmd.name}\n`;
-      }
+      out += `╭────[ *${cat.toUpperCase()}* (${cmds.length}) ]\n`;
+      cmds.forEach((cmd, i) => {
+        const isLast = i === cmds.length - 1;
+        const branch = isLast ? "└──" : "├──";
+        out += `${branch} ${prefix}${cmd.name}\n`;
+      });
       out += `\n`;
     }
     out += `Ketik ${prefix}menu <perintah> untuk detail panduan.`;
@@ -60,13 +66,13 @@ export function renderCustomMenu(data) {
   }
 
   // Tampilan 3: Menu Utama (Daftar Kategori Bergaya Linux Tree)
-  out += `*DAFTAR KATEGORI*\n`;
-  for (const cat of catKeys) {
+  out += `╭────[ *DAFTAR KATEGORI* ]\n`;
+  catKeys.forEach((cat) => {
     const count = categories[cat]?.length || 0;
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
     out += `├── ${prefix}menu ${alias} -> ${cat} (${count})\n`;
-  }
-  out += `\n├── ${prefix}menu all -> Tampilkan seluruh menu\n\n`;
+  });
+  out += `└── ${prefix}menu all -> Tampilkan Seluruh Menu\n\n`;
   out += `Ketik ${prefix}menu <kategori> untuk membuka daftar perintah.`;
 
   return out;
