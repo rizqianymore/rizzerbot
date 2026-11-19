@@ -106,17 +106,33 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
     } catch (_) {}
   }
 
-  // Bersihkan arsip status WhatsApp yang lebih tua dari 24 jam (sesuai siklus status WA)
-  const statusesDir = path.join(process.cwd(), "statuses");
-  if (fs.existsSync(statusesDir)) {
+  const statusClean = cleanStatusArchives({ now });
+  deletedCount += statusClean.deletedCount;
+  freedBytes += statusClean.freedBytes;
+
+  return { deletedCount, freedBytes };
+}
+
+export function cleanStatusArchives({ maxAgeMs = 24 * 60 * 60 * 1000, now = Date.now() } = {}) {
+  const statusDirs = [
+    path.join(process.cwd(), "statuses"),
+    path.join(process.cwd(), ".statuses"),
+  ];
+
+  let deletedCount = 0;
+  let freedBytes = 0;
+  let totalFiles = 0;
+
+  for (const statusesDir of statusDirs) {
+    if (!fs.existsSync(statusesDir)) continue;
     try {
-      const statusFiles = fs.readdirSync(statusesDir);
-      const STATUS_EXPIRY_MS = 24 * 60 * 60 * 1000;
-      for (const sfile of statusFiles) {
+      for (const sfile of fs.readdirSync(statusesDir)) {
         const sfilePath = path.join(statusesDir, sfile);
         try {
           const sstat = fs.statSync(sfilePath);
-          if (now - sstat.mtimeMs > STATUS_EXPIRY_MS) {
+          if (!sstat.isFile()) continue;
+          totalFiles++;
+          if (maxAgeMs <= 0 || now - sstat.mtimeMs > maxAgeMs) {
             freedBytes += sstat.size || 0;
             fs.unlinkSync(sfilePath);
             deletedCount++;
@@ -126,7 +142,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
     } catch (_) {}
   }
 
-  return { deletedCount, freedBytes };
+  return { deletedCount, freedBytes, totalFiles };
 }
 
 export function clearAllCache({ logger } = {}) {

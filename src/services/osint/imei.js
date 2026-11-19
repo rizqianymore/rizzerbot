@@ -81,10 +81,12 @@ export const TAC_DATABASE = {
  * Validasi Check Digit IMEI menggunakan Algoritma Luhn (Modulus 10)
  */
 export function validateLuhn(imeiStr) {
-  if (imeiStr.length < 14) return { valid: false, expected: null };
+  const digits = String(imeiStr || "").replace(/\D/g, "");
+  if (digits.length < 14 || digits.length > 15) return { valid: false, expected: null };
+
   let sum = 0;
   for (let i = 0; i < 14; i++) {
-    let d = parseInt(imeiStr[i], 10);
+    let d = parseInt(digits[i], 10);
     if (i % 2 !== 0) {
       d *= 2;
       if (d > 9) d -= 9;
@@ -92,7 +94,11 @@ export function validateLuhn(imeiStr) {
     sum += d;
   }
   const expectedCheckDigit = (10 - (sum % 10)) % 10;
-  const actualCheckDigit = parseInt(imeiStr[14], 10);
+
+  // 14 digit = tanpa check digit, jadi tidak bisa divalidasi silang
+  if (digits.length === 14) return { valid: null, expected: expectedCheckDigit, actual: null };
+
+  const actualCheckDigit = parseInt(digits[14], 10);
   return {
     valid: expectedCheckDigit === actualCheckDigit,
     expected: expectedCheckDigit,
@@ -168,6 +174,43 @@ function stripHtml(html = "") {
     .trim();
 }
 
+function isCaptchaPage(html = "") {
+  return /solve captcha|g-recaptcha|captcha-robot|are you a human|unusual traffic/i.test(html);
+}
+
+function extractImeiDetails(html = "") {
+  if (!html || html.length < 200 || isCaptchaPage(html)) return null;
+
+  const details = {};
+  const rowPatterns = [
+    /<tr[^>]*>\s*<t[dh][^>]*>([^<:]+?)<\/t[dh]>[\s:]*<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi,
+    /<(?:div|li)[^>]*>\s*<(?:th|td|span|b|strong)[^>]*>([^<:]+)<\/(?:th|td|span|b|strong)>[\s:]*<(?:td|span|div)[^>]*>([\s\S]*?)<\/(?:td|span|div)>/gi,
+  ];
+
+  for (const pattern of rowPatterns) {
+    let match;
+    while ((match = pattern.exec(html)) !== null) {
+      const key = stripHtml(match[1]).trim();
+      const val = stripHtml(match[2]).trim();
+      if (key && val && key.length < 50 && val.length < 200 && !details[key]) {
+        details[key] = val;
+      }
+    }
+  }
+
+  const titleMatch =
+    html.match(/<h[1-3][^>]*class="[^"]*(?:title|model|device)[^"]*"[^>]*>([^<]+)<\/h[1-3]>/i) ||
+    html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
+    html.match(/<title>([^<]+)<\/title>/i);
+  const scrapedTitle = titleMatch ? stripHtml(titleMatch[1]).replace(/\s*\|\s*(IMEI24|IMEI\.info).*$/i, "").trim() : null;
+
+  return {
+    details,
+    brand: details["Brand"] || details["Make"] || details["Producer"] || (scrapedTitle ? scrapedTitle.split(" ")[0] : null),
+    model: details["Model"] || details["Device"] || scrapedTitle || null,
+  };
+}
+
 /**
  * Web scraping IMEI online lookup menggunakan Bright Data Web Unlocker / Scraping API
  * @param {string} rawImei
@@ -199,102 +242,72 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
   const targetImei = baseParsed.imei;
   const timeout = options.timeout || 35000;
 
-  // 1. Coba Scraping via IMEI24 (Target utama detail device & blacklist check)
-  try {
-    const imei24Url = `https://imei24.com/check/${targetImei}`;
-    const rawHtml = await brightDataRequest(imei24Url, {
-      format: "raw",
-      timeout,
-    });
+  // imei.info diprioritaskan: tabelnya rapi & tidak digate captcha seperti imei24.
+  const attempts = [
+    {
+      source: "imei.info",
+      url: `https://www.imei.info/check/${targetImei}/`,
+      requestOptions: { format: "raw", timeout },
+    },
+    {
+      source: "imei24.com",
+      // URL lama /check/<imei> sudah 404; jalur yang benar adalah POST /searching/
+      url: "https://imei24.com/searching/",
+      requestOptions: {
+        format: "raw",
+        timeout,
+        method: "POST",
+        data: `s=${encodeURIComponent(targetImei)}&nr=0`,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+          Referer: "https://imei24.com/",
+        },
+      },
+    },
+  ];
 
-    if (rawHtml && typeof rawHtml === "string" && rawHtml.length > 200) {
-      const details = {};
-
-      // Ekstrak info penting dari tabel/div spesifikasi
-      const rowRegex =
-        /<(?:tr|div|li)[^>]*>\s*<(?:th|td|span|b|strong)[^>]*>([^<:]+)<\/(?:th|td|span|b|strong)>[\s:]*<(?:td|span|div)[^>]*>([\s\S]*?)<\/(?:td|span|div)>/gi;
-      let match;
-      while ((match = rowRegex.exec(rawHtml)) !== null) {
-        const key = stripHtml(match[1]).trim();
-        const val = stripHtml(match[2]).trim();
-        if (key && val && key.length < 50 && val.length < 200 && !details[key]) {
-          details[key] = val;
-        }
+  const errors = [];
+  for (const attempt of attempts) {
+    try {
+      const rawHtml = await brightDataRequest(attempt.url, attempt.requestOptions);
+      if (!rawHtml || typeof rawHtml !== "string") {
+        errors.push(`${attempt.source}: respons bukan HTML`);
+        continue;
+      }
+      if (isCaptchaPage(rawHtml)) {
+        errors.push(`${attempt.source}: halaman captcha / anti-bot`);
+        continue;
       }
 
-      // Cari judul model / brand
-      const titleMatch =
-        rawHtml.match(/<h[1-3][^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/h[1-3]>/i) ||
-        rawHtml.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      const scrapedTitle = titleMatch ? stripHtml(titleMatch[1]) : null;
-
-      const brand =
-        details["Brand"] || details["Make"] || (scrapedTitle ? scrapedTitle.split(" ")[0] : null) || baseParsed.brand;
-      const model = details["Model"] || details["Device"] || scrapedTitle || baseParsed.model;
-
-      if (Object.keys(details).length > 0 || scrapedTitle) {
-        return {
-          ...baseParsed,
-          scraped: true,
-          scrapeSource: "imei24.com",
-          brand,
-          model,
-          details,
-        };
+      const extracted = extractImeiDetails(rawHtml);
+      if (!extracted || Object.keys(extracted.details).length === 0) {
+        errors.push(`${attempt.source}: tidak ada data detail yang bisa diparse`);
+        continue;
       }
+
+      return {
+        ...baseParsed,
+        scraped: true,
+        scrapeSource: attempt.source,
+        brand: extracted.brand || baseParsed.brand,
+        model: extracted.model || baseParsed.model,
+        details: extracted.details,
+      };
+    } catch (err) {
+      const detail =
+        err.code === "brightdata_proxy_error"
+          ? `${err.message} — cek BRIGHTDATA_CUSTOMER / BRIGHTDATA_PROXY_PASSWORD / BRIGHTDATA_PROXY_ZONE`
+          : err.message || err;
+      errors.push(`${attempt.source}: ${detail}`);
     }
-  } catch (err) {
-    // Lanjut fallback bila attempt 1 gagal
-  }
-
-  // 2. Fallback ke IMEICheck / IMEI.info via Bright Data
-  try {
-    const imeiInfoUrl = `https://www.imei.info/check/${targetImei}/`;
-    const rawHtml = await brightDataRequest(imeiInfoUrl, {
-      format: "raw",
-      timeout,
-    });
-
-    if (rawHtml && typeof rawHtml === "string" && rawHtml.length > 200) {
-      const details = {};
-      const rowRegex = /<tr[^>]*>\s*<td[^>]*>([^<:]+)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/gi;
-      let match;
-      while ((match = rowRegex.exec(rawHtml)) !== null) {
-        const key = stripHtml(match[1]).trim();
-        const val = stripHtml(match[2]).trim();
-        if (key && val && key.length < 50 && val.length < 200 && !details[key]) {
-          details[key] = val;
-        }
-      }
-
-      const brand = details["Brand"] || details["Producer"] || baseParsed.brand;
-      const model = details["Model"] || details["Device"] || baseParsed.model;
-
-      if (Object.keys(details).length > 0) {
-        return {
-          ...baseParsed,
-          scraped: true,
-          scrapeSource: "imei.info",
-          brand,
-          model,
-          details,
-        };
-      }
-    }
-  } catch (err) {
-    return {
-      ...baseParsed,
-      scraped: false,
-      scrapeSource: null,
-      scrapeError: err.message || "Gagal scraping data IMEI online",
-      details: null,
-    };
   }
 
   return {
     ...baseParsed,
     scraped: false,
     scrapeSource: null,
+    scrapeError: errors.join(" | ") || "Gagal scraping data IMEI online",
     details: null,
   };
 }

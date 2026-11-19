@@ -65,6 +65,8 @@ export default {
       for (const k of topKeys) {
         out.push(`│ ${k}: ${result.details[k]}`);
       }
+    } else if (result.scrapeError) {
+      out.push(``, `*Live Lookup:* gagal — ${String(result.scrapeError).slice(0, 280)}`);
     }
 
     out.push(

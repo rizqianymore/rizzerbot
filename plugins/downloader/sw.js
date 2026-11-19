@@ -124,11 +124,34 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
 
 export default {
   name: "sw",
-  aliases: ["downloadsw", "status", "statussaver", "swdl"],
-  description: "Download status WhatsApp (SW) dari kontak tersimpan atau reply status",
-  usage: "[nomor/kontak] [urutan] (atau reply status)",
+  aliases: ["downloadsw", "swsaver", "statussaver", "swdl"],
+  description: "Download status WhatsApp (SW), atau .sw clean untuk membersihkan arsip status",
+  usage: "[nomor/kontak] [urutan] | clean [all]",
   category: "Downloader & Media",
-  run: async (sock, msg, args, { reply, sendTyping, prefix, getTargetJid }) => {
+  run: async (sock, msg, args, { reply, sendTyping, prefix, getTargetJid, isOwner }) => {
+    const subCmd = (args[0] || "").toLowerCase().trim();
+    if (subCmd === "clean" || subCmd === "bersih" || subCmd === "purge") {
+      if (!isOwner) return reply("❌ Pembersihan arsip status hanya untuk Owner Bot.");
+
+      const cleanAll = (args[1] || "").toLowerCase().trim() === "all";
+      await sendTyping();
+      try {
+        const { cleanStatusArchives } = await import("@/src/utils/cleaner.js");
+        const { deletedCount, freedBytes, totalFiles } = cleanStatusArchives({
+          maxAgeMs: cleanAll ? 0 : 24 * 60 * 60 * 1000,
+        });
+        const freedMB = (freedBytes / (1024 * 1024)).toFixed(2);
+        return reply(
+          `*Pembersihan Arsip Status WA Selesai!*\n\n` +
+            `*Dihapus:* ${deletedCount} file (${cleanAll ? "semua" : "lebih tua dari 24 jam"})\n` +
+            `*Tersisa:* ${totalFiles - deletedCount} file\n` +
+            `*Ruang dibebaskan:* ${freedMB} MB`
+        );
+      } catch (err) {
+        return reply(`Gagal membersihkan arsip status: ${err?.message || err}`);
+      }
+    }
+
     const { extractMessageContent } = await import("baileys");
 
     const getMediaNode = (m) => {
