@@ -171,15 +171,15 @@ export default {
       if (targetNumber) {
         return reply(
           `Belum ada status yang terekam dari nomor *+${targetNumber}*.\n` +
-            `_Pastikan bot sudah menyimpan kontak tersebut dan statusnya pernah dibuka/muncul di WhatsApp bot._`
+          `_Pastikan bot sudah menyimpan kontak tersebut dan statusnya pernah dibuka/muncul di WhatsApp bot._`
         );
       }
       return reply(
         `*DOWNLOAD STATUS (SW)*\n\n` +
-          `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
-          `*Cara Penggunaan:*\n` +
-          `• Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
-          `• Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
+        `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
+        `*Cara Penggunaan:*\n` +
+        `• Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
+        `• Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
       );
     }
 
