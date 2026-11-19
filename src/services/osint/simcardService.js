@@ -25,14 +25,17 @@ function getDatabase() {
   try {
     dbInstance = new DatabaseSync(SIMCARD_DB_PATH, { readOnly: true });
     dbInstance.exec("PRAGMA query_only = 1;");
-    dbInstance.exec("PRAGMA synchronous = NORMAL;");
+    dbInstance.exec("PRAGMA synchronous = OFF;");
+    dbInstance.exec("PRAGMA cache_size = -32000;");
+    dbInstance.exec("PRAGMA mmap_size = 268435456;");
+    dbInstance.exec("PRAGMA temp_store = MEMORY;");
 
     queryPhoneStmt = dbInstance.prepare(`
-      SELECT * FROM simcard WHERE phone = ? OR phone = ? LIMIT 10
+      SELECT * FROM simcard WHERE phone IN (?, ?, ?, ?) LIMIT 15
     `);
 
     queryNikStmt = dbInstance.prepare(`
-      SELECT * FROM simcard WHERE nik = ? LIMIT 10
+      SELECT * FROM simcard WHERE nik = ? LIMIT 20
     `);
 
     return dbInstance;
@@ -52,25 +55,22 @@ export function isSimcardReady() {
   }
 }
 
-function normalizePhoneVariants(raw) {
+export function normalizePhoneVariants(raw) {
   let cleaned = String(raw || "").replace(/\D+/g, "");
-  if (!cleaned) return { intl: "", local: "" };
+  if (!cleaned) return { intl: "", local: "", plus: "", bare: "" };
 
-  if (cleaned.startsWith("0")) {
-    return {
-      intl: "62" + cleaned.slice(1),
-      local: cleaned,
-    };
-  }
+  let bare = cleaned;
   if (cleaned.startsWith("62")) {
-    return {
-      intl: cleaned,
-      local: "0" + cleaned.slice(2),
-    };
+    bare = cleaned.slice(2);
+  } else if (cleaned.startsWith("0")) {
+    bare = cleaned.slice(1);
   }
+
   return {
-    intl: "62" + cleaned,
-    local: "0" + cleaned,
+    intl: "62" + bare,
+    local: "0" + bare,
+    plus: "+62" + bare,
+    bare: bare,
   };
 }
 
@@ -81,11 +81,11 @@ export function searchSimcardByPhone(rawPhone) {
   const db = getDatabase();
   if (!db || !queryPhoneStmt) return [];
 
-  const { intl, local } = normalizePhoneVariants(rawPhone);
-  if (!intl && !local) return [];
+  const { intl, local, plus, bare } = normalizePhoneVariants(rawPhone);
+  if (!intl) return [];
 
   try {
-    return queryPhoneStmt.all(intl, local);
+    return queryPhoneStmt.all(intl, local, plus, bare);
   } catch (err) {
     console.error("[SimcardService] Gagal query nomor:", err);
     return [];

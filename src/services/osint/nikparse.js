@@ -146,15 +146,16 @@ async function fetchWilayah(path) {
   const hit = wilayahCache.get(path);
   if (hit && hit.expires > Date.now()) return hit.data;
   try {
-    const res = await axios.get(`${WILAYAH_BASE}/${path}`, { timeout: 1500 });
+    const res = await axios.get(`${WILAYAH_BASE}/${path}`, { timeout: 400 });
     const data = Array.isArray(res.data) ? res.data : [];
     wilayahCache.set(path, { data, expires: Date.now() + WILAYAH_TTL_MS });
-    if (wilayahCache.size > 50) {
+    if (wilayahCache.size > 200) {
       const firstKey = wilayahCache.keys().next().value;
       wilayahCache.delete(firstKey);
     }
     return data;
   } catch {
+    wilayahCache.set(path, { data: [], expires: Date.now() + 60 * 1000 });
     return [];
   }
 }
@@ -162,18 +163,26 @@ async function fetchWilayah(path) {
 export async function enrichWilayah(parsed) {
   if (!parsed?.valid) return parsed;
   try {
-    const cities = await fetchWilayah(`regencies/${parsed.provinceCode}.json`);
-    const city = cities.find((c) => String(c.id) === parsed.cityCode);
-    parsed.city = city ? neat(city.name) : parsed.cityCode;
+    const [cities, districts] = await Promise.all([
+      fetchWilayah(`regencies/${parsed.provinceCode}.json`),
+      fetchWilayah(`districts/${parsed.cityCode}.json`),
+    ]);
+
+    if (Array.isArray(cities)) {
+      const city = cities.find((c) => String(c.id) === parsed.cityCode);
+      parsed.city = city ? neat(city.name) : parsed.cityCode;
+    } else {
+      parsed.city = parsed.cityCode;
+    }
+
+    if (Array.isArray(districts)) {
+      const dist = districts.find((d) => String(d.id).startsWith(parsed.districtCode));
+      parsed.district = dist ? neat(dist.name) : parsed.districtCode;
+    } else {
+      parsed.district = parsed.districtCode;
+    }
   } catch {
     parsed.city = parsed.cityCode;
-  }
-  try {
-    const districts = await fetchWilayah(`districts/${parsed.cityCode}.json`);
-
-    const dist = districts.find((d) => String(d.id).startsWith(parsed.districtCode));
-    parsed.district = dist ? neat(dist.name) : parsed.districtCode;
-  } catch {
     parsed.district = parsed.districtCode;
   }
   return parsed;

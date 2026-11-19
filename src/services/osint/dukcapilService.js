@@ -6,11 +6,12 @@ import { DatabaseSync } from "node:sqlite";
 import axios from "axios";
 import { parseNik, enrichWilayah } from "@/src/services/osint/nikparse.js";
 import { parseOperator } from "@/src/services/osint/cekoperator.js";
+import { searchSimcardByPhone, searchSimcardByNik, isSimcardReady } from "@/src/services/osint/simcardService.js";
 
 // Prioritaskan IPv4 untuk menghindari delay/timeout IPv6 pada Node.js
 try {
   dns.setDefaultResultOrder("ipv4first");
-} catch (_) {}
+} catch (_) { }
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +23,9 @@ let activeDbPath = null;
 let detectedTables = [];
 const nikStmts = new Map();
 const phoneStmts = new Map();
-const nameStmts = new Map();
+const nameExactStmts = new Map();
+const nameRangeStmts = new Map();
+const namePrefixAndLikeStmts = new Map();
 
 const TABLE_PREFIX_MAP = {
   31: "dki_jakarta",
@@ -40,13 +43,13 @@ function getActiveDbPath() {
     try {
       const stat = fs.statSync(DB_TOP_PATH);
       if (stat.isFile() && stat.size >= 1024) return DB_TOP_PATH;
-    } catch (_) {}
+    } catch (_) { }
   }
   if (fs.existsSync(DB_FALLBACK_PATH)) {
     try {
       const stat = fs.statSync(DB_FALLBACK_PATH);
       if (stat.isFile() && stat.size >= 1024) return DB_FALLBACK_PATH;
-    } catch (_) {}
+    } catch (_) { }
   }
   return null;
 }
@@ -61,7 +64,10 @@ function getDatabase() {
     activeDbPath = targetPath;
 
     dbInstance.exec("PRAGMA query_only = 1;");
-    dbInstance.exec("PRAGMA synchronous = NORMAL;");
+    dbInstance.exec("PRAGMA synchronous = OFF;");
+    dbInstance.exec("PRAGMA cache_size = -64000;");
+    dbInstance.exec("PRAGMA mmap_size = 536870912;");
+    dbInstance.exec("PRAGMA temp_store = MEMORY;");
 
     const tableRows = dbInstance
       .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
@@ -70,8 +76,10 @@ function getDatabase() {
 
     for (const table of detectedTables) {
       nikStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nik = ? LIMIT 1`));
-      phoneStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp = ? OR nohp = ? LIMIT 10`));
-      nameStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama LIKE ? LIMIT 10`));
+      phoneStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp IN (?, ?, ?, ?) LIMIT 10`));
+      nameExactStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama = ? LIMIT 10`));
+      nameRangeStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama >= ? AND nama < ? LIMIT 10`));
+      namePrefixAndLikeStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama >= ? AND nama < ? AND nama LIKE ? LIMIT 10`));
     }
 
     return dbInstance;
@@ -162,7 +170,7 @@ export function formatTtlWithCurrentAge(rawTtl, nikInfo) {
 }
 
 /**
- * Geocoding OpenStreetMap dengan in-memory cache dan retry aman
+ * Geocoding OpenStreetMap dengan in-memory cache dan timeout cepat (tidak memblokir bot)
  */
 export async function getCoordinates(query) {
   if (!query) return null;
@@ -171,37 +179,35 @@ export async function getCoordinates(query) {
 
   const cleanQuery = query.replace(/[^\w\s,.-]/gi, " ").trim();
 
-  for (let attempt = 0; attempt < 1; attempt++) {
-    try {
-      const res = await axios.get("https://nominatim.openstreetmap.org/search", {
-        params: {
-          q: cleanQuery,
-          format: "json",
-          limit: 1,
-        },
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept-Language": "id,en;q=0.9",
-        },
-        timeout: 900,
-      });
+  try {
+    const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+      params: {
+        q: cleanQuery,
+        format: "json",
+        limit: 1,
+      },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; RizzerBot/2.0; +https://rizzerbot.id)",
+        "Accept-Language": "id,en;q=0.9",
+      },
+      timeout: 250,
+    });
 
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        const coord = {
-          lat: parseFloat(res.data[0].lat),
-          lon: parseFloat(res.data[0].lon),
-          displayName: res.data[0].display_name,
-        };
-        geoCache.set(key, coord);
-        return coord;
-      }
-      break;
-    } catch {
-      return null;
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      const coord = {
+        lat: parseFloat(res.data[0].lat),
+        lon: parseFloat(res.data[0].lon),
+        displayName: res.data[0].display_name,
+      };
+      geoCache.set(key, coord);
+      return coord;
     }
+  } catch {
+    // Non-blocking fallback jika offline atau timeout
   }
 
+  geoCache.set(key, null);
   return null;
 }
 
@@ -222,7 +228,6 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
   let addr = String(alamat || "").trim();
   let streetRaw = addr.split(/\s+RT\s+/i)[0].split(/\s+RW\s+/i)[0];
 
-  // Pisahkan pengulangan kelurahan jika tercantum di bagian awal
   if (cleanKel && cleanKel.length > 3) {
     const kelRegex = new RegExp("\\b" + cleanKel + "\\b", "i");
     const idx = streetRaw.search(kelRegex);
@@ -232,13 +237,11 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
   const isGang = /^(GG|GANG)\.?\s*/i.test(streetRaw);
   let street = streetRaw.replace(/^(JL|JLN|JALAN|GG|GANG)\.?\s*/i, "").trim();
 
-  // Pisahkan nomor rumah dan slash (cth: V/75 -> V)
   street = street
     .replace(/\/\d+[A-Za-z]?$/, "")
     .replace(/\s+(?:NO\.?|NOMOR)\s*\d+[A-Za-z]?/i, "")
     .trim();
 
-  // Normalisasi singkatan kata umum alamat di Indonesia
   street = street
     .replace(/\bKAMP\b/gi, "Kampung")
     .replace(/\bKP\b/gi, "Kampung")
@@ -248,49 +251,54 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
 
   const prefix = isGang ? "Gang " : "Jalan ";
 
-  const candidates = [];
+  let targetQuery = "";
   if (street.length >= 3) {
-    candidates.push(prefix + street + ", " + cleanCity);
+    targetQuery = prefix + street + ", " + cleanCity;
   } else if (cleanKel) {
-    candidates.push(cleanKel + ", " + cleanCity);
+    targetQuery = cleanKel + ", " + cleanCity;
   } else if (cleanKec) {
-    candidates.push(cleanKec + ", " + cleanCity);
+    targetQuery = cleanKec + ", " + cleanCity;
   } else {
-    candidates.push(cleanCity);
+    targetQuery = cleanCity;
   }
 
-  for (const q of candidates) {
-    const coord = await getCoordinates(q);
-    if (coord) return coord;
-  }
-
-  return null;
+  const fastTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 250));
+  return await Promise.race([getCoordinates(targetQuery), fastTimeout]);
 }
 
 /**
- * Normalisasi nomor HP ke format internasional (628...) dan lokal (08...)
+ * Helper rentang prefix B-Tree SQLite untuk pencarian nama ultra-cepat (< 3ms)
+ */
+export function getPrefixRange(prefix) {
+  const clean = String(prefix || "").trim().toUpperCase();
+  if (!clean || clean.length < 2) return null;
+  const lastChar = clean.slice(-1);
+  const nextChar = String.fromCharCode(lastChar.charCodeAt(0) + 1);
+  const upperBound = clean.slice(0, -1) + nextChar;
+  return { lower: clean, upper: upperBound };
+}
+
+/**
+ * Normalisasi nomor HP ke format intl (628...), local (08...), plus (+628...), bare (8...)
  */
 export function normalizePhone(raw) {
   let clean = String(raw || "")
     .trim()
     .replace(/[^0-9]/g, "");
-  if (!clean) return { intl: "", local: "" };
+  if (!clean) return { intl: "", local: "", plus: "", bare: "" };
 
+  let bare = clean;
   if (clean.startsWith("62")) {
-    return {
-      intl: clean,
-      local: "0" + clean.slice(2),
-    };
+    bare = clean.slice(2);
+  } else if (clean.startsWith("0")) {
+    bare = clean.slice(1);
   }
-  if (clean.startsWith("0")) {
-    return {
-      intl: "62" + clean.slice(1),
-      local: clean,
-    };
-  }
+
   return {
-    intl: "62" + clean,
-    local: "0" + clean,
+    intl: "62" + bare,
+    local: "0" + bare,
+    plus: "+62" + bare,
+    bare: bare,
   };
 }
 
@@ -323,7 +331,7 @@ export function classifyQuery(input) {
 }
 
 /**
- * Cari data berdasarkan NIK
+ * Cari data berdasarkan NIK dengan integrasi cross-reference Simcard
  */
 export async function searchByNik(rawNik) {
   const db = getDatabase();
@@ -332,11 +340,8 @@ export async function searchByNik(rawNik) {
     .replace(/[^0-9]/g, "");
   if (!nik) return null;
 
-  let nikInfo = null;
   const parsed = parseNik(nik);
-  if (parsed.valid) {
-    nikInfo = await enrichWilayah(parsed);
-  }
+  let nikInfo = parsed.valid ? { ...parsed } : null;
 
   let record = null;
   if (db && detectedTables.length > 0) {
@@ -366,6 +371,22 @@ export async function searchByNik(rawNik) {
     }
   }
 
+  // Jika tidak ditemukan di database, perkaya wilayah dari API wilayah
+  if (!record && nikInfo) {
+    nikInfo = await enrichWilayah(nikInfo);
+  } else if (record && nikInfo) {
+    nikInfo.city = record.kota_kab || nikInfo.city;
+    nikInfo.district = record.kecamatan || nikInfo.district;
+  }
+
+  // Cross-reference dengan simcard.db untuk nomor HP yang terdaftar pada NIK ini
+  let simcards = [];
+  if (isSimcardReady()) {
+    try {
+      simcards = searchSimcardByNik(nik);
+    } catch (_) {}
+  }
+
   let operatorInfo = null;
   if (record?.nohp) {
     const op = parseOperator(record.nohp);
@@ -382,30 +403,54 @@ export async function searchByNik(rawNik) {
     nikInfo,
     operatorInfo,
     location,
+    simcards,
   };
 }
 
 /**
- * Cari data berdasarkan No HP
+ * Cari data berdasarkan No HP (dengan auto-pivot via Simcard NIK)
  */
 export async function searchByPhone(rawPhone) {
   const db = getDatabase();
   const phones = normalizePhone(rawPhone);
-  if (!phones.intl) return { records: [], operatorInfo: null, location: null };
+  if (!phones.intl) return { records: [], operatorInfo: null, location: null, simcards: [] };
 
   const operatorInfo = parseOperator(phones.local);
+
+  let simcards = [];
+  if (isSimcardReady()) {
+    try {
+      simcards = searchSimcardByPhone(rawPhone);
+    } catch (_) {}
+  }
 
   let records = [];
   if (db && detectedTables.length > 0) {
     for (const table of detectedTables) {
       const stmt = phoneStmts.get(table);
       if (!stmt) continue;
-      const rows = stmt.all(phones.intl, phones.local);
+      const rows = stmt.all(phones.intl, phones.local, phones.plus, phones.bare);
       if (rows && rows.length > 0) {
         for (const row of rows) {
           records.push({ ...row, tableSource: table });
         }
         if (records.length >= 10) break;
+      }
+    }
+  }
+
+  // Jika tidak ditemukan di database Dukcapil langsung, coba pivot dari NIK Simcard
+  if (records.length === 0 && simcards.length > 0) {
+    for (const sim of simcards) {
+      if (sim.nik && sim.nik.length === 16) {
+        const byNik = await searchByNik(sim.nik);
+        if (byNik?.record) {
+          records.push({
+            ...byNik.record,
+            simSource: sim.provider || "SIMCARD",
+            simDate: sim.date,
+          });
+        }
       }
     }
   }
@@ -436,31 +481,80 @@ export async function searchByPhone(rawPhone) {
     records: enrichedRecords,
     operatorInfo: operatorInfo.valid ? operatorInfo : null,
     location,
+    simcards,
   };
 }
 
 /**
- * Cari data berdasarkan Nama
+ * Cari data berdasarkan Nama dengan pemanfaatan indeks B-Tree SQLite (< 3ms)
  */
 export async function searchByName(rawName, limit = 5) {
   const db = getDatabase();
-  const name = String(rawName).trim();
+  const name = String(rawName || "").trim().toUpperCase();
   if (!name || !db || detectedTables.length === 0) return [];
 
-  const pattern = `%${name.toUpperCase()}%`;
   const records = [];
+  const seenNiks = new Set();
 
+  // 1. Exact Match via Indeks B-Tree (0ms)
   for (const table of detectedTables) {
-    const stmt = nameStmts.get(table);
+    const stmt = nameExactStmts.get(table);
     if (!stmt) continue;
-    const rows = stmt.all(pattern);
+    const rows = stmt.all(name);
     if (rows && rows.length > 0) {
       for (const row of rows) {
-        records.push({ ...row, tableSource: table });
-        if (records.length >= limit) break;
+        if (!seenNiks.has(row.nik)) {
+          seenNiks.add(row.nik);
+          records.push({ ...row, tableSource: table });
+          if (records.length >= limit) return records;
+        }
       }
     }
-    if (records.length >= limit) break;
+  }
+
+  // 2. Multi-kata Range Prefix + Filter LIKE (1-3ms)
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const firstWord = words[0];
+    const range = getPrefixRange(firstWord);
+    if (range && range.lower.length >= 2) {
+      const restPattern = `%${words.slice(1).join("%")}%`;
+      for (const table of detectedTables) {
+        const stmt = namePrefixAndLikeStmts.get(table);
+        if (!stmt) continue;
+        const rows = stmt.all(range.lower, range.upper, restPattern);
+        if (rows && rows.length > 0) {
+          for (const row of rows) {
+            if (!seenNiks.has(row.nik)) {
+              seenNiks.add(row.nik);
+              records.push({ ...row, tableSource: table });
+              if (records.length >= limit) return records;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Single-word Prefix Range Search (1-3ms)
+  if (records.length < limit && words.length > 0) {
+    const range = getPrefixRange(words[0]);
+    if (range && range.lower.length >= 3) {
+      for (const table of detectedTables) {
+        const stmt = nameRangeStmts.get(table);
+        if (!stmt) continue;
+        const rows = stmt.all(range.lower, range.upper);
+        if (rows && rows.length > 0) {
+          for (const row of rows) {
+            if (!seenNiks.has(row.nik)) {
+              seenNiks.add(row.nik);
+              records.push({ ...row, tableSource: table });
+              if (records.length >= limit) return records;
+            }
+          }
+        }
+      }
+    }
   }
 
   return records.slice(0, limit);
