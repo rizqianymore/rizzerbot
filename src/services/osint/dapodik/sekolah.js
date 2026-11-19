@@ -70,25 +70,25 @@ async function searchThenDetail(query) {
 export function formatSekolah(row) {
   let text = `*OSINT TOOLS - DATA SEKOLAH DAPODIK*
 `;
-  text += `├── NPSN       : \`${row.npsn || "-"}\`
+  text += `├─ NPSN       : \`${row.npsn || "-"}\`
 `;
-  text += `├── Nama       : ${row.nama || "-"}
+  text += `├─ Nama       : ${row.nama || "-"}
 `;
-  text += `├── Bentuk     : ${row.bentuk_pendidikan || "-"}
+  text += `├─ Bentuk     : ${row.bentuk_pendidikan || "-"}
 `;
-  text += `├── Status     : ${row.status || "-"}
+  text += `├─ Status     : ${row.status || "-"}
 `;
-  text += `├── Alamat     : ${row.alamat || "-"}
+  text += `├─ Alamat     : ${row.alamat || "-"}
 `;
-  text += `├── Desa/Kel   : ${row.desa_kelurahan || "-"}
+  text += `├─ Desa/Kel   : ${row.desa_kelurahan || "-"}
 `;
-  text += `├── Kecamatan  : ${row.kecamatan || "-"}
+  text += `├─ Kecamatan  : ${row.kecamatan || "-"}
 `;
-  text += `├── Kota/Kab   : ${row.kabupaten_kota || "-"}
+  text += `├─ Kota/Kab   : ${row.kabupaten_kota || "-"}
 `;
-  text += `├── Provinsi   : ${row.provinsi || "-"}
+  text += `├─ Provinsi   : ${row.provinsi || "-"}
 `;
-  text += `├── Akreditasi : ${row.akreditasi || "-"}
+  text += `├─ Akreditasi : ${row.akreditasi || "-"}
 `;
   text += `│
 `;

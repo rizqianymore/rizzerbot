@@ -206,19 +206,19 @@ export async function searchBookByTitle(title) {
 export function formatIsbnResult(data) {
   let text = `*OSINT TOOLS - ISBN BOOK LOOKUP*
 `;
-  text += `├── ISBN       : ${data.isbn || "-"}
+  text += `├─ ISBN       : ${data.isbn || "-"}
 `;
-  text += `├── Judul      : ${data.title || "-"}
+  text += `├─ Judul      : ${data.title || "-"}
 `;
-  text += `├── Penulis    : ${Array.isArray(data.authors) ? data.authors.join(", ") : data.authors || "-"}
+  text += `├─ Penulis    : ${Array.isArray(data.authors) ? data.authors.join(", ") : data.authors || "-"}
 `;
-  text += `├── Penerbit   : ${data.publisher || "-"}
+  text += `├─ Penerbit   : ${data.publisher || "-"}
 `;
-  text += `├── Tahun Terbit: ${data.publish_date || "-"}
+  text += `├─ Tahun Terbit: ${data.publish_date || "-"}
 `;
-  text += `├── Jumlah Hal : ${data.pages || "-"}
+  text += `├─ Jumlah Hal : ${data.pages || "-"}
 `;
-  text += `├── Bahasa     : ${data.language || "-"}
+  text += `├─ Bahasa     : ${data.language || "-"}
 `;
   text += `│
 `;

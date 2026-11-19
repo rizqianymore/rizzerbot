@@ -53,15 +53,15 @@ export default {
 
       let text = `*OSINT TOOLS - GEOLOKASI KOORDINAT*
 `;
-      text += `├── Alamat Lengkap: ${first.display_name}
+      text += `├─ Alamat Lengkap: ${first.display_name}
 `;
-      text += `├── Latitude     : ${first.lat}
+      text += `├─ Latitude     : ${first.lat}
 `;
-      text += `├── Longitude    : ${first.lon}
+      text += `├─ Longitude    : ${first.lon}
 `;
-      text += `├── Tipe Lokasi  : ${first.type || "-"}
+      text += `├─ Tipe Lokasi  : ${first.type || "-"}
 `;
-      text += `├── Google Maps  : https://www.google.com/maps?q=${first.lat},${first.lon}
+      text += `├─ Google Maps  : https://www.google.com/maps?q=${first.lat},${first.lon}
 `;
       text += `│
 `;

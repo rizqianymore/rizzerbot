@@ -76,19 +76,19 @@ export async function fetchRawSimpkb(keyword, page = 1) {
 export function formatGtkItem(item, index) {
   let text = `*OSINT TOOLS - DATA GTK KEMENDIKBUD*
 `;
-  text += `├── No. Peserta : \`${item.no_peserta || item.nik || "-"}\`
+  text += `├─ No. Peserta : \`${item.no_peserta || item.nik || "-"}\`
 `;
-  text += `├── Nama        : ${item.nama || "-"}
+  text += `├─ Nama        : ${item.nama || "-"}
 `;
-  text += `├── Satminkal   : ${item.satminkal || "-"}
+  text += `├─ Satminkal   : ${item.satminkal || "-"}
 `;
-  text += `├── Status      : ${item.status || "-"}
+  text += `├─ Status      : ${item.status || "-"}
 `;
-  text += `├── Jenjang     : ${item.jenjang || "-"}
+  text += `├─ Jenjang     : ${item.jenjang || "-"}
 `;
-  text += `├── Kota/Kab    : ${item.kota || "-"}
+  text += `├─ Kota/Kab    : ${item.kota || "-"}
 `;
-  text += `├── Provinsi    : ${item.provinsi || "-"}
+  text += `├─ Provinsi    : ${item.provinsi || "-"}
 `;
   text += `│
 `;

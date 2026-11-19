@@ -37,13 +37,13 @@ export default {
         }
 
         let text = `*DATA KENDARAAN (NIK)*\n`;
-        text += `├── NIK        : \`${cleanInput}\`\n`;
-        text += `├── Total      : ${list.length} Kendaraan\n`;
+        text += `├─ NIK        : \`${cleanInput}\`\n`;
+        text += `├─ Total      : ${list.length} Kendaraan\n`;
         text += `│\n`;
 
         list.forEach((item, idx) => {
           const isLast = idx === list.length - 1;
-          text += `├── [${idx + 1}] Plat    : \`${item.number}\`\n`;
+          text += `├─ [${idx + 1}] Plat    : \`${item.number}\`\n`;
           text += `│   Pemilik : ${item.name || "-"}\n`;
           text += `│   Tipe    : ${[item.brand, item.type].filter(Boolean).join(" ") || "-"}\n`;
           text += `│   Rangka  : ${item.vin || "-"}\n`;
@@ -63,16 +63,16 @@ export default {
         if (data) {
           const latency = (performance.now() - startTime).toFixed(2);
           let text = `*DATA KENDARAAN (SAMSAT)*\n`;
-          text += `├── Plat       : \`${data.number}\`\n`;
-          text += `├── Pemilik    : ${data.name || "-"}\n`;
-          text += `├── NIK        : \`${data.nik || "-"}\`\n`;
-          text += `├── Alamat     : ${data.address || "-"}\n`;
-          text += `├── Merk       : ${data.brand || "-"}\n`;
-          text += `├── Tipe       : ${data.type || "-"}\n`;
-          text += `├── Rangka     : ${data.vin || "-"}\n`;
-          text += `├── Mesin      : ${data.engine || "-"}\n`;
-          text += `├── BPKB       : ${data.bpkb || "-"}\n`;
-          text += `├── Warna/Thn  : ${data.color || "-"} / ${data.year || "-"}\n`;
+          text += `├─ Plat       : \`${data.number}\`\n`;
+          text += `├─ Pemilik    : ${data.name || "-"}\n`;
+          text += `├─ NIK        : \`${data.nik || "-"}\`\n`;
+          text += `├─ Alamat     : ${data.address || "-"}\n`;
+          text += `├─ Merk       : ${data.brand || "-"}\n`;
+          text += `├─ Tipe       : ${data.type || "-"}\n`;
+          text += `├─ Rangka     : ${data.vin || "-"}\n`;
+          text += `├─ Mesin      : ${data.engine || "-"}\n`;
+          text += `├─ BPKB       : ${data.bpkb || "-"}\n`;
+          text += `├─ Warna/Thn  : ${data.color || "-"} / ${data.year || "-"}\n`;
           text += `│\n`;
           text += `└─ [QUERY: ${latency} ms]`;
 

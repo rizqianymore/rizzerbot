@@ -94,15 +94,15 @@ export default {
 
     let text = `*OSINT TOOLS - KALENDER & WETON SIPIL*
 `;
-    text += `├── Tanggal Masehi: ${d} ${monthNames[m - 1]} ${y}
+    text += `├─ Tanggal Masehi: ${d} ${monthNames[m - 1]} ${y}
 `;
-    text += `├── Hari         : ${dayName}
+    text += `├─ Hari         : ${dayName}
 `;
-    text += `├── Pasar / Weton: ${pasaran}
+    text += `├─ Pasar / Weton: ${pasaran}
 `;
-    text += `├── Neptu        : ${neptu}
+    text += `├─ Neptu        : ${neptu}
 `;
-    text += `├── Zodiak       : ${zodiac}
+    text += `├─ Zodiak       : ${zodiac}
 `;
     text += `│
 `;

@@ -15,21 +15,21 @@ export function maskPhone(phone) {
 export function formatSiswa(row, { showFullPhone = true } = {}) {
   let text = `*OSINT TOOLS - DATA SISWA NIS*
 `;
-  text += `├── NISN       : \`${row.nisn || "-"}\`
+  text += `├─ NISN       : \`${row.nisn || "-"}\`
 `;
-  text += `├── Nama       : ${row.nama || "-"}
+  text += `├─ Nama       : ${row.nama || "-"}
 `;
-  text += `├── Jenis Kelamin: ${row.jenis_kelamin || "-"}
+  text += `├─ Jenis Kelamin: ${row.jenis_kelamin || "-"}
 `;
-  text += `├── Tempat Lahir: ${row.tempat_lahir || "-"}
+  text += `├─ Tempat Lahir: ${row.tempat_lahir || "-"}
 `;
-  text += `├── Tanggal Lahir: ${row.tanggal_lahir || "-"}
+  text += `├─ Tanggal Lahir: ${row.tanggal_lahir || "-"}
 `;
-  text += `├── Nama Ibu   : ${row.nama_ibu_kandung || "-"}
+  text += `├─ Nama Ibu   : ${row.nama_ibu_kandung || "-"}
 `;
-  text += `├── Sekolah    : ${row.sekolah || "-"}
+  text += `├─ Sekolah    : ${row.sekolah || "-"}
 `;
-  text += `├── NPSN       : ${row.npsn || "-"}
+  text += `├─ NPSN       : ${row.npsn || "-"}
 `;
   text += `│
 `;

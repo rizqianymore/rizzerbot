@@ -67,27 +67,27 @@ export function parseBin(rawInput) {
 export function formatBinInfo(p) {
   let text = `*OSINT TOOLS - BIN CHECK*
 `;
-  text += `├── BIN        : \`${p.fullGiven ? `${p.bin} (dari ${p.masked})` : p.bin}\`
+  text += `├─ BIN        : \`${p.fullGiven ? `${p.bin} (dari ${p.masked})` : p.bin}\`
 `;
-  text += `├── Skema      : ${p.scheme}
+  text += `├─ Skema      : ${p.scheme}
 `;
-  if (p.detail?.brand && p.detail.brand !== "-") text += `├── Brand      : ${p.detail.brand}
+  if (p.detail?.brand && p.detail.brand !== "-") text += `├─ Brand      : ${p.detail.brand}
 `;
-  if (p.detail?.type && p.detail.type !== "-") text += `├── Tipe       : ${p.detail.type}
+  if (p.detail?.type && p.detail.type !== "-") text += `├─ Tipe       : ${p.detail.type}
 `;
   if (p.detail?.prepaid !== null && p.detail?.prepaid !== undefined) {
-    text += `├── Prabayar   : ${p.detail.prepaid ? "Ya" : "Bukan"}
+    text += `├─ Prabayar   : ${p.detail.prepaid ? "Ya" : "Bukan"}
 `;
   }
-  if (p.detail?.bank && p.detail.bank !== "-") text += `├── Bank       : ${p.detail.bank}
+  if (p.detail?.bank && p.detail.bank !== "-") text += `├─ Bank       : ${p.detail.bank}
 `;
-  if (p.detail?.country && p.detail.country !== "-") text += `├── Negara     : ${p.detail.country}
+  if (p.detail?.country && p.detail.country !== "-") text += `├─ Negara     : ${p.detail.country}
 `;
-  if (p.detail?.currency && p.detail.currency !== "-") text += `├── Mata Uang  : ${p.detail.currency}
+  if (p.detail?.currency && p.detail.currency !== "-") text += `├─ Mata Uang  : ${p.detail.currency}
 `;
-  text += `├── Panjang    : ${p.lengths.join("/")} digit
+  text += `├─ Panjang    : ${p.lengths.join("/")} digit
 `;
-  if (!p.detail) text += `├── Wilayah    : ${p.schemeNote}
+  if (!p.detail) text += `├─ Wilayah    : ${p.schemeNote}
 `;
   text += `│
 `;

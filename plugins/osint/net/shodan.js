@@ -48,10 +48,10 @@ export default {
 
       const out =
         `*OSINT TOOLS*\n` +
-        `├── IP         : ${res.ip}\n` +
-        `├── Port       : ${ports}\n` +
-        `├── Tags       : ${tags}\n` +
-        `├── Kerentanan : ${vulns}\n` +
+        `├─ IP         : ${res.ip}\n` +
+        `├─ Port       : ${ports}\n` +
+        `├─ Tags       : ${tags}\n` +
+        `├─ Kerentanan : ${vulns}\n` +
         `│\n` +
         `└─ [STATUS: SHODAN SCAN SUCCESS]`;
 
