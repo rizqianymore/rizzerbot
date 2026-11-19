@@ -42,11 +42,11 @@ export default {
       db.updateUser(senderJid, { tempMail: mailbox.address });
 
       return reply(
-        `*EMAIL SEMENTARA BERHASIL DIBUAT!*\n\n` +
-          `• *Alamat Email:* \`${mailbox.address}\`\n` +
-          `• *Status:* Aktif & Siap Menerima Pesan\n\n` +
-          `Gunakan email ini untuk mendaftar atau verifikasi. Bila kode/email sudah dikirim, ketik:\n` +
-          `*${p}tempmail check* untuk melihat kotak masuk.`
+        `┌── EMAIL SEMENTARA BARU\n` +
+        `│ Alamat: ${mailbox.address}\n` +
+        `│ Status: Aktif & Siap Menerima\n` +
+        `└──\n\n` +
+        `Ketik ${p}tempmail check untuk melihat kotak masuk.`
       );
     }
 

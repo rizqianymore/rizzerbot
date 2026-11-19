@@ -23,14 +23,15 @@ export default {
     }
     if (!g) return reply("Data gempa BMKG kosong, coba lagi nanti.");
     const text =
-      `*GEMPA TERKINI — BMKG*\n\n` +
-      `• Waktu : ${g.Tanggal || "-"} ${g.Jam || ""}\n` +
-      `• Magnitudo : ${g.Magnitude || "-"} SR\n` +
-      `• Kedalaman : ${g.Kedalaman || "-"}\n` +
-      `• Lokasi : ${g.Lintang || "-"}, ${g.Bujur || "-"}\n` +
-      `• Wilayah : ${g.Wilayah || "-"}\n` +
-      (g.Dirasakan ? `• Dirasakan : ${g.Dirasakan}\n` : "") +
-      (g.Potensi ? `• Potensi : ${g.Potensi}` : "");
+      `┌── GEMPA TERKINI BMKG\n` +
+      `│ Waktu: ${g.Tanggal || "-"} ${g.Jam || ""}\n` +
+      `│ Magnitudo: ${g.Magnitude || "-"} SR\n` +
+      `│ Kedalaman: ${g.Kedalaman || "-"}\n` +
+      `│ Koordinat: ${g.Lintang || "-"}, ${g.Bujur || "-"}\n` +
+      `│ Lokasi: ${g.Wilayah || "-"}\n` +
+      (g.Dirasakan ? `│ Dirasakan: ${g.Dirasakan}\n` : "") +
+      (g.Potensi ? `│ Potensi: ${g.Potensi}\n` : "") +
+      `└──`;
     if (g.Shakemap) {
       try {
         await sock.sendMessage(

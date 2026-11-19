@@ -42,14 +42,14 @@ export default {
       }).format(amount);
 
       const caption =
-        "*QRIS PEMBAYARAN DINAMIS*\n\n" +
-        `• Merchant: *${info.merchantName || settings.qrisMerchantName}*\n` +
-        `• Kota: ${info.merchantCity || settings.qrisCity}\n` +
-        `• Nominal: *${formattedNominal}*\n` +
-        `• Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
-        `• Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n\n` +
-        "Silakan scan QR code di atas menggunakan aplikasi M-Banking atau E-Wallet apa saja. Nominal pembayaran otomatis terkunci pas tanpa perlu diketik manual.\n\n" +
-        "_Catatan: Harap periksa nama merchant sebelum mengonfirmasi pembayaran._";
+        `┌── QRIS DINAMIS\n` +
+        `│ Merchant: ${info.merchantName || settings.qrisMerchantName}\n` +
+        `│ Kota: ${info.merchantCity || settings.qrisCity}\n` +
+        `│ Nominal: ${formattedNominal}\n` +
+        `│ Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
+        `└──\n\n` +
+        `Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n` +
+        `Silakan scan barcode QRIS di atas untuk menyelesaikan pembayaran tepat.`;
 
       const jid = msg.key.remoteJid;
       await sock.sendMessage(

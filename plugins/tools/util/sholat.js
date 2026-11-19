@@ -33,16 +33,17 @@ export default {
       : "";
     const greg = data?.date?.readable || "";
     return reply(
-      `*JADWAL SHOLAT — ${city.toUpperCase()}*\n` +
-        `${greg}${hijri ? ` (${hijri})` : ""}\n\n` +
-        `• Imsak : ${t.Imsak}\n` +
-        `• Subuh : ${t.Fajr}\n` +
-        `• Terbit : ${t.Sunrise}\n` +
-        `• Dzuhur : ${t.Dhuhr}\n` +
-        `• Ashar : ${t.Asr}\n` +
-        `• Maghrib : ${t.Maghrib}\n` +
-        `• Isya : ${t.Isha}\n\n` +
-        `_Sumber: Kemenag RI via Aladhan. Ganti kota: ${prefix || "."}sholat Bandung_`
+      `┌── JADWAL SHOLAT ${city.toUpperCase()}\n` +
+      `│ Tanggal: ${greg}${hijri ? ` (${hijri})` : ""}\n` +
+      `│ Imsak: ${t.Imsak}\n` +
+      `│ Subuh: ${t.Fajr}\n` +
+      `│ Terbit: ${t.Sunrise}\n` +
+      `│ Dzuhur: ${t.Dhuhr}\n` +
+      `│ Ashar: ${t.Asr}\n` +
+      `│ Maghrib: ${t.Maghrib}\n` +
+      `│ Isya: ${t.Isha}\n` +
+      `└──\n\n` +
+      `Sumber: Kemenag RI via Aladhan. Ganti kota: ${prefix || "."}sholat Bandung`
     );
   },
 };

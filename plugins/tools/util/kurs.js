@@ -87,7 +87,11 @@ export default {
       const fmt = (n) =>
         Number(n).toLocaleString("id-ID", { maximumFractionDigits: n >= 1000 ? 2 : 6 });
       return reply(
-        `*KURS ${from} → ${to}*\n\n• 1 ${from} = ${fmt(rate)} ${to}\n• ${fmt(amount)} ${from} = ${fmt(converted)} ${to}\n\n_Sumber: open.er-api.com_`
+        `┌── KURS ${from} -> ${to}\n` +
+        `│ 1 ${from}: ${fmt(rate)} ${to}\n` +
+        `│ ${fmt(amount)} ${from}: ${fmt(converted)} ${to}\n` +
+        `└──\n\n` +
+        `Sumber: open.er-api.com`
       );
     } catch (err) {
       return reply(`Gagal kurs: ${err?.message || err}`);

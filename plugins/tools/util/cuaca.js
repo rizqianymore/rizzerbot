@@ -39,9 +39,11 @@ export default {
 
     if (!adm4) {
       return reply(
-        `*PRAKIRAAN CUACA BMKG*\n\n` +
-          `Kota preset: ${Object.keys(CITY_PRESETS).join(", ")}\n` +
-          `Atau gunakan kode adm4: \`${currentPrefix}cuaca 31.71.01.1001\``
+        `┌── PRAKIRAAN CUACA BMKG\n` +
+        `│ Format: ${currentPrefix}cuaca <kota / kode adm4>\n` +
+        `│ Preset: ${Object.keys(CITY_PRESETS).slice(0, 10).join(", ")}\n` +
+        `└──\n\n` +
+        `Contoh: ${currentPrefix}cuaca jakarta`
       );
     }
 
@@ -68,21 +70,19 @@ export default {
 
     const fmtTime = (s) => (s || "").replace("T", " ").replace("Z", " UTC").slice(0, 16);
     const lines = [
-      `*PRAKIRAAN CUACA — BMKG*`,
-      ``,
-      `• Wilayah: ${lokasi.kotkab || "-"}, ${lokasi.kecamatan || "-"}`,
-      `• Provinsi: ${lokasi.provinsi || "-"}`,
-      ``,
-      `*Prakiraan:*`,
+      `┌── CUACA ${lokasi.kotkab || "-"}, ${lokasi.provinsi || "-"}\n` +
+      `│ Kecamatan: ${lokasi.kecamatan || "-"}\n` +
+      `│ Sumber: BMKG Indonesia\n` +
+      `└──\n`,
+      `┌── PRAKIRAAN`,
     ];
 
-    for (const c of cuacaList.slice(0, 6)) {
+    for (const c of cuacaList.slice(0, 5)) {
       lines.push(
-        `• ${fmtTime(c.local_datetime)} — ${c.weather_desc || "-"} (${c.t}°C, RH ${c.hu}%, angin ${c.ws} m/s ${c.wd})`
+        `│ ${fmtTime(c.local_datetime)}: ${c.weather_desc || "-"} (${c.t}°C, RH ${c.hu}%)`
       );
     }
-
-    lines.push(``, `_Sumber: BMKG_`);
+    lines.push(`└──`);
     return reply(lines.join("\n"));
   },
 };

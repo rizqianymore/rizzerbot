@@ -25,16 +25,15 @@ export default {
         { timeout: 12000 }
       );
       if (sum?.type === "disambiguation" || sum?.extract) {
-        const lines = [
-          `*WIKIPEDIA: ${sum.title || target}*`,
-          "",
-          sum.extract ? sum.extract.slice(0, 900) : "Tidak ada ringkasan.",
-        ];
-        if (sum.content_urls?.desktop?.page) lines.push("", `Link: ${sum.content_urls.desktop.page}`);
-        return reply(lines.join("\n"));
+        let text =
+          `┌── WIKIPEDIA: ${sum.title || target}\n` +
+          `│ ${sum.extract ? sum.extract.slice(0, 900) : "Tidak ada ringkasan."}\n` +
+          `└──`;
+        if (sum.content_urls?.desktop?.page) text += `\n\nLink: ${sum.content_urls.desktop.page}`;
+        return reply(text);
       }
       if (sum?.title) {
-        return reply(`*WIKIPEDIA: ${sum.title}*\n${sum.extract || "Tidak ada ringkasan."}`);
+        return reply(`┌── WIKIPEDIA: ${sum.title}\n│ ${sum.extract || "Tidak ada ringkasan."}\n└──`);
       }
       return reply("Tidak ditemukan di Wikipedia.");
     } catch (err) {

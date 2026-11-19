@@ -91,10 +91,11 @@ export default {
       const chars = content.length;
 
       return reply(
-        `*PASTEBIN BERHASIL!*\n\n` +
-          `• *URL:* ${url}\n` +
-          `• *Panjang:* ${chars} karakter (${lines} baris)\n` +
-          `• *Status:* Publik & Siap Dibagikan`
+        `┌── PASTEBIN BERHASIL\n` +
+        `│ URL: ${url}\n` +
+        `│ Ukuran: ${chars} karakter (${lines} baris)\n` +
+        `│ Status: Publik\n` +
+        `└──`
       );
     } catch (err) {
       return reply(`*GAGAL UPLOAD*\n${err?.message || "Terjadi kesalahan koneksi."}`);

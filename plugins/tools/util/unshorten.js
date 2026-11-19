@@ -144,19 +144,21 @@ export default {
       const result = await resolveRedirects(targetUrl);
       const isRedirected = result.redirects.length > 1;
 
-      let out = `*HASIL PELACAKAN URL:*\n\n`;
-      out += `• *URL Awal:* ${targetUrl}\n`;
-      out += `• *URL Akhir:* ${result.finalUrl}\n`;
-      out += `• *Status Kode:* HTTP ${result.status}\n`;
-      out += `• *Jumlah Pengalihan:* ${result.redirects.length - 1} kali\n`;
+      let out =
+        `┌── HASIL PELACAKAN URL\n` +
+        `│ URL Awal: ${targetUrl}\n` +
+        `│ URL Akhir: ${result.finalUrl}\n` +
+        `│ Status: HTTP ${result.status}\n` +
+        `│ Pengalihan: ${result.redirects.length - 1} kali\n` +
+        `└──`;
 
       if (isRedirected) {
-        out += `\n*Rantai Redirect:*\n`;
+        out += `\n\n┌── RANTAI REDIRECT\n`;
         result.redirects.forEach((u, i) => {
-          out += `${i + 1}. ${u}\n`;
+          const isLast = i === result.redirects.length - 1;
+          const branch = isLast ? "└──" : "├──";
+          out += `${branch} ${u}\n`;
         });
-      } else {
-        out += `\n_Catatan: URL ini langsung mengarah ke halaman tujuan tanpa redirect._`;
       }
 
       return reply(out.trim());

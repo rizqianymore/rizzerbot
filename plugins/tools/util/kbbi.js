@@ -61,10 +61,12 @@ export default {
         if (meta) defs = [stripHtml(meta[1]).slice(0, 500)];
       }
       if (!defs.length) return reply(`Kata *${word}* ditemukan tapi definisi tidak ter-parse. Cek: https://kbbi.web.id/${word}`);
-      const lines = [`*KBBI: ${word}*`, ""];
-      defs.forEach((d, i) => lines.push(`${i + 1}. ${d}`));
-      lines.push("", `Sumber: kbbi.web.id/${word}`);
-      return reply(lines.join("\n").slice(0, 3500));
+      let text = `┌── DEFINISI KBBI: ${word.toUpperCase()}\n`;
+      defs.forEach((d) => {
+        text += `│ • ${d}\n`;
+      });
+      text += `└──\n\nSumber: kbbi.kemdikbud.go.id`;
+      return reply(text.slice(0, 3500));
     } catch (err) {
       return reply(`Gagal KBBI: ${err?.message || err}`);
     }

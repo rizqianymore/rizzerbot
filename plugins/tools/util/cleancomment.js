@@ -103,9 +103,11 @@ export default {
       }
 
       const diffCount = rawCode.length - cleaned.length;
-      let text = `*BERHASIL MEMBERSIHKAN KOMENTAR*\n`;
-      text += `Mengurangi: \`${diffCount} karakter\`\n\n`;
-      text += `\`\`\`\n${cleaned}\n\`\`\``;
+      let text =
+        `┌── CLEAN COMMENT\n` +
+        `│ Dikurangi: ${diffCount} karakter\n` +
+        `└──\n\n` +
+        `\`\`\`\n${cleaned}\n\`\`\``;
 
       return reply(text);
     } catch (err) {

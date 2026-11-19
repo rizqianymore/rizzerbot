@@ -48,22 +48,25 @@ export default {
       }).format(new Date());
 
     if (!q) {
-      const lines = [
-        `*WAKTU INDONESIA*`,
-        "",
-        `• WIB (Jakarta): ${fmt("Asia/Jakarta")}`,
-        `• WITA (Makassar): ${fmt("Asia/Makassar")}`,
-        `• WIT (Jayapura): ${fmt("Asia/Jayapura")}`,
-        "",
-        `_Ketik: jam tokyo | jam london | jam newyork_`,
-      ];
-      return reply(lines.join("\n"));
+      const text =
+        `┌── WAKTU INDONESIA\n` +
+        `│ WIB: ${fmt("Asia/Jakarta")}\n` +
+        `│ WITA: ${fmt("Asia/Makassar")}\n` +
+        `│ WIT: ${fmt("Asia/Jayapura")}\n` +
+        `└──\n\n` +
+        `Contoh dunia: jam tokyo | jam london | jam newyork`;
+      return reply(text);
     }
 
     const key = q.replace(/\s+/g, "");
     const tz = zones[key] || zones[q] || null;
     if (tz) {
-      return reply(`*JAM ${q.toUpperCase()}*\n${fmt(tz)}\n(${tz})`);
+      return reply(
+        `┌── JAM ${q.toUpperCase()}\n` +
+        `│ Waktu: ${fmt(tz)}\n` +
+        `│ Zona: ${tz}\n` +
+        `└──`
+      );
     }
 
     try {
