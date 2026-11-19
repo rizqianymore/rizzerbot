@@ -1,35 +1,41 @@
+import { AI_TIMEOUT_MS, AIError, mkWaiter, chatFetch, buildMessages } from "./util.js";
+
 const OPENAI_URL = "https://text.pollinations.ai/openai";
-const TIMEOUT_MS = 25000;
-const WORKING_MODEL = "openai";
+const MODEL = "openai";
 
 export async function askPollinations(prompt, options = {}) {
   const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt kosong.");
-  const messages = [
-    {
-      role: "system",
-      content:
-        options.system ||
-        "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.",
-    },
-    ...(Array.isArray(options.history) ? options.history : []),
-    { role: "user", content: clean },
-  ];
+  if (!clean) throw new AIError("Prompt kosong.", { source: "pollinations", code: "INPUT" });
 
-  const res = await fetch(OPENAI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: WORKING_MODEL, messages }),
-    signal: AbortSignal.timeout(options.timeoutMs || TIMEOUT_MS),
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`Pollinations HTTP ${res.status}: ${t.slice(0, 120)}`);
+  const seed = Number.isFinite(Number(options.seed))
+    ? Number(options.seed)
+    : Math.floor(Math.random() * 1_000_000);
+
+  try {
+    const r = await chatFetch({
+      url: OPENAI_URL,
+      model: MODEL,
+      messages: buildMessages(clean, options),
+      extraBody: { seed, referrer: "rizzerbot" },
+      timeoutMs: options.timeoutMs || AI_TIMEOUT_MS,
+      wait: options.wait || mkWaiter(options.timeoutMs || AI_TIMEOUT_MS),
+    });
+    return { text: r.text, model: r.model || MODEL, source: "pollinations", usage: r.usage };
+  } catch (err) {
+    const code = err instanceof AIError ? err.code : "NETWORK";
+    throw new AIError(err?.message || "Pollinations gagal merespons.", {
+      source: "pollinations",
+      code,
+      retryMs: err?.retryMs || 0,
+      cause: err,
+    });
   }
-  const data = await res.json().catch(() => null);
-  const text = data?.choices?.[0]?.message?.content?.trim?.() || "";
-  if (!text) throw new Error("Pollinations mengembalikan jawaban kosong.");
-  return { text, model: data?.model || WORKING_MODEL, source: "pollinations" };
 }
+
+export const pollinationsCapabilities = {
+  history: true,
+  seed: true,
+  quota: "1 reply / 45s per IP (free tier)",
+};
 
 export default askPollinations;

@@ -1,144 +1,77 @@
-import https from "node:https";
+import { AI_TIMEOUT_MS, AIError, mkWaiter } from "./util.js";
 
-function httpGetJson(url, timeoutMs = 25000) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(
-      url,
-      {
-        family: 4,
-        timeout: timeoutMs,
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RizzerBot/AIScraper",
-          Accept: "application/json",
-        },
-      },
-      (res) => {
-        let body = "";
-        res.on("data", (c) => (body += c));
-        res.on("end", () => {
-          try {
-            resolve({ status: res.statusCode, data: JSON.parse(body) });
-          } catch (_) {
-            resolve({ status: res.statusCode, data: null });
-          }
-        });
-      }
-    );
-    req.on("timeout", () => {
-      req.destroy();
-      reject(new Error("Timeout menghubungi server AI web scraping."));
-    });
-    req.on("error", (err) => reject(err));
+/**
+ * Catatan lapangan (diverifikasi 2026-11-19):
+ * node siputzx.my.id mengembalikan HTTP 530 (origin down) untuk semua endpoint /api/ai/*.
+ * Scraper tanpa API key dipertahankan sebagai last-resort, tapi statusnya DOWN by default
+ * supaya tidak menghabiskan budget timeout di setiap request.
+ */
+export const SCRAPE_NODE_ENABLED = process.env.AI_SCRAPE_ENABLED === "1";
+const NODE = "https://api.siputzx.my.id/api/ai";
+
+function getJson(url, timeoutMs) {
+  return fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 RizzerBot/AIScraper" },
+    signal: AbortSignal.timeout(timeoutMs),
+  }).then(async (res) => {
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) throw new AIError(`HTTP ${res.status}`, { code: res.status === 530 ? "DOWN" : "HTTP" });
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      throw new AIError("Respons scraping bukan JSON.", { code: "PARSE" });
+    }
   });
 }
 
-function cleanAnswer(rawText) {
-  if (!rawText) return "";
-  let text = String(rawText);
-  // Bersihkan tag <think> jika ada
-  text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-  return text;
+function pickText(payload) {
+  const d = payload?.data?.response ?? payload?.data ?? payload?.result ?? payload?.response ?? "";
+  if (typeof d === "string") return d.trim();
+  if (d && typeof d === "object" && typeof d.response === "string") return d.response.trim();
+  return "";
 }
 
-/**
- * Scraping AI DeepSeek R1 Reasoning (Tanpa API Key)
- * @param {string} prompt
- * @returns {Promise<object>}
- */
-export async function scrapeDeepSeekR1(prompt) {
-  const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt kosong.");
-
-  const url = `https://api.siputzx.my.id/api/ai/deepseekr1?prompt=${encodeURIComponent(clean)}`;
-  const res = await httpGetJson(url, 30000);
-
-  const rawAns = res.data?.data?.response || res.data?.data || "";
-  const answer = cleanAnswer(rawAns);
-
-  if (!answer) {
-    throw new Error("Gagal mengambil respons dari DeepSeek-R1 scraping node.");
-  }
-
-  return {
-    text: answer,
-    model: "DeepSeek-R1 (Web Scrape)",
-    source: "deepseek-scrape",
+function makeScraper({ name, source, path, param }) {
+  return async function scrape(prompt, options = {}) {
+    const clean = String(prompt || "").trim();
+    if (!clean) throw new AIError("Prompt kosong.", { source, code: "INPUT" });
+    if (!SCRAPE_NODE_ENABLED) {
+      throw new AIError(`${name} scraping node dinonaktifkan (set AI_SCRAPE_ENABLED=1 untuk mengaktifkan).`, {
+        source,
+        code: "DISABLED",
+      });
+    }
+    const wait = options.wait || mkWaiter(options.timeoutMs || AI_TIMEOUT_MS);
+    const url = `${NODE}/${path}?${param}=${encodeURIComponent(clean)}`;
+    const payload = await getJson(url, Math.max(1000, wait.remaining()));
+    const text = pickText(payload);
+    if (!text) throw new AIError(`Gagal mengambil respons dari ${name}.`, { source, code: "EMPTY" });
+    return { text, model: `${name} (Web Scrape)`, source, usage: null };
   };
 }
 
-/**
- * Scraping AI DuckAI (Tanpa API Key)
- * @param {string} prompt
- * @returns {Promise<object>}
- */
-export async function scrapeDuckAI(prompt) {
-  const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt kosong.");
+export const scrapeDeepSeekR1 = makeScraper({ name: "DeepSeek-R1", source: "deepseek-scrape", path: "deepseekr1", param: "prompt" });
+export const scrapeDuckAI = makeScraper({ name: "DuckAI", source: "duckai-scrape", path: "duckai", param: "message" });
+export const scrapeMetaAI = makeScraper({ name: "Meta AI", source: "metaai-scrape", path: "metaai", param: "prompt" });
 
-  const url = `https://api.siputzx.my.id/api/ai/duckai?message=${encodeURIComponent(clean)}`;
-  const res = await httpGetJson(url, 25000);
-
-  const answer = res.data?.data?.response || res.data?.data || res.data?.result || "";
-  if (!answer) {
-    throw new Error("Gagal mengambil respons dari DuckAI scraping node.");
-  }
-
-  return {
-    text: String(answer).trim(),
-    model: "DuckAI Web",
-    source: "duckai-scrape",
-  };
-}
-
-/**
- * Scraping AI Meta Llama (Tanpa API Key)
- * @param {string} prompt
- * @returns {Promise<object>}
- */
-export async function scrapeMetaAI(prompt) {
-  const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt kosong.");
-
-  const url = `https://api.siputzx.my.id/api/ai/metaai?prompt=${encodeURIComponent(clean)}`;
-  const res = await httpGetJson(url, 25000);
-
-  const answer = res.data?.data?.response || res.data?.data || res.data?.result || "";
-  if (!answer) {
-    throw new Error("Gagal mengambil respons dari Meta AI scraping node.");
-  }
-
-  return {
-    text: String(answer).trim(),
-    model: "Llama 3 (Meta AI)",
-    source: "metaai-scrape",
-  };
-}
-
-/**
- * Universal Scraped AI Router (Auto-Fallback tanpa API Key)
- * @param {string} prompt
- * @returns {Promise<object>}
- */
-export async function askScrapedAI(prompt) {
-  const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Pertanyaan tidak boleh kosong.");
-
+export async function askScrapedAI(prompt, options = {}) {
   const engines = [
-    { name: "DeepSeek-R1", fn: scrapeDeepSeekR1 },
-    { name: "DuckAI", fn: scrapeDuckAI },
-    { name: "MetaAI", fn: scrapeMetaAI },
+    ["DeepSeek-R1", scrapeDeepSeekR1],
+    ["DuckAI", scrapeDuckAI],
+    ["Meta AI", scrapeMetaAI],
   ];
-
   const errors = {};
-  for (const engine of engines) {
+  for (const [name, fn] of engines) {
     try {
-      return await engine.fn(clean);
+      return await fn(prompt, options);
     } catch (err) {
-      errors[engine.name] = err.message;
+      errors[name] = err?.message || String(err);
     }
   }
-
-  throw new Error(`Semua AI Scraping gagal: ${JSON.stringify(errors)}`);
+  throw new AIError(`Semua AI scraping gagal: ${JSON.stringify(errors).slice(0, 200)}`, {
+    source: "scrape",
+    code: "ALL_FAILED",
+  });
 }
 
 export default { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, askScrapedAI };

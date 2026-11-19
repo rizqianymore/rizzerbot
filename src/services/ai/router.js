@@ -1,49 +1,60 @@
-import { askDeepSeek } from "./deepseek.js";
-import { askOpenCode } from "./opencode.js";
-import { askPollinations } from "./pollinations.js";
-import { askScrapedAI, scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI } from "./aiscrape.js";
+import { AI_TIMEOUT_MS, AIError, mkWaiter } from "./util.js";
+import { askDeepSeek, deepseekCapabilities, isDeepSeekConfigured } from "./deepseek.js";
+import { askOpenCode, opencodeCapabilities, OPENCODE_MODELS } from "./opencode.js";
+import { askPollinations, pollinationsCapabilities } from "./pollinations.js";
+import { askGroq, groqCapabilities, isGroqConfigured } from "../ai-keyed/groq.js";
+import { askZen, ZEN_FREE } from "../ai-keyed/opencode-zen.js";
+import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } from "./aiscrape.js";
 
-export const AI_SOURCES = [
-  "r1",
-  "deepseek",
-  "duckai",
-  "meta",
-  "opencode",
-  "pollinations",
-];
+/**
+ * Registry tunggal. `tier` menentukan urutan fallback:
+ *   1 = gratis tanpa key (paling murah, paling sering kena limit)
+ *   2 = butuh API key (lebih stabil kalau key terpasang)
+ * timeouts bersifat kumulatif: request berhenti saat budget habis, bukan 7x timeout penuh.
+ */
+export const AI_SOURCES = {
+  pollinations: { tier: 1, run: askPollinations, caps: pollinationsCapabilities, label: "Pollinations Public" },
+  opencode: { tier: 1, run: askOpenCode, caps: opencodeCapabilities, label: "OpenCode Zen Free" },
+  r1: { tier: 3, run: scrapeDeepSeekR1, caps: { history: false }, label: "DeepSeek R1 (scrape)" },
+  duckai: { tier: 3, run: scrapeDuckAI, caps: { history: false }, label: "DuckAI (scrape)" },
+  meta: { tier: 3, run: scrapeMetaAI, caps: { history: false }, label: "Meta AI (scrape)" },
+  deepseek: { tier: 2, run: askDeepSeek, caps: deepseekCapabilities, label: "DeepSeek API" },
+  groq: { tier: 2, run: askGroq, caps: groqCapabilities, label: "Groq API" },
+  zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
+};
 
 const ALIASES = {
-  // DeepSeek & R1
   r1: "r1",
+  deepseekr1: "r1",
+  r1scrape: "r1",
+
   deepseek: "deepseek",
   ds: "deepseek",
-  r1scrape: "r1",
-  deepseekr1: "r1",
 
-  // DuckAI
   duckai: "duckai",
   duck: "duckai",
   duckduckgo: "duckai",
   ddg: "duckai",
 
-  // Meta Llama
   meta: "meta",
   metaai: "meta",
   llama: "meta",
   llama3: "meta",
 
-  // OpenCode Zen
   opencode: "opencode",
   oc: "opencode",
-  zen: "opencode",
+  zen: "zen",
+  coding: "opencode",
   code: "opencode",
 
-  // Pollinations Free
   pollinations: "pollinations",
   polli: "pollinations",
   pl: "pollinations",
+  gptoss: "pollinations",
 
-  // Universal
+  groq: "groq",
+  llama70b: "groq",
+
   auto: "auto",
   scrape: "auto",
   free: "auto",
@@ -51,59 +62,96 @@ const ALIASES = {
 
 export function normalizeSource(s) {
   if (!s) return null;
-  const k = String(s).toLowerCase();
-  return ALIASES[k] || null;
+  return ALIASES[String(s).toLowerCase()] || null;
 }
 
-async function runSource(source, clean, options) {
-  if (source === "r1" || source === "deepseek") return await scrapeDeepSeekR1(clean);
-  if (source === "duckai") return await scrapeDuckAI(clean);
-  if (source === "meta") return await scrapeMetaAI(clean);
-  if (source === "opencode") return await askOpenCode(clean, options);
-  if (source === "pollinations") return await askPollinations(clean, options);
-  if (source === "auto") return await askScrapedAI(clean);
-  throw new Error(`Model AI tidak dikenal: ${source}`);
+function buildChain(prefer) {
+  const list = [];
+  if (prefer && prefer !== "auto" && AI_SOURCES[prefer]) list.push(prefer);
+  const rest = Object.entries(AI_SOURCES)
+    .filter(([name]) => name !== prefer)
+    .sort((a, b) => a[1].tier - b[1].tier)
+    .map(([name]) => name);
+  return [...list, ...rest];
+}
+
+function skipReason(name, tier) {
+  if (tier === 3 && !SCRAPE_NODE_ENABLED) return "nonaktif (node scraping dimatikan)";
+  if (name === "deepseek" && !isDeepSeekConfigured()) return "nonaktif (butuh DEEPSEEK_API_KEY)";
+  if (name === "groq" && !isGroqConfigured()) return "nonaktif (butuh GROQ_API_KEY)";
+  return null;
+}
+
+function shouldSkip(source) {
+  return Boolean(skipReason(source.name, source.tier));
 }
 
 /**
- * Universal AI Gateway - 100% Non API Key (Web Scraped & Free Public Engines)
+ * Gateway AI universal. Selalu mengembalikan { text, model, source, attempts }.
  * @param {string} prompt
- * @param {object} options
+ * @param {{prefer?: string, history?: object[], system?: string, timeoutMs?: number, model?: string}} options
  */
 export async function askAI(prompt, options = {}) {
   const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Pertanyaan tidak boleh kosong.");
+  if (!clean) throw new AIError("Pertanyaan tidak boleh kosong.", { code: "INPUT" });
+
+  const budget = Math.max(5000, Number(options.timeoutMs) || AI_TIMEOUT_MS);
+  const wait = mkWaiter(budget);
   const prefer = normalizeSource(options.prefer);
-  const errors = {};
+  const chain = buildChain(prefer);
+  const attempts = [];
 
-  // Rantai eksekusi 100% Free / Scraped
-  const chain = [];
-  if (prefer && prefer !== "auto") chain.push(prefer);
-  
-  // Auto-failover sequence across free web engines
-  for (const s of ["r1", "duckai", "opencode", "meta", "pollinations"]) {
-    if (!chain.includes(s)) chain.push(s);
-  }
+  for (const name of chain) {
+    if (wait.remaining() < 2000) {
+      attempts.push({ source: name, skipped: "budget habis" });
+      continue;
+    }
+    const entry = AI_SOURCES[name];
+    const reason = skipReason(name, entry.tier);
+    if (reason) {
+      attempts.push({ source: name, skipped: reason });
+      continue;
+    }
 
-  for (const source of chain) {
+    const started = Date.now();
     try {
-      return await runSource(source, clean, options);
+      const r = await entry.run(clean, { ...options, wait: options.wait || wait });
+      return { ...r, source: name, attempts, latencyMs: Date.now() - started };
     } catch (err) {
-      errors[source] = err?.message || String(err);
+      attempts.push({
+        source: name,
+        code: err?.code || "NETWORK",
+        error: String(err?.message || err).slice(0, 160),
+        ms: Date.now() - started,
+      });
     }
   }
 
-  throw new Error(`Seluruh model AI non-API Key gagal merespons: ${JSON.stringify(errors).slice(0, 300)}`);
+  const detail = attempts
+    .map((a) => `${a.source}:${a.skipped || a.code || "FAIL"}`)
+    .join(", ")
+    .slice(0, 300);
+  throw new AIError(`Semua engine AI gagal (${detail})`, { code: "ALL_FAILED", source: "router", attempts });
 }
 
 export function getAIStatus() {
-  return {
-    "deepseek-r1": "Aktif (Web Scrape Live - Tanpa API Key)",
-    "duckai": "Aktif (DuckAI Web - Tanpa API Key)",
-    "opencode-zen": "Aktif (OpenCode Free Models - Tanpa API Key)",
-    "meta-llama": "Aktif (Meta AI Web - Tanpa API Key)",
-    "pollinations": "Aktif (Public Node - Tanpa API Key)",
-  };
+  const out = {};
+  for (const [name, s] of Object.entries(AI_SOURCES)) {
+    out[name] = skipReason(name, s.tier) || `siap · ${s.label}`;
+  }
+  return out;
 }
+
+export function listSources() {
+  return Object.entries(AI_SOURCES).map(([name, s]) => ({
+    name,
+    label: s.label,
+    tier: s.tier,
+    caps: s.caps,
+    ready: !shouldSkip({ name, tier: s.tier }),
+  }));
+}
+
+export { OPENCODE_MODELS, ZEN_FREE };
 
 export default askAI;

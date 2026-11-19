@@ -1,74 +1,62 @@
-import { askAI, getAIStatus, normalizeSource } from "@/src/services/ai/router.js";
-import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
+import { runChat, renderHelp, renderModelList, renderStatus, formatReply, normalizeSource } from "./_shared.js";
+import { splitChunks } from "@/src/services/ai/util.js";
+import { memoryStats } from "@/src/services/ai/memory.js";
+import { queueStats } from "@/src/services/ai/queue.js";
+import { cacheStats } from "@/src/services/ai/cache.js";
+
+const TRIVIAL = new Set(["models", "model", "status", "-m", "stats", "engine", "help", "?"]);
 
 export default {
   name: "ai",
   aliases: ["tanya", "chatai", "ask"],
-  description: "Tanya AI cerdas 100% Free Web Scraped (Tanpa API Key)",
-  usage: "[model] <pertanyaan> | contoh: .ai r1 jelaskan black hole",
+  description: "Gateway AI multi-model dengan fallback otomatis (cache + antrean)",
+  usage: "[model] <pertanyaan> | models | status | stats",
   premiumOnly: true,
   category: "AI",
+  cooldownMs: 3000,
   run: async (sock, msg, args, { reply, sendTyping, prefix, senderJid }) => {
-    await sendTyping();
     const p = prefix || ".";
+    if (!args || args.length === 0) return reply(renderHelp(p));
 
-    if (!args || args.length === 0) {
-      return reply(
-        `*AI ENGINE (100% BEBAS API KEY)*\n\n` +
-          `Format:\n` +
-          `• *${p}ai <pertanyaan>*\n` +
-          `• *${p}ai <model> <pertanyaan>*\n\n` +
-          `Daftar Model Non-API Key:\n` +
-          `• *r1* / *deepseek* : DeepSeek R1 Reasoning (Web Scraped)\n` +
-          `• *duckai* : DuckAI Web Intelligence\n` +
-          `• *opencode* / *oc* : OpenCode Zen Free Coding Engine\n` +
-          `• *meta* / *llama* : Meta Llama 3 Web\n` +
-          `• *pollinations* : Pollinations Public Node\n\n` +
-          `Contoh:\n` +
-          `• *${p}ai r1 Buatkan kode async crawler di Node.js*\n` +
-          `• *${p}ai Siapakah penemu komputer?*\n` +
-          `• *${p}ai models* (Cek status model aktif)`
-      );
+    const firstWord = String(args[0] || "").toLowerCase().replace(/^--/, "");
+    if (TRIVIAL.has(firstWord)) {
+      if (firstWord === "stats") {
+        const m = memoryStats();
+        const q = queueStats();
+        const c = cacheStats();
+        return reply(
+          `*STATS AI RUNTIME*\n\n` +
+            `• Memori: ${m.buckets} bucket, ${m.turns} turn (TTL ${m.ttlHours}j)\n` +
+            `• Antrean: ${q.active} aktif / ${q.queued} menunggu (maks ${q.maxConcurrent})\n` +
+            `• Cache: ${c.live} entri hidup / ${c.size} tersimpan`
+        );
+      }
+      if (firstWord === "models" || firstWord === "model" || firstWord === "-m") return reply(renderModelList());
+      if (firstWord === "help" || firstWord === "?") return reply(renderHelp(p));
+      return reply(renderStatus());
     }
 
-    const firstWord = (args[0] || "").toLowerCase().replace(/^--/, "");
-
-    if (firstWord === "models" || firstWord === "status" || firstWord === "-m") {
-      const s = getAIStatus();
-      return reply(
-        `*STATUS MODEL AI (NON-API KEY)*\n\n` +
-          Object.entries(s)
-            .map(([k, v]) => `• *${k.toUpperCase()}*: ${v}`)
-            .join("\n")
-      );
-    }
+    await sendTyping();
 
     let prefer = null;
-    let queryArgs = [...args];
-
-    // Cek apakah argumen pertama adalah nama model
-    const matchedModel = normalizeSource(firstWord);
-    if (matchedModel && args.length > 1) {
-      prefer = matchedModel;
+    const queryArgs = [...args];
+    const matched = normalizeSource(firstWord);
+    if (matched && args.length > 1) {
+      prefer = matched;
       queryArgs.shift();
     }
 
     const promptText = queryArgs.join(" ").trim();
     if (!promptText) {
-      return reply(`Silakan tulis pertanyaan kamu setelah model! Contoh:\n*${p}ai ${prefer || "r1"} Halo apa kabar?*`);
+      return reply(`Tulis pertanyaan setelah model. Contoh:\n*${p}ai ${prefer || "pollinations"} Halo apa kabar?*`);
     }
 
-    await reply("Memproses jawaban...");
     try {
-      const history = getHistory(senderJid);
-      const result = await askAI(promptText, { prefer, history });
-      pushTurn(senderJid, promptText, result.text);
-
-      const header = `*AI (${result.model || result.source.toUpperCase()})*`;
-      const output = `${header}\n\n${result.text}`;
-      await reply(output.slice(0, 4000));
+      const result = await runChat(promptText, { prefer, senderJid });
+      const chunks = splitChunks(formatReply(result), 3500);
+      for (const chunk of chunks) await reply(chunk);
     } catch (err) {
-      await reply(`*AI ERROR*\n${err?.message || "Terjadi kesalahan saat memproses jawaban."}`);
+      await reply(`*AI GAGAL*\n${err?.message || "Terjadi kesalahan saat memproses jawaban."}`);
     }
   },
 };

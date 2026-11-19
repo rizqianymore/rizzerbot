@@ -1,38 +1,41 @@
-import { scrapeDeepSeekR1 } from "./aiscrape.js";
-import { postChatCompletions, buildMessages } from "./openai-compat.js";
+import { AI_TIMEOUT_MS, AIError, mkWaiter, chatFetch, buildMessages, stripThink } from "./util.js";
 
-/**
- * DeepSeek Service - Mengutamakan Free Web Scraping R1
- * @param {string} prompt
- * @param {object} options
- */
+const BASE = "https://api.deepseek.com/v1";
+
 export async function askDeepSeek(prompt, options = {}) {
   const clean = String(prompt || "").trim();
-  if (!clean) throw new Error("Prompt kosong.");
+  if (!clean) throw new AIError("Prompt kosong.", { source: "deepseek", code: "INPUT" });
 
-  // 1. Prioritas Utama: Scrape DeepSeek-R1 (Tanpa API Key)
+  const key = options.apiKey || process.env.DEEPSEEK_API_KEY;
+  if (!key) throw new AIError("DEEPSEEK_API_KEY belum dikonfigurasi.", { source: "deepseek", code: "AUTH" });
+
+  const wait = options.wait || mkWaiter(options.timeoutMs || AI_TIMEOUT_MS);
+  const model = options.model || (options.thinking ? "deepseek-reasoner" : "deepseek-chat");
+
   try {
-    return await scrapeDeepSeekR1(clean);
-  } catch (errScrape) {
-    // 2. Fallback: jika ada DEEPSEEK_API_KEY terpasang
-    const key = options.apiKey || process.env.DEEPSEEK_API_KEY;
-    if (key) {
-      const model = options.thinking ? "deepseek-reasoner" : "deepseek-chat";
-      const r = await postChatCompletions({
-        baseUrl: "https://api.deepseek.com/v1",
-        apiKey: key,
-        model,
-        messages: buildMessages(clean, options),
-        timeoutMs: 45000,
-      });
-      return { ...r, source: "deepseek" };
-    }
-    throw errScrape;
+    const r = await chatFetch({
+      url: `${BASE}/chat/completions`,
+      apiKey: key,
+      model,
+      messages: buildMessages(clean, options),
+      timeoutMs: wait.remaining(),
+      wait,
+    });
+    return { text: stripThink(r.text), model: r.model || model, source: "deepseek", usage: r.usage };
+  } catch (err) {
+    throw new AIError(err?.message || "DeepSeek gagal merespons.", {
+      source: "deepseek",
+      code: err?.code || "NETWORK",
+      retryMs: err?.retryMs || 0,
+      cause: err,
+    });
   }
 }
 
 export function isDeepSeekConfigured() {
-  return true; // Selalu aktif karena didukung free scraping
+  return Boolean(process.env.DEEPSEEK_API_KEY);
 }
+
+export const deepseekCapabilities = { history: true, seed: false };
 
 export default askDeepSeek;
