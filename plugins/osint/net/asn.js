@@ -39,14 +39,21 @@ export default {
 
       if (parts.length >= 4) {
         const out =
-          `*OSINT TOOLS*\n\n` +
-          `ASN: AS${parts[1]}\n` +
-          `Target IP: ${parts[0]}\n` +
-          `IP Range: ${parts[2]}\n` +
-          `Organisasi: ${parts.slice(3).join(",").trim()}`;
+          `*OSINT TOOLS*\n` +
+          `├── ASN        : AS${parts[1]}\n` +
+          `├── Target IP  : ${parts[0]}\n` +
+          `├── IP Range   : ${parts[2]}\n` +
+          `├── Organisasi : ${parts.slice(3).join(",").trim()}\n` +
+          `│\n` +
+          `└─ [STATUS: ASN LOOKUP SUCCESS]`;
         return context.reply(out);
       } else if (parts.length >= 2) {
-        const out = `*OSINT TOOLS*\n\nASN: AS${parts[0]}\nOperator: ${parts.slice(1).join(",").trim()}`;
+        const out =
+          `*OSINT TOOLS*\n` +
+          `├── ASN        : AS${parts[0]}\n` +
+          `├── Operator   : ${parts.slice(1).join(",").trim()}\n` +
+          `│\n` +
+          `└─ [STATUS: ASN LOOKUP SUCCESS]`;
         return context.reply(out);
       }
       return context.reply(`Data ASN:\n${raw}`);

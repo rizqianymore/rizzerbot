@@ -22,25 +22,26 @@ export default {
     try {
       const records = await getDnsRecords(domain);
 
-      let text = `*OSINT TOOLS*\n\nDomain: ${records.domain.toUpperCase()}\n`;
+      let text = `*OSINT TOOLS*\n├── Domain     : ${records.domain.toUpperCase()}\n`;
       if (records.a.length > 0) {
-        text += `A (IPv4): ${records.a.slice(0, 3).join(", ")}\n`;
+        text += `├── A (IPv4)   : ${records.a.slice(0, 3).join(", ")}\n`;
       }
       if (records.aaaa.length > 0) {
-        text += `AAAA (IPv6): ${records.aaaa.slice(0, 2).join(", ")}\n`;
+        text += `├── AAAA (IPv6): ${records.aaaa.slice(0, 2).join(", ")}\n`;
       }
       if (records.cname.length > 0) {
-        text += `CNAME: ${records.cname.slice(0, 2).join(", ")}\n`;
+        text += `├── CNAME      : ${records.cname.slice(0, 2).join(", ")}\n`;
       }
       if (records.mx.length > 0) {
-        text += `MX: ${records.mx.slice(0, 2).join(", ")}\n`;
+        text += `├── MX         : ${records.mx.slice(0, 2).join(", ")}\n`;
       }
       if (records.ns.length > 0) {
-        text += `NS: ${records.ns.slice(0, 3).join(", ")}\n`;
+        text += `├── NS         : ${records.ns.slice(0, 3).join(", ")}\n`;
       }
       if (records.txt.length > 0) {
-        text += `TXT: ${records.txt[0].slice(0, 60)}...\n`;
+        text += `├── TXT        : ${records.txt[0].slice(0, 60)}...\n`;
       }
+      text += `│\n└─ [STATUS: DNS LOOKUP SUCCESS]`;
 
       return await reply(text.trim());
     } catch (err) {

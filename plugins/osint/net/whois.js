@@ -25,14 +25,15 @@ export default {
       const info = await getWhois(domain);
 
       let text =
-        `*OSINT TOOLS*\n\n` +
-        `Domain: ${info.domain}\n` +
-        `Registrar: ${info.registrar}\n` +
-        `Didaftarkan: ${info.createdDate}\n` +
-        `Diperbarui: ${info.updatedDate}\n` +
-        `Kedaluwarsa: ${info.expiryDate}\n`;
-      if (info.abuseEmail !== "-") text += `Abuse Email: ${info.abuseEmail}\n`;
-      if (info.registrarWhois !== "-") text += `Whois Server: ${info.registrarWhois}\n`;
+        `*OSINT TOOLS*\n` +
+        `├── Domain     : ${info.domain}\n` +
+        `├── Registrar  : ${info.registrar}\n` +
+        `├── Didaftarkan: ${info.createdDate}\n` +
+        `├── Diperbarui : ${info.updatedDate}\n` +
+        `├── Kedaluwarsa: ${info.expiryDate}\n`;
+      if (info.abuseEmail !== "-") text += `├── Abuse Email: ${info.abuseEmail}\n`;
+      if (info.registrarWhois !== "-") text += `├── Whois Server: ${info.registrarWhois}\n`;
+      text += `│\n└─ [STATUS: WHOIS SUCCESS]`;
 
       await reply(text.trim());
     } catch (err) {

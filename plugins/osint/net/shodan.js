@@ -47,11 +47,13 @@ export default {
         Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.slice(0, 5).join(", ") : "Tidak terdeteksi";
 
       const out =
-        `*OSINT TOOLS*\n\n` +
-        `IP: ${res.ip}\n` +
-        `Port Terbuka: ${ports}\n` +
-        `Tags: ${tags}\n` +
-        `Kerentanan (CVE): ${vulns}`;
+        `*OSINT TOOLS*\n` +
+        `├── IP         : ${res.ip}\n` +
+        `├── Port       : ${ports}\n` +
+        `├── Tags       : ${tags}\n` +
+        `├── Kerentanan : ${vulns}\n` +
+        `│\n` +
+        `└─ [STATUS: SHODAN SCAN SUCCESS]`;
 
       return context.reply(out);
     } catch (err) {

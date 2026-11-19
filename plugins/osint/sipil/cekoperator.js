@@ -21,12 +21,15 @@ export default {
 
     if (!input) {
       return reply(
-        `*OSINT TOOLS - CEK OPERATOR*\n\n` +
-          `Format:\n` +
-          `• ${currentPrefix}cekoperator <nomor HP>\n\n` +
-          `Contoh:\n` +
-          `• ${currentPrefix}cekoperator 081310321726\n` +
-          `• ${currentPrefix}cekoperator 081293269631`
+        `*OSINT TOOLS*\n` +
+          `├── Penggunaan : ${currentPrefix}cekoperator <nomor HP>\n` +
+          `├── Format     : 08xx / 628xx / +628xx\n` +
+          `│\n` +
+          `├── Contoh:\n` +
+          `├── • ${currentPrefix}cekoperator 081310321726\n` +
+          `├── • ${currentPrefix}cekoperator 081293269631\n` +
+          `│\n` +
+          `└─ [STATUS: READY]`
       );
     }
 
@@ -35,7 +38,11 @@ export default {
     try {
       const op = parseOperator(input);
       if (!op.valid) {
-        return reply(`*OSINT TOOLS*\nNomor tidak valid: ${op.reason || "periksa kembali format nomor HP"}`);
+        return reply(
+          `*OSINT TOOLS*\n` +
+            `├── MSISDN : ${input}\n` +
+            `└── Error  : ${op.reason || "Format nomor HP tidak valid"}`
+        );
       }
 
       // 1. Cek data registrasi Simcard (simcard.db)
@@ -76,13 +83,13 @@ export default {
       // FORMAT SIMCARD DETAILS JIKA ADA
       const simLines = [];
       if (allSimcards.length > 0) {
-        simLines.push(``, `*REGISTRASI SIMCARD*`);
+        simLines.push(`│`, `├── [REGISTRASI SIMCARD]`);
         allSimcards.forEach((s, idx) => {
           const regDate = s.date ? String(s.date).split(" ")[0] : "-";
           simLines.push(
-            `Kartu ${idx + 1}: ${s.provider || op.operator}`,
-            `NIK Terdaftar: \`${s.nik || "-"}\``,
-            `Tgl Registrasi: ${regDate}`
+            `├── Kartu ${idx + 1}    : ${s.provider || op.operator}`,
+            `│   ├── NIK    : \`${s.nik || "-"}\``,
+            `│   └── Tgl Reg: ${regDate}`
           );
         });
       }
@@ -94,35 +101,34 @@ export default {
           const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           const lines = [
             `*OSINT TOOLS*`,
-            ``,
-            `MSISDN: \`${r.nohp || op.normalized}\``,
-            `Operator: ${op.operator} (${op.brand})`,
-            `NIK: \`${r.nik || "-"}\``,
-            `Nama: ${r.nama || "-"}`,
-            `Gender: ${r.gender || "-"}`,
-            `TTL: ${ttlFormatted}`,
+            `├── MSISDN     : \`${r.nohp || op.normalized}\``,
+            `├── Operator   : ${op.operator} (${op.brand})`,
+            `├── NIK        : \`${r.nik || "-"}\``,
+            `├── Nama       : ${r.nama || "-"}`,
+            `├── Gender     : ${r.gender || "-"}`,
+            `├── TTL        : ${ttlFormatted}`,
           ];
 
           if (r.nikInfo?.zodiac) {
-            lines.push(`Zodiak: ${r.nikInfo.zodiac} (${r.nikInfo.generation || "-"})`);
+            lines.push(`├── Zodiak     : ${r.nikInfo.zodiac} (${r.nikInfo.generation || "-"})`);
           }
 
           lines.push(
-            `Alamat: ${r.alamat || "-"}`,
-            `Kelurahan: ${r.kelurahan || "-"}`,
-            `Kecamatan: ${r.kecamatan || "-"}`,
-            `Kota/Kab: ${r.kota_kab || "-"}`
+            `├── Alamat     : ${r.alamat || "-"}`,
+            `├── Kelurahan  : ${r.kelurahan || "-"}`,
+            `├── Kecamatan  : ${r.kecamatan || "-"}`,
+            `├── Kota/Kab   : ${r.kota_kab || "-"}`
           );
 
           if (r.nikInfo && (r.nikInfo.province || r.nikInfo.city || r.nikInfo.district)) {
             const origin = [r.nikInfo.province, r.nikInfo.city, r.nikInfo.district].filter(Boolean).join(", ");
-            lines.push(`Wilayah KTP: ${origin}`);
+            lines.push(`├── Wilayah KTP: ${origin}`);
           }
 
           if (location?.lat && location?.lon) {
             lines.push(
-              `Koordinat: ${location.lat}, ${location.lon}`,
-              `Maps: https://www.google.com/maps?q=${location.lat},${location.lon}`
+              `├── Koordinat  : ${location.lat}, ${location.lon}`,
+              `├── Maps       : https://www.google.com/maps?q=${location.lat},${location.lon}`
             );
           }
 
@@ -130,6 +136,7 @@ export default {
             lines.push(...simLines);
           }
 
+          lines.push(`│`, `└─ [STATUS: RECORD VERIFIED]`);
           return reply(lines.join("\n"));
         }
 
@@ -137,22 +144,21 @@ export default {
         const primary = records[0];
         const lines = [
           `*OSINT TOOLS*`,
-          ``,
-          `MSISDN: \`${primary.nohp || op.normalized}\``,
-          `Operator: ${op.operator} (${op.brand})`,
-          `Terhubung: ${records.length} data kependudukan`,
-          ``,
+          `├── MSISDN     : \`${primary.nohp || op.normalized}\``,
+          `├── Operator   : ${op.operator} (${op.brand})`,
+          `├── Terhubung  : ${records.length} data kependudukan`,
+          `│`,
         ];
 
         records.forEach((r, idx) => {
           const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           lines.push(
-            `${idx + 1}. *${r.nama}*`,
-            `   NIK: \`${r.nik || "-"}\``,
-            `   Gender: ${r.gender || "-"}`,
-            `   TTL: ${ttlFormatted}`,
-            `   Alamat: ${r.alamat || "-"}, ${r.kota_kab || "-"}`,
-            ``
+            `├── ${idx + 1}. ${r.nama}`,
+            `│   ├── NIK    : \`${r.nik || "-"}\``,
+            `│   ├── Gender : ${r.gender || "-"}`,
+            `│   ├── TTL    : ${ttlFormatted}`,
+            `│   └── Alamat : ${r.alamat || "-"}, ${r.kota_kab || "-"}`,
+            `│`
           );
         });
 
@@ -160,6 +166,7 @@ export default {
           lines.push(...simLines);
         }
 
+        lines.push(`└─ [STATUS: MULTI-RECORD MATCH]`);
         return reply(lines.join("\n"));
       }
 
@@ -167,13 +174,12 @@ export default {
       if (allSimcards.length > 0) {
         const lines = [
           `*OSINT TOOLS*`,
-          ``,
-          `MSISDN: \`${op.normalized}\``,
-          `Operator: ${op.operator} (${op.brand})`,
-          `Terdaftar: ${allSimcards.length} catatan simcard`,
+          `├── MSISDN     : \`${op.normalized}\``,
+          `├── Operator   : ${op.operator} (${op.brand})`,
+          `├── Terdaftar  : ${allSimcards.length} catatan simcard`,
           ...simLines,
-          ``,
-          `_Catatan: Profil kependudukan belum terindeks di database Dukcapil._`,
+          `│`,
+          `└─ [CATATAN: Profil kependudukan belum terdaftar di dukcapil]`,
         ];
         return reply(lines.join("\n"));
       }
@@ -181,18 +187,17 @@ export default {
       // KASUS 3: Nomor valid tapi tidak tercatat di DB manapun
       const lines = [
         `*OSINT TOOLS*`,
-        ``,
-        `MSISDN: \`${op.normalized}\``,
-        `Prefix: \`${op.prefix}*\``,
-        `Operator: ${op.operator}`,
-        `Kartu: ${op.brand}`,
-        ``,
-        `_Status: Belum terdaftar di database kependudukan & simcard._`,
+        `├── MSISDN     : \`${op.normalized}\``,
+        `├── Prefix     : \`${op.prefix}*\``,
+        `├── Operator   : ${op.operator}`,
+        `├── Kartu      : ${op.brand}`,
+        `│`,
+        `└─ [STATUS: BELUM TERDAFTAR DI DATABASE]`,
       ];
 
       return reply(lines.join("\n"));
     } catch (err) {
-      return reply(`*OSINT TOOLS*\nGagal cek operator: ${err?.message || err}`);
+      return reply(`Gagal cek operator: ${err?.message || err}`);
     }
   },
 };

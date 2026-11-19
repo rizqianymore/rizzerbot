@@ -38,17 +38,19 @@ export default {
       }
 
       const text =
-        `*OSINT TOOLS*\n\n` +
-        `Target: ${geo.query}\n` +
-        `Lokasi: ${geo.city}, ${geo.regionName}, ${geo.country} (${geo.countryCode})\n` +
-        `Koordinat: ${geo.lat}, ${geo.lon}\n` +
-        `Zona Waktu: ${geo.timezone}\n` +
-        `ISP: ${geo.isp}\n` +
-        `Organisasi: ${geo.org || "-"}\n` +
-        `ASN: ${geo.as || "-"}\n` +
-        `Tipe Jaringan: ${tipeJaringan}\n` +
-        `Proxy / VPN: ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
-        `Hosting / VPS: ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}`;
+        `*OSINT TOOLS*\n` +
+        `├── Target       : ${geo.query}\n` +
+        `├── Lokasi       : ${geo.city}, ${geo.regionName}, ${geo.country} (${geo.countryCode})\n` +
+        `├── Koordinat    : ${geo.lat}, ${geo.lon}\n` +
+        `├── Zona Waktu   : ${geo.timezone}\n` +
+        `├── ISP          : ${geo.isp}\n` +
+        `├── Organisasi   : ${geo.org || "-"}\n` +
+        `├── ASN          : ${geo.as || "-"}\n` +
+        `├── Tipe Jaringan: ${tipeJaringan}\n` +
+        `├── Proxy / VPN  : ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
+        `├── Hosting/VPS  : ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}\n` +
+        `│\n` +
+        `└─ [STATUS: RECON SUCCESS]`;
 
       await reply(text);
     } catch (err) {
