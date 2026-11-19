@@ -271,7 +271,7 @@ export function attachMessageHandler(sock) {
 
         enqueueMessage(sock, msg, logger);
       } catch (err) {
-        logger?.error?.("[Message Handler Error]", err?.message || err);
+        logger?.error?.(`[Message Handler Error] ${err?.stack || err?.message || err}`);
       }
     }
   });
