@@ -14,10 +14,10 @@ export default {
 
     if (!text || !/open\.spotify\.com\/track/i.test(text)) {
       return reply(
-        `*SPOTIFY DOWNLOADER*\n\n` +
-          `Masukkan link track Spotify yang valid.\n\n` +
-          `*Contoh:*\n` +
-          `\`${currentPrefix}spdl https://open.spotify.com/track/3RY0NyQQXxuAiyk5eAS4fC\``
+        `┌── SPOTIFY DOWNLOADER\n` +
+        `│ Format: ${currentPrefix}spdl <url track>\n` +
+        `└──\n\n` +
+        `Contoh: ${currentPrefix}spdl https://open.spotify.com/track/xxxx`
       );
     }
 

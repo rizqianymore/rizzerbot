@@ -23,10 +23,10 @@ export default {
 
     if (!input) {
       return reply(
-        `*INSTAGRAM DOWNLOADER*\n\n` +
-          `Masukkan link Instagram.\n` +
-          `Unduh semua: \`${currentPrefix}igdl <url>\`\n` +
-          `Pilih slide tertentu: \`${currentPrefix}igdl <url> 2\` atau \`${currentPrefix}igdl <url> 1,3\``
+        `┌── INSTAGRAM DOWNLOADER\n` +
+        `│ Format: ${currentPrefix}igdl <url> [nomor slide]\n` +
+        `└──\n\n` +
+        `Contoh: ${currentPrefix}igdl https://instagram.com/p/xxxx`
       );
     }
 

@@ -395,16 +395,21 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
 }
 
 export function buildCaption(platform, info) {
-  const lines = [`*${platform.toUpperCase()} DOWNLOADER*`];
-  if (info?.title) lines.push(`Judul: ${String(info.title).slice(0, 150)}`);
-  if (info?.uploader || info?.author || info?.channel) lines.push(`Author: ${info.uploader || info.author || info.channel}`);
+  let out = `┌── ${platform.toUpperCase()} DOWNLOADER\n`;
+  if (info?.title) out += `│ Judul: ${String(info.title).slice(0, 150)}\n`;
+  if (info?.uploader || info?.author || info?.channel) {
+    out += `│ Author: ${info.uploader || info.author || info.channel}\n`;
+  }
   if (info?.duration) {
     const d = Number(info.duration);
     if (Number.isFinite(d) && d > 0) {
       const m = Math.floor(d / 60);
       const s = Math.floor(d % 60);
-      lines.push(`Durasi: ${m}m ${s}s`);
-    } else if (info.duration) lines.push(`Durasi: ${info.duration}`);
+      out += `│ Durasi: ${m}m ${s}s\n`;
+    } else if (info.duration) {
+      out += `│ Durasi: ${info.duration}\n`;
+    }
   }
-  return lines.join("\n");
+  out += `└──`;
+  return out;
 }
