@@ -39,4 +39,74 @@ export function formatLinuxTree(title, items = [], footer = "") {
   return out.trim();
 }
 
-export default { formatLinuxBox, formatLinuxTree };
+/**
+ * Otomatis mendeteksi dan mengonversi format respons lama (*TITLE*, bullets •, dll)
+ * menjadi format kaku Terminal Linux (┌── │ └──) secara transparan.
+ */
+export function autoFormatToLinux(raw) {
+  if (typeof raw !== "string") return raw;
+  const text = raw.trim();
+
+  // Jika sudah terformat atau berupa raw code block, pertahankan aslinya
+  if (text.includes("┌──") || text.includes("├──")) return raw;
+  if (text.startsWith("```") && text.endsWith("```")) return raw;
+
+  const lines = text.split("\n");
+  if (lines.length < 2) return raw;
+
+  // Tangkap judul di baris pertama: misal *JUDUL* atau *JUDUL:*
+  const headerMatch = lines[0].match(/^\*([^*]+)\*[:\s]*$/);
+  if (!headerMatch) return raw;
+
+  const title = headerMatch[1].replace(/[:\-—]/g, "").trim();
+  const bodyLines = lines.slice(1);
+
+  const rows = [];
+  const footerLines = [];
+  let inFooter = false;
+
+  for (let i = 0; i < bodyLines.length; i++) {
+    const line = bodyLines[i].trim();
+    if (!line) {
+      if (rows.length > 0) inFooter = true;
+      continue;
+    }
+
+    if (
+      inFooter &&
+      (line.startsWith("Ketik") ||
+        line.startsWith("Contoh") ||
+        line.startsWith("Sumber") ||
+        line.startsWith("Catatan") ||
+        line.startsWith("Format") ||
+        line.startsWith("_") ||
+        line.startsWith("Hubungi"))
+    ) {
+      footerLines.push(line.replace(/^[_*]+|[_*]+$/g, ""));
+      continue;
+    }
+
+    let cleanLine = line.replace(/^[•\-\*]\s*/, "");
+    cleanLine = cleanLine.replace(/^\*([^*:]+)\*:\s*/, "$1: ");
+    cleanLine = cleanLine.replace(/^\*([^*:]+):\*\s*/, "$1: ");
+    cleanLine = cleanLine.replace(/`([^`]+)`/g, "$1");
+
+    rows.push(cleanLine);
+  }
+
+  if (rows.length === 0) return raw;
+
+  let out = `┌── ${title.toUpperCase()}\n`;
+  for (const r of rows) {
+    out += `│ ${r}\n`;
+  }
+  out += `└──`;
+
+  if (footerLines.length > 0) {
+    out += `\n\n` + footerLines.join("\n");
+  }
+
+  return out;
+}
+
+export default { formatLinuxBox, formatLinuxTree, autoFormatToLinux };

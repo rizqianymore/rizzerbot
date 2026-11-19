@@ -1,4 +1,5 @@
 import { db } from "@/src/core/database.js";
+import { autoFormatToLinux } from "@/src/utils/format.js";
 import { isGroupJid } from "./identity.js";
 import { getUniversalContextInfo, findPhoneJid } from "./message.js";
 import { getGroupAccessError } from "./group.js";
@@ -83,11 +84,12 @@ export async function executeCommand(sock, msg, logger, env) {
       Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
     },
     reply: async (text) => {
+      const formatted = typeof text === "string" ? autoFormatToLinux(text) : text;
       if (responseDelay > 0) {
         Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
         await delay(responseDelay);
       }
-      return sock.sendMessage(remoteJid, { text }, { quoted: msg }).catch((e) => {
+      return sock.sendMessage(remoteJid, { text: formatted }, { quoted: msg }).catch((e) => {
         logger?.warn?.(`[Reply Send Error] ${remoteJid}: ${e?.message || e}`);
       });
     },
