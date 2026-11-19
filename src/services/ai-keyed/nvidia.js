@@ -1,4 +1,4 @@
-import { postChatCompletions, buildMessages } from "./openai-compat.js";
+import { postChatCompletions, buildMessages } from "../ai/openai-compat.js";
 
 const BASE = "https://integrate.api.nvidia.com/v1";
 const FREE_MODELS = [

@@ -1,10 +1,17 @@
+/**
+ * Jembatan kompatibilitas: layanan ai-keyed lama tetap memakai signature lama,
+ * tapi transport-nya sekarang satu implementasi dengan gateway AI (util.js).
+ * timeouts opsional supaya pemanggil lama yang tidak mengirimnya tetap jalan.
+ */
+import { AI_TIMEOUT_MS, chatFetch, buildMessages, stripThink } from "./util.js";
+
 export async function postChatCompletions({
   baseUrl,
   apiKey,
   model,
   models = [],
   messages,
-  timeoutMs = 45000,
+  timeoutMs = AI_TIMEOUT_MS,
   extraBody = {},
   extraHeaders = {},
 }) {
@@ -12,40 +19,23 @@ export async function postChatCompletions({
   let lastErr = null;
   for (const m of [...new Set(chain)]) {
     try {
-      const res = await fetch(`${baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          ...extraHeaders,
-        },
-        body: JSON.stringify({ model: m, messages, ...extraBody }),
-        signal: AbortSignal.timeout(timeoutMs),
+      const r = await chatFetch({
+        url: `${baseUrl}/chat/completions`,
+        apiKey,
+        model: m,
+        messages,
+        extraBody,
+        extraHeaders,
+        timeoutMs,
       });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status}: ${t.slice(0, 150)}`);
-      }
-      const data = await res.json().catch(() => null);
-      const text = data?.choices?.[0]?.message?.content?.trim?.() || "";
-      if (!text) throw new Error("Respons kosong.");
-      return { text, model: m };
+      return { text: stripThink(r.text), model: m, usage: r.usage };
     } catch (err) {
       lastErr = err;
+      if (err?.code === "AUTH") break;
     }
   }
   throw lastErr || new Error("Semua model gagal.");
 }
 
-export function buildMessages(prompt, options = {}) {
-  return [
-    {
-      role: "system",
-      content:
-        options.system ||
-        "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.",
-    },
-    ...(Array.isArray(options.history) ? options.history : []),
-    { role: "user", content: String(prompt).trim() },
-  ];
-}
+export { buildMessages, AI_TIMEOUT_MS };
+export default postChatCompletions;

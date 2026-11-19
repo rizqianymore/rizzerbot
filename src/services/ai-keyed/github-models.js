@@ -1,4 +1,4 @@
-import { postChatCompletions, buildMessages } from "./openai-compat.js";
+import { postChatCompletions, buildMessages } from "../ai/openai-compat.js";
 
 const BASE = "https://models.inference.ai.azure.com";
 const FREE_MODELS = [

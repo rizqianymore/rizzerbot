@@ -1,4 +1,4 @@
-import { postChatCompletions, buildMessages } from "./openai-compat.js";
+import { postChatCompletions, buildMessages } from "../ai/openai-compat.js";
 
 const BASE = "https://api.cerebras.ai/v1";
 const FREE_MODELS = ["llama-3.3-70b", "llama3.1-8b"];

@@ -3,6 +3,7 @@ import { askDeepSeek, deepseekCapabilities, isDeepSeekConfigured } from "./deeps
 import { askOpenCode, opencodeCapabilities, OPENCODE_MODELS } from "./opencode.js";
 import { askPollinations, pollinationsCapabilities } from "./pollinations.js";
 import { askGroq, groqCapabilities, isGroqConfigured } from "../ai-keyed/groq.js";
+import { askOpenRouter, isOpenRouterConfigured } from "../ai-keyed/openrouter.js";
 import { askZen, ZEN_FREE } from "../ai-keyed/opencode-zen.js";
 import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } from "./aiscrape.js";
 
@@ -21,6 +22,7 @@ export const AI_SOURCES = {
   deepseek: { tier: 2, run: askDeepSeek, caps: deepseekCapabilities, label: "DeepSeek API" },
   groq: { tier: 2, run: askGroq, caps: groqCapabilities, label: "Groq API" },
   zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
+  openrouter: { tier: 2, run: askOpenRouter, caps: { history: true }, label: "OpenRouter Free" },
 };
 
 const ALIASES = {
@@ -55,6 +57,10 @@ const ALIASES = {
   groq: "groq",
   llama70b: "groq",
 
+  openrouter: "openrouter",
+  or: "openrouter",
+  router: "openrouter",
+
   auto: "auto",
   scrape: "auto",
   free: "auto",
@@ -79,6 +85,7 @@ function skipReason(name, tier) {
   if (tier === 3 && !SCRAPE_NODE_ENABLED) return "nonaktif (node scraping dimatikan)";
   if (name === "deepseek" && !isDeepSeekConfigured()) return "nonaktif (butuh DEEPSEEK_API_KEY)";
   if (name === "groq" && !isGroqConfigured()) return "nonaktif (butuh GROQ_API_KEY)";
+  if (name === "openrouter" && !isOpenRouterConfigured()) return "nonaktif (butuh OPENROUTER_API_KEY)";
   return null;
 }
 
