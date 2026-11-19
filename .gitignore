@@ -29,6 +29,7 @@ plat-nomor.csv
 *.sqlite
 *.sqlite3
 database/*.db
+statuses
 
 # Environment Variables & Secrets
 .env
