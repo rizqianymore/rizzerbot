@@ -64,14 +64,14 @@ export default {
 
       let text = `*OSINT TOOLS - KODE POS INDONESIA*
 `;
-      text += `├─ Kueri        : ${input}
+      text += `└─ Kueri        : ${input}
 `;
-      text += `├─ Ditemukan    : ${results.length} Wilayah
+      text += `└─ Ditemukan    : ${results.length} Wilayah
 `;
       text += `│
 `;
       results.slice(0, 5).forEach((item, idx) => {
-        text += `├─ [${idx + 1}] Kode Pos : ${item.postalcode || item.kodepos || "-"}
+        text += `└─ [${idx + 1}] Kode Pos : ${item.postalcode || item.kodepos || "-"}
 `;
         text += `│   Wilayah  : ${item.urban || item.kelurahan || "-"}, ${item.subdistrict || item.kecamatan || "-"}
 `;
@@ -84,7 +84,6 @@ export default {
       });
       text += `│
 `;
-      text += `└─ [STATUS: KODE POS FOUND]`;
       return reply(text);
     } catch (err) {
       return reply(`Terjadi kesalahan saat mencari kode pos: ${err.message}`);

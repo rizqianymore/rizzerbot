@@ -39,11 +39,11 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location, simcards = 
     `├─ NIK        : ${record.nik}`,
     `├─ Nama       : ${record.nama || "-"}`,
     `├─ Gender     : ${record.gender || "-"}`,
-    `├─ TTL        : ${ttlFormatted}`,
+    `└─ TTL        : ${ttlFormatted}`,
   ];
 
   if (nikInfo?.zodiac) {
-    lines.push(`├─ Zodiak     : ${nikInfo.zodiac} (${nikInfo.generation || "-"})`);
+    lines.push(`└─ Zodiak     : ${nikInfo.zodiac} (${nikInfo.generation || "-"})`);
   }
 
   const phoneStr = record.nohp
@@ -54,26 +54,26 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location, simcards = 
     `├─ Alamat     : ${record.alamat || "-"}`,
     `├─ Kelurahan  : ${record.kelurahan || "-"}`,
     `├─ Kecamatan  : ${record.kecamatan || "-"}`,
-    `├─ Kota/Kab   : ${record.kota_kab || "-"}`
+    `└─ Kota/Kab   : ${record.kota_kab || "-"}`
   );
 
   if (nikInfo && (nikInfo.province || nikInfo.city || nikInfo.district)) {
     const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
-    lines.push(`├─ Wilayah KTP: ${origin}`);
+    lines.push(`└─ Wilayah KTP: ${origin}`);
   }
 
   if (location?.lat && location?.lon) {
     lines.push(
       `├─ Koordinat  : ${location.lat}, ${location.lon}`,
-      `├─ Maps       : https://www.google.com/maps?q=${location.lat},${location.lon}`
+      `└─ Maps       : https://www.google.com/maps?q=${location.lat},${location.lon}`
     );
   }
 
   if (Array.isArray(simcards) && simcards.length > 0) {
-    lines.push(`│`, `├─ [SIMCARD TERDAFTAR]`);
+    lines.push(`│`, `└─ [SIMCARD TERDAFTAR]`);
     simcards.forEach((s, idx) => {
       const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-      lines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
+      lines.push(`└─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
     });
   }
 
@@ -85,7 +85,7 @@ function formatNameResults(records, query, prefix = ".") {
   const lines = [
     `*OSINT TOOLS*`,
     `├─ Query      : "${query}"`,
-    `├─ Ditemukan  : ${records.length} data`,
+    `└─ Ditemukan  : ${records.length} data`,
     `│`,
   ];
 
@@ -93,13 +93,13 @@ function formatNameResults(records, query, prefix = ".") {
     lines.push(
       `├─ ${idx + 1}. ${rec.nama}`,
       `│   ├─ NIK    : ${rec.nik}`,
-      `│   ├─ No. HP : ${rec.nohp || "-"}`,
+      `│   └─ No. HP : ${rec.nohp || "-"}`,
       `│   └─ Lokasi : ${rec.kelurahan || "-"}, ${rec.kota_kab || "-"}`,
       `│`
     );
   });
 
-  lines.push(`└─ Gunakan ${prefix}cekdukcapil <NIK> untuk melihat profil lengkap`);
+  lines.push(`Gunakan ${prefix}cekdukcapil <NIK> untuk melihat profil lengkap`);
   return lines.join("\n");
 }
 
@@ -108,7 +108,7 @@ function formatPhoneMultiRecords(records, operatorInfo, rawQuery, simcards = [])
     `*OSINT TOOLS*`,
     `├─ MSISDN     : ${rawQuery}`,
     operatorInfo ? `├─ Operator   : ${operatorInfo.operator} (${operatorInfo.brand})` : null,
-    `├─ Terhubung  : ${records.length} data kependudukan`,
+    `└─ Terhubung  : ${records.length} data kependudukan`,
     `│`,
   ].filter(Boolean);
 
@@ -118,17 +118,17 @@ function formatPhoneMultiRecords(records, operatorInfo, rawQuery, simcards = [])
       `├─ ${idx + 1}. ${rec.nama}`,
       `│   ├─ NIK    : ${rec.nik}`,
       `│   ├─ Gender : ${rec.gender || "-"}`,
-      `│   ├─ TTL    : ${ttlFormatted}`,
+      `│   └─ TTL    : ${ttlFormatted}`,
       `│   └─ Alamat : ${rec.alamat || "-"}, ${rec.kota_kab || "-"}`,
       `│`
     );
   });
 
   if (Array.isArray(simcards) && simcards.length > 0) {
-    lines.push(`├─ [SIMCARD TERDAFTAR]`);
+    lines.push(`└─ [SIMCARD TERDAFTAR]`);
     simcards.forEach((s, idx) => {
       const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-      lines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
+      lines.push(`└─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
     });
     lines.push(`│`);
   }
@@ -154,12 +154,12 @@ export default {
           `├─ Format Perintah:\n` +
           `├─ • ${currentPrefix}cekdukcapil <NIK 16 digit>\n` +
           `├─ • ${currentPrefix}cekdukcapil <No. HP>\n` +
-          `├─ • ${currentPrefix}cekdukcapil <Nama Penduduk>\n` +
+          `└─ • ${currentPrefix}cekdukcapil <Nama Penduduk>\n` +
           `│\n` +
           `├─ Contoh:\n` +
           `├─ • ${currentPrefix}cekdukcapil 3171072604880003\n` +
           `├─ • ${currentPrefix}cekdukcapil 081310321726\n` +
-          `├─ • ${currentPrefix}cekdukcapil PARILAH\n` +
+          `└─ • ${currentPrefix}cekdukcapil PARILAH\n` +
           `│\n` +
           `└─ [STATUS: READY]`
       );
@@ -168,7 +168,7 @@ export default {
     if (!isDukcapilReady()) {
       return reply(
         `*OSINT TOOLS*\n` +
-          `├─ Status: Database tidak tersedia\n` +
+          `└─ Status: Database tidak tersedia\n` +
           `└─ Periksa file database kependudukan`
       );
     }
@@ -204,14 +204,14 @@ export default {
             `├─ TTL        : ${ttlFormatted}`,
             `├─ Zodiak     : ${nikInfo.zodiac} (${nikInfo.generation})`,
             `├─ Wilayah KTP: ${origin || "-"}`,
-            `├─ No. Urut   : ${nikInfo.sequence}`,
+            `└─ No. Urut   : ${nikInfo.sequence}`,
           ];
 
           if (Array.isArray(simcards) && simcards.length > 0) {
-            fallbackLines.push(`│`, `├─ [SIMCARD TERDAFTAR]`);
+            fallbackLines.push(`│`, `└─ [SIMCARD TERDAFTAR]`);
             simcards.forEach((s, idx) => {
               const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-              fallbackLines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
+              fallbackLines.push(`└─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
             });
           }
 
@@ -226,7 +226,7 @@ export default {
 
         return reply(
           `*OSINT TOOLS*\n` +
-            `├─ NIK    : ${rawQuery}\n` +
+            `└─ NIK    : ${rawQuery}\n` +
             `└─ Status : Data tidak ditemukan`
         );
       }
@@ -239,22 +239,22 @@ export default {
           const lines = [
             `*OSINT TOOLS*`,
             `├─ MSISDN     : ${rawQuery}`,
-            operatorInfo ? `├─ Operator   : ${operatorInfo.operator} (${operatorInfo.brand})` : null,
+            operatorInfo ? `└─ Operator   : ${operatorInfo.operator} (${operatorInfo.brand})` : null,
           ].filter(Boolean);
 
           if (Array.isArray(simcards) && simcards.length > 0) {
-            lines.push(`│`, `├─ [SIMCARD TERDAFTAR]`);
+            lines.push(`│`, `└─ [SIMCARD TERDAFTAR]`);
             simcards.forEach((s, idx) => {
               const regDate = s.date ? String(s.date).split(" ")[0] : "-";
               lines.push(
                 `├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"})`,
-                `│   ├─ NIK Terdaftar : ${s.nik || "-"}`,
+                `│   └─ NIK Terdaftar : ${s.nik || "-"}`,
                 `│   └─ Tgl Registrasi: ${regDate}`
               );
             });
           }
 
-          lines.push(`│`, `└─ Status Dukcapil: Tidak ditemukan di database`);
+          lines.push(`└─ Status Dukcapil: Tidak ditemukan di database`);
           return reply(lines.join("\n"));
         }
 
@@ -276,7 +276,7 @@ export default {
       if (records.length === 0) {
         return reply(
           `*OSINT TOOLS*\n` +
-            `├─ Nama   : "${rawQuery}"\n` +
+            `└─ Nama   : "${rawQuery}"\n` +
             `└─ Status : Data tidak ditemukan`
         );
       }

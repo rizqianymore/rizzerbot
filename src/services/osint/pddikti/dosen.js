@@ -64,29 +64,16 @@ export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
 }
 
 export function formatDosenDetail(d, nidn) {
-  let text = `*OSINT TOOLS - DATA DOSEN PDDIKTI*
-`;
-  text += `├─ Nama       : ${d.nama || "-"}
-`;
-  text += `├─ NIDN / NUP : ${nidn || d.nidn || "-"}
-`;
-  text += `├─ Perguruan Tinggi: ${d.nama_pt || "-"}
-`;
-  text += `├─ Program Studi   : ${d.nama_prodi || "-"}
-`;
-  text += `├─ Jenis Kelamin   : ${d.jk || "-"}
-`;
-  text += `├─ Jabatan Fungsional: ${d.jabatan_fungsional || "-"}
-`;
-  text += `├─ Pendidikan Tertinggi: ${d.pendidikan_tertinggi || "-"}
-`;
-  text += `├─ Status Ikatan Kerja: ${d.status_ikatan_kerja || "-"}
-`;
-  text += `├─ Status Aktivitas: ${d.status_aktivitas || "-"}
-`;
-  text += `│
-`;
-  text += `└─ [STATUS: PDDIKTI FOUND]`;
+  let text = `*OSINT TOOLS - DATA DOSEN PDDIKTI*\n`;
+  text += `├─ Nama                : ${d.nama || "-"}\n`;
+  text += `├─ NIDN / NUP          : ${nidn || d.nidn || "-"}\n`;
+  text += `├─ Perguruan Tinggi    : ${d.nama_pt || "-"}\n`;
+  text += `├─ Program Studi       : ${d.nama_prodi || "-"}\n`;
+  text += `├─ Jenis Kelamin       : ${d.jk || "-"}\n`;
+  text += `├─ Jabatan Fungsional  : ${d.jabatan_fungsional || "-"}\n`;
+  text += `├─ Pendidikan Tertinggi: ${d.pendidikan_tertinggi || "-"}\n`;
+  text += `├─ Status Ikatan Kerja : ${d.status_ikatan_kerja || "-"}\n`;
+  text += `└─ Status Aktivitas    : ${d.status_aktivitas || "-"}`;
   return text;
 }
 

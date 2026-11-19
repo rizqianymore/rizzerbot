@@ -51,13 +51,11 @@ export default {
 
     let text = `*OSINT TOOLS - HTTP SECURITY HEADERS*\n`;
     text += `├─ Target URL   : ${url}\n`;
-    text += `├─ Grade / Skor : Grade ${grade} (${score}/${checks.length})\n`;
+    text += `└─ Grade / Skor : Grade ${grade} (${score}/${checks.length})\n`;
     text += `│\n`;
     for (const c of checks) {
-      text += `├─ ${c.label.padEnd(22)}: ${c.good ? "AMAN (Dikonfigurasi)" : "TIDAK DITEMUKAN"}\n`;
+      text += `└─ ${c.label.padEnd(22)}: ${c.good ? "AMAN (Dikonfigurasi)" : "TIDAK DITEMUKAN"}\n`;
     }
-    text += `│\n`;
-    text += `└─ [STATUS: HEADER AUDIT SUCCESS]`;
     return reply(text);
   },
 };

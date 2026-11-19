@@ -48,9 +48,7 @@ export default {
         `├─ ASN          : ${geo.as || "-"}\n` +
         `├─ Tipe Jaringan: ${tipeJaringan}\n` +
         `├─ Proxy / VPN  : ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
-        `├─ Hosting/VPS  : ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}\n` +
-        `│\n` +
-        `└─ [STATUS: RECON SUCCESS]`;
+        `└─ Hosting/VPS  : ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}`;
 
       await reply(text);
     } catch (err) {

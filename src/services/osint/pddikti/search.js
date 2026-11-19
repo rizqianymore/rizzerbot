@@ -1,9 +1,12 @@
 import { stealthBrowser } from "@/src/utils/request.js";
-import { brightDataRequest, getBrightDataConfig } from "@/src/services/network/brightdata.js";
-import { BASE, UA, SEARCH_TTL_MS, searchCache, cacheGet, cacheSet, fetchWithTimeout } from "./constants.js";
-import { getRecaptchaToken } from "./token.js";
+import { SEARCH_TTL_MS, searchCache, cacheGet, cacheSet, BASE } from "./constants.js";
 
-export async function searchPddikti(keyword, { retries = 2 } = {}) {
+/**
+ * PDDikti Search Engine
+ * Mengambil data PT, Mahasiswa, Dosen, dan Prodi langsung melalui
+ * in-browser session rendering dengan intercept request reCAPTCHA otomatis.
+ */
+export async function searchPddikti(keyword, { timeoutMs = 35000 } = {}) {
   const kw = String(keyword ?? "").trim();
   if (!kw) throw new Error("keyword wajib diisi");
   if (kw.length > 100) throw new Error("keyword terlalu panjang (maks 100 karakter)");
@@ -11,141 +14,45 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
   const cached = cacheGet(searchCache, kw.toLowerCase());
   if (cached) return cached;
 
-  const { apiKey } = getBrightDataConfig();
-  const searchUrl = `${BASE}/api/pencarian/enc/all/${encodeURIComponent(kw)}`;
+  const page = await stealthBrowser.newPage();
+  let searchResult = null;
+  let pageErr = null;
 
-  let lastErr = null;
-  let brightDataTried = false;
-
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    let data = null;
-    try {
-      const token = await getRecaptchaToken();
-
+  const onResponse = async (res) => {
+    const url = res.url();
+    if (url.includes("api-pddikti") && url.includes("pencarian")) {
       try {
-        const res = await fetchWithTimeout(searchUrl, {
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-            Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-            "User-Agent": UA,
-          },
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.status === "success") {
-            data = json.data || {};
-          }
+        const json = await res.json();
+        if (json?.status === "success" && json.data) {
+          searchResult = json.data;
         }
-      } catch (fetchErr) {
-        lastErr = fetchErr;
-      }
-
-      if (!data && apiKey && !brightDataTried) {
-        brightDataTried = true;
-        try {
-          const bdRes = await brightDataRequest(searchUrl, {
-            format: "json",
-            method: "GET",
-            headers: {
-              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-              "User-Agent": UA,
-            },
-            timeout: 25000,
-          });
-          if (bdRes?.status === "success") {
-            data = bdRes.data || {};
-          }
-        } catch (_) {}
-      }
-
-      if (!data) {
-        try {
-          const inPageRes = await stealthBrowser.inPageFetch(searchUrl, {
-            method: "GET",
-            headers: {
-              Accept: "application/json, text/plain, */*",
-              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-              "User-Agent": UA,
-            },
-          });
-          if (inPageRes?.status === "success") {
-            data = inPageRes.data || {};
-          }
-        } catch (inPageErr) {
-          lastErr = inPageErr;
-        }
-      }
-
-      if (data) {
-        cacheSet(searchCache, kw.toLowerCase(), data, SEARCH_TTL_MS);
-        return data;
-      }
-
-      if (/timeout|ECONNRESET|ETIMEDOUT|ECONNABORTED/.test(String(lastErr?.message || "")) && attempt < retries) {
-        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
-        continue;
-      }
-
-      if (
-        /403|token|recaptcha/i.test(String(lastErr?.message || "")) &&
-        attempt < retries &&
-        apiKey &&
-        !brightDataTried
-      ) {
-        brightDataTried = true;
-        try {
-          const bdRes = await brightDataRequest(searchUrl, {
-            format: "json",
-            method: "GET",
-            headers: {
-              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-              "x-recaptcha-token": token,
-              "User-Agent": UA,
-            },
-            timeout: 25000,
-          });
-          if (bdRes?.status === "success") {
-            data = bdRes.data || {};
-          }
-        } catch (_) {}
-      }
-
-      if (data) {
-        cacheSet(searchCache, kw.toLowerCase(), data, SEARCH_TTL_MS);
-        return data;
-      }
-
-      if (attempt < retries) {
-        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
-      }
-    } catch (err) {
-      lastErr = err;
-
-      if (
-        /ECONN|ENOTFOUND|ETIMEDOUT|network|NETWORK/i.test(err.message || "") &&
-        attempt < retries &&
-        apiKey &&
-        !brightDataTried
-      ) {
-        brightDataTried = true;
-        try {
-          const bdRes = await brightDataRequest(searchUrl, {
-            format: "json",
-            method: "GET",
-            headers: {
-              Referer: `${BASE}/search/${encodeURIComponent(kw)}`,
-              "User-Agent": UA,
-            },
-            timeout: 25000,
-          });
-          if (bdRes?.status === "success") {
-            data = bdRes.data || {};
-          }
-        } catch (_) {}
-      }
+      } catch (_) {}
     }
-  }
+  };
 
-  throw lastErr;
+  page.on("response", onResponse);
+
+  try {
+    const targetUrl = `${BASE}/search/${encodeURIComponent(kw)}`;
+    await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: timeoutMs });
+
+    // Tunggu jika response belum sempat ditangkap
+    const startTime = Date.now();
+    while (!searchResult && Date.now() - startTime < 8000) {
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
+    if (searchResult) {
+      cacheSet(searchCache, kw.toLowerCase(), searchResult, SEARCH_TTL_MS);
+      return searchResult;
+    }
+
+    throw new Error("Tidak menerima data dari PDDikti (timeout/kosong).");
+  } catch (err) {
+    pageErr = err;
+    throw pageErr;
+  } finally {
+    page.off("response", onResponse);
+    await stealthBrowser.closePage(page).catch(() => {});
+  }
 }

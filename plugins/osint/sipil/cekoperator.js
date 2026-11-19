@@ -23,11 +23,11 @@ export default {
       return reply(
         `*OSINT TOOLS*\n` +
           `├─ Penggunaan : ${currentPrefix}cekoperator <nomor HP>\n` +
-          `├─ Format     : 08xx / 628xx / +628xx\n` +
+          `└─ Format     : 08xx / 628xx / +628xx\n` +
           `│\n` +
           `├─ Contoh:\n` +
           `├─ • ${currentPrefix}cekoperator 081310321726\n` +
-          `├─ • ${currentPrefix}cekoperator 081293269631\n` +
+          `└─ • ${currentPrefix}cekoperator 081293269631\n` +
           `│\n` +
           `└─ [STATUS: READY]`
       );
@@ -40,7 +40,7 @@ export default {
       if (!op.valid) {
         return reply(
           `*OSINT TOOLS*\n` +
-            `├─ MSISDN : ${input}\n` +
+            `└─ MSISDN : ${input}\n` +
             `└─ Error  : ${op.reason || "Format nomor HP tidak valid"}`
         );
       }
@@ -83,12 +83,12 @@ export default {
       // FORMAT SIMCARD DETAILS JIKA ADA
       const simLines = [];
       if (allSimcards.length > 0) {
-        simLines.push(`│`, `├─ [REGISTRASI SIMCARD]`);
+        simLines.push(`│`, `└─ [REGISTRASI SIMCARD]`);
         allSimcards.forEach((s, idx) => {
           const regDate = s.date ? String(s.date).split(" ")[0] : "-";
           simLines.push(
             `├─ Kartu ${idx + 1}    : ${s.provider || op.operator}`,
-            `│   ├─ NIK    : ${s.nik || "-"}`,
+            `│   └─ NIK    : ${s.nik || "-"}`,
             `│   └─ Tgl Reg: ${regDate}`
           );
         });
@@ -106,29 +106,29 @@ export default {
             `├─ NIK        : ${r.nik || "-"}`,
             `├─ Nama       : ${r.nama || "-"}`,
             `├─ Gender     : ${r.gender || "-"}`,
-            `├─ TTL        : ${ttlFormatted}`,
+            `└─ TTL        : ${ttlFormatted}`,
           ];
 
           if (r.nikInfo?.zodiac) {
-            lines.push(`├─ Zodiak     : ${r.nikInfo.zodiac} (${r.nikInfo.generation || "-"})`);
+            lines.push(`└─ Zodiak     : ${r.nikInfo.zodiac} (${r.nikInfo.generation || "-"})`);
           }
 
           lines.push(
             `├─ Alamat     : ${r.alamat || "-"}`,
             `├─ Kelurahan  : ${r.kelurahan || "-"}`,
             `├─ Kecamatan  : ${r.kecamatan || "-"}`,
-            `├─ Kota/Kab   : ${r.kota_kab || "-"}`
+            `└─ Kota/Kab   : ${r.kota_kab || "-"}`
           );
 
           if (r.nikInfo && (r.nikInfo.province || r.nikInfo.city || r.nikInfo.district)) {
             const origin = [r.nikInfo.province, r.nikInfo.city, r.nikInfo.district].filter(Boolean).join(", ");
-            lines.push(`├─ Wilayah KTP: ${origin}`);
+            lines.push(`└─ Wilayah KTP: ${origin}`);
           }
 
           if (location?.lat && location?.lon) {
             lines.push(
               `├─ Koordinat  : ${location.lat}, ${location.lon}`,
-              `├─ Maps       : https://www.google.com/maps?q=${location.lat},${location.lon}`
+              `└─ Maps       : https://www.google.com/maps?q=${location.lat},${location.lon}`
             );
           }
 
@@ -146,7 +146,7 @@ export default {
           `*OSINT TOOLS*`,
           `├─ MSISDN     : ${primary.nohp || op.normalized}`,
           `├─ Operator   : ${op.operator} (${op.brand})`,
-          `├─ Terhubung  : ${records.length} data kependudukan`,
+          `└─ Terhubung  : ${records.length} data kependudukan`,
           `│`,
         ];
 
@@ -156,7 +156,7 @@ export default {
             `├─ ${idx + 1}. ${r.nama}`,
             `│   ├─ NIK    : ${r.nik || "-"}`,
             `│   ├─ Gender : ${r.gender || "-"}`,
-            `│   ├─ TTL    : ${ttlFormatted}`,
+            `│   └─ TTL    : ${ttlFormatted}`,
             `│   └─ Alamat : ${r.alamat || "-"}, ${r.kota_kab || "-"}`,
             `│`
           );
@@ -176,7 +176,7 @@ export default {
           `*OSINT TOOLS*`,
           `├─ MSISDN     : ${op.normalized}`,
           `├─ Operator   : ${op.operator} (${op.brand})`,
-          `├─ Terdaftar  : ${allSimcards.length} catatan simcard`,
+          `└─ Terdaftar  : ${allSimcards.length} catatan simcard`,
           ...simLines,
           `│`,
           `└─ [CATATAN: Profil kependudukan belum terdaftar di dukcapil]`,
@@ -190,7 +190,7 @@ export default {
         `├─ MSISDN     : ${op.normalized}`,
         `├─ Prefix     : ${op.prefix}*`,
         `├─ Operator   : ${op.operator}`,
-        `├─ Kartu      : ${op.brand}`,
+        `└─ Kartu      : ${op.brand}`,
         `│`,
         `└─ [STATUS: BELUM TERDAFTAR DI DATABASE]`,
       ];

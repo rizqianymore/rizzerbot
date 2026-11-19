@@ -59,19 +59,18 @@ export default {
 
       let text = `*OSINT TOOLS - HTTP RECONNAISSANCE*
 `;
-      text += `├─ Target URL   : ${targetUrl}
+      text += `└─ Target URL   : ${targetUrl}
 `;
-      text += `├─ Status Code  : ${res.status} ${res.statusText}
+      text += `└─ Status Code  : ${res.status} ${res.statusText}
 `;
-      text += `├─ Server       : ${res.headers.get("server") || "-"}
+      text += `└─ Server       : ${res.headers.get("server") || "-"}
 `;
-      text += `├─ Content-Type : ${res.headers.get("content-type") || "-"}
+      text += `└─ Content-Type : ${res.headers.get("content-type") || "-"}
 `;
-      text += `├─ Response Time: ${responseTime} ms
+      text += `└─ Response Time: ${responseTime} ms
 `;
       text += `│
 `;
-      text += `└─ [STATUS: HTTP PROBE SUCCESS]`;
       return reply(text);
     } catch (err) {
       if (err.name === "AbortError") {

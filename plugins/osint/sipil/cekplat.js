@@ -38,12 +38,12 @@ export default {
 
         let text = `*DATA KENDARAAN (NIK)*\n`;
         text += `├─ NIK        : ${cleanInput}\n`;
-        text += `├─ Total      : ${list.length} Kendaraan\n`;
+        text += `└─ Total      : ${list.length} Kendaraan\n`;
         text += `│\n`;
 
         list.forEach((item, idx) => {
           const isLast = idx === list.length - 1;
-          text += `├─ [${idx + 1}] Plat    : ${item.number}\n`;
+          text += `└─ [${idx + 1}] Plat    : ${item.number}\n`;
           text += `│   Pemilik : ${item.name || "-"}\n`;
           text += `│   Tipe    : ${[item.brand, item.type].filter(Boolean).join(" ") || "-"}\n`;
           text += `│   Rangka  : ${item.vin || "-"}\n`;
@@ -52,9 +52,6 @@ export default {
           if (item.address) text += `│   Alamat  : ${item.address}\n`;
           if (!isLast) text += `│\n`;
         });
-
-        text += `│\n`;
-        text += `└─ [QUERY: ${latency} ms]`;
         return reply(text.trim());
       }
 
@@ -72,9 +69,7 @@ export default {
           text += `├─ Rangka     : ${data.vin || "-"}\n`;
           text += `├─ Mesin      : ${data.engine || "-"}\n`;
           text += `├─ BPKB       : ${data.bpkb || "-"}\n`;
-          text += `├─ Warna/Thn  : ${data.color || "-"} / ${data.year || "-"}\n`;
-          text += `│\n`;
-          text += `└─ [QUERY: ${latency} ms]`;
+          text += `└─ Warna/Thn  : ${data.color || "-"} / ${data.year || "-"}\n`;
 
           return reply(text);
         }

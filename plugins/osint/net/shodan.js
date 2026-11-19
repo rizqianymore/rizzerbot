@@ -51,9 +51,7 @@ export default {
         `├─ IP         : ${res.ip}\n` +
         `├─ Port       : ${ports}\n` +
         `├─ Tags       : ${tags}\n` +
-        `├─ Kerentanan : ${vulns}\n` +
-        `│\n` +
-        `└─ [STATUS: SHODAN SCAN SUCCESS]`;
+        `└─ Kerentanan : ${vulns}`;
 
       return context.reply(out);
     } catch (err) {

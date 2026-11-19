@@ -200,9 +200,7 @@ export function formatNikInfo(p) {
   text += `├─ Provinsi   : ${p.province}\n`;
   text += `├─ Kota/Kab   : ${p.city || p.cityCode}\n`;
   text += `├─ Kecamatan  : ${p.district || p.districtCode}\n`;
-  text += `├─ Nomor Urut : ${p.sequence}\n`;
-  text += `│\n`;
-  text += `└─ [STATUS: VALID NIK]`;
+  text += `└─ Nomor Urut : ${p.sequence}\n`;
   return text;
 }
 

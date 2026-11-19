@@ -159,29 +159,16 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
 }
 
 export function formatMhsDetail(d) {
-  let text = `*OSINT TOOLS - DATA MAHASISWA PDDIKTI*
-`;
-  text += `├─ Nama       : ${d.nama || "-"}
-`;
-  text += `├─ NIM        : ${d.nim || "-"}
-`;
-  text += `├─ Perguruan Tinggi: ${d.nama_pt || "-"}
-`;
-  text += `├─ Program Studi   : ${d.nama_prodi || "-"}
-`;
-  text += `├─ Jenjang    : ${d.jenjang || "-"}
-`;
-  text += `├─ Jenis Daftar: ${d.jenis_daftar || "-"}
-`;
-  text += `├─ Status Awal: ${d.status_awal || "-"}
-`;
-  text += `├─ Status Saat Ini: ${d.status_saat_ini || "-"}
-`;
-  text += `├─ Tahun Masuk: ${d.tahun_masuk || "-"}
-`;
-  text += `│
-`;
-  text += `└─ [STATUS: PDDIKTI FOUND]`;
+  let text = `*OSINT TOOLS - DATA MAHASISWA PDDIKTI*\n`;
+  text += `├─ Nama            : ${d.nama || "-"}\n`;
+  text += `├─ NIM             : ${d.nim || "-"}\n`;
+  text += `├─ Perguruan Tinggi: ${d.nama_pt || "-"}\n`;
+  text += `├─ Program Studi   : ${d.nama_prodi || "-"}\n`;
+  text += `├─ Jenjang         : ${d.jenjang || "-"}\n`;
+  text += `├─ Jenis Daftar    : ${d.jenis_daftar || "-"}\n`;
+  text += `├─ Status Awal     : ${d.status_awal || "-"}\n`;
+  text += `├─ Status Saat Ini : ${d.status_saat_ini || "-"}\n`;
+  text += `└─ Tahun Masuk     : ${d.tahun_masuk || "-"}`;
   return text;
 }
 

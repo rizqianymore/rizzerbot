@@ -1,4 +1,5 @@
 export const BASE = "https://pddikti.kemdiktisaintek.go.id";
+export const API_BASE = "https://api-pddikti.kemdiktisaintek.go.id";
 export const SITEKEY = "6LdqjDstAAAAAMW1whjCNKyvqmPBOIssWETjbLbh";
 
 export const UA =

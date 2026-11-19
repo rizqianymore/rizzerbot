@@ -223,6 +223,13 @@ export function attachMessageHandler(sock) {
             continue;
         }
 
+        // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
+        // Pesan yang gagal didekripsi oleh libsignal muncul HANYA sebagai CIPHERTEXT stub (stubType 2).
+        // PENTING: Jangan masukkan stubType 1 (REVOKE) atau stubType 3 (FUTUREPROOF) ke failure recovery.
+        const stubType = Number(msg.messageStubType) || 0;
+        const stubStr = String(msg.messageStubType || "").toLowerCase();
+        const isDecryptionFailure = stubType === 2 || stubStr === "ciphertext";
+
         const preview =
           msg.message?.conversation ||
           msg.message?.extendedTextMessage?.text ||
@@ -239,13 +246,6 @@ export function attachMessageHandler(sock) {
             sock.readMessages([msg.key]).catch(() => {});
           }
         } catch (_) {}
-
-        // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
-        // Pesan yang gagal didekripsi oleh libsignal muncul HANYA sebagai CIPHERTEXT stub (stubType 2).
-        // PENTING: Jangan masukkan stubType 1 (REVOKE) atau stubType 3 (FUTUREPROOF) ke failure recovery.
-        const stubType = Number(msg.messageStubType) || 0;
-        const stubStr = String(msg.messageStubType || "").toLowerCase();
-        const isDecryptionFailure = stubType === 2 || stubStr === "ciphertext";
 
         if (isDecryptionFailure) {
           const senderJid = msg.key.participant || msg.key.remoteJid;

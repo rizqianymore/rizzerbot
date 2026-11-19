@@ -32,8 +32,7 @@ export default {
         `├─ Diperbarui : ${info.updatedDate}\n` +
         `├─ Kedaluwarsa: ${info.expiryDate}\n`;
       if (info.abuseEmail !== "-") text += `├─ Abuse Email: ${info.abuseEmail}\n`;
-      if (info.registrarWhois !== "-") text += `├─ Whois Server: ${info.registrarWhois}\n`;
-      text += `│\n└─ [STATUS: WHOIS SUCCESS]`;
+      if (info.registrarWhois !== "-") text += `└─ Whois Server: ${info.registrarWhois}\n`;
 
       await reply(text.trim());
     } catch (err) {

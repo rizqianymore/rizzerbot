@@ -107,21 +107,20 @@ export default {
 
     let text = `*OSINT TOOLS - EMAIL ANALYZER*
 `;
-      text += `├─ Email Target : ${email}
+      text += `└─ Email Target : ${email}
 `;
-      text += `├─ Domain       : ${domain}
+      text += `└─ Domain       : ${domain}
 `;
-      text += `├─ Format Sintaks: ${isValidSyntax ? "VALID" : "INVALID"}
+      text += `└─ Format Sintaks: ${isValidSyntax ? "VALID" : "INVALID"}
 `;
-      text += `├─ Disposable   : ${isDisposable ? "YA (Email Sementara)" : "BUKAN (Email Normal)"}
+      text += `└─ Disposable   : ${isDisposable ? "YA (Email Sementara)" : "BUKAN (Email Normal)"}
 `;
-      text += `├─ Domain MX Aktif: ${hasMx ? "AKTIF (Bisa Terima Email)" : "TIDAK AKTIF"}
+      text += `└─ Domain MX Aktif: ${hasMx ? "AKTIF (Bisa Terima Email)" : "TIDAK AKTIF"}
 `;
-      text += `├─ Provider     : ${detectedProvider}
+      text += `└─ Provider     : ${detectedProvider}
 `;
       text += `│
 `;
-      text += `└─ [STATUS: EMAIL RECON SUCCESS]`;
       return reply(text);
   },
 };
