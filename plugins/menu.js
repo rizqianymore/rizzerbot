@@ -107,14 +107,15 @@ export default {
             : "-";
 
         const detailText =
-          `*PANDUAN PERINTAH: ${prefix}${targetCmd.name}*\n\n` +
-          `Kategori: ${targetCmd.category || "General"}\n` +
-          `Deskripsi: ${targetCmd.description || "Tidak ada deskripsi."}\n` +
-          `Format: *${usage.trim()}*\n` +
-          `Alias: ${aliases}\n` +
-          (targetCmd.premiumOnly ? `Akses: Khusus Premium User\n` : "") +
-          (targetCmd.adminOnly ? `Akses: Khusus Admin Bot\n` : "") +
-          (targetCmd.ownerOnly ? `Akses: Khusus Pemilik Bot\n` : "");
+          `┌── PANDUAN: ${prefix}${targetCmd.name}\n` +
+          `│ Kategori: ${targetCmd.category || "General"}\n` +
+          `│ Deskripsi: ${targetCmd.description || "Tidak ada deskripsi."}\n` +
+          `│ Format: ${usage.trim()}\n` +
+          `│ Alias: ${aliases}\n` +
+          (targetCmd.premiumOnly ? `│ Akses: Khusus Premium User\n` : "") +
+          (targetCmd.adminOnly ? `│ Akses: Khusus Admin Bot\n` : "") +
+          (targetCmd.ownerOnly ? `│ Akses: Khusus Pemilik Bot\n` : "") +
+          `└──`;
 
         return await reply(detailText.trim());
       }

@@ -7,6 +7,11 @@ export default {
   category: "User",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
-    await reply(`*UPTIME:* ${getUptimeString()}`);
+    const text =
+      `┌── UPTIME\n` +
+      `│ Bot: Online\n` +
+      `│ Aktif: ${getUptimeString()}\n` +
+      `└──`;
+    await reply(text);
   },
 };

@@ -102,10 +102,11 @@ export default {
 
         const imgBuf = await getNxSnapshot(cam.id);
         const caption =
-          `*CCTV Live Snapshot*\n\n` +
-          `• *Lokasi:* ${cam.name}\n` +
-          `• *Status:* ${cam.status}\n` +
-          `• *Waktu:* ${new Date().toLocaleTimeString("id-ID")} WIB`;
+          `┌── CCTV LIVE SNAPSHOT\n` +
+          `│ Lokasi: ${cam.name}\n` +
+          `│ Status: ${cam.status}\n` +
+          `│ Waktu: ${new Date().toLocaleTimeString("id-ID")} WIB\n` +
+          `└──`;
 
         return await sock.sendMessage(remoteJid, { image: imgBuf, caption }, { quoted: msg });
       }
@@ -128,10 +129,11 @@ export default {
 
         const vidBuf = await ensureVideoCompatible(rawVidBuf);
         const caption =
-          `*Rekaman CCTV (8 Detik)*\n\n` +
-          `• *Lokasi:* ${cam.name}\n` +
-          `• *Status:* ${cam.status}\n` +
-          `• *Waktu:* ${new Date().toLocaleTimeString("id-ID")} WIB`;
+          `┌── REKAMAN CCTV (8s)\n` +
+          `│ Lokasi: ${cam.name}\n` +
+          `│ Status: ${cam.status}\n` +
+          `│ Waktu: ${new Date().toLocaleTimeString("id-ID")} WIB\n` +
+          `└──`;
 
         return await sock.sendMessage(
           remoteJid,

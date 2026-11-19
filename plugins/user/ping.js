@@ -8,8 +8,13 @@ export default {
     const start = Date.now();
     const sent = await sock.sendMessage(msg.key.remoteJid, { text: "Ping..." }, { quoted: msg });
     const speed = Date.now() - start;
+    const text =
+      `┌── SPEED TEST\n` +
+      `│ Status: Online\n` +
+      `│ Response: ${speed}ms\n` +
+      `└──`;
     if (sent?.key) {
-      await sock.sendMessage(msg.key.remoteJid, { text: `*PONG!*\nKecepatan: *${speed}ms*`, edit: sent.key }).catch(() => {});
+      await sock.sendMessage(msg.key.remoteJid, { text, edit: sent.key }).catch(() => {});
     }
   },
 };

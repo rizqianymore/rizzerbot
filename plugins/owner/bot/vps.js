@@ -148,24 +148,20 @@ export default {
       : "IP/Negara: tidak terjangkau";
 
     const text =
-      `*INFORMASI SERVER (ALL)*\n\n` +
-      `*Sistem*\n` +
-      `OS: ${os.platform()} ${os.arch()} (${os.release()})${isTermux() ? " [TERMUX]" : ""}\n` +
-      `Host: ${os.hostname()}\n` +
-      `Uptime sys: ${formatUptime(os.uptime())} | bot: ${formatUptime(process.uptime())}\n\n` +
-      `*CPU*\n` +
-      `${cpus[0]?.model || "Unknown"} (${cpus.length} core)\n` +
-      `Load: ${cpuPct === null ? "-" : `${cpuPct}%`} | avg: ${load}\n\n` +
-      `*RAM*\n` +
-      `${formatBytes(usedMem)} / ${formatBytes(totalMem)} (${memPct}%) | free ${formatBytes(freeMem)}\n\n` +
-      `*Disk*\n` +
-      `/: ${root ? `${root.used} / ${root.total} (${root.pct})` : "-"}\n` +
-      `cwd: ${cwd ? `${formatBytes(cwd.used)} / ${formatBytes(cwd.total)}` : "-"}\n` +
-      `DB: ${dbSizes()}\n\n` +
-      `*Jaringan*\n${netText}\n\n` +
-      `*Tools*\n${coreTools}\n\n` +
-      `*Native*\n${nativeText}\n\n` +
-      `Node.js: ${process.version}`;
+      `┌── INFORMASI SERVER\n` +
+      `│ OS: ${os.platform()} ${os.arch()} (${os.release()})${isTermux() ? " [TERMUX]" : ""}\n` +
+      `│ Host: ${os.hostname()}\n` +
+      `│ Uptime: ${formatUptime(os.uptime())} (Bot: ${formatUptime(process.uptime())})\n` +
+      `│ CPU: ${cpus[0]?.model || "Unknown"} (${cpus.length} Core)\n` +
+      `│ Load: ${cpuPct === null ? "-" : `${cpuPct}%`} (avg: ${load})\n` +
+      `│ RAM: ${formatBytes(usedMem)} / ${formatBytes(totalMem)} (${memPct}%)\n` +
+      `│ Disk: ${root ? `${root.used} / ${root.total} (${root.pct})` : "-"}\n` +
+      `│ Database: ${dbSizes()}\n` +
+      `│ Node.js: ${process.version}\n` +
+      `└──\n\n` +
+      `┌── JARINGAN\n` +
+      (ip ? `│ IP: ${ip.query}\n│ Lokasi: ${ip.city}, ${ip.country}\n│ ISP: ${ip.isp}\n` : `│ IP: Tidak terjangkau\n`) +
+      `└──`;
 
     return reply(text);
   },
