@@ -46,8 +46,8 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
   const cacheDir = path.join(os.tmpdir(), "rizzerbot-compat");
   await fsp.mkdir(cacheDir, { recursive: true }).catch(() => {});
   const base = path.join(cacheDir, `cvt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  const inFile = `${base}.${inputExt}`;
-  const outFile = `${base}.${outputExt}`;
+  const inFile = `${base}_in.${inputExt}`;
+  const outFile = `${base}_out.${outputExt}`;
   await fsp.writeFile(inFile, inputBuffer);
   try {
     await execFileAsync(resolveFfmpegPath(), ["-y", "-i", inFile, ...extraArgs, outFile], {
@@ -82,6 +82,10 @@ export async function ensureVideoCompatible(buffer) {
     const out = await ffmpegConvertBuffer(buffer, inputExt, "mp4", [
       "-c:v",
       "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "26",
       "-pix_fmt",
       "yuv420p",
       "-c:a",

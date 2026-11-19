@@ -106,6 +106,26 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
     } catch (_) {}
   }
 
+  // Bersihkan arsip status WhatsApp yang lebih tua dari 24 jam (sesuai siklus status WA)
+  const statusesDir = path.join(process.cwd(), "statuses");
+  if (fs.existsSync(statusesDir)) {
+    try {
+      const statusFiles = fs.readdirSync(statusesDir);
+      const STATUS_EXPIRY_MS = 24 * 60 * 60 * 1000;
+      for (const sfile of statusFiles) {
+        const sfilePath = path.join(statusesDir, sfile);
+        try {
+          const sstat = fs.statSync(sfilePath);
+          if (now - sstat.mtimeMs > STATUS_EXPIRY_MS) {
+            freedBytes += sstat.size || 0;
+            fs.unlinkSync(sfilePath);
+            deletedCount++;
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   return { deletedCount, freedBytes };
 }
 

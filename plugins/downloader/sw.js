@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { downloadContentFromMessage } from "baileys";
+import { ensureVideoCompatible } from "@/src/services/fetch/downloaderCompat.js";
 
 const STATUSES_DIR = path.join(process.cwd(), "statuses");
 
@@ -36,7 +37,7 @@ function listStatusFiles(filterQuery = "") {
 
   const matched = files.filter((name) => {
     if (!name.startsWith("status_")) return false;
-    if (!/\.(jpe?g|png|webp|mp4|mov|m4a|mp3|ogg)$/i.test(name)) return false;
+    if (!/\.(jpe?g|png|webp|mp4|mov|m4a|mp3|ogg|txt)$/i.test(name)) return false;
     if (!querySuffix) return true;
     return name.includes(querySuffix);
   });
@@ -97,6 +98,7 @@ async function downloadRepliedStatus(sock, msg, quotedInfo, quotedMedia, reply) 
     const mime = mimetypeFor(ext);
 
     if (type === "video") {
+      buf = await ensureVideoCompatible(buf);
       await sock.sendMessage(
         msg.key.remoteJid,
         { video: buf, mimetype: "video/mp4", caption: "Status video berhasil diunduh." },
@@ -158,6 +160,20 @@ export default {
       return;
     }
 
+    const quotedText =
+      quotedMsg?.conversation ||
+      quotedMsg?.extendedTextMessage?.text ||
+      quotedMsg?.documentWithCaptionMessage?.message?.documentMessage?.caption;
+    if (quotedText) {
+      await sendTyping();
+      const num = quotedInfo?.participant ? String(quotedInfo.participant).split("@")[0] : "kontak";
+      return await reply(
+        `*STATUS WHATSAPP (TEKS)*\n\n` +
+        `"${quotedText}"\n\n` +
+        `_Dari: +${num}_`
+      );
+    }
+
     const targetJid = getTargetJid?.(args);
     const targetNumber = targetJid ? normalizeNumber(targetJid) : normalizeNumber(args[0]);
 
@@ -166,6 +182,22 @@ export default {
     }
 
     const files = listStatusFiles(targetNumber);
+
+    if (args[0]?.toLowerCase() === "list" || args[0]?.toLowerCase() === "daftar") {
+      if (files.length === 0) {
+        return reply("Belum ada status yang terekam dalam 24 jam terakhir.");
+      }
+      let listText = `*DAFTAR STATUS TERSIMPAN (${files.length})*\n\n`;
+      const previewFiles = files.slice(0, 15);
+      previewFiles.forEach((file, i) => {
+        const m = file.match(/status_(\d+)_/);
+        const num = m ? m[1] : "kontak";
+        const fext = path.extname(file).replace(".", "").toUpperCase();
+        listText += `[${i + 1}] +${num} (${fext})\n`;
+      });
+      listText += `\n_Ketik \`${prefix || "."}sw [nomor urut]\` untuk mengunduh._`;
+      return reply(listText.trim());
+    }
 
     if (files.length === 0) {
       if (targetNumber) {
@@ -210,6 +242,16 @@ export default {
 
     await sendTyping();
     const caption = `*STATUS DOWNLOADER*\n\nDari: *+${senderNumber}*\nStatus: #${idx} dari ${files.length} tersimpan.`;
+
+    if (ext === ".txt") {
+      const textContent = buffer.toString("utf8");
+      return await reply(
+        `*STATUS WHATSAPP (TEKS)*\n\n` +
+        `"${textContent}"\n\n` +
+        `Dari: *+${senderNumber}*\n` +
+        `Status: #${idx} dari ${files.length} tersimpan.`
+      );
+    }
 
     if (isVideo) {
       await sock.sendMessage(

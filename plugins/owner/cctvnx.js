@@ -1,4 +1,5 @@
 import { getNxCameras, getNxSnapshot, getNxVideo } from "@/src/services/network/nxClient.js";
+import { ensureVideoCompatible } from "@/src/services/fetch/downloaderCompat.js";
 
 // Cache daftar kamera selama 5 menit agar interaksi nomor urut responsif
 let cachedCameras = null;
@@ -125,7 +126,12 @@ export default {
 
         await reply(`Mengunduh rekaman video 8 detik dari kamera *${cam.name}*...`);
 
-        const vidBuf = await getNxVideo(cam.id, 8);
+        const [rawVidBuf, snapBuf] = await Promise.all([
+          getNxVideo(cam.id, 8),
+          getNxSnapshot(cam.id).catch(() => null),
+        ]);
+
+        const vidBuf = await ensureVideoCompatible(rawVidBuf);
         const caption =
           `*CCTV VIDEO CLIP (8s)*\n\n` +
           `Nama: ${cam.name}\n` +
@@ -134,7 +140,13 @@ export default {
 
         return await sock.sendMessage(
           remoteJid,
-          { video: vidBuf, mimetype: "video/mp4", caption },
+          {
+            video: vidBuf,
+            mimetype: "video/mp4",
+            caption,
+            gifPlayback: false,
+            jpegThumbnail: snapBuf && snapBuf.length <= 32 * 1024 ? snapBuf : undefined,
+          },
           { quoted: msg }
         );
       }

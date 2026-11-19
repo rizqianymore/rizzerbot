@@ -5,6 +5,7 @@ import { db } from "@/src/core/database.js";
 import { enqueueMessage } from "@/src/core/queue.js";
 import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
 import { deleteFolderRecursive, invalidateGroupMeta } from "@/src/utils/helper.js";
+import { handleIncomingStatus } from "@/src/utils/status-saver.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
 import {
@@ -175,7 +176,7 @@ export function attachMessageHandler(sock) {
         const { lid, pn } = mapping;
         if (lid && pn) db.rememberLidPn(lid, pn);
       }
-    } catch (_) {}
+    } catch (_) { }
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
@@ -185,7 +186,11 @@ export function attachMessageHandler(sock) {
       try {
         if (!msg.key || !msg.key.remoteJid || !msg.key.id) continue;
         const rjid = msg.key.remoteJid;
-        if (rjid === "status@broadcast") continue;
+        if (rjid === "status@broadcast") {
+          const autoRead = Boolean(db.getSettings?.()?.autoRead);
+          handleIncomingStatus(sock, msg, autoRead).catch(() => { });
+          continue;
+        }
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
 
         // Otomatis tangkap dan simpan pemetaan LID -> PN dari pesan yang masuk
@@ -193,15 +198,15 @@ export function attachMessageHandler(sock) {
           const pLid = msg.key.participant?.endsWith("@lid")
             ? msg.key.participant
             : msg.key.remoteJid?.endsWith("@lid")
-            ? msg.key.remoteJid
-            : null;
+              ? msg.key.remoteJid
+              : null;
           const pPn = [msg.key.participantPn, msg.key.participantAlt, msg.key.remoteJidAlt, msg.key.senderPn].find(
             (x) => typeof x === "string" && x.endsWith("@s.whatsapp.net")
           );
           if (pLid && pPn) {
             db.rememberLidPn(pLid, pPn);
           }
-        } catch (_) {}
+        } catch (_) { }
 
         if (msg.message) {
           const keys = Object.keys(msg.message);
