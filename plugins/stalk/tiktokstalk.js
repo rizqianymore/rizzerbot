@@ -16,12 +16,10 @@ export default {
 
     if (!input) {
       return context.reply(
-        `*OSINT TIKTOK PROFILE LOOKUP*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}tiktokstalk <username / link tiktok>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}tiktokstalk @khaby.lame\n` +
-        `• ${context.prefix || "."}tiktokstalk tiktok`
+        `┌── OSINT TIKTOK STALKER\n` +
+        `│ Format: ${context.prefix || "."}tiktokstalk <username>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}tiktokstalk @khaby.lame`
       );
     }
 
@@ -37,13 +35,11 @@ export default {
     }
 
     const out = [
-      `*HASIL INTELIJEN TIKTOK*`,
-      `Username   : @${res.username}`,
-      `Nama Akun  : *${res.authorName}*`,
-      `Status     : ✅ Akun Aktif Terverifikasi Sistem`,
-      ``,
-      `*Tautan Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `┌── TIKTOK PROFILE: @${res.username}`,
+      `│ Nama: ${res.authorName}`,
+      `│ Status: Akun Aktif Terverifikasi`,
+      `└──\n`,
+      `Tautan: ${res.profileUrl}`
     ];
 
     return context.reply(out.join("\n"));

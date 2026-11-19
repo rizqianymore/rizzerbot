@@ -11,12 +11,10 @@ export default {
     const input = args[0]?.trim();
     if (!input) {
       return context.reply(
-        `*OSINT ROBLOX PLAYER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}robloxstalk <username-roblox>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}robloxstalk Roblox\n` +
-        `• ${context.prefix || "."}robloxstalk builderman`
+        `┌── OSINT ROBLOX PLAYER STALKER\n` +
+        `│ Format: ${context.prefix || "."}robloxstalk <username>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}robloxstalk Roblox`
       );
     }
 
@@ -32,18 +30,14 @@ export default {
     }
 
     const caption = [
-      `*HASIL INTELIJEN ROBLOX PLAYER*`,
-      `Username     : *${res.username}*`,
-      `Display Name : ${res.displayName} ${res.hasVerifiedBadge ? "✔ (Verified)" : ""}`,
-      `User ID      : \`${res.userId}\``,
-      `Tanggal Join : 📅 ${res.createdDate}`,
-      `Status Akun  : ${res.isBanned ? "🚨 DIBANNED / SUSPENDED" : "✅ Aktif / Normal"}`,
-      ``,
-      `*Bio / Deskripsi:*`,
-      `${res.description}`,
-      ``,
-      `*Link Profil Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `┌── ROBLOX PLAYER: ${res.username}`,
+      `│ Display Name: ${res.displayName}`,
+      `│ User ID: ${res.userId}`,
+      `│ Tanggal Join: ${res.createdDate}`,
+      `│ Status: ${res.isBanned ? "BANNED" : "Aktif"}`,
+      `│ Bio: ${res.description || "-"}`,
+      `└──\n`,
+      `Tautan: ${res.profileUrl}`
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

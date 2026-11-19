@@ -16,12 +16,10 @@ export default {
 
     if (!input) {
       return context.reply(
-        `*OSINT INSTAGRAM PROFILE STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}igstalk <username-instagram>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}igstalk instagram\n` +
-        `• ${context.prefix || "."}igstalk @zuck`
+        `┌── OSINT INSTAGRAM STALKER\n` +
+        `│ Format: ${context.prefix || "."}igstalk <username>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}igstalk instagram`
       );
     }
 
@@ -37,15 +35,13 @@ export default {
     }
 
     const caption = [
-      `*HASIL INTELIJEN INSTAGRAM PROFILE*`,
-      `Username   : @${res.username}`,
-      `Nama Akun  : *${res.fullName}*`,
-      `Pengikut   : 👥 *${res.followers}* Followers`,
-      `Mengikuti  : 👤 *${res.following}* Following`,
-      `Total Post : 📸 *${res.posts}* Posts`,
-      ``,
-      `*Tautan Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `┌── INSTAGRAM PROFILE: @${res.username}`,
+      `│ Nama: ${res.fullName}`,
+      `│ Followers: ${res.followers}`,
+      `│ Following: ${res.following}`,
+      `│ Posts: ${res.posts}`,
+      `└──\n`,
+      `Tautan: ${res.profileUrl}`
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

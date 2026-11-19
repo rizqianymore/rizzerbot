@@ -11,12 +11,10 @@ export default {
     const input = args[0]?.trim();
     if (!input) {
       return context.reply(
-        `*OSINT NPM MAINTAINER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}npmstalk <username-npm>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}npmstalk sindresorhus\n` +
-        `• ${context.prefix || "."}npmstalk isaacs`
+        `┌── OSINT NPM MAINTAINER\n` +
+        `│ Format: ${context.prefix || "."}npmstalk <username>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}npmstalk sindresorhus`
       );
     }
 
@@ -32,22 +30,18 @@ export default {
     }
 
     const out = [
-      `*HASIL INTELIJEN DEVELOPER NPM*`,
-      `Maintainer    : *${res.username}*`,
-      `Total Package : *${res.totalPackages.toLocaleString("id-ID")} Paket Terbit*`,
-      ``,
-      `*Paket Teratas / Populer:*`,
+      `┌── NPM DEVELOPER: ${res.username}`,
+      `│ Total Package: ${res.totalPackages.toLocaleString("id-ID")}`,
+      `└──\n`,
+      `┌── PAKET TERATAS`,
     ];
 
-    for (const pkg of res.packages) {
+    for (const pkg of res.packages.slice(0, 5)) {
       out.push(
-        `📦 *${pkg.name}* (v${pkg.version})`,
-        `  • Unduhan/Bulan: ${pkg.monthlyDownloads.toLocaleString("id-ID")}`,
-        `  • Deskripsi    : ${pkg.description.slice(0, 80)}...`,
-        `  • Link         : ${pkg.npmUrl}`,
-        ``
+        `│ • ${pkg.name} (v${pkg.version}) — ${pkg.monthlyDownloads.toLocaleString("id-ID")} dl/bln`
       );
     }
+    out.push(`└──`);
 
     out.push(`*Link Profil NPM:*`, `👉 ${res.profileUrl}`);
     return context.reply(out.join("\n"));

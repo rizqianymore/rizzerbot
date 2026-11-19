@@ -16,13 +16,10 @@ export default {
 
     if (!input) {
       return context.reply(
-        `*OSINT TELEGRAM INTELLIGENCE*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}tgstalk <username / link t.me>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}tgstalk @durov\n` +
-        `• ${context.prefix || "."}tgstalk https://t.me/BotFather\n` +
-        `• ${context.prefix || "."}tgstalk telegram`
+        `┌── OSINT TELEGRAM STALKER\n` +
+        `│ Format: ${context.prefix || "."}tgstalk <username / link t.me>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}tgstalk @durov`
       );
     }
 
@@ -38,17 +35,13 @@ export default {
     }
 
     const caption = [
-      `*HASIL INTELIJEN TELEGRAM*`,
-      `Username   : @${res.username}`,
-      `Nama/Title : *${res.title}*`,
-      `Tipe Akun  : ${res.entityType}`,
-      `Statistik  : ${res.extra}`,
-      ``,
-      `*Bio / Deskripsi:*`,
-      `${res.description}`,
-      ``,
-      `*Link Publik:*`,
-      `👉 ${res.url}`
+      `┌── TELEGRAM INFO: @${res.username}`,
+      `│ Judul: ${res.title}`,
+      `│ Tipe: ${res.entityType}`,
+      `│ Statistik: ${res.extra}`,
+      `│ Bio: ${res.description || "-"}`,
+      `└──\n`,
+      `Tautan: https://t.me/${res.username}`
     ].join("\n");
 
     // Kirim avatar foto profil jika tersedia

@@ -11,13 +11,10 @@ export default {
     const input = args[0]?.trim();
     if (!input) {
       return context.reply(
-        `*OSINT STEAM PLAYER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}steamstalk <custom-url / steamid64 / link-profil>\n\n` +
-        `*Contoh:*\n` +
-        `• ${context.prefix || "."}steamstalk gabelogannewell\n` +
-        `• ${context.prefix || "."}steamstalk 76561197960287930\n` +
-        `• ${context.prefix || "."}steamstalk https://steamcommunity.com/id/dendi`
+        `┌── OSINT STEAM GAMER STALKER\n` +
+        `│ Format: ${context.prefix || "."}steamstalk <steamid64 / custom URL>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}steamstalk gabelogannewell`
       );
     }
 
@@ -33,20 +30,16 @@ export default {
     }
 
     const caption = [
-      `*HASIL INTELIJEN STEAM GAMER*`,
-      `Nama Akun    : *${res.steamName}*`,
-      `SteamID64    : \`${res.steamId64}\``,
-      `Status Online: *${res.onlineState.toUpperCase()}* (${res.stateMessage})`,
-      `Privasi Akun : ${res.privacyState === "public" ? "🌐 Publik" : "🔒 Terkunci / Friendsonly"}`,
-      `Status VAC   : ${res.vacBanned ? "🚨 TERKENA VAC BAN!" : "✅ Bersih (No VAC Ban)"}`,
-      `Trade Ban    : ${res.tradeBanState}`,
-      res.memberSince !== "-" ? `Member Sejak : 📅 ${res.memberSince}` : "",
-      ``,
-      `*Status / Headline:*`,
-      `${res.headline}`,
-      ``,
-      `*Link Profil Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `┌── STEAM GAMER: ${res.steamName}`,
+      `│ SteamID64: ${res.steamId64}`,
+      `│ Status: ${res.onlineState.toUpperCase()} (${res.stateMessage})`,
+      `│ Privasi: ${res.privacyState === "public" ? "Publik" : "Terkunci"}`,
+      `│ Status VAC: ${res.vacBanned ? "BANNED" : "Bersih"}`,
+      `│ Trade Ban: ${res.tradeBanState}`,
+      res.memberSince !== "-" ? `│ Sejak: ${res.memberSince}` : "",
+      `│ Bio: ${res.headline || "-"}`,
+      `└──\n`,
+      `Tautan: ${res.profileUrl}`
     ].filter(Boolean).join("\n");
 
     if (res.avatarFull && /^https?:\/\//i.test(res.avatarFull)) {
