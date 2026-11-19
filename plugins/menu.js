@@ -12,18 +12,17 @@ export function renderMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
   let text = "";
 
-  text += `╭───────────────[ *SYSTEM INFO* ]──────────╮\n`;
-  text += `│ Bot: ${botName}\n`;
+  text += `╭─[ *${botName.toUpperCase()}* ]\n`;
   text += `│ OS: Linux (x86_64)\n`;
   text += `│ Status: Online\n`;
   text += `│ Prefix: [ ${prefix} ]\n`;
   text += `│ Role: ${role}\n`;
   text += `│ Total: ${totalCmds} Perintah\n`;
-  text += `╰──────────────────────────────────────╯\n\n`;
+  text += `╰──────────────────\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    text += `╭────[ *${targetCategory.toUpperCase()}* (${cmds.length}) ]\n`;
+    text += `╭─[ *${targetCategory.toUpperCase()}* ]\n`;
     cmds.forEach((cmd, i) => {
       const isLast = i === cmds.length - 1;
       const branch = isLast ? "└──" : "├──";
@@ -37,7 +36,7 @@ export function renderMenu(data) {
     for (const cat of catKeys) {
       const cmds = categories[cat] || [];
       if (!cmds || cmds.length === 0) continue;
-      text += `╭────[ *${cat.toUpperCase()}* (${cmds.length}) ]\n`;
+      text += `╭─[ *${cat.toUpperCase()}* ]\n`;
       cmds.forEach((cmd, i) => {
         const isLast = i === cmds.length - 1;
         const branch = isLast ? "└──" : "├──";
@@ -49,11 +48,10 @@ export function renderMenu(data) {
     return text;
   }
 
-  text += `╭────[ *DAFTAR KATEGORI* ]\n`;
+  text += `╭─[ *DAFTAR KATEGORI* ]\n`;
   catKeys.forEach((cat) => {
-    const count = categories[cat]?.length || 0;
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
-    text += `├── ${prefix}menu ${alias} -> ${cat} (${count})\n`;
+    text += `├── ${prefix}menu ${alias} -> ${cat}\n`;
   });
   text += `└── ${prefix}menu all -> Tampilkan Seluruh Menu\n\n`;
   text += `Ketik ${prefix}menu <kategori> untuk membuka daftar perintah.`;
