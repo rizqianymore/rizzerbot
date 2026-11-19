@@ -12,7 +12,9 @@ export default {
     const raw = (args || []).join(" ").trim() || args[0];
     if (!raw) {
       return reply(
-        `┌── WHOIS DOMAIN LOOKUP\n` + `│ Format: .whois <domain>\n` + `└──\n\n` + `Contoh: .whois openai.com`
+        `*OSINT TOOLS - WHOIS*\n\n` +
+          `Format: .whois <domain>\n\n` +
+          `Contoh: .whois openai.com`
       );
     }
     const domain = cleanDomain(raw);
@@ -23,16 +25,16 @@ export default {
       const info = await getWhois(domain);
 
       let text =
-        `┌── WHOIS: ${info.domain}\n` +
-        `│ Registrar: ${info.registrar}\n` +
-        `│ Didaftarkan: ${info.createdDate}\n` +
-        `│ Diperbarui: ${info.updatedDate}\n` +
-        `│ Kedaluwarsa: ${info.expiryDate}\n`;
-      if (info.abuseEmail !== "-") text += `│ Abuse Email: ${info.abuseEmail}\n`;
-      if (info.registrarWhois !== "-") text += `│ Whois Server: ${info.registrarWhois}\n`;
-      text += `└──`;
+        `*OSINT TOOLS*\n\n` +
+        `Domain: ${info.domain}\n` +
+        `Registrar: ${info.registrar}\n` +
+        `Didaftarkan: ${info.createdDate}\n` +
+        `Diperbarui: ${info.updatedDate}\n` +
+        `Kedaluwarsa: ${info.expiryDate}\n`;
+      if (info.abuseEmail !== "-") text += `Abuse Email: ${info.abuseEmail}\n`;
+      if (info.registrarWhois !== "-") text += `Whois Server: ${info.registrarWhois}\n`;
 
-      await reply(text);
+      await reply(text.trim());
     } catch (err) {
       await reply(`Gagal WHOIS: ${err.message}`);
     }

@@ -11,9 +11,8 @@ export default {
     let query = (args[0] || "").trim();
     if (!query) {
       return context.reply(
-        `┌── AUTONOMOUS SYSTEM (ASN) LOOKUP\n` +
-          `│ Format: ${context.prefix || "."}asn <ip / AS number>\n` +
-          `└──\n\n` +
+        `*OSINT TOOLS - ASN LOOKUP*\n\n` +
+          `Format: ${context.prefix || "."}asn <ip / AS number>\n\n` +
           `Contoh: ${context.prefix || "."}asn 1.1.1.1`
       );
     }
@@ -40,14 +39,14 @@ export default {
 
       if (parts.length >= 4) {
         const out =
-          `┌── ASN: AS${parts[1]}\n` +
-          `│ Target IP: ${parts[0]}\n` +
-          `│ IP Range: ${parts[2]}\n` +
-          `│ Organisasi: ${parts.slice(3).join(",").trim()}\n` +
-          `└──`;
+          `*OSINT TOOLS*\n\n` +
+          `ASN: AS${parts[1]}\n` +
+          `Target IP: ${parts[0]}\n` +
+          `IP Range: ${parts[2]}\n` +
+          `Organisasi: ${parts.slice(3).join(",").trim()}`;
         return context.reply(out);
       } else if (parts.length >= 2) {
-        const out = `┌── ASN: AS${parts[0]}\n` + `│ Operator: ${parts.slice(1).join(",").trim()}\n` + `└──`;
+        const out = `*OSINT TOOLS*\n\nASN: AS${parts[0]}\nOperator: ${parts.slice(1).join(",").trim()}`;
         return context.reply(out);
       }
       return context.reply(`Data ASN:\n${raw}`);

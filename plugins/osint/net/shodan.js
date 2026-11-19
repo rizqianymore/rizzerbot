@@ -20,9 +20,8 @@ export default {
     const ip = (args[0] || "").trim();
     if (!ip) {
       return context.reply(
-        `┌── SHODAN INTERNETDB SCAN\n` +
-          `│ Format: ${context.prefix || "."}shodan <ip>\n` +
-          `└──\n\n` +
+        `*OSINT TOOLS - SHODAN*\n\n` +
+          `Format: ${context.prefix || "."}shodan <ip>\n\n` +
           `Contoh: ${context.prefix || "."}shodan 1.1.1.1`
       );
     }
@@ -39,7 +38,7 @@ export default {
       });
 
       if (!res || !res.ip) {
-        return context.reply(`Tidak ada data Shodan InternetDB ditemukan untuk IP ${ip}.`);
+        return context.reply(`*OSINT TOOLS*\nTidak ada data Shodan InternetDB ditemukan untuk IP ${ip}.`);
       }
 
       const ports = Array.isArray(res.ports) && res.ports.length > 0 ? res.ports.join(", ") : "Tidak terdeteksi";
@@ -48,11 +47,11 @@ export default {
         Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.slice(0, 5).join(", ") : "Tidak terdeteksi";
 
       const out =
-        `┌── SHODAN: ${res.ip}\n` +
-        `│ Port Terbuka: ${ports}\n` +
-        `│ Tags: ${tags}\n` +
-        `│ Kerentanan (CVE): ${vulns}\n` +
-        `└──`;
+        `*OSINT TOOLS*\n\n` +
+        `IP: ${res.ip}\n` +
+        `Port Terbuka: ${ports}\n` +
+        `Tags: ${tags}\n` +
+        `Kerentanan (CVE): ${vulns}`;
 
       return context.reply(out);
     } catch (err) {

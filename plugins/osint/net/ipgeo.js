@@ -13,7 +13,9 @@ export default {
     const target = args[0];
     if (!target) {
       return reply(
-        `┌── OSINT IP & RECON\n` + `│ Format: .ipgeo <ip / domain>\n` + `└──\n\n` + `Contoh: .ipgeo 1.1.1.1`
+        `*OSINT TOOLS - IP GEO*\n\n` +
+          `Format: .ipgeo <ip / domain>\n\n` +
+          `Contoh: .ipgeo 1.1.1.1`
       );
     }
 
@@ -36,17 +38,17 @@ export default {
       }
 
       const text =
-        `┌── RECON: ${geo.query}\n` +
-        `│ Lokasi: ${geo.city}, ${geo.regionName}, ${geo.country} (${geo.countryCode})\n` +
-        `│ Koordinat: ${geo.lat}, ${geo.lon}\n` +
-        `│ Zona Waktu: ${geo.timezone}\n` +
-        `│ ISP: ${geo.isp}\n` +
-        `│ Organisasi: ${geo.org || "-"}\n` +
-        `│ ASN: ${geo.as || "-"}\n` +
-        `│ Tipe Jaringan: ${tipeJaringan}\n` +
-        `│ Proxy / VPN: ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
-        `│ Hosting / VPS: ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}\n` +
-        `└──`;
+        `*OSINT TOOLS*\n\n` +
+        `Target: ${geo.query}\n` +
+        `Lokasi: ${geo.city}, ${geo.regionName}, ${geo.country} (${geo.countryCode})\n` +
+        `Koordinat: ${geo.lat}, ${geo.lon}\n` +
+        `Zona Waktu: ${geo.timezone}\n` +
+        `ISP: ${geo.isp}\n` +
+        `Organisasi: ${geo.org || "-"}\n` +
+        `ASN: ${geo.as || "-"}\n` +
+        `Tipe Jaringan: ${tipeJaringan}\n` +
+        `Proxy / VPN: ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
+        `Hosting / VPS: ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}`;
 
       await reply(text);
     } catch (err) {
