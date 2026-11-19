@@ -42,7 +42,7 @@ export default {
         `│ Ashar: ${t.Asr}\n` +
         `│ Maghrib: ${t.Maghrib}\n` +
         `│ Isya: ${t.Isha}\n` +
-        `└──\n\n` +
+        `└─\n\n` +
         `Sumber: Kemenag RI via Aladhan. Ganti kota: ${prefix || "."}sholat Bandung`
     );
   },

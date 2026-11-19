@@ -163,7 +163,7 @@ export function formatMhsDetail(d) {
 `;
   text += `├─ Nama       : ${d.nama || "-"}
 `;
-  text += `├─ NIM        : \`${d.nim || "-"}\`
+  text += `├─ NIM        : ${d.nim || "-"}
 `;
   text += `├─ Perguruan Tinggi: ${d.nama_pt || "-"}
 `;

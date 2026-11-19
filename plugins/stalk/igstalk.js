@@ -18,7 +18,7 @@ export default {
       return context.reply(
         `┌── OSINT INSTAGRAM STALKER\n` +
           `│ Format: ${context.prefix || "."}igstalk <username>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}igstalk instagram`
       );
     }
@@ -40,7 +40,7 @@ export default {
       `│ Followers: ${res.followers}`,
       `│ Following: ${res.following}`,
       `│ Posts: ${res.posts}`,
-      `└──\n`,
+      `└─\n`,
       `Tautan: ${res.profileUrl}`,
     ].join("\n");
 

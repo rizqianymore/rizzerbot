@@ -15,7 +15,7 @@ export default {
         `┌── UNIVERSAL DOWNLOADER\n` +
           `│ Format: ${prefix || "."}dl <url> [mp3]\n` +
           `│ Dukungan: YouTube, IG, TikTok, X, FB, dll\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${prefix || "."}dl https://vt.tiktok.com/xxxx`
       );
     }
@@ -40,7 +40,7 @@ export default {
         }
       }
       if (source) caption += `│ Engine: ${source}\n`;
-      caption += `└──`;
+      caption += `└─`;
       const mimetype = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
 
       await sock.sendMessage(

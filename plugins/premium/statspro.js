@@ -17,11 +17,11 @@ export default {
       `┌── STATISTIK PENGGUNAAN BOT\n` +
       `│ Total Perintah: ${total}\n` +
       `│ Jumlah Fitur: ${Object.keys(usage).length}\n` +
-      `└──\n\n` +
+      `└─\n\n` +
       `┌── TOP 10 COMMAND\n`;
     top.forEach(([cmd, count], i) => {
       const isLast = i === top.length - 1;
-      const branch = isLast ? "└──" : "├──";
+      const branch = isLast ? "└─" : "├─";
       text += `${branch} ${cmd}: ${count}x\n`;
     });
     await reply(text);

@@ -13,7 +13,7 @@ export default {
     try {
       const sent = await sock.sendMessage(targetJid, { text: "Ping..." }, { quoted: msg });
       const speed = Date.now() - start;
-      const text = `┌── SPEED TEST\n` + `│ Status: Online\n` + `│ Response: ${speed}ms\n` + `└──`;
+      const text = `┌── SPEED TEST\n` + `│ Status: Online\n` + `│ Response: ${speed}ms\n` + `└─`;
       if (sent?.key) {
         await sock.sendMessage(targetJid, { text, edit: sent.key }).catch(async () => {
           await reply(text);
@@ -23,7 +23,7 @@ export default {
       }
     } catch (_) {
       const speed = Date.now() - start;
-      const text = `┌── SPEED TEST\n` + `│ Status: Online\n` + `│ Response: ${speed}ms\n` + `└──`;
+      const text = `┌── SPEED TEST\n` + `│ Status: Online\n` + `│ Response: ${speed}ms\n` + `└─`;
       await reply(text);
     }
   },

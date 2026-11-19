@@ -42,7 +42,7 @@ export default {
 
       let text = `*OSINT TOOLS - MAC ADDRESS LOOKUP*
 `;
-      text += `├─ MAC Address  : \`${formattedMac}\`
+      text += `├─ MAC Address  : ${formattedMac}
 `;
       text += `├─ OUI Prefix   : ${formattedMac.slice(0, 8)}
 `;

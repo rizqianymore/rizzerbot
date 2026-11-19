@@ -190,7 +190,7 @@ export async function enrichWilayah(parsed) {
 
 export function formatNikInfo(p) {
   let text = `*OSINT TOOLS*\n`;
-  text += `├─ NIK        : \`${p.nik}\`\n`;
+  text += `├─ NIK        : ${p.nik}\n`;
   text += `├─ Format     : ${p.formatted}\n`;
   text += `├─ Jenis Kelamin: ${p.gender}\n`;
   text += `├─ Tanggal Lahir: ${p.birthStr} (${p.dayName})\n`;

@@ -15,7 +15,7 @@ export function maskPhone(phone) {
 export function formatSiswa(row, { showFullPhone = true } = {}) {
   let text = `*OSINT TOOLS - DATA SISWA NIS*
 `;
-  text += `├─ NISN       : \`${row.nisn || "-"}\`
+  text += `├─ NISN       : ${row.nisn || "-"}
 `;
   text += `├─ Nama       : ${row.nama || "-"}
 `;

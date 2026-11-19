@@ -15,7 +15,7 @@ export default {
       `│ Nama: ${activeSettings.ownerName}\n` +
       `│ Kontak: wa.me/${ownerNumber}\n` +
       `│ Status: Aktif\n` +
-      `└──\n\n` +
+      `└─\n\n` +
       `Hubungi owner jika ada kendala, ingin sewa bot, atau upgrade akun premium.`;
     await reply(text);
   },

@@ -36,7 +36,7 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location, simcards = 
 
   const lines = [
     `*OSINT TOOLS*`,
-    `├─ NIK        : \`${record.nik}\``,
+    `├─ NIK        : ${record.nik}`,
     `├─ Nama       : ${record.nama || "-"}`,
     `├─ Gender     : ${record.gender || "-"}`,
     `├─ TTL        : ${ttlFormatted}`,
@@ -73,7 +73,7 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location, simcards = 
     lines.push(`│`, `├─ [SIMCARD TERDAFTAR]`);
     simcards.forEach((s, idx) => {
       const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-      lines.push(`├─ ${idx + 1}. \`${s.phone || "-"}\` (${s.provider || "GSM"}) [${regDate}]`);
+      lines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
     });
   }
 
@@ -92,21 +92,21 @@ function formatNameResults(records, query, prefix = ".") {
   records.forEach((rec, idx) => {
     lines.push(
       `├─ ${idx + 1}. ${rec.nama}`,
-      `│   ├─ NIK    : \`${rec.nik}\``,
-      `│   ├─ No. HP : \`${rec.nohp || "-"}\``,
+      `│   ├─ NIK    : ${rec.nik}`,
+      `│   ├─ No. HP : ${rec.nohp || "-"}`,
       `│   └─ Lokasi : ${rec.kelurahan || "-"}, ${rec.kota_kab || "-"}`,
       `│`
     );
   });
 
-  lines.push(`└─ Gunakan \`${prefix}cekdukcapil <NIK>\` untuk melihat profil lengkap`);
+  lines.push(`└─ Gunakan ${prefix}cekdukcapil <NIK> untuk melihat profil lengkap`);
   return lines.join("\n");
 }
 
 function formatPhoneMultiRecords(records, operatorInfo, rawQuery, simcards = []) {
   const lines = [
     `*OSINT TOOLS*`,
-    `├─ MSISDN     : \`${rawQuery}\``,
+    `├─ MSISDN     : ${rawQuery}`,
     operatorInfo ? `├─ Operator   : ${operatorInfo.operator} (${operatorInfo.brand})` : null,
     `├─ Terhubung  : ${records.length} data kependudukan`,
     `│`,
@@ -116,7 +116,7 @@ function formatPhoneMultiRecords(records, operatorInfo, rawQuery, simcards = [])
     const ttlFormatted = formatTtlWithCurrentAge(rec.ttl_umur || rec.ttl, rec.nikInfo);
     lines.push(
       `├─ ${idx + 1}. ${rec.nama}`,
-      `│   ├─ NIK    : \`${rec.nik}\``,
+      `│   ├─ NIK    : ${rec.nik}`,
       `│   ├─ Gender : ${rec.gender || "-"}`,
       `│   ├─ TTL    : ${ttlFormatted}`,
       `│   └─ Alamat : ${rec.alamat || "-"}, ${rec.kota_kab || "-"}`,
@@ -128,7 +128,7 @@ function formatPhoneMultiRecords(records, operatorInfo, rawQuery, simcards = [])
     lines.push(`├─ [SIMCARD TERDAFTAR]`);
     simcards.forEach((s, idx) => {
       const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-      lines.push(`├─ ${idx + 1}. \`${s.phone || "-"}\` (${s.provider || "GSM"}) [${regDate}]`);
+      lines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
     });
     lines.push(`│`);
   }
@@ -199,7 +199,7 @@ export default {
           const origin = [nikInfo.province, nikInfo.city, nikInfo.district].filter(Boolean).join(", ");
           const fallbackLines = [
             `*OSINT TOOLS*`,
-            `├─ NIK        : \`${nikInfo.nik}\``,
+            `├─ NIK        : ${nikInfo.nik}`,
             `├─ Gender     : ${nikInfo.gender}`,
             `├─ TTL        : ${ttlFormatted}`,
             `├─ Zodiak     : ${nikInfo.zodiac} (${nikInfo.generation})`,
@@ -211,7 +211,7 @@ export default {
             fallbackLines.push(`│`, `├─ [SIMCARD TERDAFTAR]`);
             simcards.forEach((s, idx) => {
               const regDate = s.date ? String(s.date).split(" ")[0] : "-";
-              fallbackLines.push(`├─ ${idx + 1}. \`${s.phone || "-"}\` (${s.provider || "GSM"}) [${regDate}]`);
+              fallbackLines.push(`├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"}) [${regDate}]`);
             });
           }
 
@@ -226,7 +226,7 @@ export default {
 
         return reply(
           `*OSINT TOOLS*\n` +
-            `├─ NIK    : \`${rawQuery}\`\n` +
+            `├─ NIK    : ${rawQuery}\n` +
             `└─ Status : Data tidak ditemukan`
         );
       }
@@ -238,7 +238,7 @@ export default {
         if (records.length === 0) {
           const lines = [
             `*OSINT TOOLS*`,
-            `├─ MSISDN     : \`${rawQuery}\``,
+            `├─ MSISDN     : ${rawQuery}`,
             operatorInfo ? `├─ Operator   : ${operatorInfo.operator} (${operatorInfo.brand})` : null,
           ].filter(Boolean);
 
@@ -247,8 +247,8 @@ export default {
             simcards.forEach((s, idx) => {
               const regDate = s.date ? String(s.date).split(" ")[0] : "-";
               lines.push(
-                `├─ ${idx + 1}. \`${s.phone || "-"}\` (${s.provider || "GSM"})`,
-                `│   ├─ NIK Terdaftar : \`${s.nik || "-"}\``,
+                `├─ ${idx + 1}. ${s.phone || "-"} (${s.provider || "GSM"})`,
+                `│   ├─ NIK Terdaftar : ${s.nik || "-"}`,
                 `│   └─ Tgl Registrasi: ${regDate}`
               );
             });

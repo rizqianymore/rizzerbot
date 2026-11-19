@@ -25,7 +25,7 @@ export default {
       return reply(
         `┌── INSTAGRAM DOWNLOADER\n` +
           `│ Format: ${currentPrefix}igdl <url> [nomor slide]\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${currentPrefix}igdl https://instagram.com/p/xxxx`
       );
     }

@@ -150,13 +150,13 @@ export default {
         `│ URL Akhir: ${result.finalUrl}\n` +
         `│ Status: HTTP ${result.status}\n` +
         `│ Pengalihan: ${result.redirects.length - 1} kali\n` +
-        `└──`;
+        `└─`;
 
       if (isRedirected) {
         out += `\n\n┌── RANTAI REDIRECT\n`;
         result.redirects.forEach((u, i) => {
           const isLast = i === result.redirects.length - 1;
-          const branch = isLast ? "└──" : "├──";
+          const branch = isLast ? "└─" : "├─";
           out += `${branch} ${u}\n`;
         });
       }

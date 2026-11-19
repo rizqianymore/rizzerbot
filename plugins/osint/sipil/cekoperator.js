@@ -88,7 +88,7 @@ export default {
           const regDate = s.date ? String(s.date).split(" ")[0] : "-";
           simLines.push(
             `├─ Kartu ${idx + 1}    : ${s.provider || op.operator}`,
-            `│   ├─ NIK    : \`${s.nik || "-"}\``,
+            `│   ├─ NIK    : ${s.nik || "-"}`,
             `│   └─ Tgl Reg: ${regDate}`
           );
         });
@@ -101,9 +101,9 @@ export default {
           const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           const lines = [
             `*OSINT TOOLS*`,
-            `├─ MSISDN     : \`${r.nohp || op.normalized}\``,
+            `├─ MSISDN     : ${r.nohp || op.normalized}`,
             `├─ Operator   : ${op.operator} (${op.brand})`,
-            `├─ NIK        : \`${r.nik || "-"}\``,
+            `├─ NIK        : ${r.nik || "-"}`,
             `├─ Nama       : ${r.nama || "-"}`,
             `├─ Gender     : ${r.gender || "-"}`,
             `├─ TTL        : ${ttlFormatted}`,
@@ -144,7 +144,7 @@ export default {
         const primary = records[0];
         const lines = [
           `*OSINT TOOLS*`,
-          `├─ MSISDN     : \`${primary.nohp || op.normalized}\``,
+          `├─ MSISDN     : ${primary.nohp || op.normalized}`,
           `├─ Operator   : ${op.operator} (${op.brand})`,
           `├─ Terhubung  : ${records.length} data kependudukan`,
           `│`,
@@ -154,7 +154,7 @@ export default {
           const ttlFormatted = formatTtlWithCurrentAge(r.ttl_umur || r.ttl, r.nikInfo);
           lines.push(
             `├─ ${idx + 1}. ${r.nama}`,
-            `│   ├─ NIK    : \`${r.nik || "-"}\``,
+            `│   ├─ NIK    : ${r.nik || "-"}`,
             `│   ├─ Gender : ${r.gender || "-"}`,
             `│   ├─ TTL    : ${ttlFormatted}`,
             `│   └─ Alamat : ${r.alamat || "-"}, ${r.kota_kab || "-"}`,
@@ -174,7 +174,7 @@ export default {
       if (allSimcards.length > 0) {
         const lines = [
           `*OSINT TOOLS*`,
-          `├─ MSISDN     : \`${op.normalized}\``,
+          `├─ MSISDN     : ${op.normalized}`,
           `├─ Operator   : ${op.operator} (${op.brand})`,
           `├─ Terdaftar  : ${allSimcards.length} catatan simcard`,
           ...simLines,
@@ -187,8 +187,8 @@ export default {
       // KASUS 3: Nomor valid tapi tidak tercatat di DB manapun
       const lines = [
         `*OSINT TOOLS*`,
-        `├─ MSISDN     : \`${op.normalized}\``,
-        `├─ Prefix     : \`${op.prefix}*\``,
+        `├─ MSISDN     : ${op.normalized}`,
+        `├─ Prefix     : ${op.prefix}*`,
         `├─ Operator   : ${op.operator}`,
         `├─ Kartu      : ${op.brand}`,
         `│`,

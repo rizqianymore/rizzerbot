@@ -68,7 +68,7 @@ export function formatDosenDetail(d, nidn) {
 `;
   text += `├─ Nama       : ${d.nama || "-"}
 `;
-  text += `├─ NIDN / NUP : \`${nidn || d.nidn || "-"}\`
+  text += `├─ NIDN / NUP : ${nidn || d.nidn || "-"}
 `;
   text += `├─ Perguruan Tinggi: ${d.nama_pt || "-"}
 `;

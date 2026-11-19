@@ -31,7 +31,7 @@ export default {
       `│ Lokasi: ${g.Wilayah || "-"}\n` +
       (g.Dirasakan ? `│ Dirasakan: ${g.Dirasakan}\n` : "") +
       (g.Potensi ? `│ Potensi: ${g.Potensi}\n` : "") +
-      `└──`;
+      `└─`;
     if (g.Shakemap) {
       try {
         await sock.sendMessage(

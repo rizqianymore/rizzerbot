@@ -91,7 +91,7 @@ export default {
         `┌── KURS ${from} -> ${to}\n` +
           `│ 1 ${from}: ${fmt(rate)} ${to}\n` +
           `│ ${fmt(amount)} ${from}: ${fmt(converted)} ${to}\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Sumber: open.er-api.com`
       );
     } catch (err) {

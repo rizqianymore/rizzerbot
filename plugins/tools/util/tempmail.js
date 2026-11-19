@@ -45,7 +45,7 @@ export default {
         `┌── EMAIL SEMENTARA BARU\n` +
           `│ Alamat: ${mailbox.address}\n` +
           `│ Status: Aktif & Siap Menerima\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Ketik ${p}tempmail check untuk melihat kotak masuk.`
       );
     }

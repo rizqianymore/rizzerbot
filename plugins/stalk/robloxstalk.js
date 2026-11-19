@@ -13,7 +13,7 @@ export default {
       return context.reply(
         `┌── OSINT ROBLOX PLAYER STALKER\n` +
           `│ Format: ${context.prefix || "."}robloxstalk <username>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}robloxstalk Roblox`
       );
     }
@@ -36,7 +36,7 @@ export default {
       `│ Tanggal Join: ${res.createdDate}`,
       `│ Status: ${res.isBanned ? "BANNED" : "Aktif"}`,
       `│ Bio: ${res.description || "-"}`,
-      `└──\n`,
+      `└─\n`,
       `Tautan: ${res.profileUrl}`,
     ].join("\n");
 

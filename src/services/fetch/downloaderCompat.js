@@ -410,6 +410,6 @@ export function buildCaption(platform, info) {
       out += `│ Durasi: ${info.duration}\n`;
     }
   }
-  out += `└──`;
+  out += `└─`;
   return out;
 }

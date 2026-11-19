@@ -72,7 +72,7 @@ export default {
       defs.forEach((d) => {
         text += `│ • ${d}\n`;
       });
-      text += `└──\n\nSumber: kbbi.kemdikbud.go.id`;
+      text += `└─\n\nSumber: kbbi.kemdikbud.go.id`;
       return reply(text.slice(0, 3500));
     } catch (err) {
       return reply(`Gagal KBBI: ${err?.message || err}`);

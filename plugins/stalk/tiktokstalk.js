@@ -18,7 +18,7 @@ export default {
       return context.reply(
         `┌── OSINT TIKTOK STALKER\n` +
           `│ Format: ${context.prefix || "."}tiktokstalk <username>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}tiktokstalk @khaby.lame`
       );
     }
@@ -38,7 +38,7 @@ export default {
       `┌── TIKTOK PROFILE: @${res.username}`,
       `│ Nama: ${res.authorName}`,
       `│ Status: Akun Aktif Terverifikasi`,
-      `└──\n`,
+      `└─\n`,
       `Tautan: ${res.profileUrl}`,
     ];
 

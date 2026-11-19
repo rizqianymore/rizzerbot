@@ -67,7 +67,7 @@ export function parseBin(rawInput) {
 export function formatBinInfo(p) {
   let text = `*OSINT TOOLS - BIN CHECK*
 `;
-  text += `├─ BIN        : \`${p.fullGiven ? `${p.bin} (dari ${p.masked})` : p.bin}\`
+  text += `├─ BIN        : ${p.fullGiven ? `${p.bin} (dari ${p.masked})` : p.bin}
 `;
   text += `├─ Skema      : ${p.scheme}
 `;

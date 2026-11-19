@@ -13,7 +13,7 @@ export default {
       return context.reply(
         `┌── OSINT NPM MAINTAINER\n` +
           `│ Format: ${context.prefix || "."}npmstalk <username>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}npmstalk sindresorhus`
       );
     }
@@ -32,14 +32,14 @@ export default {
     const out = [
       `┌── NPM DEVELOPER: ${res.username}`,
       `│ Total Package: ${res.totalPackages.toLocaleString("id-ID")}`,
-      `└──\n`,
+      `└─\n`,
       `┌── PAKET TERATAS`,
     ];
 
     for (const pkg of res.packages.slice(0, 5)) {
       out.push(`│ • ${pkg.name} (v${pkg.version}) — ${pkg.monthlyDownloads.toLocaleString("id-ID")} dl/bln`);
     }
-    out.push(`└──`);
+    out.push(`└─`);
 
     out.push(`*Link Profil NPM:*`, `👉 ${res.profileUrl}`);
     return context.reply(out.join("\n"));

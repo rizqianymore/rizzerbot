@@ -16,7 +16,7 @@ export default {
       return reply(
         `┌── SPOTIFY DOWNLOADER\n` +
           `│ Format: ${currentPrefix}spdl <url track>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${currentPrefix}spdl https://open.spotify.com/track/xxxx`
       );
     }

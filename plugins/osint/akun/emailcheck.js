@@ -107,7 +107,7 @@ export default {
 
     let text = `*OSINT TOOLS - EMAIL ANALYZER*
 `;
-      text += `├─ Email Target : \`${email}\`
+      text += `├─ Email Target : ${email}
 `;
       text += `├─ Domain       : ${domain}
 `;

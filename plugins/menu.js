@@ -17,7 +17,7 @@ export function renderMenu(data) {
     text += `┌── ${targetCategory.toUpperCase()}\n`;
     cmds.forEach((cmd, i) => {
       const isLast = i === cmds.length - 1;
-      const branch = isLast ? "└─" : "├──";
+      const branch = isLast ? "└─" : "├─";
       text += `${branch} ${prefix}${cmd.name}\n`;
     });
     return text.trim();
@@ -30,7 +30,7 @@ export function renderMenu(data) {
       text += `┌── ${cat.toUpperCase()}\n`;
       cmds.forEach((cmd, i) => {
         const isLast = i === cmds.length - 1;
-        const branch = isLast ? "└─" : "├──";
+        const branch = isLast ? "└─" : "├─";
         text += `${branch} ${prefix}${cmd.name}\n`;
       });
       text += `\n`;
@@ -41,7 +41,7 @@ export function renderMenu(data) {
   text += `┌── DAFTAR KATEGORI\n`;
   catKeys.forEach((cat) => {
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
-    text += `├── ${prefix}menu ${alias} -> ${cat}\n`;
+    text += `├─ ${prefix}menu ${alias} -> ${cat}\n`;
   });
   text += `└─ ${prefix}menu all -> Tampilkan Seluruh Menu`;
 
@@ -104,7 +104,7 @@ export default {
           (targetCmd.premiumOnly ? `│ Akses: Khusus Premium User\n` : "") +
           (targetCmd.adminOnly ? `│ Akses: Khusus Admin Bot\n` : "") +
           (targetCmd.ownerOnly ? `│ Akses: Khusus Pemilik Bot\n` : "") +
-          `└──`;
+          `└─`;
 
         return await reply(detailText.trim());
       }

@@ -27,7 +27,7 @@ export default {
         timeout: 12000,
       });
       if (txt && txt.startsWith("http")) {
-        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${txt.trim()}\n` + `└──`);
+        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${txt.trim()}\n` + `└─`);
       }
     } catch (_) {}
     try {
@@ -35,7 +35,7 @@ export default {
         timeout: 12000,
       });
       if (data?.shorturl) {
-        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${data.shorturl}\n` + `└──`);
+        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${data.shorturl}\n` + `└─`);
       }
       if (data?.errormessage) throw new Error(data.errormessage);
     } catch (_) {}
@@ -45,7 +45,7 @@ export default {
         timeout: 12000,
       });
       if (data?.data) {
-        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${data.data}\n` + `└──`);
+        return reply(`┌── SHORTLINK\n` + `│ Asli: ${url}\n` + `│ Pendek: ${data.data}\n` + `└─`);
       }
     } catch (err) {
       return reply(`Gagal perpendek: ${err?.message || err}`);

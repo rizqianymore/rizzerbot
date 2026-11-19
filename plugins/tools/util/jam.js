@@ -53,7 +53,7 @@ export default {
         `│ WIB: ${fmt("Asia/Jakarta")}\n` +
         `│ WITA: ${fmt("Asia/Makassar")}\n` +
         `│ WIT: ${fmt("Asia/Jayapura")}\n` +
-        `└──\n\n` +
+        `└─\n\n` +
         `Contoh dunia: jam tokyo | jam london | jam newyork`;
       return reply(text);
     }
@@ -61,7 +61,7 @@ export default {
     const key = q.replace(/\s+/g, "");
     const tz = zones[key] || zones[q] || null;
     if (tz) {
-      return reply(`┌── JAM ${q.toUpperCase()}\n` + `│ Waktu: ${fmt(tz)}\n` + `│ Zona: ${tz}\n` + `└──`);
+      return reply(`┌── JAM ${q.toUpperCase()}\n` + `│ Waktu: ${fmt(tz)}\n` + `│ Zona: ${tz}\n` + `└─`);
     }
 
     try {

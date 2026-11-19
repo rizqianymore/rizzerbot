@@ -21,7 +21,7 @@ export default {
       let text = `┌── ${(config.shopName || "STORE").toUpperCase()}\n`;
       text += `│ Status: Buka\n`;
       text += `│ Total Produk: ${prods.length}\n`;
-      text += `└──\n\n`;
+      text += `└─\n\n`;
 
       if (prods.length === 0) {
         text += `Belum ada produk yang dijual saat ini.\n`;
@@ -34,7 +34,7 @@ export default {
         const stockStr = item.stock === -1 ? "Tersedia" : `${item.stock} item`;
         text += `│ ${item.code}: ${item.name} — ${formatRupiah(item.price)} (${stockStr})\n`;
       }
-      text += `└──\n\n`;
+      text += `└─\n\n`;
       text += `Ketik ${p}shop detail <kode> untuk melihat rincian.\n`;
       text += `Ketik ${p}buy <kode> [jumlah] untuk pemesanan.\n`;
       text += `Ketik ${p}payment untuk metode pembayaran.`;
@@ -53,7 +53,7 @@ export default {
       text += `│ Harga: ${formatRupiah(prod.price)}\n`;
       text += `│ Stok: ${stockStr}\n`;
       if (prod.desc) text += `│ Deskripsi: ${prod.desc}\n`;
-      text += `└──\n\n`;
+      text += `└─\n\n`;
       text += `Ketik ${p}buy ${prod.code} untuk melakukan pemesanan.`;
       return reply(text.trim());
     }
@@ -83,10 +83,10 @@ export default {
         out += `│ Jumlah: ${order.quantity}\n`;
         out += `│ Total Tagihan: ${formatRupiah(order.totalPrice)}\n`;
         out += `│ Status: PENDING\n`;
-        out += `└──\n\n`;
+        out += `└─\n\n`;
         out += `┌── INSTRUKSI PEMBAYARAN\n`;
         out += `│ ${config.paymentInfo || "Silakan lakukan pembayaran via QRIS atau Transfer Bank."}\n`;
-        out += `└──\n\n`;
+        out += `└─\n\n`;
         out += `Kirim bukti transfer ke Admin/Owner bot dengan menyertakan ID Pesanan: ${order.id}`;
 
         return reply(out.trim());

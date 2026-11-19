@@ -24,7 +24,7 @@ export default {
     const config = getShopConfig();
     let out = `┌── METODE PEMBAYARAN RESMI\n`;
     out += `│ ${config.paymentInfo || "Belum ada informasi pembayaran yang disetel."}\n`;
-    out += `└──\n\n`;
+    out += `└─\n\n`;
     out += `Setelah transfer, simpan bukti struk dan konfirmasi ke Admin/Owner.`;
 
     if (isOwner) {

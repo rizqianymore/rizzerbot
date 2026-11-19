@@ -13,7 +13,7 @@ export default {
       return context.reply(
         `┌── OSINT STEAM GAMER STALKER\n` +
           `│ Format: ${context.prefix || "."}steamstalk <steamid64 / custom URL>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}steamstalk gabelogannewell`
       );
     }
@@ -38,7 +38,7 @@ export default {
       `│ Trade Ban: ${res.tradeBanState}`,
       res.memberSince !== "-" ? `│ Sejak: ${res.memberSince}` : "",
       `│ Bio: ${res.headline || "-"}`,
-      `└──\n`,
+      `└─\n`,
       `Tautan: ${res.profileUrl}`,
     ]
       .filter(Boolean)

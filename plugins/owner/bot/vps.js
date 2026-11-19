@@ -158,10 +158,10 @@ export default {
       `│ Disk: ${root ? `${root.used} / ${root.total} (${root.pct})` : "-"}\n` +
       `│ Database: ${dbSizes()}\n` +
       `│ Node.js: ${process.version}\n` +
-      `└──\n\n` +
+      `└─\n\n` +
       `┌── JARINGAN\n` +
       (ip ? `│ IP: ${ip.query}\n│ Lokasi: ${ip.city}, ${ip.country}\n│ ISP: ${ip.isp}\n` : `│ IP: Tidak terjangkau\n`) +
-      `└──`;
+      `└─`;
 
     return reply(text);
   },

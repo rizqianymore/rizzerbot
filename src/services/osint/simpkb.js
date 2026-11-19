@@ -76,7 +76,7 @@ export async function fetchRawSimpkb(keyword, page = 1) {
 export function formatGtkItem(item, index) {
   let text = `*OSINT TOOLS - DATA GTK KEMENDIKBUD*
 `;
-  text += `├─ No. Peserta : \`${item.no_peserta || item.nik || "-"}\`
+  text += `├─ No. Peserta : ${item.no_peserta || item.nik || "-"}
 `;
   text += `├─ Nama        : ${item.nama || "-"}
 `;

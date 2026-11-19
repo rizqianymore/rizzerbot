@@ -70,7 +70,7 @@ async function searchThenDetail(query) {
 export function formatSekolah(row) {
   let text = `*OSINT TOOLS - DATA SEKOLAH DAPODIK*
 `;
-  text += `├─ NPSN       : \`${row.npsn || "-"}\`
+  text += `├─ NPSN       : ${row.npsn || "-"}
 `;
   text += `├─ Nama       : ${row.nama || "-"}
 `;

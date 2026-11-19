@@ -18,7 +18,7 @@ export default {
       return context.reply(
         `┌── OSINT TELEGRAM STALKER\n` +
           `│ Format: ${context.prefix || "."}tgstalk <username / link t.me>\n` +
-          `└──\n\n` +
+          `└─\n\n` +
           `Contoh: ${context.prefix || "."}tgstalk @durov`
       );
     }
@@ -40,7 +40,7 @@ export default {
       `│ Tipe: ${res.entityType}`,
       `│ Statistik: ${res.extra}`,
       `│ Bio: ${res.description || "-"}`,
-      `└──\n`,
+      `└─\n`,
       `Tautan: https://t.me/${res.username}`,
     ].join("\n");
 

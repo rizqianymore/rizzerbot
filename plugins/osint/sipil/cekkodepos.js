@@ -71,7 +71,7 @@ export default {
       text += `│
 `;
       results.slice(0, 5).forEach((item, idx) => {
-        text += `├─ [${idx + 1}] Kode Pos : \`${item.postalcode || item.kodepos || "-"}\`
+        text += `├─ [${idx + 1}] Kode Pos : ${item.postalcode || item.kodepos || "-"}
 `;
         text += `│   Wilayah  : ${item.urban || item.kelurahan || "-"}, ${item.subdistrict || item.kecamatan || "-"}
 `;

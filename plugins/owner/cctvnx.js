@@ -108,7 +108,7 @@ export default {
           `│ Lokasi: ${cam.name}\n` +
           `│ Status: ${cam.status}\n` +
           `│ Waktu: ${new Date().toLocaleTimeString("id-ID")} WIB\n` +
-          `└──`;
+          `└─`;
 
         return await sock.sendMessage(remoteJid, { image: imgBuf, caption }, { quoted: msg });
       }
@@ -135,7 +135,7 @@ export default {
           `│ Lokasi: ${cam.name}\n` +
           `│ Status: ${cam.status}\n` +
           `│ Waktu: ${new Date().toLocaleTimeString("id-ID")} WIB\n` +
-          `└──`;
+          `└─`;
 
         return await sock.sendMessage(
           remoteJid,

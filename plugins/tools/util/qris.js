@@ -47,7 +47,7 @@ export default {
         `│ Kota: ${info.merchantCity || settings.qrisCity}\n` +
         `│ Nominal: ${formattedNominal}\n` +
         `│ Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
-        `└──\n\n` +
+        `└─\n\n` +
         `Dukungan: BCA, Mandiri, BRI, BNI, Dana, GoPay, OVO, ShopeePay, LinkAja, dll.\n` +
         `Silakan scan barcode QRIS di atas untuk menyelesaikan pembayaran tepat.`;
 
