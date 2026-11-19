@@ -11,11 +11,10 @@ export default {
     let query = (args[0] || "").trim();
     if (!query) {
       return context.reply(
-        `Gunakan format:\n` +
-        `${context.prefix || "."}asn <ip atau nomor-as>\n\n` +
-        `Contoh:\n` +
-        `• ${context.prefix || "."}asn 1.1.1.1\n` +
-        `• ${context.prefix || "."}asn AS7713 (Telkom Indonesia)`
+        `┌── AUTONOMOUS SYSTEM (ASN) LOOKUP\n` +
+        `│ Format: ${context.prefix || "."}asn <ip / AS number>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}asn 1.1.1.1`
       );
     }
 
@@ -32,51 +31,29 @@ export default {
       });
 
       if (!raw || raw.includes("error") || raw.includes("No ASN")) {
-        return context.reply(`Tidak ditemukan data ASN untuk kueri: \`${query}\``);
+        return context.reply(`Tidak ditemukan data ASN untuk kueri: ${query}`);
       }
 
       const lines = raw.trim().split("\n");
       const firstLine = lines[0];
-
-      // Format IP lookup: "1.1.1.1","13335","1.1.1.0/24","CLOUDFLARENET, US"
-      // Format AS lookup: "7713","TELKOMNET-AS-AP PT Telekomunikasi Indonesia, ID"
       const parts = firstLine.replace(/"/g, "").split(",");
 
       if (parts.length >= 4) {
-        // Query berupa IP
-        const out = [
-          `*AUTONOMOUS SYSTEM (ASN) LOOKUP*`,
-          `Target IP   : ${parts[0]}`,
-          `ASN Number  : AS${parts[1]}`,
-          `IP Prefix   : ${parts[2]}`,
-          `Organisasi  : ${parts[3]}`,
-          `Negara      : ${parts[4] || "-"}`,
-        ].join("\n");
+        const out =
+          `┌── ASN: AS${parts[1]}\n` +
+          `│ Target IP: ${parts[0]}\n` +
+          `│ IP Range: ${parts[2]}\n` +
+          `│ Organisasi: ${parts.slice(3).join(",").trim()}\n` +
+          `└──`;
         return context.reply(out);
       } else if (parts.length >= 2) {
-        // Query berupa ASN
-        const asnNum = parts[0];
-        const org = parts.slice(1).join(", ");
-        const subnets = lines.slice(1).filter((l) => l.trim().length > 0);
-
-        const out = [
-          `*AUTONOMOUS SYSTEM (ASN) DETAIL*`,
-          `ASN Number : AS${asnNum}`,
-          `Organisasi : ${org.trim()}`,
-          `Total Blok : ${subnets.length} subnet terdaftar`,
-          ``,
-          `*Sample IP Subnet Terdaftar:*`,
-          subnets.slice(0, 10).map((s) => `  - ${s}`).join("\n"),
-        ];
-
-        if (subnets.length > 10) {
-          out.push(`  ... dan ${subnets.length - 10} subnet lainnya.`);
-        }
-
-        return context.reply(out.join("\n"));
+        const out =
+          `┌── ASN: AS${parts[0]}\n` +
+          `│ Operator: ${parts.slice(1).join(",").trim()}\n` +
+          `└──`;
+        return context.reply(out);
       }
-
-      return context.reply(`Hasil pencarian ASN:\n${raw.slice(0, 500)}`);
+      return context.reply(`Data ASN:\n${raw}`);
     } catch (err) {
       return context.reply(`Gagal mencari data ASN: ${err.message}`);
     }

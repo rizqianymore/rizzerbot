@@ -180,18 +180,18 @@ export async function enrichWilayah(parsed) {
 }
 
 export function formatNikInfo(p) {
-  let text = `*INFO NIK*\n`;
-  text += `NIK: ${p.nik}\n`;
-  text += `Format: ${p.formatted}\n`;
-  text += `Jenis Kelamin: ${p.gender}\n`;
-  text += `Tanggal Lahir: ${p.birthStr} (${p.dayName})\n`;
-  text += `Umur: ${p.age} Tahun\n`;
-  text += `Zodiak: ${p.zodiac}\n`;
-  text += `Generasi: ${p.generation}\n`;
-  text += `Provinsi: ${p.province}\n`;
-  text += `Kota/Kab: ${p.city || p.cityCode}\n`;
-  text += `Kecamatan: ${p.district || p.districtCode}\n`;
-  text += `No Urut: ${p.sequence}`;
+  let text = `┌── INFO NIK: ${p.nik}\n`;
+  text += `│ Format: ${p.formatted}\n`;
+  text += `│ Jenis Kelamin: ${p.gender}\n`;
+  text += `│ Tanggal Lahir: ${p.birthStr} (${p.dayName})\n`;
+  text += `│ Umur: ${p.age} Tahun\n`;
+  text += `│ Zodiak: ${p.zodiac}\n`;
+  text += `│ Generasi: ${p.generation}\n`;
+  text += `│ Provinsi: ${p.province}\n`;
+  text += `│ Kota/Kab: ${p.city || p.cityCode}\n`;
+  text += `│ Kecamatan: ${p.district || p.districtCode}\n`;
+  text += `│ Nomor Urut: ${p.sequence}\n`;
+  text += `└──`;
   return text;
 }
 

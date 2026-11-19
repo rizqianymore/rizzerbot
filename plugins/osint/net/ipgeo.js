@@ -12,7 +12,12 @@ export default {
     await sendTyping();
     const target = args[0];
     if (!target) {
-      return reply("Masukkan alamat IP atau domain! Contoh: `.ipgeo 1.1.1.1` atau `.iprecon google.com`");
+      return reply(
+        `┌── OSINT IP & RECON\n` +
+        `│ Format: .ipgeo <ip / domain>\n` +
+        `└──\n\n` +
+        `Contoh: .ipgeo 1.1.1.1`
+      );
     }
 
     try {
@@ -22,38 +27,31 @@ export default {
       const isHosting = geo.hosting === true;
       const isMobile = geo.mobile === true;
 
-      let tipeJaringan = "Rumahan / Kantor (Residential)";
+      let tipeJaringan = "Residential (Rumahan/Kantor)";
       if (isHosting && isProxy) {
-        tipeJaringan = "[!] VPN / Datacenter Proxy";
+        tipeJaringan = "VPN / Datacenter Proxy";
       } else if (isHosting) {
-        tipeJaringan = " Cloud Datacenter / Server Hosting";
+        tipeJaringan = "Cloud Datacenter / Server";
       } else if (isProxy) {
-        tipeJaringan = " Anonymous Proxy / VPN";
+        tipeJaringan = "Anonymous Proxy / VPN";
       } else if (isMobile) {
-        tipeJaringan = " Jaringan Seluler (Mobile Data)";
+        tipeJaringan = "Jaringan Seluler (Mobile)";
       }
 
-      const lines = [
-        ` *IP & THREAT INTEL RECON*`,
-        ``,
-        `• Target IP: \`${geo.query}\``,
-        `• Negara: ${geo.country} (${geo.countryCode})`,
-        `• Kota/Wilayah: ${geo.city}, ${geo.regionName}`,
-        `• Kode Pos: ${geo.zip || "-"}`,
-        `• Koordinat: \`${geo.lat}, ${geo.lon}\``,
-        `• Timezone: ${geo.timezone}`,
-        `• ISP: ${geo.isp}`,
-        `• Organisasi: ${geo.org || "-"}`,
-        `• AS Number: ${geo.as || "-"}`,
-        ``,
-        ` *DETEKSI KEAMANAN & ANCAMAN:*`,
-        `• Tipe Jaringan: *${tipeJaringan}*`,
-        `• VPN / Proxy: ${isProxy ? "[!] *TERDETEKSI (Ya)*" : "Aman (Tidak)"}`,
-        `• Cloud Hosting / VPS: ${isHosting ? "[*] *Ya (Datacenter)*" : "Bukan Hosting"}`,
-        `• Mobile Network: ${isMobile ? " Ya (Seluler)" : "[-] Bukan Seluler"}`,
-      ];
+      const text =
+        `┌── RECON: ${geo.query}\n` +
+        `│ Lokasi: ${geo.city}, ${geo.regionName}, ${geo.country} (${geo.countryCode})\n` +
+        `│ Koordinat: ${geo.lat}, ${geo.lon}\n` +
+        `│ Zona Waktu: ${geo.timezone}\n` +
+        `│ ISP: ${geo.isp}\n` +
+        `│ Organisasi: ${geo.org || "-"}\n` +
+        `│ ASN: ${geo.as || "-"}\n` +
+        `│ Tipe Jaringan: ${tipeJaringan}\n` +
+        `│ Proxy / VPN: ${isProxy ? "TERDETEKSI" : "Aman (Tidak)"}\n` +
+        `│ Hosting / VPS: ${isHosting ? "Ya (Datacenter)" : "Bukan Hosting"}\n` +
+        `└──`;
 
-      await reply(lines.join("\n"));
+      await reply(text);
     } catch (err) {
       await reply(`Gagal melacak IP: ${err.message}`);
     }

@@ -12,49 +12,39 @@ export default {
     await sendTyping();
     const domain = args[0];
     if (!domain) {
-      return reply("Masukkan nama domain! Contoh: *.dnslookup google.com*");
+      return reply(
+        `┌── DNS RECORDS LOOKUP\n` +
+        `│ Format: .dnslookup <domain>\n` +
+        `└──\n\n` +
+        `Contoh: .dnslookup google.com`
+      );
     }
-
-    await reply(`Memeriksa record DNS untuk *${domain}*...`);
 
     try {
       const records = await getDnsRecords(domain);
 
-      const lines = [`*DNS RECORDS: ${records.domain.toUpperCase()}*`];
-
+      let text = `┌── DNS: ${records.domain.toUpperCase()}\n`;
       if (records.a.length > 0) {
-        lines.push(`*A Records (IPv4):*`);
-        records.a.forEach((ip) => lines.push(`  • ${ip}`));
+        text += `│ A (IPv4): ${records.a.slice(0, 3).join(", ")}\n`;
       }
       if (records.aaaa.length > 0) {
-        lines.push(`*AAAA Records (IPv6):*`);
-        records.aaaa.forEach((ip) => lines.push(`  • ${ip}`));
+        text += `│ AAAA (IPv6): ${records.aaaa.slice(0, 2).join(", ")}\n`;
       }
       if (records.cname.length > 0) {
-        lines.push(`*CNAME:*`);
-        records.cname.forEach((c) => lines.push(`  • ${c}`));
+        text += `│ CNAME: ${records.cname.slice(0, 2).join(", ")}\n`;
       }
       if (records.mx.length > 0) {
-        lines.push(`*MX Records (Mail):*`);
-        records.mx.forEach((mx) => lines.push(`  • ${mx}`));
+        text += `│ MX: ${records.mx.slice(0, 2).join(", ")}\n`;
       }
       if (records.ns.length > 0) {
-        lines.push(`*Name Servers (NS):*`);
-        records.ns.forEach((ns) => lines.push(`  • ${ns}`));
+        text += `│ NS: ${records.ns.slice(0, 3).join(", ")}\n`;
       }
       if (records.txt.length > 0) {
-        lines.push(`*TXT Records:*`);
-        records.txt.slice(0, 4).forEach((txt) => lines.push(`  • ${txt}`));
-        if (records.txt.length > 4) {
-          lines.push(`  _...dan ${records.txt.length - 4} TXT lainnya_`);
-        }
+        text += `│ TXT: ${records.txt[0].slice(0, 60)}...\n`;
       }
+      text += `└──`;
 
-      if (lines.length <= 1) {
-        return reply(`Tidak ditemukan record DNS publik untuk *${domain}*.`);
-      }
-
-      await reply(lines.join("\n"));
+      return await reply(text);
     } catch (err) {
       await reply(`Gagal DNS Lookup: ${err.message}`);
     }

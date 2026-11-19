@@ -19,7 +19,12 @@ export default {
   run: async (_sock, _msg, args, context) => {
     const ip = (args[0] || "").trim();
     if (!ip) {
-      return context.reply(`Gunakan format:\n${context.prefix || "."}shodan <ip-address>\n\nContoh:\n${context.prefix || "."}shodan 1.1.1.1`);
+      return context.reply(
+        `┌── SHODAN INTERNETDB SCAN\n` +
+        `│ Format: ${context.prefix || "."}shodan <ip>\n` +
+        `└──\n\n` +
+        `Contoh: ${context.prefix || "."}shodan 1.1.1.1`
+      );
     }
 
     if (!isIpv4(ip)) {
@@ -38,26 +43,15 @@ export default {
       }
 
       const ports = Array.isArray(res.ports) && res.ports.length > 0 ? res.ports.join(", ") : "Tidak terdeteksi";
-      const hostnames = Array.isArray(res.hostnames) && res.hostnames.length > 0 ? res.hostnames.join("\n  - ") : "-";
-      const cpes = Array.isArray(res.cpes) && res.cpes.length > 0 ? res.cpes.join("\n  - ") : "-";
       const tags = Array.isArray(res.tags) && res.tags.length > 0 ? res.tags.join(", ") : "-";
-      const vulns = Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.join("\n  - ") : "Tidak ada kerentanan publik terdeteksi";
+      const vulns = Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.slice(0, 5).join(", ") : "Tidak terdeteksi";
 
-      const out = [
-        `*SHODAN INTERNETDB SCAN*`,
-        `Target IP: ${res.ip}`,
-        `Port Terbuka: ${ports}`,
-        `Tags: ${tags}`,
-        ``,
-        `*Hostnames:*`,
-        `  - ${hostnames}`,
-        ``,
-        `*CPE (Services/Software):*`,
-        `  - ${cpes}`,
-        ``,
-        `*Known Vulnerabilities (CVE):*`,
-        `  - ${vulns}`,
-      ].join("\n");
+      const out =
+        `┌── SHODAN: ${res.ip}\n` +
+        `│ Port Terbuka: ${ports}\n` +
+        `│ Tags: ${tags}\n` +
+        `│ Kerentanan (CVE): ${vulns}\n` +
+        `└──`;
 
       return context.reply(out);
     } catch (err) {
