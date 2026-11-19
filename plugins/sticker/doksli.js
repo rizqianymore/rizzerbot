@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { createSticker } from "@/src/services/fetch/media.js";
 
-const BASE_PATH = path.join(process.cwd(), "assets", "brat", "Doksli.png");
+const BASE_PATH = path.join(process.cwd(), "assets", "brat", "doksli.png");
 let baseCache = null;
 
 function getBase() {
