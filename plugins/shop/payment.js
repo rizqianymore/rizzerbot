@@ -22,12 +22,13 @@ export default {
     }
 
     const config = getShopConfig();
-    let out = `*METODE PEMBAYARAN RESMI*\n\n`;
-    out += `${config.paymentInfo || "Belum ada informasi pembayaran yang disetel."}\n\n`;
-    out += `_Setelah transfer, simpan bukti struk dan konfirmasi ke Admin/Owner._`;
+    let out = `┌── METODE PEMBAYARAN RESMI\n`;
+    out += `│ ${config.paymentInfo || "Belum ada informasi pembayaran yang disetel."}\n`;
+    out += `└──\n\n`;
+    out += `Setelah transfer, simpan bukti struk dan konfirmasi ke Admin/Owner.`;
 
     if (isOwner) {
-      out += `\n\n_Owner: Ketik \`${p}payment set <info>\` untuk mengubah teks pembayaran._`;
+      out += `\n\nOwner: Ketik ${p}payment set <info> untuk mengubah teks pembayaran.`;
     }
 
     return reply(out.trim());

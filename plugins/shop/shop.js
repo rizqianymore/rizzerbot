@@ -23,27 +23,26 @@ export default {
 
     if (!sub || sub === "list") {
       const prods = listProducts();
-      let text = `*${(config.shopName || "STORE").toUpperCase()}*\n`;
-      text += `• Status: Buka\n`;
-      text += `• Total Produk: ${prods.length}\n\n`;
+      let text = `┌── ${(config.shopName || "STORE").toUpperCase()}\n`;
+      text += `│ Status: Buka\n`;
+      text += `│ Total Produk: ${prods.length}\n`;
+      text += `└──\n\n`;
 
       if (prods.length === 0) {
-        text += `_Belum ada produk yang dijual saat ini._\n`;
-        text += `_Owner dapat menambah produk dengan ketik \`${p}addproduct\`._`;
+        text += `Belum ada produk yang dijual saat ini.\n`;
+        text += `Owner dapat menambah produk dengan ${p}addproduct`;
         return reply(text.trim());
       }
 
-      text += `*DAFTAR PRODUK:*\n`;
+      text += `┌── DAFTAR PRODUK\n`;
       for (const item of prods) {
         const stockStr = item.stock === -1 ? "Tersedia" : `${item.stock} item`;
-        text += `• *[${item.code}]* ${item.name}\n`;
-        text += `  Harga: *${formatRupiah(item.price)}* | Stok: ${stockStr}\n`;
+        text += `│ ${item.code}: ${item.name} — ${formatRupiah(item.price)} (${stockStr})\n`;
       }
-
-      text += `\n*Panduan Pembelian:*\n`;
-      text += `• Detail: \`${p}shop detail <kode>\`\n`;
-      text += `• Order : \`${p}buy <kode> [jumlah]\`\n\n`;
-      text += `_Ketik \`${p}payment\` untuk info metode pembayaran resmi._`;
+      text += `└──\n\n`;
+      text += `Ketik ${p}shop detail <kode> untuk melihat rincian.\n`;
+      text += `Ketik ${p}buy <kode> [jumlah] untuk pemesanan.\n`;
+      text += `Ketik ${p}payment untuk metode pembayaran.`;
       return reply(text.trim());
     }
 
@@ -54,13 +53,13 @@ export default {
       if (!prod) return reply(`Produk dengan kode *${code.toUpperCase()}* tidak ditemukan.`);
 
       const stockStr = prod.stock === -1 ? "Tersedia (Unlimited)" : `${prod.stock} unit`;
-      let text = `*DETAIL PRODUK:*\n\n`;
-      text += `• *Kode:* ${prod.code}\n`;
-      text += `• *Nama:* ${prod.name}\n`;
-      text += `• *Harga:* ${formatRupiah(prod.price)}\n`;
-      text += `• *Stok:* ${stockStr}\n`;
-      if (prod.desc) text += `• *Deskripsi:*\n${prod.desc}\n`;
-      text += `\nKetik \`${p}buy ${prod.code}\` untuk melakukan pemesanan.`;
+      let text = `┌── DETAIL PRODUK: ${prod.code}\n`;
+      text += `│ Nama: ${prod.name}\n`;
+      text += `│ Harga: ${formatRupiah(prod.price)}\n`;
+      text += `│ Stok: ${stockStr}\n`;
+      if (prod.desc) text += `│ Deskripsi: ${prod.desc}\n`;
+      text += `└──\n\n`;
+      text += `Ketik ${p}buy ${prod.code} untuk melakukan pemesanan.`;
       return reply(text.trim());
     }
 
@@ -84,15 +83,16 @@ export default {
           notes: args.slice(3).join(" "),
         });
 
-        let out = `*INVOICE PEMESANAN DIBUAT*\n\n`;
-        out += `• *ID Pesanan:* \`${order.id}\`\n`;
-        out += `• *Produk:* ${order.productName} (${order.productCode})\n`;
-        out += `• *Jumlah:* ${order.quantity}\n`;
-        out += `• *Total Tagihan:* *${formatRupiah(order.totalPrice)}*\n`;
-        out += `• *Status:* PENDING\n\n`;
-        out += `*INSTRUKSI PEMBAYARAN:*\n`;
-        out += `${config.paymentInfo || "Silakan lakukan pembayaran via QRIS atau Transfer Rekening."}\n\n`;
-        out += `Kirim bukti transfer ke Admin/Owner bot dengan menyertakan ID Pesanan: \`${order.id}\`.`;
+        let out = `┌── INVOICE PEMESANAN: ${order.id}\n`;
+        out += `│ Produk: ${order.productName} (${order.productCode})\n`;
+        out += `│ Jumlah: ${order.quantity}\n`;
+        out += `│ Total Tagihan: ${formatRupiah(order.totalPrice)}\n`;
+        out += `│ Status: PENDING\n`;
+        out += `└──\n\n`;
+        out += `┌── INSTRUKSI PEMBAYARAN\n`;
+        out += `│ ${config.paymentInfo || "Silakan lakukan pembayaran via QRIS atau Transfer Bank."}\n`;
+        out += `└──\n\n`;
+        out += `Kirim bukti transfer ke Admin/Owner bot dengan menyertakan ID Pesanan: ${order.id}`;
 
         return reply(out.trim());
       } catch (err) {

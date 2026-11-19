@@ -14,12 +14,15 @@ export default {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
     let text =
-      `*STATISTIK PENGGUNAAN BOT*\n\n` +
-      `*Total Perintah:* ${total}\n` +
-      `*Jumlah Fitur:* ${Object.keys(usage).length}\n\n` +
-      `*Top 10 Command:*\n`;
+      `┌── STATISTIK PENGGUNAAN BOT\n` +
+      `│ Total Perintah: ${total}\n` +
+      `│ Jumlah Fitur: ${Object.keys(usage).length}\n` +
+      `└──\n\n` +
+      `┌── TOP 10 COMMAND\n`;
     top.forEach(([cmd, count], i) => {
-      text += ` ${i + 1}. ${cmd}: ${count}x\n`;
+      const isLast = i === top.length - 1;
+      const branch = isLast ? "└──" : "├──";
+      text += `${branch} ${cmd}: ${count}x\n`;
     });
     await reply(text);
   },
