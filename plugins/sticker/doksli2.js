@@ -70,7 +70,8 @@ export default {
     let topText = "";
     let bottomText = "";
     if (!position) position = "bawah";
-    const maxSize = fontSize > 0 ? fontSize : 80;
+    if (!font) font = "Impact";
+    const maxSize = fontSize > 0 ? fontSize : 60;
 
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ").trim();

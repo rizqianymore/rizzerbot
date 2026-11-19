@@ -4,14 +4,23 @@ import { requireCanvas } from "@/src/utils/native.js";
 import { ensureEmojiFont } from "@/src/utils/emoji-font.js";
 
 const fontBratPath = path.join(process.cwd(), "assets", "brat", "ArialNarrow.ttf");
+const fontImpactPath = path.join(process.cwd(), "assets", "fonts", "impact.ttf");
 let fontRegistered = false;
+
 function ensureStickerFont() {
   if (fontRegistered) return;
   fontRegistered = true;
-  if (!fs.existsSync(fontBratPath)) return;
-  try {
-    requireCanvas().GlobalFonts.registerFromPath(fontBratPath, "ArialNarrow");
-  } catch (_) {}
+  const canvas = requireCanvas();
+  if (fs.existsSync(fontImpactPath)) {
+    try {
+      canvas.GlobalFonts.registerFromPath(fontImpactPath, "Impact");
+    } catch (_) {}
+  }
+  if (fs.existsSync(fontBratPath)) {
+    try {
+      canvas.GlobalFonts.registerFromPath(fontBratPath, "ArialNarrow");
+    } catch (_) {}
+  }
 }
 
 let emojiTried = false;
@@ -24,7 +33,7 @@ async function ensureStickerEmoji() {
 }
 
 const FONT_FALLBACK =
-  '"Impact", "ArialNarrow", "DejaVu Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  '"Impact", "Noto Color Emoji", "ArialNarrow", "Apple Color Emoji", "Segoe UI Emoji", "DejaVu Sans", sans-serif';
 
 function fontStack(size, customFont) {
   const clean = String(customFont || "")
