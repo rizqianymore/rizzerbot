@@ -71,7 +71,7 @@ export default {
     let bottomText = "";
     if (!position) position = "bawah";
     if (!font) font = "Impact";
-    const maxSize = fontSize > 0 ? fontSize : 60;
+    const maxSize = fontSize > 0 ? fontSize : 120;
 
     if (textArgs.length > 0) {
       const fullText = textArgs.join(" ").trim();
