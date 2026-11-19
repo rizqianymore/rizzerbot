@@ -25,19 +25,19 @@
 export function renderCustomMenu(data) {
   const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
 
-  // Header Simpel Gaya Terminal Linux (Ringkas tanpa border kepanjangan)
-  let out = `╭─[ *${botName.toUpperCase()}* ]\n`;
+  // Header Kaku & Murni Terminal Linux (┌── │ └── tanpa tanda kurung [ ])
+  let out = `┌── ${botName.toUpperCase()}\n`;
   out += `│ OS: Linux (x86_64)\n`;
   out += `│ Status: Online\n`;
-  out += `│ Prefix: [ ${prefix} ]\n`;
+  out += `│ Prefix: ${prefix}\n`;
   out += `│ Role: ${role}\n`;
   out += `│ Total: ${totalCmds} Perintah\n`;
-  out += `╰──────────────────\n\n`;
+  out += `└──\n\n`;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    out += `╭─[ *${targetCategory.toUpperCase()}* ]\n`;
+    out += `┌── ${targetCategory.toUpperCase()}\n`;
     cmds.forEach((cmd, i) => {
       const isLast = i === cmds.length - 1;
       const branch = isLast ? "└──" : "├──";
@@ -52,7 +52,7 @@ export function renderCustomMenu(data) {
     for (const cat of catKeys) {
       const cmds = categories[cat] || [];
       if (!cmds || cmds.length === 0) continue;
-      out += `╭─[ *${cat.toUpperCase()}* ]\n`;
+      out += `┌── ${cat.toUpperCase()}\n`;
       cmds.forEach((cmd, i) => {
         const isLast = i === cmds.length - 1;
         const branch = isLast ? "└──" : "├──";
@@ -64,14 +64,14 @@ export function renderCustomMenu(data) {
     return out;
   }
 
-  // Tampilan 3: Menu Utama (Daftar Kategori Bergaya Linux Tree Ringkas tanpa count)
-  out += `╭─[ *DAFTAR KATEGORI* ]\n`;
+  // Tampilan 3: Menu Utama (Daftar Kategori Bergaya Linux Tree Kaku)
+  out += `┌── DAFTAR KATEGORI\n`;
   catKeys.forEach((cat) => {
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
     out += `├── ${prefix}menu ${alias} -> ${cat}\n`;
   });
   out += `└── ${prefix}menu all -> Tampilkan Seluruh Menu\n\n`;
-  out += `Ketik ${prefix}menu <kategori> untuk membuka daftar perintah.`;
+  out += `Ketik ${prefix}menu <kategori> untuk membuka daftar.`;
 
   return out;
 }
