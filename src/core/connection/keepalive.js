@@ -1,7 +1,7 @@
 const HEARTBEAT_MS = 4 * 60 * 1000;
 const MAX_FAILS = 3;
-const LAG_WATCH_MS = 60 * 1000;
-const LAG_WARN_MS = 500;
+const LAG_SAMPLE_MS = 2000;
+const LAG_WARN_MS = 1500;
 
 export function startKeepAlive(sock, { logger = console, restart = null, intervalMs = HEARTBEAT_MS } = {}) {
   let fails = 0;
@@ -36,21 +36,21 @@ export function startKeepAlive(sock, { logger = console, restart = null, interva
   };
 }
 
-export function startStabilityWatchdog({ logger = console, intervalMs = LAG_WATCH_MS } = {}) {
+export function startStabilityWatchdog({ logger = console, sampleMs = LAG_SAMPLE_MS } = {}) {
   let stopped = false;
   let last = Date.now();
   const timer = setInterval(() => {
     if (stopped) return;
     const now = Date.now();
-    const lag = now - last - intervalMs;
+    const lag = now - last - sampleMs;
     last = now;
     if (lag >= LAG_WARN_MS) {
       try {
         const mem = Math.round((process.memoryUsage()?.heapUsed || 0) / 1024 / 1024);
-        logger?.warn?.(`[Stability] event-loop lag ${lag}ms (heap ${mem}MB) — 1 tugas berat memblokir semua perintah`);
+        logger?.warn?.(`[Stability] event-loop lag ${lag}ms (heap ${mem}MB) — event loop terbebani sementara`);
       } catch (_) {}
     }
-  }, intervalMs);
+  }, sampleMs);
   if (timer.unref) timer.unref();
   return () => {
     stopped = true;
