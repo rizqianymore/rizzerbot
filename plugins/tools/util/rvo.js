@@ -1,4 +1,5 @@
 import { downloadContentFromMessage } from "baileys";
+import { ensureVideoCompatible } from "../../../src/services/fetch/downloaderCompat.js";
 
 async function streamToBuffer(stream) {
   let buffer = Buffer.from([]);
@@ -20,7 +21,7 @@ export default {
     await sendTyping();
 
     if (!quoted) {
-      return reply("Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*!");
+      return reply("Balas (reply) pesan View Once (foto, video, atau voice note) dengan perintah *.rvo*");
     }
 
     const inner =
@@ -34,19 +35,17 @@ export default {
     const audioMsg = inner.audioMessage;
 
     if (!imageMsg && !videoMsg && !audioMsg) {
-      return reply("Pesan yang dibalas bukan media View Once atau media gambar/video/audio!");
+      return reply("Pesan yang dibalas bukan media View Once atau media gambar/video/audio.");
     }
-
-    await reply("Membuka media sekali lihat...");
 
     try {
       if (imageMsg) {
         const stream = await downloadContentFromMessage(imageMsg, "image");
         const buffer = await streamToBuffer(stream);
 
-        let caption = "*View Once Image Unlocked*";
+        let caption = "*Media Sekali Lihat (Foto)*";
         if (imageMsg.caption) {
-          caption += `\n\n*Caption Asli:* ${imageMsg.caption}`;
+          caption += `\n\n*Keterangan Asli:*\n${imageMsg.caption}`;
         }
 
         await sock.sendMessage(
@@ -60,11 +59,12 @@ export default {
         );
       } else if (videoMsg) {
         const stream = await downloadContentFromMessage(videoMsg, "video");
-        const buffer = await streamToBuffer(stream);
+        const rawBuffer = await streamToBuffer(stream);
+        const buffer = await ensureVideoCompatible(rawBuffer);
 
-        let caption = "*View Once Video Unlocked*";
+        let caption = "*Media Sekali Lihat (Video)*";
         if (videoMsg.caption) {
-          caption += `\n\n*Caption Asli:* ${videoMsg.caption}`;
+          caption += `\n\n*Keterangan Asli:*\n${videoMsg.caption}`;
         }
 
         await sock.sendMessage(
@@ -72,7 +72,7 @@ export default {
           {
             video: buffer,
             caption,
-            mimetype: videoMsg.mimetype || "video/mp4",
+            mimetype: "video/mp4",
           },
           { quoted: msg }
         );

@@ -62,13 +62,13 @@ async function dispatchInner(sock, msg, logger) {
       const ageMs = Date.now() - ts * 1000;
 
       if (ageMs > 5 * 60 * 1000) {
-        logger?.info?.(`[Stale] pesan basi diabaikan (umur ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
+        logger?.info?.(`[Stale] pesan lama dilewati (umur ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`);
         return;
       }
 
       if (ageMs < -5 * 60 * 1000) {
         logger?.info?.(
-          `[Stale] timestamp masa depan diabaikan (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`
+          `[Stale] timestamp masa depan dilewati (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`
         );
         return;
       }

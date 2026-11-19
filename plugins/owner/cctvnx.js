@@ -100,15 +100,12 @@ export default {
           return reply(`Kamera "${targetQuery}" tidak ditemukan. Ketik \`${p}nx list\` untuk melihat nomor urut.`);
         }
 
-        await reply(`Mengambil snapshot live kamera *${cam.name}*...`);
-
         const imgBuf = await getNxSnapshot(cam.id);
         const caption =
-          `*CCTV LIVE SNAPSHOT*\n\n` +
-          `Nama: ${cam.name}\n` +
-          `Status: ${cam.status}\n` +
-          `Waktu: ${new Date().toLocaleTimeString("id-ID")}\n` +
-          `Server: Network Optix VMS`;
+          `*CCTV Live Snapshot*\n\n` +
+          `• *Lokasi:* ${cam.name}\n` +
+          `• *Status:* ${cam.status}\n` +
+          `• *Waktu:* ${new Date().toLocaleTimeString("id-ID")} WIB`;
 
         return await sock.sendMessage(remoteJid, { image: imgBuf, caption }, { quoted: msg });
       }
@@ -124,8 +121,6 @@ export default {
           return reply(`Kamera "${targetQuery}" tidak ditemukan. Ketik \`${p}nx list\` untuk melihat nomor urut.`);
         }
 
-        await reply(`Mengunduh rekaman video 8 detik dari kamera *${cam.name}*...`);
-
         const [rawVidBuf, snapBuf] = await Promise.all([
           getNxVideo(cam.id, 8),
           getNxSnapshot(cam.id).catch(() => null),
@@ -133,10 +128,10 @@ export default {
 
         const vidBuf = await ensureVideoCompatible(rawVidBuf);
         const caption =
-          `*CCTV VIDEO CLIP (8s)*\n\n` +
-          `Nama: ${cam.name}\n` +
-          `Status: ${cam.status}\n` +
-          `Server: Network Optix VMS`;
+          `*Rekaman CCTV (8 Detik)*\n\n` +
+          `• *Lokasi:* ${cam.name}\n` +
+          `• *Status:* ${cam.status}\n` +
+          `• *Waktu:* ${new Date().toLocaleTimeString("id-ID")} WIB`;
 
         return await sock.sendMessage(
           remoteJid,
