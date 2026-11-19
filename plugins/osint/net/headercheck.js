@@ -49,23 +49,15 @@ export default {
     const score = checks.filter((c) => c.good).length;
     const grade = score >= 5 ? "A" : score >= 3 ? "B" : score >= 1 ? "C" : "D";
 
-    const lines = [
-      `*HTTP SECURITY HEADERS*`,
-      ``,
-      `│ URL: \`${res.url}\``,
-      `│ Status: ${res.status} ${res.statusText}`,
-      `│ Server: ${h("server") || "-"}`,
-      `│ Skor: ${score}/${checks.length} (Grade ${grade})`,
-      ``,
-      `*Header Keamanan:*`,
-    ];
-
+    let text = `*OSINT TOOLS - HTTP SECURITY HEADERS*\n`;
+    text += `├── Target URL   : ${url}\n`;
+    text += `├── Grade / Skor : Grade ${grade} (${score}/${checks.length})\n`;
+    text += `│\n`;
     for (const c of checks) {
-      lines.push(`   ${c.good ? "" : "[FAIL]"} ${c.label}: ${h(c.key) ? h(c.key).slice(0, 80) : "tidak ada"}`);
+      text += `├── ${c.label.padEnd(22)}: ${c.good ? "AMAN (Dikonfigurasi)" : "TIDAK DITEMUKAN"}\n`;
     }
-
-    lines.push(``, `_Catatan: penilaian dasar berdasarkan keberadaan header._`);
-
-    return reply(lines.join("\n"));
+    text += `│\n`;
+    text += `└─ [STATUS: HEADER AUDIT SUCCESS]`;
+    return reply(text);
   },
 };

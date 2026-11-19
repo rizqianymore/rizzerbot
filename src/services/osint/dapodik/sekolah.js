@@ -68,43 +68,32 @@ async function searchThenDetail(query) {
 }
 
 export function formatSekolah(row) {
-  const rtRw = [row.rt ? `RT ${row.rt}` : "", row.rw ? `RW ${row.rw}` : ""].filter(Boolean).join("/");
-  const alamatParts = [neat(row.alamat_jalan, ""), rtRw, neat(row.desa_kelurahan, "")].filter(Boolean);
-
-  const lines = [];
-  lines.push(` *DATA SEKOLAH — DAPODIK*\n`);
-  lines.push(`• Nama: *${neat(row.nama)}*`);
-  lines.push(`• NPSN: ${neat(row.npsn)}`);
-  lines.push(`• Jenjang: ${neat(row.jenjang || row.bentuk_pendidikan)} (${neat(row.status_sekolah)})`);
-  lines.push(`• Akreditasi: ${neat(row.akreditasi)}`);
-  lines.push(`• Alamat: ${alamatParts.join(", ") || "-"}`);
-  const wilayah = [neat(row.kecamatan), neat(row.kabupaten), neat(row.provinsi)]
-    .filter((v) => v && v !== "-")
-    .join(", ");
-  if (wilayah) lines.push(`• Wilayah: ${wilayah}${row.kode_pos ? ` ${row.kode_pos}` : ""}`);
-  if (row.nama_kepsek && row.nama_kepsek !== "-") lines.push(`• Kepala sekolah: ${neat(row.nama_kepsek)}`);
-
-  const pd = Number(row.pd || 0);
-  if (pd > 0) {
-    lines.push(`• Peserta didik: ${pd} (L ${Number(row.pd_l || 0)} / P ${Number(row.pd_p || 0)})`);
-  }
-  const stats = [
-    row.jum_guru ? `Guru ${Number(row.jum_guru)}` : "",
-    row.jum_tendik ? `Tendik ${Number(row.jum_tendik)}` : "",
-    row.rombel ? `Rombel ${Number(row.rombel)}` : "",
-    row.ruang_kelas ? `Ruang kelas ${Number(row.ruang_kelas)}` : "",
-  ].filter(Boolean);
-  if (stats.length) lines.push(`• Tenaga & sarana: ${stats.join(" | ")}`);
-  if (row.partisipasi_bos) lines.push(`• BOS: ${neat(row.partisipasi_bos)}`);
-  if (row.status_kepemilikan && row.status_kepemilikan !== "-") {
-    lines.push(
-      `• Kepemilikan: ${neat(row.status_kepemilikan)}${row.nama_yayasan ? ` (${neat(row.nama_yayasan)})` : ""}`
-    );
-  }
-
-  const updated = formatTanggal(row.tanggal_update);
-  if (updated !== "-") lines.push(`\n_Data diperbarui ${updated} • ${labelSemester(row.semester)}_`);
-  return lines.join("\n");
+  let text = `*OSINT TOOLS - DATA SEKOLAH DAPODIK*
+`;
+  text += `├── NPSN       : \`${row.npsn || "-"}\`
+`;
+  text += `├── Nama       : ${row.nama || "-"}
+`;
+  text += `├── Bentuk     : ${row.bentuk_pendidikan || "-"}
+`;
+  text += `├── Status     : ${row.status || "-"}
+`;
+  text += `├── Alamat     : ${row.alamat || "-"}
+`;
+  text += `├── Desa/Kel   : ${row.desa_kelurahan || "-"}
+`;
+  text += `├── Kecamatan  : ${row.kecamatan || "-"}
+`;
+  text += `├── Kota/Kab   : ${row.kabupaten_kota || "-"}
+`;
+  text += `├── Provinsi   : ${row.provinsi || "-"}
+`;
+  text += `├── Akreditasi : ${row.akreditasi || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: DAPODIK LOOKUP SUCCESS]`;
+  return text;
 }
 
 function formatList(query, items) {

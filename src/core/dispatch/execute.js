@@ -84,13 +84,12 @@ export async function executeCommand(sock, msg, logger, env) {
       Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
     },
     reply: async (text) => {
-      const formatted = typeof text === "string" ? autoFormatToLinux(text) : text;
       const targetJid = remoteJid.endsWith("@lid") ? db.resolvePhoneJid(remoteJid) || remoteJid : remoteJid;
       if (responseDelay > 0) {
         Promise.resolve(sock.sendPresenceUpdate?.("composing", targetJid)).catch(() => {});
         await delay(responseDelay);
       }
-      return sock.sendMessage(targetJid, { text: formatted }, { quoted: msg }).catch((e) => {
+      return sock.sendMessage(targetJid, { text: String(text) }, { quoted: msg }).catch((e) => {
         logger?.warn?.(`[Reply Send Error] ${targetJid}: ${e?.message || e}`);
       });
     },

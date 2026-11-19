@@ -62,33 +62,30 @@ export default {
       const total = list.length;
       const displayed = list.slice(0, 15);
 
-      const lines = [
-        `*HASIL PENCARIAN KODE POS*`,
-        `Kata kunci: \`${input}\``,
-        `Ditemukan: *${total}* wilayah (menampilkan ${displayed.length} teratas)`,
-        ``,
-      ];
-
-      displayed.forEach((item, idx) => {
-        const pos = item.code || item.postalcode || "-";
-        const desa = item.village || item.urban || "-";
-        const kec = item.district || item.subdistrict || "-";
-        const kab = item.regency || item.city || "-";
-        const prov = item.province || "-";
-
-        lines.push(`*${idx + 1}. Kode Pos: ${pos}*`);
-        lines.push(`   Kel/Desa: ${desa}`);
-        lines.push(`   Kec: ${kec}`);
-        lines.push(`   Kab/Kota: ${kab}`);
-        lines.push(`   Prov: ${prov}`);
-        lines.push(``);
+      let text = `*OSINT TOOLS - KODE POS INDONESIA*
+`;
+      text += `├── Kueri        : ${input}
+`;
+      text += `├── Ditemukan    : ${results.length} Wilayah
+`;
+      text += `│
+`;
+      results.slice(0, 5).forEach((item, idx) => {
+        text += `├── [${idx + 1}] Kode Pos : \`${item.postalcode || item.kodepos || "-"}\`
+`;
+        text += `│   Wilayah  : ${item.urban || item.kelurahan || "-"}, ${item.subdistrict || item.kecamatan || "-"}
+`;
+        text += `│   Kota/Kab : ${item.city || item.kabupaten || "-"}
+`;
+        text += `│   Provinsi : ${item.province || item.provinsi || "-"}
+`;
+        if (idx < Math.min(results.length, 5) - 1) text += `│
+`;
       });
-
-      if (total > 15) {
-        lines.push(`_...dan ${total - 15} wilayah lainnya. Persempit kata kunci jika perlu._`);
-      }
-
-      return reply(lines.join("\n").trim());
+      text += `│
+`;
+      text += `└─ [STATUS: KODE POS FOUND]`;
+      return reply(text);
     } catch (err) {
       return reply(`Terjadi kesalahan saat mencari kode pos: ${err.message}`);
     }

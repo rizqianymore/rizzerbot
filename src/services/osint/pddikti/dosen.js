@@ -64,16 +64,30 @@ export async function detailDosen(encId, { timeoutMs = 45000 } = {}) {
 }
 
 export function formatDosenDetail(d, nidn) {
-  const lines = [];
-  lines.push(`*DATA DOSEN (PDDikti)*`);
-  lines.push(`Nama: ${neat(d.nama)}`);
-  if (nidn) lines.push(`NIDN: ${neat(nidn)}`);
-  lines.push(`PT: ${neat(d.nama_pt)}`);
-  lines.push(`Prodi: ${neat(d.nama_prodi)}`);
-  lines.push(`JK: ${jkLabel(d.jenis_kelamin)}`);
-  lines.push(`Jabatan: ${neat(d.jabatan)}`);
-  lines.push(`Pendidikan: ${neat(d.pendidikan)}`);
-  return lines.join("\n");
+  let text = `*OSINT TOOLS - DATA DOSEN PDDIKTI*
+`;
+  text += `├── Nama       : ${d.nama || "-"}
+`;
+  text += `├── NIDN / NUP : \`${nidn || d.nidn || "-"}\`
+`;
+  text += `├── Perguruan Tinggi: ${d.nama_pt || "-"}
+`;
+  text += `├── Program Studi   : ${d.nama_prodi || "-"}
+`;
+  text += `├── Jenis Kelamin   : ${d.jk || "-"}
+`;
+  text += `├── Jabatan Fungsional: ${d.jabatan_fungsional || "-"}
+`;
+  text += `├── Pendidikan Tertinggi: ${d.pendidikan_tertinggi || "-"}
+`;
+  text += `├── Status Ikatan Kerja: ${d.status_ikatan_kerja || "-"}
+`;
+  text += `├── Status Aktivitas: ${d.status_aktivitas || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: PDDIKTI FOUND]`;
+  return text;
 }
 
 export function formatDosenList(rows, total) {

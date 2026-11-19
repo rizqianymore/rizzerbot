@@ -51,36 +51,21 @@ export default {
       const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
       const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
 
-      const text =
-        `* HASIL PENCARIAN GEOLOKASI*\n\n` +
-        `│ *Nama / Tempat* : ${place.name || place.display_name.split(",")[0] || "-"}\n` +
-        `│ Alamat Lengkap: ${place.display_name}\n` +
-        `│ *Latitude*       : \`${lat}\`\n` +
-        `│ *Longitude*      : \`${lon}\`\n` +
-        `│ *Kecamatan/Kota* : ${addr.suburb || addr.city_district || addr.city || "-"}\n` +
-        `│ *Provinsi*       : ${addr.state || addr.province || addr.region || "-"}\n` +
-        `│ *Kode Pos*       : ${addr.postcode || "-"}\n` +
-        `│ *Negara*         : ${addr.country || "-"}\n\n` +
-        ` *Google Maps*   : ${mapsLink}\n` +
-        ` *OpenStreetMap* : ${osmLink}`;
-
-      if (sock && msg?.key?.remoteJid) {
-        try {
-          await sock.sendMessage(
-            msg.key.remoteJid,
-            {
-              location: {
-                degreesLatitude: lat,
-                degreesLongitude: lon,
-                name: place.name || query,
-                address: place.display_name,
-              },
-            },
-            { quoted: msg }
-          );
-        } catch (_) {}
-      }
-
+      let text = `*OSINT TOOLS - GEOLOKASI KOORDINAT*
+`;
+      text += `├── Alamat Lengkap: ${first.display_name}
+`;
+      text += `├── Latitude     : ${first.lat}
+`;
+      text += `├── Longitude    : ${first.lon}
+`;
+      text += `├── Tipe Lokasi  : ${first.type || "-"}
+`;
+      text += `├── Google Maps  : https://www.google.com/maps?q=${first.lat},${first.lon}
+`;
+      text += `│
+`;
+      text += `└─ [STATUS: GEOCODE SUCCESS]`;
       return reply(text);
     } catch (err) {
       return reply(`Gagal mencari geolokasi: ${err.response?.data?.message || err.message}`);

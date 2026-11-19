@@ -40,14 +40,18 @@ export default {
         return context.reply(`Vendor untuk MAC address \`${formattedMac}\` tidak ditemukan di database OUI publik.`);
       }
 
-      const out = [
-        `*MAC ADDRESS VENDOR LOOKUP*`,
-        `MAC Address : \`${formattedMac}\``,
-        `Prefix OUI  : ${formattedMac.slice(0, 8)}`,
-        `Vendor/Manufaktur: ${vendor.trim()}`,
-      ].join("\n");
-
-      return context.reply(out);
+      let text = `*OSINT TOOLS - MAC ADDRESS LOOKUP*
+`;
+      text += `├── MAC Address  : \`${formattedMac}\`
+`;
+      text += `├── OUI Prefix   : ${formattedMac.slice(0, 8)}
+`;
+      text += `├── Vendor/Brand : ${vendor}
+`;
+      text += `│
+`;
+      text += `└─ [STATUS: VENDOR FOUND]`;
+      return context.reply(text);
     } catch (err) {
       if (err?.message?.includes("404")) {
         return context.reply(`Vendor untuk MAC address \`${formattedMac}\` tidak ditemukan di database OUI publik.`);

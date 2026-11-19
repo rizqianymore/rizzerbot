@@ -57,25 +57,22 @@ export default {
       const xcto = headers["x-content-type-options"] || "-";
       const referrer = headers["referrer-policy"] || "-";
 
-      const lines = [
-        `*HTTP/WEB RECONNAISSANCE*`,
-        ``,
-        `│ Target URL: ${res.url}`,
-        `│ Status Code: \`${res.status} ${res.statusText}\``,
-        `│ Latency / RTT: \`${latency} ms\``,
-        `│ Web Server: \`${server}\``,
-        `│ WAF / CDN: ${wafCdn.length > 0 ? wafCdn.join(", ") : "Tidak terdeteksi / Direct"}`,
-        `│ Content-Type: \`${headers["content-type"] || "-"}\``,
-        ``,
-        `*Security Headers:*`,
-        `  - HSTS: ${hsts ? "Enabled" : "Disabled / Missing"}`,
-        `  - CSP: ${csp ? "Enabled" : "Disabled / Missing"}`,
-        `  - X-Frame-Options: \`${xfo}\``,
-        `  - X-Content-Type-Options: \`${xcto}\``,
-        `  - Referrer-Policy: \`${referrer}\``,
-      ];
-
-      return reply(lines.join("\n"));
+      let text = `*OSINT TOOLS - HTTP RECONNAISSANCE*
+`;
+      text += `├── Target URL   : ${targetUrl}
+`;
+      text += `├── Status Code  : ${res.status} ${res.statusText}
+`;
+      text += `├── Server       : ${res.headers.get("server") || "-"}
+`;
+      text += `├── Content-Type : ${res.headers.get("content-type") || "-"}
+`;
+      text += `├── Response Time: ${responseTime} ms
+`;
+      text += `│
+`;
+      text += `└─ [STATUS: HTTP PROBE SUCCESS]`;
+      return reply(text);
     } catch (err) {
       if (err.name === "AbortError") {
         return reply("Request timeout (12 detik). Host target tidak merespons.");

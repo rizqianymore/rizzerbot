@@ -204,19 +204,24 @@ export async function searchBookByTitle(title) {
 }
 
 export function formatIsbnResult(data) {
-  const { validation, ...book } = data;
-  let text = ` *CEK ISBN*\n\n`;
-  text += `*${book.title}*\n\n`;
-  text += ` *Penulis:* ${book.authors}\n`;
-  text += ` *Penerbit:* ${book.publisher}\n`;
-  text += ` *Tahun Terbit:* ${book.publishDate}\n`;
-  text += ` *Halaman:* ${book.pages}\n`;
-  text += ` *ISBN-10:* ${book.isbn10}\n`;
-  text += ` *ISBN-13:* ${book.isbn13}\n`;
-  text += ` *Subjek/Kategori:* ${book.subjects}\n`;
-  text += ` *Sumber:* ${book.source}\n`;
-  if (book.openLibraryUrl) text += ` *OpenLibrary:* ${book.openLibraryUrl}\n`;
-  if (book.googleBooksUrl) text += ` *Google Books:* ${book.googleBooksUrl}\n`;
-  if (validation) text += `\n_Tipe: ${validation.type} (${validation.clean})_`;
+  let text = `*OSINT TOOLS - ISBN BOOK LOOKUP*
+`;
+  text += `├── ISBN       : ${data.isbn || "-"}
+`;
+  text += `├── Judul      : ${data.title || "-"}
+`;
+  text += `├── Penulis    : ${Array.isArray(data.authors) ? data.authors.join(", ") : data.authors || "-"}
+`;
+  text += `├── Penerbit   : ${data.publisher || "-"}
+`;
+  text += `├── Tahun Terbit: ${data.publish_date || "-"}
+`;
+  text += `├── Jumlah Hal : ${data.pages || "-"}
+`;
+  text += `├── Bahasa     : ${data.language || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: ISBN FOUND]`;
   return text;
 }

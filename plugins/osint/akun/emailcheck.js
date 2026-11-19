@@ -105,29 +105,23 @@ export default {
       hasDmarc = flattened.some((t) => t.toLowerCase().startsWith("v=dmarc1"));
     } catch {}
 
-    const lines = [
-      `*OSINT EMAIL ANALYZER*`,
-      ``,
-      `│ Email: \`${email}\``,
-      `│ Domain: \`${domain}\``,
-      `│ Format Valid: Ya`,
-      `│ Disposable / Temp Mail: ${isDisposable ? "YA (Email Sementara / Palsu)" : "Tidak (Bukan Temp Mail)"}`,
-      `│ Status Mail Server (MX): ${mxRecords.length > 0 ? "" + mxStatus : "" + mxStatus}`,
-      `│ Keamanan Email: `,
-      `   - SPF Record: ${hasSpf ? "Ditemukan" : "Tidak ada"}`,
-      `   - DMARC Policy: ${hasDmarc ? "Ditemukan" : "Tidak ada"}`,
-    ];
-
-    if (mxRecords.length > 0) {
-      lines.push(``, `*Mail Server (MX Exchanger):*`);
-      mxRecords.slice(0, 3).forEach((mx) => {
-        lines.push(`   - ${mx.exchange} (Priority: ${mx.priority})`);
-      });
-      if (mxRecords.length > 3) {
-        lines.push(`   _...dan ${mxRecords.length - 3} mail server lainnya_`);
-      }
-    }
-
-    return reply(lines.join("\n"));
+    let text = `*OSINT TOOLS - EMAIL ANALYZER*
+`;
+      text += `├── Email Target : \`${email}\`
+`;
+      text += `├── Domain       : ${domain}
+`;
+      text += `├── Format Sintaks: ${isValidSyntax ? "VALID" : "INVALID"}
+`;
+      text += `├── Disposable   : ${isDisposable ? "YA (Email Sementara)" : "BUKAN (Email Normal)"}
+`;
+      text += `├── Domain MX Aktif: ${hasMx ? "AKTIF (Bisa Terima Email)" : "TIDAK AKTIF"}
+`;
+      text += `├── Provider     : ${detectedProvider}
+`;
+      text += `│
+`;
+      text += `└─ [STATUS: EMAIL RECON SUCCESS]`;
+      return reply(text);
   },
 };

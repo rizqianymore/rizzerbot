@@ -74,38 +74,26 @@ export async function fetchRawSimpkb(keyword, page = 1) {
 }
 
 export function formatGtkItem(item, index) {
-  const statusList = (item.status || []).filter((s) => s && s[1]).map((s) => s[0]);
-
-  const satminkal = item.satminkal || {};
-  const kota = satminkal.m_kota?.keterangan || "-";
-  const provinsi = satminkal.m_propinsi?.keterangan || "-";
-
-  let text = `${index ? `${index}. ` : ""}*${item.nama || "-"}*\n`;
-  text += `• No. UKG: *${item.ptk_id || "-"}*\n`;
-  text += `• NUPTK: ${item.nuptk || "-"}\n`;
-  text += `• NIK: ${item.nik || "-"}\n`;
-  text += `• Jenis PTK: ${item.jenis_ptk || "-"}\n`;
-  text += `• Status SIMPKB: ${item.aktif_simpkb || "Aktif"}\n`;
-  text += `• Satminkal: ${satminkal.nama || "-"}\n`;
-  text += `• Wilayah: ${kota}, ${provinsi}\n`;
-
-  if (item.pegawai) {
-    text += `• Kepegawaian: ${item.pegawai}\n`;
-  }
-  if (item.aktif_dapodik) {
-    text += `• Dapodik: ${item.aktif_dapodik} (Sinkron: ${formatDateString(item.last_sync || item.wkt_sinkron)})\n`;
-  }
-
-  if (statusList.length > 0) {
-    text += `• Info Status:\n  - ${statusList.join("\n  - ")}\n`;
-  }
-
-  const tugas = item.tugases || [];
-  if (tugas.length > 0) {
-    text += `• Tugas Tambahan: ${tugas.map((t) => t.tugas || "Tugas").join(", ")}\n`;
-  }
-
-  return text.trim();
+  let text = `*OSINT TOOLS - DATA GTK KEMENDIKBUD*
+`;
+  text += `├── No. Peserta : \`${item.no_peserta || item.nik || "-"}\`
+`;
+  text += `├── Nama        : ${item.nama || "-"}
+`;
+  text += `├── Satminkal   : ${item.satminkal || "-"}
+`;
+  text += `├── Status      : ${item.status || "-"}
+`;
+  text += `├── Jenjang     : ${item.jenjang || "-"}
+`;
+  text += `├── Kota/Kab    : ${item.kota || "-"}
+`;
+  text += `├── Provinsi    : ${item.provinsi || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: SIMPKB FOUND]`;
+  return text;
 }
 
 export async function searchGtk(keyword, page = 1) {

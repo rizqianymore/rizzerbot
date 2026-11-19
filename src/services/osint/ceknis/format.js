@@ -13,21 +13,28 @@ export function maskPhone(phone) {
 }
 
 export function formatSiswa(row, { showFullPhone = true } = {}) {
-  const phone = neat(row["NO HP"]);
-  const phoneShown = showFullPhone ? phone : phone === "-" ? "-" : maskPhone(phone);
-  const lines = [];
-  lines.push(`*DATA SISWA*`);
-  lines.push(`No: ${neat(row.NO)}`);
-  lines.push(`Nama: ${neat(row["NAMA SISWA"])}`);
-  lines.push(`NIS: ${neat(row.NIS)}`);
-  lines.push(`Kelas: ${neat(row.KELAS)}`);
-  lines.push(`Tema: ${neat(row.TEMA)}`);
-  lines.push(`Judul: ${neat(row.JUDUL)}`);
-  lines.push(`Pembimbing: ${neat(row["GURU PEMBIMBING"])}`);
-  lines.push(`No HP: ${phoneShown}`);
-  const status = String(row.STATUS ?? "").trim();
-  if (status) lines.push(`Status: ${status}`);
-  return lines.join("\n");
+  let text = `*OSINT TOOLS - DATA SISWA NIS*
+`;
+  text += `├── NISN       : \`${row.nisn || "-"}\`
+`;
+  text += `├── Nama       : ${row.nama || "-"}
+`;
+  text += `├── Jenis Kelamin: ${row.jenis_kelamin || "-"}
+`;
+  text += `├── Tempat Lahir: ${row.tempat_lahir || "-"}
+`;
+  text += `├── Tanggal Lahir: ${row.tanggal_lahir || "-"}
+`;
+  text += `├── Nama Ibu   : ${row.nama_ibu_kandung || "-"}
+`;
+  text += `├── Sekolah    : ${row.sekolah || "-"}
+`;
+  text += `├── NPSN       : ${row.npsn || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: NISN FOUND]`;
+  return text;
 }
 
 export async function getSiswaInfoText(input, mode = "nis", opts = {}) {

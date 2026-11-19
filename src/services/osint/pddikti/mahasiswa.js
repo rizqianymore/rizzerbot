@@ -159,18 +159,30 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
 }
 
 export function formatMhsDetail(d) {
-  const nim = neat(d.nim);
-  const lines = [];
-  lines.push(`*DATA MAHASISWA (PDDikti)*`);
-  lines.push(`Nama: ${neat(d.nama)}`);
-  lines.push(`NIM: ${nim}`);
-  lines.push(`PT: ${neat(d.nama_pt)}`);
-  lines.push(`Prodi: ${neat(d.jenjang)} - ${neat(d.prodi)}`);
-  lines.push(`JK: ${jkLabel(d.jenis_kelamin)}`);
-  lines.push(`Tgl Masuk: ${formatTanggal(d.tanggal_masuk)}`);
-  lines.push(`Status Awal: ${neat(d.jenis_daftar)}`);
-  lines.push(`Status: ${neat(d.status_saat_ini)}`);
-  return lines.join("\n");
+  let text = `*OSINT TOOLS - DATA MAHASISWA PDDIKTI*
+`;
+  text += `├── Nama       : ${d.nama || "-"}
+`;
+  text += `├── NIM        : \`${d.nim || "-"}\`
+`;
+  text += `├── Perguruan Tinggi: ${d.nama_pt || "-"}
+`;
+  text += `├── Program Studi   : ${d.nama_prodi || "-"}
+`;
+  text += `├── Jenjang    : ${d.jenjang || "-"}
+`;
+  text += `├── Jenis Daftar: ${d.jenis_daftar || "-"}
+`;
+  text += `├── Status Awal: ${d.status_awal || "-"}
+`;
+  text += `├── Status Saat Ini: ${d.status_saat_ini || "-"}
+`;
+  text += `├── Tahun Masuk: ${d.tahun_masuk || "-"}
+`;
+  text += `│
+`;
+  text += `└─ [STATUS: PDDIKTI FOUND]`;
+  return text;
 }
 
 export function formatMhsList(rows, total) {
