@@ -16,7 +16,7 @@ export default {
     for (const gid of ids) {
       const r = groups[gid];
       const sisa = Math.max(0, Math.ceil((r.until - Date.now()) / (24 * 60 * 60 * 1000)));
-      text += `• ${gid}\n  Berakhir: ${new Date(r.until).toLocaleString("id-ID")} (sisa ${sisa} hari)\n`;
+      text += `│ ${gid}\n  Berakhir: ${new Date(r.until).toLocaleString("id-ID")} (sisa ${sisa} hari)\n`;
     }
     await reply(text.trim());
   },

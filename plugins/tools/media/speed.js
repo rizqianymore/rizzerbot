@@ -25,8 +25,8 @@ export default {
         `*MEDIA SPEED CHANGER*\n\n` +
           `Format: *${p}speed <0.5 - 2.0>*\n\n` +
           `Contoh:\n` +
-          `• Reply video/audio: *${p}speed 1.5* (Percepat 1.5x)\n` +
-          `• Reply video/audio: *${p}speed 0.75* (Perlambat 0.75x)`
+          `│ Reply video/audio: *${p}speed 1.5* (Percepat 1.5x)\n` +
+          `│ Reply video/audio: *${p}speed 0.75* (Perlambat 0.75x)`
       );
     }
 

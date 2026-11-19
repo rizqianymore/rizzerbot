@@ -23,7 +23,7 @@ export default {
 
     if (!jid) {
       return reply(
-        "Balas pesan user atau masukkan nomor! Contoh:\n• *.addprem 628xxx 30* (30 hari)\n• *.addprem 628xxx* (Permanen)"
+        "Balas pesan user atau masukkan nomor! Contoh:\n│ *.addprem 628xxx 30* (30 hari)\n│ *.addprem 628xxx* (Permanen)"
       );
     }
 

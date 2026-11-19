@@ -36,9 +36,9 @@ export default {
               stats: rep.stats,
               results: rep.results,
               extra: [
-                `• SHA256: \`${rep.hash.slice(0, 32)}...\``,
-                `• Mode: FREE (tanpa VT_API_KEY) — ${rep.known ? "dikenal di DB" : "belum di-scan"}`,
-                ...(rep.detections?.length ? [`• Deteksi: ${rep.detections.join("; ")}`] : []),
+                `│ SHA256: \`${rep.hash.slice(0, 32)}...\``,
+                `│ Mode: FREE (tanpa VT_API_KEY) — ${rep.known ? "dikenal di DB" : "belum di-scan"}`,
+                ...(rep.detections?.length ? [`│ Deteksi: ${rep.detections.join("; ")}`] : []),
                 `_Tip: isi VT_API_KEY untuk 70+ engine_`,
               ],
             })
@@ -59,8 +59,8 @@ export default {
             stats: rep.stats,
             results: rep.results,
             extra: [
-              `• SHA256: \`${rep.hash.slice(0, 32)}...\``,
-              `• Status: ${rep.known ? "pernah di-scan" : "scan baru"}`,
+              `│ SHA256: \`${rep.hash.slice(0, 32)}...\``,
+              `│ Status: ${rep.known ? "pernah di-scan" : "scan baru"}`,
             ],
           })
         );
@@ -84,8 +84,8 @@ export default {
             stats: rep.stats,
             results: rep.results,
             extra: [
-              `• Mode: FREE (tanpa VT_API_KEY)`,
-              ...(rep.detections?.length ? [`• Sumber: ${rep.detections.join(", ")}`] : [`• Tidak ada deteksi di free DB`]),
+              `│ Mode: FREE (tanpa VT_API_KEY)`,
+              ...(rep.detections?.length ? [`│ Sumber: ${rep.detections.join(", ")}`] : [`│ Tidak ada deteksi di free DB`]),
               `_Isi VT_API_KEY untuk hasil 70+ engine lebih akurat_`,
             ],
           })

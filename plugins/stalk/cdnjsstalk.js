@@ -15,9 +15,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}cdnjsstalk <nama-library>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}cdnjsstalk jquery\n` +
-        `• ${context.prefix || "."}cdnjsstalk bootstrap\n` +
-        `• ${context.prefix || "."}cdnjsstalk sweetalert2`
+        `│ ${context.prefix || "."}cdnjsstalk jquery\n` +
+        `│ ${context.prefix || "."}cdnjsstalk bootstrap\n` +
+        `│ ${context.prefix || "."}cdnjsstalk sweetalert2`
       );
     }
 

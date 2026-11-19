@@ -41,7 +41,7 @@ export default {
     let text = `*DAFTAR OWNER (+${activeBotJid.split("@")[0]})*\n\n`;
 
     uniqueOwners.forEach((j, i) => {
-      const tags = [...groups.get(j)].map((t) => `_${t}_`).join(" • ");
+      const tags = [...groups.get(j)].map((t) => `_${t}_`).join(" │ ");
       const configNote = configFileOwners.includes(j) ? " config" : "";
       text += `${i + 1}. +${j.split("@")[0]} ${configNote}\n   ${tags}\n`;
     });

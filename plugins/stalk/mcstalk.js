@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}mcstalk <username-minecraft>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}mcstalk Notch\n` +
-        `• ${context.prefix || "."}mcstalk Dream`
+        `│ ${context.prefix || "."}mcstalk Notch\n` +
+        `│ ${context.prefix || "."}mcstalk Dream`
       );
     }
 

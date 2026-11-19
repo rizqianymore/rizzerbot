@@ -104,10 +104,10 @@ export default {
         `*TTS GOOGLE*\n\n` +
           `Ubah teks jadi audio (Google Translate TTS).\n\n` +
           `*Cara pakai:*\n` +
-          `• \`${cur}tts halo dunia\` (default lang id)\n` +
-          `• \`${cur}tts en hello world\`\n` +
-          `• \`${cur}tts ja こんにちは\`\n` +
-          `• Reply pesan teks lalu \`${cur}tts id\` atau \`${cur}tts\`\n\n` +
+          `│ \`${cur}tts halo dunia\` (default lang id)\n` +
+          `│ \`${cur}tts en hello world\`\n` +
+          `│ \`${cur}tts ja こんにちは\`\n` +
+          `│ Reply pesan teks lalu \`${cur}tts id\` atau \`${cur}tts\`\n\n` +
           `*Lang:* id, en, en-US, ja/jp, ko, ar, zh, fr, de, dll (kode Google TTS)\n` +
           `Maks 200 karakter per chunk, otomatis split jika panjang.`
       );

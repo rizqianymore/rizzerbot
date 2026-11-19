@@ -19,9 +19,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}cekpinjol <nama pinjol/perusahaan>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}cekpinjol AdaKami\n` +
-        `• ${context.prefix || "."}cekpinjol Aku Rupiah\n` +
-        `• ${context.prefix || "."}cekpinjol Akulaku`
+        `│ ${context.prefix || "."}cekpinjol AdaKami\n` +
+        `│ ${context.prefix || "."}cekpinjol Aku Rupiah\n` +
+        `│ ${context.prefix || "."}cekpinjol Akulaku`
       );
     }
 
@@ -41,14 +41,14 @@ export default {
 
       res.legal.forEach((item, idx) => {
         out.push(`*${idx + 1}. ${item.platform_name}*`);
-        out.push(`• Perusahaan   : ${item.company_name}`);
-        out.push(`• No. Izin/Reg : ${item.registration || "-"}`);
-        out.push(`• Status OJK   : ${item.registration_type || "Terdaftar/Berizin"}`);
+        out.push(`│ Perusahaan   : ${item.company_name}`);
+        out.push(`│ No. Izin/Reg : ${item.registration || "-"}`);
+        out.push(`│ Status OJK   : ${item.registration_type || "Terdaftar/Berizin"}`);
         if (item.website?.length) {
-          out.push(`• Website Resmi: ${item.website.join(", ")}`);
+          out.push(`│ Website Resmi: ${item.website.join(", ")}`);
         }
         if (item.alamat) {
-          out.push(`• Alamat       : ${item.alamat.replace(/\r?\n|\r/g, " ").slice(0, 120)}...`);
+          out.push(`│ Alamat       : ${item.alamat.replace(/\r?\n|\r/g, " ").slice(0, 120)}...`);
         }
         out.push(``);
       });
@@ -58,7 +58,7 @@ export default {
 
       res.illegal.forEach((item, idx) => {
         out.push(`*${idx + 1}. ${item.name}*`);
-        out.push(`• Developer / Pemilik: ${item.developer}`);
+        out.push(`│ Developer / Pemilik: ${item.developer}`);
         out.push(``);
       });
 
@@ -74,8 +74,8 @@ export default {
     }
 
     out.push(`\n*Tips Aman OJK:*`);
-    out.push(`• Bunga & biaya harus transparan`);
-    out.push(`• Pinjol legal TIDAK meminta akses ke kontak, galeri, atau media ponsel.`);
+    out.push(`│ Bunga & biaya harus transparan`);
+    out.push(`│ Pinjol legal TIDAK meminta akses ke kontak, galeri, atau media ponsel.`);
 
     return context.reply(out.join("\n"));
   },

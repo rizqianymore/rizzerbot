@@ -20,9 +20,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitreleasestalk <owner/repository>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitreleasestalk facebook/react\n` +
-        `• ${context.prefix || "."}gitreleasestalk oven-sh/bun\n` +
-        `• ${context.prefix || "."}gitreleasestalk protocolbuffers/protobuf`
+        `│ ${context.prefix || "."}gitreleasestalk facebook/react\n` +
+        `│ ${context.prefix || "."}gitreleasestalk oven-sh/bun\n` +
+        `│ ${context.prefix || "."}gitreleasestalk protocolbuffers/protobuf`
       );
     }
 
@@ -52,7 +52,7 @@ export default {
     if (res.assets.length > 0) {
       out.push(`*File Installer / Binary Terlampir:*`);
       for (const a of res.assets.slice(0, 3)) {
-        out.push(`• 📦 \`${a.name}\` (${a.sizeMb} MB) — 📥 ${a.downloads.toLocaleString("id-ID")} downloads`);
+        out.push(`│ 📦 \`${a.name}\` (${a.sizeMb} MB) — 📥 ${a.downloads.toLocaleString("id-ID")} downloads`);
       }
       out.push(``);
     }

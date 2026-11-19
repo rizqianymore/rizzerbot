@@ -45,9 +45,9 @@ export default {
       const mode = bSettings.public === false ? "Self" : "Public";
 
       lines.push(`*${i + 1}. +${b.number}*`);
-      lines.push(`   • Status: ${statusLabel(b.status)} | Mode: ${mode}`);
-      lines.push(`   • Owner: +${ownerNum} | Prefix: \`${bSettings.prefix || "."}\``);
-      lines.push(b.status === "online" ? `   • Uptime: ${Math.floor(b.uptime / 60)} menit\n` : "");
+      lines.push(`   │ Status: ${statusLabel(b.status)} | Mode: ${mode}`);
+      lines.push(`   │ Owner: +${ownerNum} | Prefix: \`${bSettings.prefix || "."}\``);
+      lines.push(b.status === "online" ? `   │ Uptime: ${Math.floor(b.uptime / 60)} menit\n` : "");
     }
 
     lines.push(`_Gunakan \`.delbot <nomor>\` untuk mematikan dan menghapus bot._`);

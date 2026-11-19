@@ -29,7 +29,7 @@ export default {
     if (!raw) {
       const p = prefix || ".";
       return reply(
-        `*PICK RANDOM*\nContoh:\n• \`${p}pick apel|jeruk|mangga\`\n• \`${p}pick pizza, burger, sate\`\n• \`${p}dice\` lempar dadu\n• \`${p}coin\` lempar koin`
+        `*PICK RANDOM*\nContoh:\n│ \`${p}pick apel|jeruk|mangga\`\n│ \`${p}pick pizza, burger, sate\`\n│ \`${p}dice\` lempar dadu\n│ \`${p}coin\` lempar koin`
       );
     }
     const opts = raw

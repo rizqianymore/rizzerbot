@@ -17,14 +17,14 @@ export default {
       const cur = db.main().getSettings();
       return reply(
         `*Manajemen Saluran*\n\n` +
-          `• Saluran saat ini: *${cur.channelJid || "Belum diatur"}*\n` +
-          `• Nama saluran: *${cur.channelName || "Official Channel"}*\n` +
-          `• Auto post trx: *${cur.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n\n` +
+          `│ Saluran saat ini: *${cur.channelJid || "Belum diatur"}*\n` +
+          `│ Nama saluran: *${cur.channelName || "Official Channel"}*\n` +
+          `│ Auto post trx: *${cur.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n\n` +
           `*Cara Mengatur:*\n` +
-          `• \`.setch <JID_SALURAN>\`\n` +
+          `│ \`.setch <JID_SALURAN>\`\n` +
           `  Contoh: \`.setch 120363312345678901@newsletter\`\n` +
-          `• Link saluran: \`.setch https://whatsapp.com/channel/0029Vxxxxxxx\`\n` +
-          `• Ganti nama saluran: \`.setch name <Nama Baru>\``
+          `│ Link saluran: \`.setch https://whatsapp.com/channel/0029Vxxxxxxx\`\n` +
+          `│ Ganti nama saluran: \`.setch name <Nama Baru>\``
       );
     }
 

@@ -17,9 +17,9 @@ export default {
         `*CEK SEKOLAH — DAPODIK*\n\n` +
           `Masukkan nama sekolah atau NPSN (8 digit).\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}ceksekolah SMAN 1 Jakarta\`\n` +
-          `• \`${currentPrefix}sekolah SDN Menteng 01\`\n` +
-          `• \`${currentPrefix}npsn 20100216\`\n\n` +
+          `│ \`${currentPrefix}ceksekolah SMAN 1 Jakarta\`\n` +
+          `│ \`${currentPrefix}sekolah SDN Menteng 01\`\n` +
+          `│ \`${currentPrefix}npsn 20100216\`\n\n` +
           `_Sumber: dapo.kemendikdasmen.go.id (akreditasi, alamat, jumlah siswa & guru)_`
       );
     }

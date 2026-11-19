@@ -20,9 +20,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitrepostalk <owner/repository>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitrepostalk torvalds/linux\n` +
-        `• ${context.prefix || "."}gitrepostalk expressjs/express\n` +
-        `• ${context.prefix || "."}gitrepostalk https://github.com/facebook/react`
+        `│ ${context.prefix || "."}gitrepostalk torvalds/linux\n` +
+        `│ ${context.prefix || "."}gitrepostalk expressjs/express\n` +
+        `│ ${context.prefix || "."}gitrepostalk https://github.com/facebook/react`
       );
     }
 

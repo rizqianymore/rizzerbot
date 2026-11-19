@@ -60,9 +60,9 @@ export default {
     }
 
     let text = `*${activeSettings.botName} - DAFTAR PLUGIN*\n`;
-    text += `• Prefix : [ *${prefix}* ]\n`;
-    text += `• Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
-    text += `• Total  : *${pluginsData.length} Plugin*\n\n`;
+    text += `│ Prefix : [ *${prefix}* ]\n`;
+    text += `│ Status : *${isOwner ? "Owner" : isAdmin ? "Admin" : isPremium ? "Premium" : "Free User"}*\n`;
+    text += `│ Total  : *${pluginsData.length} Plugin*\n\n`;
 
     const catKeys = sortCategoryKeys(Object.keys(categories));
 
@@ -78,7 +78,7 @@ export default {
         if (p.botAdminOnly) badges.push("BAdmin");
         const badgeStr = badges.length ? ` [${badges.join(", ")}]` : "";
         const aliasStr = p.aliases.length ? ` | Alias: ${p.aliases.map((a) => `${prefix}${a}`).join(", ")}` : "";
-        text += `• ${prefix}${p.name}${badgeStr}\n`;
+        text += `│ ${prefix}${p.name}${badgeStr}\n`;
         text += `  Deskripsi: ${p.description}\n`;
         if (p.usage) text += `  Format: ${prefix}${p.name} ${p.usage}\n`;
         text += `  File: ${p.file}${aliasStr}\n`;

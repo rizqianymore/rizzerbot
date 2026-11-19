@@ -19,9 +19,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}cekrekening <nomor-rekening> [bank/wallet]\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}cekrekening 1234567890 BCA\n` +
-        `• ${context.prefix || "."}cekrekening 08123456789 DANA\n` +
-        `• ${context.prefix || "."}cekrekening 539241249`
+        `│ ${context.prefix || "."}cekrekening 1234567890 BCA\n` +
+        `│ ${context.prefix || "."}cekrekening 08123456789 DANA\n` +
+        `│ ${context.prefix || "."}cekrekening 539241249`
       );
     }
 
@@ -48,12 +48,12 @@ export default {
     out.push(
       ``,
       `*Link Investigasi & Pelaporan Resmi:*`,
-      `• Kredibel.com   : ${res.kredibelUrl}`,
-      `• Kemkomdigi RI  : ${res.cekrekeningUrl}`,
+      `│ Kredibel.com   : ${res.kredibelUrl}`,
+      `│ Kemkomdigi RI  : ${res.cekrekeningUrl}`,
       ``,
       `⚠️ *Tips Aman Bertransaksi:*`,
-      `• Jangan tergiur harga yang jauh di bawah pasar`,
-      `• Gunakan fitur rekening bersama / rekber / marketplace terpercaya.`
+      `│ Jangan tergiur harga yang jauh di bawah pasar`,
+      `│ Gunakan fitur rekening bersama / rekber / marketplace terpercaya.`
     );
 
     return context.reply(out.join("\n"));

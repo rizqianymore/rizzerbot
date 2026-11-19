@@ -28,7 +28,7 @@ export default {
     text += `*Total Admin:* ${admins.length}\n\n`;
 
     if (creator) {
-      text += `*Creator / Pembuat Grup:*\n• @${creator.id.split("@")[0]}\n\n`;
+      text += `*Creator / Pembuat Grup:*\n│ @${creator.id.split("@")[0]}\n\n`;
     }
 
     if (regularAdmins.length > 0) {

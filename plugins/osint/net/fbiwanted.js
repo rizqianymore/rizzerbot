@@ -41,7 +41,7 @@ export default {
       const title = item.title || item.uid || "-";
       const reward = item.reward_text || item.reward_min || "-";
       const url = item.url || (item.uid ? `https://www.fbi.gov/wanted/${item.uid}` : "-");
-      lines.push(`• *${title}*`);
+      lines.push(`│ *${title}*`);
       if (reward && reward !== "-") lines.push(`   Reward: ${String(reward).slice(0, 120)}`);
       if (url && url !== "-") lines.push(`   ${url}`);
       lines.push("");

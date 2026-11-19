@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitprstalk <username-github>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitprstalk torvalds\n` +
-        `• ${context.prefix || "."}gitprstalk sindresorhus`
+        `│ ${context.prefix || "."}gitprstalk torvalds\n` +
+        `│ ${context.prefix || "."}gitprstalk sindresorhus`
       );
     }
 
@@ -42,8 +42,8 @@ export default {
       const icon = pr.state === "open" ? "🟢 [OPEN]" : "🟣 [MERGED/CLOSED]";
       out.push(
         `${icon} *${pr.title}*`,
-        `  • Tanggal: 📅 ${pr.createdDate}`,
-        `  • Link   : 🔗 ${pr.url}`,
+        `  │ Tanggal: 📅 ${pr.createdDate}`,
+        `  │ Link   : 🔗 ${pr.url}`,
         ``
       );
     }

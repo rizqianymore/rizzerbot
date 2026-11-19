@@ -15,9 +15,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}cratestalk <nama-crate>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}cratestalk tokio\n` +
-        `• ${context.prefix || "."}cratestalk serde\n` +
-        `• ${context.prefix || "."}cratestalk reqwest`
+        `│ ${context.prefix || "."}cratestalk tokio\n` +
+        `│ ${context.prefix || "."}cratestalk serde\n` +
+        `│ ${context.prefix || "."}cratestalk reqwest`
       );
     }
 
@@ -44,8 +44,8 @@ export default {
       `${res.description}`,
       ``,
       `*Dokumentasi Resmi:*`,
-      `• Docs.rs    : 📚 ${res.documentation}`,
-      `• Crates.io  : 🔗 ${res.crateUrl}`
+      `│ Docs.rs    : 📚 ${res.documentation}`,
+      `│ Crates.io  : 🔗 ${res.crateUrl}`
     ].filter(Boolean);
 
     return context.reply(out.join("\n"));

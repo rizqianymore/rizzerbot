@@ -17,9 +17,9 @@ export default {
         `*CEK GTK / GURU — SIMPKB*\n\n` +
           `Masukkan Nama GTK, No. UKG (SIMPKB-ID), NUPTK, atau NIK.\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekgtk ROSYANTO\`\n` +
-          `• \`${currentPrefix}cekgtk 201698552239\`\n` +
-          `• \`${currentPrefix}cekgtk 0245761662130153\`\n\n` +
+          `│ \`${currentPrefix}cekgtk ROSYANTO\`\n` +
+          `│ \`${currentPrefix}cekgtk 201698552239\`\n` +
+          `│ \`${currentPrefix}cekgtk 0245761662130153\`\n\n` +
           `_Sumber: portal-backend.simpkb.id (Realtime Portal SIMPKB)_`
       );
     }

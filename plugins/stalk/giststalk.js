@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}giststalk <username-github>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}giststalk torvalds\n` +
-        `• ${context.prefix || "."}giststalk sindresorhus`
+        `│ ${context.prefix || "."}giststalk torvalds\n` +
+        `│ ${context.prefix || "."}giststalk sindresorhus`
       );
     }
 
@@ -40,9 +40,9 @@ export default {
     for (const g of res.gists) {
       out.push(
         `📄 *${g.filename}* (💬 ${g.comments} komentar)`,
-        `  • Deskripsi: ${g.description}`,
-        `  • Dibuat   : ${g.createdDate}`,
-        `  • Link     : 🔗 ${g.url}`,
+        `  │ Deskripsi: ${g.description}`,
+        `  │ Dibuat   : ${g.createdDate}`,
+        `  │ Link     : 🔗 ${g.url}`,
         ``
       );
     }

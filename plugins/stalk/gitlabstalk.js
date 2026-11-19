@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitlabstalk <username-gitlab>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitlabstalk gitlab\n` +
-        `• ${context.prefix || "."}gitlabstalk sytses`
+        `│ ${context.prefix || "."}gitlabstalk gitlab\n` +
+        `│ ${context.prefix || "."}gitlabstalk sytses`
       );
     }
 

@@ -20,9 +20,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}cekresi <nomor-resi> [kurir]\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}cekresi SPXID04819284192\n` +
-        `• ${context.prefix || "."}cekresi 004123456789 sicepat\n` +
-        `• ${context.prefix || "."}cekresi JP1234567890 jnt\n\n` +
+        `│ ${context.prefix || "."}cekresi SPXID04819284192\n` +
+        `│ ${context.prefix || "."}cekresi 004123456789 sicepat\n` +
+        `│ ${context.prefix || "."}cekresi JP1234567890 jnt\n\n` +
         `*Daftar Ekspedisi Didukung:*\n${courierList}\n\n` +
         `_Tip: Anda tidak wajib menuliskan nama kurir bila nomor resi memiliki kode awalan resmi (seperti SPXID, JP, dsb)._`
       );
@@ -53,7 +53,7 @@ export default {
     if (res.history?.length > 0) {
       out.push(``, `*Riwayat Perjalanan Terkini:*`);
       for (const h of res.history) {
-        out.push(`• [${h.date}] ${h.desc}`);
+        out.push(`│ [${h.date}] ${h.desc}`);
       }
     }
 

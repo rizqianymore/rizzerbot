@@ -6,7 +6,7 @@ import { splitChunks } from "@/src/services/ai/util.js";
 
 export function renderStatus() {
   const lines = Object.entries(getAIStatus())
-    .map(([k, v]) => `• *${k.toUpperCase()}*: ${v}`)
+    .map(([k, v]) => `│ ${k.toUpperCase()}: ${v}`)
     .join("\n");
   return `*STATUS ENGINE AI*\n\n${lines}`;
 }
@@ -22,15 +22,15 @@ export function renderHelp(p) {
   return (
     `*AI ENGINE — MULTI MODEL + FALLBACK*\n\n` +
     `Format:\n` +
-    `• *${p}ai <pertanyaan>*\n` +
-    `• *${p}ai <model> <pertanyaan>*\n` +
-    `• *${p}ai models* — daftar model & kesiapan\n` +
-    `• *${p}ai status* — status engine\n\n` +
+    `│ *${p}ai <pertanyaan>*\n` +
+    `│ *${p}ai <model> <pertanyaan>*\n` +
+    `│ *${p}ai models* — daftar model & kesiapan\n` +
+    `│ *${p}ai status* — status engine\n\n` +
     `Model populer:\n` +
-    `• *pollinations* (gratis, default)\n` +
-    `• *opencode* / *oc* (coding)\n` +
-    `• *r1* / *deepseek* (butuh DEEPSEEK_API_KEY)\n` +
-    `• *groq* (butuh GROQ_API_KEY)\n\n` +
+    `│ *pollinations* (gratis, default)\n` +
+    `│ *opencode* / *oc* (coding)\n` +
+    `│ *r1* / *deepseek* (butuh DEEPSEEK_API_KEY)\n` +
+    `│ *groq* (butuh GROQ_API_KEY)\n\n` +
     `Contoh: *${p}ai r1 jelaskan black hole*`
   );
 }

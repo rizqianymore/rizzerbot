@@ -22,17 +22,17 @@ export default {
 
     let infoText =
       `*Informasi Saluran*\n\n` +
-      `• JID Saluran: \`${channelJid}\`\n` +
-      `• Nama Label: *${settings.channelName || "Official Channel"}*\n` +
-      `• Auto Post TRX: *${settings.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n`;
+      `│ JID Saluran: \`${channelJid}\`\n` +
+      `│ Nama Label: *${settings.channelName || "Official Channel"}*\n` +
+      `│ Auto Post TRX: *${settings.autoForwardTrxToChannel !== false ? "Aktif" : "Mati"}*\n`;
 
     try {
       if (sock.newsletterMetadata) {
         const meta = await sock.newsletterMetadata("jid", channelJid);
         if (meta) {
-          infoText += `• Nama Asli Saluran: *${meta.name || "-"}*\n`;
-          infoText += `• Subscribers: *${meta.subscribers || "-"}*\n`;
-          infoText += `• Dibuat: *${meta.creation_time ? new Date(meta.creation_time * 1000).toLocaleDateString("id-ID") : "-"}*\n`;
+          infoText += `│ Nama Asli Saluran: *${meta.name || "-"}*\n`;
+          infoText += `│ Subscribers: *${meta.subscribers || "-"}*\n`;
+          infoText += `│ Dibuat: *${meta.creation_time ? new Date(meta.creation_time * 1000).toLocaleDateString("id-ID") : "-"}*\n`;
         }
       }
     } catch (_) {}

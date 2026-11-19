@@ -33,10 +33,10 @@ export default {
           `\`${currentPrefix}cekhalal pelaku <nama usaha>\`\n` +
           `\`${currentPrefix}cekhalal no <no sertifikat>\`\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekhalal Indomie\`\n` +
-          `• \`${currentPrefix}cekhalal "Manggo Sticky Rice"\`\n` +
-          `• \`${currentPrefix}halal pelaku "PT ABC"\`\n` +
-          `• \`${currentPrefix}cekhalal no ID32110078776040726\`\n\n` +
+          `│ \`${currentPrefix}cekhalal Indomie\`\n` +
+          `│ \`${currentPrefix}cekhalal "Manggo Sticky Rice"\`\n` +
+          `│ \`${currentPrefix}halal pelaku "PT ABC"\`\n` +
+          `│ \`${currentPrefix}cekhalal no ID32110078776040726\`\n\n` +
           `_Sumber: bpjph.halal.go.id (BPJPH Kemenag RI)_`
       );
     }

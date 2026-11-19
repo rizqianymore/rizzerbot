@@ -20,9 +20,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}wayback <domain / tautan-web>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}wayback detik.com\n` +
-        `• ${context.prefix || "."}wayback kpu.go.id\n` +
-        `• ${context.prefix || "."}wayback https://target-scam.com/promo\n\n` +
+        `│ ${context.prefix || "."}wayback detik.com\n` +
+        `│ ${context.prefix || "."}wayback kpu.go.id\n` +
+        `│ ${context.prefix || "."}wayback https://target-scam.com/promo\n\n` +
         `Fitur ini digunakan untuk membongkar riwayat tampilan situs di masa lalu atau membuka artikel/postingan yang sengaja dihapus pemiliknya.`
       );
     }
@@ -43,12 +43,12 @@ export default {
       `Target URL   : \`${res.target}\``,
       ``,
       `*Jejak Arsip Tertua (Pertama Kali Terekam):*`,
-      `• Tanggal    : 📅 ${res.firstArchivedDate}`,
-      `• Snapshot   : 🔗 ${res.firstArchivedUrl}`,
+      `│ Tanggal    : 📅 ${res.firstArchivedDate}`,
+      `│ Snapshot   : 🔗 ${res.firstArchivedUrl}`,
       ``,
       `*Jejak Arsip Terakhir:*`,
-      `• Tanggal    : 📅 ${res.latestArchivedDate}`,
-      `• Snapshot   : 🔗 ${res.latestArchivedUrl}`,
+      `│ Tanggal    : 📅 ${res.latestArchivedDate}`,
+      `│ Snapshot   : 🔗 ${res.latestArchivedUrl}`,
       ``,
       `*Kalender Riwayat Lengkap (Semua Snapshot):*`,
       `👉 ${res.calendarUrl}`

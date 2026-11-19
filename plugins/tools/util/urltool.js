@@ -16,7 +16,7 @@ export default {
     if (!text) {
       const p = prefix || ".";
       return reply(
-        `Kirim teks!\n• Encode: \`${p}urlencode https://example.com/a b\`\n• Decode: \`${p}urldecode https%3A%2F%2Fexample.com%2Fa%20b\``
+        `Kirim teks!\n│ Encode: \`${p}urlencode https://example.com/a b\`\n│ Decode: \`${p}urldecode https%3A%2F%2Fexample.com%2Fa%20b\``
       );
     }
     try {

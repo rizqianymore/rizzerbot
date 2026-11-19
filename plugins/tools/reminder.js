@@ -26,7 +26,7 @@ export default {
     if (sub === "list") {
       const list = [...activeReminders.values()].filter((r) => r.jid === msg.key.remoteJid);
       if (!list.length) return reply("Tidak ada pengingat aktif di chat ini.");
-      const lines = list.map((r) => `• #${r.id} ${r.human} → ${r.text} (sisa ${Math.max(0, Math.ceil((r.at - Date.now()) / 1000))}s)`);
+      const lines = list.map((r) => `│ #${r.id} ${r.human} → ${r.text} (sisa ${Math.max(0, Math.ceil((r.at - Date.now()) / 1000))}s)`);
       return reply(`*DAFTAR PENGINGAT*\n\n${lines.join("\n")}\n\nBatalkan: \`${currentPrefix}ingat cancel <id>\``);
     }
     if (sub === "cancel" || sub === "del" || sub === "hapus") {
@@ -43,10 +43,10 @@ export default {
     if (!dur) {
       return reply(
         `*PENGINGAT*\n\n` +
-          `• \`${currentPrefix}ingat 10m beli susu\`\n` +
-          `• \`${currentPrefix}ingat 2h meeting\`\n` +
-          `• \`${currentPrefix}ingat 30s cek oven\`\n` +
-          `• \`${currentPrefix}ingat 1hari bayar kos\`\n\n` +
+          `│ \`${currentPrefix}ingat 10m beli susu\`\n` +
+          `│ \`${currentPrefix}ingat 2h meeting\`\n` +
+          `│ \`${currentPrefix}ingat 30s cek oven\`\n` +
+          `│ \`${currentPrefix}ingat 1hari bayar kos\`\n\n` +
           `Durasi: 1s - 7 hari. Alias: s/detik, m/menit, h/jam, d/hari\n` +
           `Lihat: \`${currentPrefix}ingat list\` | Batal: \`${currentPrefix}ingat cancel <id>\``
       );

@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitissuestalk <username-github>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitissuestalk torvalds\n` +
-        `• ${context.prefix || "."}gitissuestalk antirez`
+        `│ ${context.prefix || "."}gitissuestalk torvalds\n` +
+        `│ ${context.prefix || "."}gitissuestalk antirez`
       );
     }
 
@@ -42,8 +42,8 @@ export default {
       const icon = is.state === "open" ? "🟢 [OPEN]" : "🟣 [CLOSED]";
       out.push(
         `${icon} *${is.title}* (💬 ${is.comments} balasan)`,
-        `  • Tanggal: 📅 ${is.createdDate}`,
-        `  • Link   : 🔗 ${is.url}`,
+        `  │ Tanggal: 📅 ${is.createdDate}`,
+        `  │ Link   : 🔗 ${is.url}`,
         ``
       );
     }

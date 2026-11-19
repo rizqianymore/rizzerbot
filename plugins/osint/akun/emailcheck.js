@@ -108,12 +108,12 @@ export default {
     const lines = [
       `*OSINT EMAIL ANALYZER*`,
       ``,
-      `• *Email:* \`${email}\``,
-      `• *Domain:* \`${domain}\``,
-      `• *Format Valid:* Ya`,
-      `• *Disposable / Temp Mail:* ${isDisposable ? "YA (Email Sementara / Palsu)" : "Tidak (Bukan Temp Mail)"}`,
-      `• *Status Mail Server (MX):* ${mxRecords.length > 0 ? "" + mxStatus : "" + mxStatus}`,
-      `• *Keamanan Email:*`,
+      `│ Email: \`${email}\``,
+      `│ Domain: \`${domain}\``,
+      `│ Format Valid: Ya`,
+      `│ Disposable / Temp Mail: ${isDisposable ? "YA (Email Sementara / Palsu)" : "Tidak (Bukan Temp Mail)"}`,
+      `│ Status Mail Server (MX): ${mxRecords.length > 0 ? "" + mxStatus : "" + mxStatus}`,
+      `│ Keamanan Email: `,
       `   - SPF Record: ${hasSpf ? "Ditemukan" : "Tidak ada"}`,
       `   - DMARC Policy: ${hasDmarc ? "Ditemukan" : "Tidak ada"}`,
     ];

@@ -30,8 +30,8 @@ export default {
     if (!rawUrl) {
       return context.reply(
         `Gunakan format:\n` +
-        `• ${context.prefix || "."}ssweb <url> (Desktop view)\n` +
-        `• ${context.prefix || "."}ssweb mobile <url> (Mobile view)\n\n` +
+        `│ ${context.prefix || "."}ssweb <url> (Desktop view)\n` +
+        `│ ${context.prefix || "."}ssweb mobile <url> (Mobile view)\n\n` +
         `Contoh:\n` +
         `${context.prefix || "."}ssweb google.com`
       );

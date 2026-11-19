@@ -87,7 +87,7 @@ export default {
       lines.push(
         "",
         "*Pola Mencurigakan / Menarik (URL, Path, Token):*",
-        result.interesting.map((s) => `• \`${s.slice(0, 100)}\``).join("\n")
+        result.interesting.map((s) => `│ \`${s.slice(0, 100)}\``).join("\n")
       );
     }
 
@@ -95,7 +95,7 @@ export default {
       lines.push(
         "",
         "*Sample String Biner Lainnya:*",
-        result.samples.slice(0, 15).map((s) => `• \`${s.slice(0, 80)}\``).join("\n")
+        result.samples.slice(0, 15).map((s) => `│ \`${s.slice(0, 80)}\``).join("\n")
       );
     }
 

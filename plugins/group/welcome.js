@@ -22,7 +22,7 @@ export default {
       const isEnabled = Boolean(db.getGroupSetting?.(ctx.remoteJid, "welcome") ?? false);
       return context.reply(
         `*FITUR WELCOME GRUP*\n\n` +
-          `• Status Saat Ini: *${isEnabled ? "AKTIF" : "MATI"}*\n\n` +
+          `│ Status Saat Ini: *${isEnabled ? "AKTIF" : "MATI"}*\n\n` +
           `Gunakan: \`.welcome on\` (aktifkan) atau \`.welcome off\` (matikan).`
       );
     }

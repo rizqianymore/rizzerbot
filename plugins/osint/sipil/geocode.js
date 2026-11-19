@@ -17,9 +17,9 @@ export default {
     if (!query) {
       return reply(
         `*CARA PENGGUNAAN GEOLOKASI:*\n\n` +
-          `• \`${currentPrefix}geocode Monas Jakarta\`\n` +
-          `• \`${currentPrefix}alamat Gedung Sate Bandung\`\n` +
-          `• \`${currentPrefix}lokasi Jl. Malioboro Yogyakarta\``
+          `│ \`${currentPrefix}geocode Monas Jakarta\`\n` +
+          `│ \`${currentPrefix}alamat Gedung Sate Bandung\`\n` +
+          `│ \`${currentPrefix}lokasi Jl. Malioboro Yogyakarta\``
       );
     }
 
@@ -53,14 +53,14 @@ export default {
 
       const text =
         `* HASIL PENCARIAN GEOLOKASI*\n\n` +
-        `• *Nama / Tempat* : ${place.name || place.display_name.split(",")[0] || "-"}\n` +
-        `• *Alamat Lengkap*: ${place.display_name}\n` +
-        `• *Latitude*       : \`${lat}\`\n` +
-        `• *Longitude*      : \`${lon}\`\n` +
-        `• *Kecamatan/Kota* : ${addr.suburb || addr.city_district || addr.city || "-"}\n` +
-        `• *Provinsi*       : ${addr.state || addr.province || addr.region || "-"}\n` +
-        `• *Kode Pos*       : ${addr.postcode || "-"}\n` +
-        `• *Negara*         : ${addr.country || "-"}\n\n` +
+        `│ *Nama / Tempat* : ${place.name || place.display_name.split(",")[0] || "-"}\n` +
+        `│ Alamat Lengkap: ${place.display_name}\n` +
+        `│ *Latitude*       : \`${lat}\`\n` +
+        `│ *Longitude*      : \`${lon}\`\n` +
+        `│ *Kecamatan/Kota* : ${addr.suburb || addr.city_district || addr.city || "-"}\n` +
+        `│ *Provinsi*       : ${addr.state || addr.province || addr.region || "-"}\n` +
+        `│ *Kode Pos*       : ${addr.postcode || "-"}\n` +
+        `│ *Negara*         : ${addr.country || "-"}\n\n` +
         ` *Google Maps*   : ${mapsLink}\n` +
         ` *OpenStreetMap* : ${osmLink}`;
 

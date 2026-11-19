@@ -44,10 +44,10 @@ export default {
           `5. Produsen\n` +
           `6. Jenis Produk\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekinfoalkes AKL 21603712060\`\n` +
-          `• \`${currentPrefix}infoalkes "LITHO Surgical" 2\`\n` +
-          `• \`${currentPrefix}cekalex "PT. I-TECH" 3\`\n` +
-          `• \`${currentPrefix}ceknies "Surgical Laser" 2\`\n\n` +
+          `│ \`${currentPrefix}cekinfoalkes AKL 21603712060\`\n` +
+          `│ \`${currentPrefix}infoalkes "LITHO Surgical" 2\`\n` +
+          `│ \`${currentPrefix}cekalex "PT. I-TECH" 3\`\n` +
+          `│ \`${currentPrefix}ceknies "Surgical Laser" 2\`\n\n` +
           `_Sumber: infoalkes.kemkes.go.id (e-Info Alkes PKRT Kemkes RI)_`
       );
     }

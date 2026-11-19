@@ -15,26 +15,26 @@ export default {
     const text =
       `*PRICELIST SEWA BOT & AKUN PREMIUM*\n\n` +
       `*PAKET SEWA BOT (MASUK GRUP):*\n` +
-      `• 7 Hari: Rp 5.000\n` +
-      `• 15 Hari: Rp 10.000\n` +
-      `• 30 Hari: Rp 15.000\n` +
-      `• Permanen: Rp 35.000\n\n` +
+      `│ 7 Hari: Rp 5.000\n` +
+      `│ 15 Hari: Rp 10.000\n` +
+      `│ 30 Hari: Rp 15.000\n` +
+      `│ Permanen: Rp 35.000\n\n` +
       `*PAKET USER PREMIUM (AKSES FITUR KHUSUS):*\n` +
-      `• 7 Hari: Rp 3.000\n` +
-      `• 30 Hari: Rp 10.000\n` +
-      `• Permanen: Rp 25.000\n\n` +
+      `│ 7 Hari: Rp 3.000\n` +
+      `│ 30 Hari: Rp 10.000\n` +
+      `│ Permanen: Rp 25.000\n\n` +
       `*KEUNTUNGAN PREMIUM:*\n` +
-      `• Bebas limit & tanpa cooldown anti-spam\n` +
-      `• Akses fitur HD upscale foto (` +
+      `│ Bebas limit & tanpa cooldown anti-spam\n` +
+      `│ Akses fitur HD upscale foto (` +
       currentPrefix +
       `hd)\n` +
-      `• Akses TTS Suara Google (` +
+      `│ Akses TTS Suara Google (` +
       currentPrefix +
       `tts)\n` +
-      `• Akses pencarian anime & web pro\n\n` +
+      `│ Akses pencarian anime & web pro\n\n` +
       `*METODE PEMBAYARAN:*\n` +
-      `• QRIS All Payment (Dana, Ovo, Gopay, ShopeePay, Bank)\n` +
-      `• Transfer Bank / E-Wallet\n\n` +
+      `│ QRIS All Payment (Dana, Ovo, Gopay, ShopeePay, Bank)\n` +
+      `│ Transfer Bank / E-Wallet\n\n` +
       `Minat sewa atau upgrade? Hubungi owner:\n` +
       `wa.me/${ownerNumber} _(${activeSettings.ownerName})_`;
 

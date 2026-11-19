@@ -42,11 +42,11 @@ export default {
 
       const displayList = result.breaches.slice(0, 15);
       for (const site of displayList) {
-        out.push(`• ${site}`);
+        out.push(`│ ${site}`);
       }
 
       if (result.breaches.length > 15) {
-        out.push(`• ...dan ${result.breaches.length - 15} insiden kebocoran lainnya.`);
+        out.push(`│ ...dan ${result.breaches.length - 15} insiden kebocoran lainnya.`);
       }
 
       out.push(

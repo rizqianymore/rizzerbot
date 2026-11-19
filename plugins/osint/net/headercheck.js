@@ -46,10 +46,10 @@ export default {
     const lines = [
       `*HTTP SECURITY HEADERS*`,
       ``,
-      `• URL: \`${res.url}\``,
-      `• Status: ${res.status} ${res.statusText}`,
-      `• Server: ${h("server") || "-"}`,
-      `• Skor: ${score}/${checks.length} (Grade ${grade})`,
+      `│ URL: \`${res.url}\``,
+      `│ Status: ${res.status} ${res.statusText}`,
+      `│ Server: ${h("server") || "-"}`,
+      `│ Skor: ${score}/${checks.length} (Grade ${grade})`,
       ``,
       `*Header Keamanan:*`,
     ];

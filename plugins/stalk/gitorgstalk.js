@@ -15,9 +15,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}gitorgstalk <nama-organisasi>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}gitorgstalk google\n` +
-        `• ${context.prefix || "."}gitorgstalk nodejs\n` +
-        `• ${context.prefix || "."}gitorgstalk microsoft`
+        `│ ${context.prefix || "."}gitorgstalk google\n` +
+        `│ ${context.prefix || "."}gitorgstalk nodejs\n` +
+        `│ ${context.prefix || "."}gitorgstalk microsoft`
       );
     }
 

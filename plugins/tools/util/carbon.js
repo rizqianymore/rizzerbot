@@ -33,9 +33,9 @@ export default {
         `*CARBON CODE TO IMAGE*\n\n` +
           `Ubah kode jadi gambar Carbon aesthetic.\n\n` +
           `*Cara pakai:*\n` +
-          `• ${curPrefix}carbon console.log("hello")\n` +
-          `• Reply kode lalu ketik ${curPrefix}carbon\n` +
-          `• Alias: ${curPrefix}car / ${curPrefix}code2img`
+          `│ ${curPrefix}carbon console.log("hello")\n` +
+          `│ Reply kode lalu ketik ${curPrefix}carbon\n` +
+          `│ Alias: ${curPrefix}car / ${curPrefix}code2img`
       );
     }
 

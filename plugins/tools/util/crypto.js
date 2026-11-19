@@ -77,8 +77,8 @@ export default {
           const formattedIdr = Number(item.idr).toLocaleString("id-ID");
 
           out += `${icon} *${coin.toUpperCase()}*\n`;
-          out += `  • USD : $${formattedUsd} (${sign}${change24.toFixed(2)}%)\n`;
-          out += `  • IDR : Rp ${formattedIdr}\n\n`;
+          out += `  │ USD : $${formattedUsd} (${sign}${change24.toFixed(2)}%)\n`;
+          out += `  │ IDR : Rp ${formattedIdr}\n\n`;
         }
 
         return reply(out.trim());
@@ -122,10 +122,10 @@ export default {
         : "-";
 
       let out = `*${icon} CRYPTO PRICE: ${coinId.toUpperCase()}*\n\n`;
-      out += `• *Harga USD* : $${formattedUsd}\n`;
-      out += `• *Harga IDR* : Rp ${formattedIdr}\n`;
-      out += `• *24 Jam*     : ${sign}${change24.toFixed(2)}%\n`;
-      out += `• *Volume 24j* : $${volUsd}\n`;
+      out += `│ *Harga USD* : $${formattedUsd}\n`;
+      out += `│ *Harga IDR* : Rp ${formattedIdr}\n`;
+      out += `│ *24 Jam*     : ${sign}${change24.toFixed(2)}%\n`;
+      out += `│ *Volume 24j* : $${volUsd}\n`;
       out += `\n_Sumber: CoinGecko API_`;
 
       return reply(out);

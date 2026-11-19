@@ -16,8 +16,8 @@ export default {
     if (!text) {
       return reply(
         `*HELLO KITTY STICKER*\n\n` +
-          `• \`${p}hellokitty <teks>\`\n` +
-          `• \`${p}hk <teks>\`\n\n` +
+          `│ \`${p}hellokitty <teks>\`\n` +
+          `│ \`${p}hk <teks>\`\n\n` +
           `Contoh:\n` +
           `\`${p}hk selamat pagi semua\``
       );

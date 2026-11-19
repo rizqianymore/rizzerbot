@@ -127,9 +127,9 @@ export default {
         `*SANDBOX CODE RUNNER*\n\n` +
           `Jalankan potongan kode Javascript atau Python secara terisolasi.\n\n` +
           `*Penggunaan:*\n` +
-          `• JS: \`${currentPrefix}sandbox console.log(1 + 1)\`\n` +
-          `• Python: \`${currentPrefix}sandbox --py print(sum([1, 2, 3]))\`\n` +
-          `• Alias cepat: \`${currentPrefix}py print("halo")\` atau \`${currentPrefix}js [1,2,3].map(x => x*2)\`\n\n` +
+          `│ JS: \`${currentPrefix}sandbox console.log(1 + 1)\`\n` +
+          `│ Python: \`${currentPrefix}sandbox --py print(sum([1, 2, 3]))\`\n` +
+          `│ Alias cepat: \`${currentPrefix}py print("halo")\` atau \`${currentPrefix}js [1,2,3].map(x => x*2)\`\n\n` +
           (isFull
             ? `_Mode SuperOwner: tanpa batasan._`
             : `_Mode publik: tanpa jaringan, tanpa baca file sensitif, cooldown 30 dtk._`)

@@ -67,7 +67,7 @@ export default {
 
     if (!chosenEffect) {
       const effectList = Object.keys(EFFECTS)
-        .map((k) => `• *${k}* : ${EFFECTS[k].label}`)
+        .map((k) => `│ *${k}* : ${EFFECTS[k].label}`)
         .join("\n");
 
       return reply(
@@ -75,9 +75,9 @@ export default {
           `Balas (reply) audio/vn/video dengan efek yang dipilih:\n\n` +
           `*Daftar Efek Suara:*\n${effectList}\n\n` +
           `*Contoh Penggunaan:*\n` +
-          `• Reply audio lalu ketik: *${p}nightcore*\n` +
-          `• Reply audio lalu ketik: *${p}slowed*\n` +
-          `• Reply audio lalu ketik: *${p}audioeffect robot*`
+          `│ Reply audio lalu ketik: *${p}nightcore*\n` +
+          `│ Reply audio lalu ketik: *${p}slowed*\n` +
+          `│ Reply audio lalu ketik: *${p}audioeffect robot*`
       );
     }
 

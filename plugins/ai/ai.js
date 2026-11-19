@@ -26,9 +26,9 @@ export default {
         const c = cacheStats();
         return reply(
           `*STATS AI RUNTIME*\n\n` +
-            `• Memori: ${m.buckets} bucket, ${m.turns} turn (TTL ${m.ttlHours}j)\n` +
-            `• Antrean: ${q.active} aktif / ${q.queued} menunggu (maks ${q.maxConcurrent})\n` +
-            `• Cache: ${c.live} entri hidup / ${c.size} tersimpan`
+            `│ Memori: ${m.buckets} bucket, ${m.turns} turn (TTL ${m.ttlHours}j)\n` +
+            `│ Antrean: ${q.active} aktif / ${q.queued} menunggu (maks ${q.maxConcurrent})\n` +
+            `│ Cache: ${c.live} entri hidup / ${c.size} tersimpan`
         );
       }
       if (firstWord === "models" || firstWord === "model" || firstWord === "-m") return reply(renderModelList());

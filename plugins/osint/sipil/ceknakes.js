@@ -103,13 +103,13 @@ export default {
       `\`${currentPrefix}ceknakes profesi\` — daftar profesi nakes\n` +
       `\`${currentPrefix}ceknakes profesi medis\` — daftar profesi medis\n\n` +
       `*Catatan:*\n` +
-      `• Nakes: pencarian nama *persis* (exact)\n` +
-      `• Medis: nama *sebagian* tapi wajib ada profesi\n\n` +
+      `│ Nakes: pencarian nama *persis* (exact)\n` +
+      `│ Medis: nama *sebagian* tapi wajib ada profesi\n\n` +
       `*Contoh:*\n` +
-      `• \`${currentPrefix}ceknakes BUDI\`\n` +
-      `• \`${currentPrefix}ceknakes NM00002106357370\`\n` +
-      `• \`${currentPrefix}ceknakes BUDI perawat\`\n` +
-      `• \`${currentPrefix}ceknakes medis YUDI dokter\`\n\n` +
+      `│ \`${currentPrefix}ceknakes BUDI\`\n` +
+      `│ \`${currentPrefix}ceknakes NM00002106357370\`\n` +
+      `│ \`${currentPrefix}ceknakes BUDI perawat\`\n` +
+      `│ \`${currentPrefix}ceknakes medis YUDI dokter\`\n\n` +
       `_Sumber: kki.go.id (Konsil Kesehatan Indonesia)_`;
 
     if (!rawArgs) {

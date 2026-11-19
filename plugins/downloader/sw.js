@@ -210,8 +210,8 @@ export default {
         `*DOWNLOAD STATUS (SW)*\n\n` +
         `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
         `*Cara Penggunaan:*\n` +
-        `• Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
-        `• Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
+        `│ Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
+        `│ Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
       );
     }
 

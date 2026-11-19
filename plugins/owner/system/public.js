@@ -29,10 +29,10 @@ export default {
       return reply(
         `Mode saat ini: *${current}*\n` +
           `Gunakan:\n` +
-          `• \`.public\` → public bot ini\n` +
-          `• \`.public --private\` → private/self bot ini\n` +
-          `• \`.public --all\` → public SEMUA bot\n` +
-          `• \`.public --private --all\` → private SEMUA bot`
+          `│ \`.public\` → public bot ini\n` +
+          `│ \`.public --private\` → private/self bot ini\n` +
+          `│ \`.public --all\` → public SEMUA bot\n` +
+          `│ \`.public --private --all\` → private SEMUA bot`
       );
     }
 

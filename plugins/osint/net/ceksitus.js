@@ -20,9 +20,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}ceksitus <link-atau-domain>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}ceksitus https://undian-berhadiah.xyz\n` +
-        `• ${context.prefix || "."}ceksitus tokopedla.site/klaim-dana\n` +
-        `• ${context.prefix || "."}ceksitus google.com\n\n` +
+        `│ ${context.prefix || "."}ceksitus https://undian-berhadiah.xyz\n` +
+        `│ ${context.prefix || "."}ceksitus tokopedla.site/klaim-dana\n` +
+        `│ ${context.prefix || "."}ceksitus google.com\n\n` +
         `Tip: Anda juga bisa me-reply pesan teks yang memuat tautan mencurigakan.`
       );
     }
@@ -52,13 +52,13 @@ export default {
     if (res.riskFactors.length > 0) {
       out.push(``, `*Indikasi & Faktor Ancaman Terdeteksi:*`);
       for (const rf of res.riskFactors) {
-        out.push(`• ⚠️ ${rf}`);
+        out.push(`│ ⚠️ ${rf}`);
       }
     }
 
     out.push(``, `💡 *Edukasi Keamanan Siber:*`);
-    out.push(`• Jangan pernah memasukkan PIN, kata sandi, atau kode OTP pada tautan tidak resmi.`);
-    out.push(`• Bank & layanan resmi tidak pernah membagikan link undian berhadiah melalui nomor WA acak.`);
+    out.push(`│ Jangan pernah memasukkan PIN, kata sandi, atau kode OTP pada tautan tidak resmi.`);
+    out.push(`│ Bank & layanan resmi tidak pernah membagikan link undian berhadiah melalui nomor WA acak.`);
 
     return context.reply(out.join("\n"));
   },

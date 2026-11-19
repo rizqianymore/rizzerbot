@@ -70,7 +70,7 @@ export default {
     const text = args.slice(1).join(" ").trim();
     if (!text || !["enc", "encode", "dec", "decode"].includes(mode)) {
       return reply(
-        `*MORSE*\nContoh:\n• \`${cur}morse enc hello world\`\n• \`${cur}morse dec .... . .-.. .-.. ---\``
+        `*MORSE*\nContoh:\n│ \`${cur}morse enc hello world\`\n│ \`${cur}morse dec .... . .-.. .-.. ---\``
       );
     }
     const isDec = ["dec", "decode"].includes(mode);

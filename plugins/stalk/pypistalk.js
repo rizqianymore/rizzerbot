@@ -15,9 +15,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}pypistalk <nama-paket-python>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}pypistalk requests\n` +
-        `• ${context.prefix || "."}pypistalk fastapi\n` +
-        `• ${context.prefix || "."}pypistalk numpy`
+        `│ ${context.prefix || "."}pypistalk requests\n` +
+        `│ ${context.prefix || "."}pypistalk fastapi\n` +
+        `│ ${context.prefix || "."}pypistalk numpy`
       );
     }
 
@@ -43,8 +43,8 @@ export default {
       `${res.summary}`,
       ``,
       `*Tautan:*`,
-      `• PyPI Page  : 🔗 ${res.packageUrl}`,
-      `• Homepage   : 🔗 ${res.homePage}`
+      `│ PyPI Page  : 🔗 ${res.packageUrl}`,
+      `│ Homepage   : 🔗 ${res.homePage}`
     ];
 
     return context.reply(out.join("\n"));

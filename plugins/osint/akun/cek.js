@@ -58,14 +58,14 @@ export default {
       return reply(
         `*CEK — PINTASAN OSINT*\n\n` +
           `Pilih sub-perintah:\n` +
-          `• Edu: \`nim/mahasiswa\`, \`dosen/nidn\`, \`nis/siswa\`, \`gtk/guru\`, \`sekolah/npsn\`, \`kampus/pt\`\n` +
-          `• Sipil: \`nik\`, \`halal\`, \`bpom\`, \`alkes\`, \`nakes/kki\`, \`isbn/buku\`, \`plat/nopol\`, \`operator/hlr\`, \`kodepos/pos\`, \`bansos\`, \`geocode/alamat\`\n` +
-          `• Net: \`cert/crt\`\n\n` +
+          `│ Edu: \`nim/mahasiswa\`, \`dosen/nidn\`, \`nis/siswa\`, \`gtk/guru\`, \`sekolah/npsn\`, \`kampus/pt\`\n` +
+          `│ Sipil: \`nik\`, \`halal\`, \`bpom\`, \`alkes\`, \`nakes/kki\`, \`isbn/buku\`, \`plat/nopol\`, \`operator/hlr\`, \`kodepos/pos\`, \`bansos\`, \`geocode/alamat\`\n` +
+          `│ Net: \`cert/crt\`\n\n` +
           `Contoh:\n` +
-          `• \`${currentPrefix}cek nim 201311413\`\n` +
-          `• \`${currentPrefix}cek halal mie instan\`\n` +
-          `• \`${currentPrefix}cek nik 3171010101010001\`\n` +
-          `• \`${currentPrefix}cek cert example.com\``
+          `│ \`${currentPrefix}cek nim 201311413\`\n` +
+          `│ \`${currentPrefix}cek halal mie instan\`\n` +
+          `│ \`${currentPrefix}cek nik 3171010101010001\`\n` +
+          `│ \`${currentPrefix}cek cert example.com\``
       );
     }
 

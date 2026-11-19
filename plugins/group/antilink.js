@@ -23,7 +23,7 @@ export default {
       const current = db.isAntilink(ctx.remoteJid);
       return context.reply(
         `*STATUS ANTI-LINK*\n\n` +
-          `• Status: ${current ? "AKTIF" : "MATI"}\n\n` +
+          `│ Status: ${current ? "AKTIF" : "MATI"}\n\n` +
           `Gunakan: .antilink on (aktifkan) atau .antilink off (matikan).`
       );
     }

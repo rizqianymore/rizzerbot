@@ -52,26 +52,26 @@ export default {
       `Status Luhn   : ${luhnStatus}`,
       ``,
       `*Informasi Alokasi Hardware (TAC):*`,
-      `• TAC Code    : ${result.tac}`,
-      `• Asal Badan  : ${result.reportingBody}`,
-      `• Merek       : ${result.brand}`,
-      `• Model / Seri: ${result.model}`,
-      `• Serial Number: ${result.serialNumber}`,
+      `│ TAC Code    : ${result.tac}`,
+      `│ Asal Badan  : ${result.reportingBody}`,
+      `│ Merek       : ${result.brand}`,
+      `│ Model / Seri: ${result.model}`,
+      `│ Serial Number: ${result.serialNumber}`,
     ];
 
     if (result.scraped && result.details && Object.keys(result.details).length > 0) {
       out.push(``, `*Spesifikasi & Live Data (${result.scrapeSource}):*`);
       const topKeys = Object.keys(result.details).slice(0, 10);
       for (const k of topKeys) {
-        out.push(`• ${k}: ${result.details[k]}`);
+        out.push(`│ ${k}: ${result.details[k]}`);
       }
     }
 
     out.push(
       ``,
       `*Pengecekan Legalitas Kemenperin / Bea Cukai RI:*`,
-      `• Bea Cukai   : ${result.beacukaiCheckUrl}`,
-      `• Kemenperin  : ${result.kemenperinCheckUrl}`
+      `│ Bea Cukai   : ${result.beacukaiCheckUrl}`,
+      `│ Kemenperin  : ${result.kemenperinCheckUrl}`
     );
 
     return context.reply(out.join("\n"));

@@ -15,9 +15,9 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}wikistalk <nama-tokoh/figur>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}wikistalk Joko Widodo\n` +
-        `• ${context.prefix || "."}wikistalk Elon Musk\n` +
-        `• ${context.prefix || "."}wikistalk Raden Saleh`
+        `│ ${context.prefix || "."}wikistalk Joko Widodo\n` +
+        `│ ${context.prefix || "."}wikistalk Elon Musk\n` +
+        `│ ${context.prefix || "."}wikistalk Raden Saleh`
       );
     }
 

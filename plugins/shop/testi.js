@@ -56,9 +56,9 @@ export default {
       if (ok) {
         return reply(
           `*TESTIMONI TERKIRIM!*\n` +
-            `• ID: \`${order.id}\`\n` +
-            `• Saluran: *${settings.channelName || channelJid}*\n` +
-            `• Status Order: *COMPLETED*`
+            `│ ID: \`${order.id}\`\n` +
+            `│ Saluran: *${settings.channelName || channelJid}*\n` +
+            `│ Status Order: *COMPLETED*`
         );
       }
       return reply("Gagal mengirim testimoni ke saluran. Pastikan bot adalah Admin di saluran tersebut.");
@@ -98,9 +98,9 @@ export default {
     // Panduan jika argumen kosong
     return reply(
       `*POSTING TESTIMONI KE SALURAN*\n\n` +
-        `• *Berdasarkan Order:* \`${p}testi <ID_ORDER>\`\n` +
+        `│ Berdasarkan Order: \`${p}testi <ID_ORDER>\`\n` +
         `  Contoh: \`${p}testi ORD-ABC12\` (Otomatis ubah status ke COMPLETED)\n\n` +
-        `• *Manual:* \`${p}testi manual <PRODUK> <HARGA> <NOHP>\`\n` +
+        `│ Manual: \`${p}testi manual <PRODUK> <HARGA> <NOHP>\`\n` +
         `  Contoh: \`${p}testi manual "Netflix 1 Bulan" 35000 6281234567890\`\n\n` +
         `_Catatan: Balas (reply) gambar struk pembayaran saat mengetik perintah agar foto ikut diposting ke saluran._`
     );

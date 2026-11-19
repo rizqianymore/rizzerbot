@@ -91,7 +91,7 @@ export default {
     }
     if (!topText && !bottomText) {
       return reply(
-        `*DOKSLI STIKER*\n\nContoh:\n• ${currentPrefix}doksli GASKEUN\n• ${currentPrefix}doksli ATAS | BAWAH\n• ${currentPrefix}doksli --size=64 --tengah HALO`
+        `*DOKSLI STIKER*\n\nContoh:\n│ ${currentPrefix}doksli GASKEUN\n│ ${currentPrefix}doksli ATAS | BAWAH\n│ ${currentPrefix}doksli --size=64 --tengah HALO`
       );
     }
 

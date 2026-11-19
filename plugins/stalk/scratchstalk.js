@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}scratchstalk <username-scratch>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}scratchstalk griffpatch\n` +
-        `• ${context.prefix || "."}scratchstalk Will_Wam`
+        `│ ${context.prefix || "."}scratchstalk griffpatch\n` +
+        `│ ${context.prefix || "."}scratchstalk Will_Wam`
       );
     }
 

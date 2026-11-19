@@ -17,9 +17,9 @@ export default {
         `*CEK PERGURUAN TINGGI — PDDIKTI*\n\n` +
           `Masukkan nama perguruan tinggi atau kode PT.\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekkampus Institut Teknologi Bandung\`\n` +
-          `• \`${currentPrefix}kampus UGM\`\n` +
-          `• \`${currentPrefix}cekpt 002001\`\n\n` +
+          `│ \`${currentPrefix}cekkampus Institut Teknologi Bandung\`\n` +
+          `│ \`${currentPrefix}kampus UGM\`\n` +
+          `│ \`${currentPrefix}cekpt 002001\`\n\n` +
           `_Sumber: PDDikti (profil PT, akreditasi, prodi, rasio dosen:mahasiswa)_`
       );
     }

@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}lichessstalk <username-lichess>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}lichessstalk MagnusCarlsen\n` +
-        `• ${context.prefix || "."}lichessstalk DanielNaroditsky`
+        `│ ${context.prefix || "."}lichessstalk MagnusCarlsen\n` +
+        `│ ${context.prefix || "."}lichessstalk DanielNaroditsky`
       );
     }
 
@@ -37,16 +37,16 @@ export default {
       `Member Sejak : 📅 ${res.createdDate}`,
       ``,
       `*Statistik Pertandingan:*`,
-      `• Total Game : ${res.totalGames.toLocaleString("id-ID")}`,
-      `• Menang (W) : 🏆 ${res.wins.toLocaleString("id-ID")}`,
-      `• Kalah (L)  : ❌ ${res.losses.toLocaleString("id-ID")}`,
-      `• Seri (D)   : 🤝 ${res.draws.toLocaleString("id-ID")}`,
+      `│ Total Game : ${res.totalGames.toLocaleString("id-ID")}`,
+      `│ Menang (W) : 🏆 ${res.wins.toLocaleString("id-ID")}`,
+      `│ Kalah (L)  : ❌ ${res.losses.toLocaleString("id-ID")}`,
+      `│ Seri (D)   : 🤝 ${res.draws.toLocaleString("id-ID")}`,
       ``,
       `*Rating Elo Mode Catur:*`,
-      `• Blitz      : ⚡ ${res.blitz}`,
-      `• Bullet     : 🚅 ${res.bullet}`,
-      `• Rapid      : ⏱️ ${res.rapid}`,
-      `• Classical  : ⏳ ${res.classical}`,
+      `│ Blitz      : ⚡ ${res.blitz}`,
+      `│ Bullet     : 🚅 ${res.bullet}`,
+      `│ Rapid      : ⏱️ ${res.rapid}`,
+      `│ Classical  : ⏳ ${res.classical}`,
       ``,
       `*Link Profil Resmi:*`,
       `👉 ${res.profileUrl}`

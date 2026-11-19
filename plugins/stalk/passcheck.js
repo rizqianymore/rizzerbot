@@ -15,8 +15,8 @@ export default {
         `Gunakan format:\n` +
         `${context.prefix || "."}passcheck <kata-sandi>\n\n` +
         `*Contoh:*\n` +
-        `• ${context.prefix || "."}passcheck password123\n` +
-        `• ${context.prefix || "."}passcheck admin12345\n\n` +
+        `│ ${context.prefix || "."}passcheck password123\n` +
+        `│ ${context.prefix || "."}passcheck admin12345\n\n` +
         `🔒 *Jaminan Keamanan Privasi:* Password Anda TIDAK PERNAH dikirim ke server luar. Pemeriksaan menggunakan algoritma matematis _k-Anonymity SHA-1_ yang 100% aman.`
       );
     }

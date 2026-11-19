@@ -39,9 +39,9 @@ export default {
         `*PENCARIAN KODE POS INDONESIA*\n\n` +
           `Masukkan nama daerah (kelurahan, kecamatan, kota) atau 5 digit kode pos.\n\n` +
           `*Contoh:*\n` +
-          `• \`${currentPrefix}cekkodepos Kemanggisan\`\n` +
-          `• \`${currentPrefix}kodepos Palmerah\`\n` +
-          `• \`${currentPrefix}cekkodepos 11480\``
+          `│ \`${currentPrefix}cekkodepos Kemanggisan\`\n` +
+          `│ \`${currentPrefix}kodepos Palmerah\`\n` +
+          `│ \`${currentPrefix}cekkodepos 11480\``
       );
     }
 

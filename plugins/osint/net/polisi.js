@@ -23,8 +23,8 @@ export default {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return reply(
         `*UK POLICE CRIME DATA*\n\n` +
-          `• \`${currentPrefix}polisi 52.6297 -1.1316\`\n` +
-          `• \`${currentPrefix}polisi 52.6297 -1.1316 2024-01\`\n\n` +
+          `│ \`${currentPrefix}polisi 52.6297 -1.1316\`\n` +
+          `│ \`${currentPrefix}polisi 52.6297 -1.1316 2024-01\`\n\n` +
           `Koordinat latitude/longitude (Inggris).`
       );
     }
@@ -60,15 +60,15 @@ export default {
     const lines = [
       `*UK POLICE — STREET CRIME*`,
       ``,
-      `• Koordinat: ${lat}, ${lng}`,
-      `• Periode: ${date}`,
-      `• Total insiden: ${data.length}`,
+      `│ Koordinat: ${lat}, ${lng}`,
+      `│ Periode: ${date}`,
+      `│ Total insiden: ${data.length}`,
       ``,
       `*Kategori (top 10):*`,
     ];
 
     for (const [cat, n] of sorted.slice(0, 10)) {
-      lines.push(`   • ${cat.replace(/-/g, " ")}: ${n}`);
+      lines.push(`   │ ${cat.replace(/-/g, " ")}: ${n}`);
     }
 
     lines.push(``, `_Sumber: data.police.uk (UK Police)_`);
