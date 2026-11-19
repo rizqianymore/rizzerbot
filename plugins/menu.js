@@ -9,27 +9,18 @@ export function renderMenu(data) {
     return renderCustomMenu(data);
   }
 
-  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
+  const { prefix, categories, catKeys, targetCategory, showAll } = data;
   let text = "";
-
-  text += `┌── ${botName.toUpperCase()}\n`;
-  text += `│ OS: Linux (x86_64)\n`;
-  text += `│ Status: Online\n`;
-  text += `│ Prefix: ${prefix}\n`;
-  text += `│ Role: ${role}\n`;
-  text += `│ Total: ${totalCmds} Perintah\n`;
-  text += `└──\n\n`;
 
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
     text += `┌── ${targetCategory.toUpperCase()}\n`;
     cmds.forEach((cmd, i) => {
       const isLast = i === cmds.length - 1;
-      const branch = isLast ? "└──" : "├──";
+      const branch = isLast ? "└─" : "├──";
       text += `${branch} ${prefix}${cmd.name}\n`;
     });
-    text += `\nKetik ${prefix}menu <perintah> untuk detail panduan.`;
-    return text;
+    return text.trim();
   }
 
   if (showAll) {
@@ -39,13 +30,12 @@ export function renderMenu(data) {
       text += `┌── ${cat.toUpperCase()}\n`;
       cmds.forEach((cmd, i) => {
         const isLast = i === cmds.length - 1;
-        const branch = isLast ? "└──" : "├──";
+        const branch = isLast ? "└─" : "├──";
         text += `${branch} ${prefix}${cmd.name}\n`;
       });
       text += `\n`;
     }
-    text += `Ketik ${prefix}menu <perintah> untuk detail panduan.`;
-    return text;
+    return text.trim();
   }
 
   text += `┌── DAFTAR KATEGORI\n`;
@@ -53,8 +43,7 @@ export function renderMenu(data) {
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
     text += `├── ${prefix}menu ${alias} -> ${cat}\n`;
   });
-  text += `└── ${prefix}menu all -> Tampilkan Seluruh Menu\n\n`;
-  text += `Ketik ${prefix}menu <kategori> untuk membuka daftar.`;
+  text += `└─ ${prefix}menu all -> Tampilkan Seluruh Menu`;
 
   return text;
 }

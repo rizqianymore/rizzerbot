@@ -23,55 +23,44 @@
  * - data.showAll        : Boolean true jika user mengetik .menu all
  */
 export function renderCustomMenu(data) {
-  const { botName, prefix, role, totalCmds, categories, catKeys, targetCategory, showAll } = data;
-
-  // Header Kaku & Murni Terminal Linux (┌── │ └── tanpa tanda kurung [ ])
-  let out = `┌── ${botName.toUpperCase()}\n`;
-  out += `│ OS: Linux (x86_64)\n`;
-  out += `│ Status: Online\n`;
-  out += `│ Prefix: ${prefix}\n`;
-  out += `│ Role: ${role}\n`;
-  out += `│ Total: ${totalCmds} Perintah\n`;
-  out += `└──\n\n`;
+  const { prefix, categories, catKeys, targetCategory, showAll } = data;
 
   // Tampilan 1: User membuka kategori tertentu (.menu ai, .menu osint, dll)
   if (targetCategory && categories[targetCategory]) {
     const cmds = categories[targetCategory] || [];
-    out += `┌── ${targetCategory.toUpperCase()}\n`;
+    let out = `┌── ${targetCategory.toUpperCase()}\n`;
     cmds.forEach((cmd, i) => {
       const isLast = i === cmds.length - 1;
-      const branch = isLast ? "└──" : "├──";
+      const branch = isLast ? "└─" : "├──";
       out += `${branch} ${prefix}${cmd.name}\n`;
     });
-    out += `\nKetik ${prefix}menu <perintah> untuk detail panduan.`;
-    return out;
+    return out.trim();
   }
 
   // Tampilan 2: User meminta seluruh menu (.menu all)
   if (showAll) {
+    let out = "";
     for (const cat of catKeys) {
       const cmds = categories[cat] || [];
       if (!cmds || cmds.length === 0) continue;
       out += `┌── ${cat.toUpperCase()}\n`;
       cmds.forEach((cmd, i) => {
         const isLast = i === cmds.length - 1;
-        const branch = isLast ? "└──" : "├──";
+        const branch = isLast ? "└─" : "├──";
         out += `${branch} ${prefix}${cmd.name}\n`;
       });
       out += `\n`;
     }
-    out += `Ketik ${prefix}menu <perintah> untuk detail panduan.`;
-    return out;
+    return out.trim();
   }
 
-  // Tampilan 3: Menu Utama (Daftar Kategori Bergaya Linux Tree Kaku)
-  out += `┌── DAFTAR KATEGORI\n`;
+  // Tampilan 3: Menu Utama (Daftar Kategori Bersih & Akurat Sesuai Permintaan)
+  let out = `┌── DAFTAR KATEGORI\n`;
   catKeys.forEach((cat) => {
     const alias = cat.toLowerCase().replace(/[^a-z0-9]/g, "");
     out += `├── ${prefix}menu ${alias} -> ${cat}\n`;
   });
-  out += `└── ${prefix}menu all -> Tampilkan Seluruh Menu\n\n`;
-  out += `Ketik ${prefix}menu <kategori> untuk membuka daftar.`;
+  out += `└─ ${prefix}menu all -> Tampilkan Seluruh Menu`;
 
   return out;
 }
