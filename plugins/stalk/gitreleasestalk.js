@@ -17,12 +17,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITHUB SOFTWARE RELEASE STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}gitreleasestalk <owner/repository>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}gitreleasestalk facebook/react\n` +
-        `│ ${context.prefix || "."}gitreleasestalk oven-sh/bun\n` +
-        `│ ${context.prefix || "."}gitreleasestalk protocolbuffers/protobuf`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}gitreleasestalk <owner/repository>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}gitreleasestalk facebook/react\n` +
+          `│ ${context.prefix || "."}gitreleasestalk oven-sh/bun\n` +
+          `│ ${context.prefix || "."}gitreleasestalk protocolbuffers/protobuf`
       );
     }
 

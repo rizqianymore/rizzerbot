@@ -44,7 +44,6 @@ function stripHtml(html) {
 }
 
 function extractNomorIzin(raw) {
-
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nomor = match ? match[1].trim() : stripHtml(raw);
   const terbitMatch = raw?.match(/Terbit\s*:\s*([^<\n]+)/);
@@ -57,7 +56,6 @@ function extractNomorIzin(raw) {
 }
 
 function extractMerk(raw) {
-
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const typeMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -68,7 +66,6 @@ function extractMerk(raw) {
 }
 
 function extractTipe(raw) {
-
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const tipe = match ? match[1].trim() : "-";
   const kelasMatch = raw?.match(/Kelas\s*:\s*([^<\n]+)/);
@@ -77,7 +74,6 @@ function extractTipe(raw) {
 }
 
 function extractPendaftar(raw) {
-
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const addrMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -86,7 +82,6 @@ function extractPendaftar(raw) {
 }
 
 function extractProdusen(raw) {
-
   const match = raw?.match(/<b>([^<]+)<\/b>/);
   const nama = match ? match[1].trim() : stripHtml(raw);
   const negaraMatch = raw?.match(/<div>([^<]+)<\/div>/);
@@ -95,7 +90,6 @@ function extractProdusen(raw) {
 }
 
 function extractStatus(raw) {
-
   const match = raw?.match(/badge-light-(\w+)">([^<]+)<\/span>/);
   if (match) return { status: match[2].trim(), class: match[1] };
   return { status: stripHtml(raw), class: "-" };

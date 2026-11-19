@@ -21,9 +21,9 @@ export default {
     if (!ip) {
       return context.reply(
         `┌── SHODAN INTERNETDB SCAN\n` +
-        `│ Format: ${context.prefix || "."}shodan <ip>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}shodan 1.1.1.1`
+          `│ Format: ${context.prefix || "."}shodan <ip>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}shodan 1.1.1.1`
       );
     }
 
@@ -44,7 +44,8 @@ export default {
 
       const ports = Array.isArray(res.ports) && res.ports.length > 0 ? res.ports.join(", ") : "Tidak terdeteksi";
       const tags = Array.isArray(res.tags) && res.tags.length > 0 ? res.tags.join(", ") : "-";
-      const vulns = Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.slice(0, 5).join(", ") : "Tidak terdeteksi";
+      const vulns =
+        Array.isArray(res.vulns) && res.vulns.length > 0 ? res.vulns.slice(0, 5).join(", ") : "Tidak terdeteksi";
 
       const out =
         `┌── SHODAN: ${res.ip}\n` +

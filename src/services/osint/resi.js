@@ -51,7 +51,9 @@ export const COURIERS = {
  * Deteksi ekspedisi otomatis dari awb / input
  */
 export function detectCourier(rawCourier = "", awb = "") {
-  const c = String(rawCourier || "").trim().toLowerCase();
+  const c = String(rawCourier || "")
+    .trim()
+    .toLowerCase();
   if (c && COURIERS[c]) return { key: c, ...COURIERS[c] };
 
   if (c) {
@@ -80,7 +82,9 @@ export function detectCourier(rawCourier = "", awb = "") {
  * @returns {Promise<object>}
  */
 export async function trackResi(awb, courierInput = "") {
-  const cleanAwb = String(awb || "").trim().replace(/[^a-zA-Z0-9-]/g, "");
+  const cleanAwb = String(awb || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9-]/g, "");
   if (!cleanAwb || cleanAwb.length < 6 || cleanAwb.length > 35) {
     return {
       valid: false,
@@ -90,7 +94,7 @@ export async function trackResi(awb, courierInput = "") {
 
   const detected = detectCourier(courierInput, cleanAwb);
   const courierKey = detected ? detected.key : "jne";
-  const courierName = detected ? detected.name : (courierInput.toUpperCase() || "Ekspedisi Otomatis");
+  const courierName = detected ? detected.name : courierInput.toUpperCase() || "Ekspedisi Otomatis";
 
   // Portal agregator publik dengan Bright Data Unlocker
   const targetUrl = `https://cekresi.com/?noresi=${encodeURIComponent(cleanAwb)}`;
@@ -108,12 +112,14 @@ export async function trackResi(awb, courierInput = "") {
       if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
         scraped = true;
         // Parsing status pengiriman
-        const statusMatch = html.match(/<(?:td|span|div)[^>]*class="[^"]*status[^"]*"[^>]*>([^<]+)<\/(?:td|span|div)>/i) ||
-                            html.match(/Status\s*:\s*<[^>]+>([^<]+)<\/[^>]+>/i);
+        const statusMatch =
+          html.match(/<(?:td|span|div)[^>]*class="[^"]*status[^"]*"[^>]*>([^<]+)<\/(?:td|span|div)>/i) ||
+          html.match(/Status\s*:\s*<[^>]+>([^<]+)<\/[^>]+>/i);
         if (statusMatch) status = statusMatch[1].trim();
 
         // Riwayat transit
-        const historyRegex = /<li[^>]*>\s*<span[^>]*class="[^"]*date[^"]*"[^>]*>([^<]+)<\/span>\s*<div[^>]*>([^<]+)<\/div>/gi;
+        const historyRegex =
+          /<li[^>]*>\s*<span[^>]*class="[^"]*date[^"]*"[^>]*>([^<]+)<\/span>\s*<div[^>]*>([^<]+)<\/div>/gi;
         let match;
         while ((match = historyRegex.exec(html)) !== null) {
           history.push({

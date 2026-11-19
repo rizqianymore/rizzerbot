@@ -12,12 +12,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT RUST CRATES STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}cratestalk <nama-crate>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}cratestalk tokio\n` +
-        `│ ${context.prefix || "."}cratestalk serde\n` +
-        `│ ${context.prefix || "."}cratestalk reqwest`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}cratestalk <nama-crate>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}cratestalk tokio\n` +
+          `│ ${context.prefix || "."}cratestalk serde\n` +
+          `│ ${context.prefix || "."}cratestalk reqwest`
       );
     }
 
@@ -45,7 +45,7 @@ export default {
       ``,
       `*Dokumentasi Resmi:*`,
       `│ Docs.rs    : 📚 ${res.documentation}`,
-      `│ Crates.io  : 🔗 ${res.crateUrl}`
+      `│ Crates.io  : 🔗 ${res.crateUrl}`,
     ].filter(Boolean);
 
     return context.reply(out.join("\n"));

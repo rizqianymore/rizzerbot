@@ -12,12 +12,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT CDNJS LIBRARY STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}cdnjsstalk <nama-library>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}cdnjsstalk jquery\n` +
-        `│ ${context.prefix || "."}cdnjsstalk bootstrap\n` +
-        `│ ${context.prefix || "."}cdnjsstalk sweetalert2`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}cdnjsstalk <nama-library>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}cdnjsstalk jquery\n` +
+          `│ ${context.prefix || "."}cdnjsstalk bootstrap\n` +
+          `│ ${context.prefix || "."}cdnjsstalk sweetalert2`
       );
     }
 
@@ -45,7 +45,7 @@ export default {
       `👉 \`${res.latestCdnUrl}\``,
       ``,
       `*Homepage:*`,
-      `🔗 ${res.homepage}`
+      `🔗 ${res.homepage}`,
     ].filter(Boolean);
 
     return context.reply(out.join("\n"));

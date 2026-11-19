@@ -92,10 +92,10 @@ export default {
 
       return reply(
         `┌── PASTEBIN BERHASIL\n` +
-        `│ URL: ${url}\n` +
-        `│ Ukuran: ${chars} karakter (${lines} baris)\n` +
-        `│ Status: Publik\n` +
-        `└──`
+          `│ URL: ${url}\n` +
+          `│ Ukuran: ${chars} karakter (${lines} baris)\n` +
+          `│ Status: Publik\n` +
+          `└──`
       );
     } catch (err) {
       return reply(`*GAGAL UPLOAD*\n${err?.message || "Terjadi kesalahan koneksi."}`);

@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupNpm(username) {
-  const clean = String(username || "").trim().toLowerCase();
+  const clean = String(username || "")
+    .trim()
+    .toLowerCase();
   if (!clean) {
     return { valid: false, reason: "Username NPM tidak boleh kosong." };
   }

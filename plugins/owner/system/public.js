@@ -3,7 +3,8 @@ import { db } from "@/src/core/database.js";
 export default {
   name: "public",
   aliases: ["pub"],
-  description: "Set bot to public mode (bisa diakses semua orang). Gunakan --private untuk private, --all untuk semua bot",
+  description:
+    "Set bot to public mode (bisa diakses semua orang). Gunakan --private untuk private, --all untuk semua bot",
   usage: "[--private] [--all]",
   ownerOnly: true,
   category: "Owner",
@@ -16,7 +17,8 @@ export default {
 
     const normalizedArgs = (args || []).map((a) => String(a).toLowerCase().trim());
     const syncAll = normalizedArgs.includes("--all") || normalizedArgs.includes("-a");
-    const wantPrivate = normalizedArgs.includes("--private") || normalizedArgs.includes("--self") || normalizedArgs.includes("-p");
+    const wantPrivate =
+      normalizedArgs.includes("--private") || normalizedArgs.includes("--self") || normalizedArgs.includes("-p");
 
     if (syncAll && !isPrimarySuperOwner) {
       return reply("Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
@@ -37,7 +39,9 @@ export default {
     }
 
     const targetPublic = !wantPrivate;
-    logger?.warn?.(`[OwnerCmd] public ${targetPublic ? "PUBLIC" : "SELF/PRIVATE"} oleh ${senderJid} via ${activeBotJid} syncAll=${syncAll}`);
+    logger?.warn?.(
+      `[OwnerCmd] public ${targetPublic ? "PUBLIC" : "SELF/PRIVATE"} oleh ${senderJid} via ${activeBotJid} syncAll=${syncAll}`
+    );
 
     if (syncAll) {
       db.main().updateSettings({ public: targetPublic });

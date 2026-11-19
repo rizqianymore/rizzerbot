@@ -12,12 +12,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITHUB ORGANIZATION STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}gitorgstalk <nama-organisasi>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}gitorgstalk google\n` +
-        `│ ${context.prefix || "."}gitorgstalk nodejs\n` +
-        `│ ${context.prefix || "."}gitorgstalk microsoft`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}gitorgstalk <nama-organisasi>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}gitorgstalk google\n` +
+          `│ ${context.prefix || "."}gitorgstalk nodejs\n` +
+          `│ ${context.prefix || "."}gitorgstalk microsoft`
       );
     }
 
@@ -45,8 +45,10 @@ export default {
       `${res.description}`,
       ``,
       `*Link Organisasi:*`,
-      `👉 ${res.orgUrl}`
-    ].filter(Boolean).join("\n");
+      `👉 ${res.orgUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {
       try {

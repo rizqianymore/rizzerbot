@@ -25,7 +25,9 @@ const ALIAS = {
 };
 
 function norm(code) {
-  const c = String(code || "").trim().toLowerCase();
+  const c = String(code || "")
+    .trim()
+    .toLowerCase();
   return ALIAS[c] || c.toUpperCase();
 }
 
@@ -84,14 +86,13 @@ export default {
       const rate = rates[to];
       if (!rate) return reply(`Kurs ${from} → ${to} tidak tersedia.`);
       const converted = amount * rate;
-      const fmt = (n) =>
-        Number(n).toLocaleString("id-ID", { maximumFractionDigits: n >= 1000 ? 2 : 6 });
+      const fmt = (n) => Number(n).toLocaleString("id-ID", { maximumFractionDigits: n >= 1000 ? 2 : 6 });
       return reply(
         `┌── KURS ${from} -> ${to}\n` +
-        `│ 1 ${from}: ${fmt(rate)} ${to}\n` +
-        `│ ${fmt(amount)} ${from}: ${fmt(converted)} ${to}\n` +
-        `└──\n\n` +
-        `Sumber: open.er-api.com`
+          `│ 1 ${from}: ${fmt(rate)} ${to}\n` +
+          `│ ${fmt(amount)} ${from}: ${fmt(converted)} ${to}\n` +
+          `└──\n\n` +
+          `Sumber: open.er-api.com`
       );
     } catch (err) {
       return reply(`Gagal kurs: ${err?.message || err}`);

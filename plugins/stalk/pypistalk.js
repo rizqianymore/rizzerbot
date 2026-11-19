@@ -12,12 +12,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT PYPI PACKAGE STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}pypistalk <nama-paket-python>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}pypistalk requests\n` +
-        `│ ${context.prefix || "."}pypistalk fastapi\n` +
-        `│ ${context.prefix || "."}pypistalk numpy`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}pypistalk <nama-paket-python>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}pypistalk requests\n` +
+          `│ ${context.prefix || "."}pypistalk fastapi\n` +
+          `│ ${context.prefix || "."}pypistalk numpy`
       );
     }
 
@@ -44,7 +44,7 @@ export default {
       ``,
       `*Tautan:*`,
       `│ PyPI Page  : 🔗 ${res.packageUrl}`,
-      `│ Homepage   : 🔗 ${res.homePage}`
+      `│ Homepage   : 🔗 ${res.homePage}`,
     ];
 
     return context.reply(out.join("\n"));

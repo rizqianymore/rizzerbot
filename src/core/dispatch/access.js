@@ -54,7 +54,7 @@ export async function resolveCommandAccess(
 
   const isSelfMessage = Boolean(isFromMe);
   const senderJid = isSelfMessage
-    ? (botJid || (isGroupJid(remoteJid) ? normalizedRawSender : remoteJid))
+    ? botJid || (isGroupJid(remoteJid) ? normalizedRawSender : remoteJid)
     : normalizedRawSender;
 
   const isSenderOwner =

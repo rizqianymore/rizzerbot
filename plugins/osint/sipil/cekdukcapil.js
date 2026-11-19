@@ -47,9 +47,7 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location) {
   }
 
   lines.push(
-    `No. HP: \`${record.nohp || "-"}\`${
-      operatorInfo ? ` (${operatorInfo.operator} - ${operatorInfo.brand})` : ""
-    }`,
+    `No. HP: \`${record.nohp || "-"}\`${operatorInfo ? ` (${operatorInfo.operator} - ${operatorInfo.brand})` : ""}`,
     `Alamat: ${record.alamat || "-"}`,
     `Kelurahan: ${record.kelurahan || "-"}`,
     `Kecamatan: ${record.kecamatan || "-"}`,
@@ -221,11 +219,7 @@ export default {
         return reply(text);
       }
 
-      const listText = [
-        `*HASIL PENCARIAN NAMA*`,
-        `Ditemukan ${records.length} data untuk "${rawQuery}":`,
-        ``,
-      ];
+      const listText = [`*HASIL PENCARIAN NAMA*`, `Ditemukan ${records.length} data untuk "${rawQuery}":`, ``];
 
       records.forEach((rec, idx) => {
         listText.push(

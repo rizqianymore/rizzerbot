@@ -41,7 +41,6 @@ export async function getGroupAccessError(sock, remoteJid, senderJid, cmd, acces
 }
 
 export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot, _senderJid = "") {
-
   try {
     if (db.getKnownSubDigits().length === 0) {
       return { mode: "solo", botsInGroup: botJid ? [botJid] : [] };

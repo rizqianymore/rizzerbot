@@ -15,7 +15,9 @@ function getNxConfig() {
   const password = process.env.CCTV_PASS || env.CCTV_PASS || "";
 
   if (!baseUrl || !username || !password) {
-    throw new Error("Konfigurasi CCTV (CCTV_BASE_URL, CCTV_USER, CCTV_PASS) belum diatur di .env atau database settings.");
+    throw new Error(
+      "Konfigurasi CCTV (CCTV_BASE_URL, CCTV_USER, CCTV_PASS) belum diatur di .env atau database settings."
+    );
   }
 
   return { baseUrl, username, password };

@@ -16,13 +16,13 @@ export default {
     if (isOwner) {
       return reply(
         `Owner tidak dapat kehilangan akses Premium.\n` +
-        `Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`
+          `Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`
       );
     }
     if (isAdmin) {
       return reply(
         `Admin Bot otomatis memiliki akses Premium.\n` +
-        `Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`
+          `Berhasil menghapus *${jid.split("@")[0]}* dari daftar Premium.`
       );
     }
     if (db.isPremium(jid)) {

@@ -5,9 +5,7 @@ const QUALITY_RANK = ["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p",
 function rankOf(q) {
   const raw = String(q || "").trim();
   const normalized = /^\d+$/.test(raw) ? `${raw}p` : raw;
-  const m = normalized
-    .toLowerCase()
-    .match(/(\d+p)/);
+  const m = normalized.toLowerCase().match(/(\d+p)/);
   const i = m ? QUALITY_RANK.indexOf(m[1]) : -1;
   return i === -1 ? 99 : i;
 }

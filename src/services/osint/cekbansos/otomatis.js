@@ -34,7 +34,6 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
       if (!codeTries.length) continue;
 
       for (const code of codeTries) {
-
         await page.evaluate(() => {
           const nikInput = document.querySelector("#cek_peserta_nik");
           const captchaInput = document.querySelector("#captcha");
@@ -52,7 +51,6 @@ export async function cekBansosOtomatis(nik, { maxAttempts = 3 } = {}) {
         const bodyText = await page.evaluate(() => document.body.innerText || "");
 
         if (/Kode Captcha salah/i.test(bodyText)) {
-
           continue;
         }
 

@@ -15,10 +15,10 @@ export default {
     if (!target) {
       return context.reply(
         `Kirim atau reply foto yang ingin diproses!\n\n` +
-        `*Menyembunyikan Pesan:*\n` +
-        `Reply foto lalu ketik: \`${context.prefix || "."}stego <pesan rahasia>\`\n\n` +
-        `*Membaca Pesan:*\n` +
-        `Reply foto lalu ketik: \`${context.prefix || "."}unstego\``
+          `*Menyembunyikan Pesan:*\n` +
+          `Reply foto lalu ketik: \`${context.prefix || "."}stego <pesan rahasia>\`\n\n` +
+          `*Membaca Pesan:*\n` +
+          `Reply foto lalu ketik: \`${context.prefix || "."}unstego\``
       );
     }
 
@@ -44,7 +44,9 @@ export default {
             return context.reply("Tidak ditemukan pesan tersembunyi (LSB) di dalam gambar ini.");
           }
           // Jika dipanggil dengan `.stego` tanpa argumen
-          return context.reply(`Tuliskan pesan yang mau disembunyikan!\nContoh: \`${context.prefix || "."}stego Password: Rahasia123\``);
+          return context.reply(
+            `Tuliskan pesan yang mau disembunyikan!\nContoh: \`${context.prefix || "."}stego Password: Rahasia123\``
+          );
         }
 
         const out = [
@@ -66,7 +68,9 @@ export default {
     // MODE 2: STEGO (ENCODE PESAN)
     const textToHide = args.join(" ").trim();
     if (!textToHide) {
-      return context.reply(`Tuliskan pesan yang mau disisipkan!\nContoh: \`${context.prefix || "."}stego Ini pesan rahasia\``);
+      return context.reply(
+        `Tuliskan pesan yang mau disisipkan!\nContoh: \`${context.prefix || "."}stego Ini pesan rahasia\``
+      );
     }
 
     try {

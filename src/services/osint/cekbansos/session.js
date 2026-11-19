@@ -46,21 +46,16 @@ export async function fetchFormSession() {
     }
     throw new Error("Gagal membaca token bansos dari browser");
   } finally {
-
     await stealthBrowser.closePage(page);
   }
-
 }
 
 export async function fetchCaptchaImage(session) {
-
   if (session?.via === "brightdata") {
     try {
       const buf = await brightDataRequest(session.captchaUrl, { format: "raw", timeout: 20000 });
       return Buffer.from(buf);
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
 
   try {

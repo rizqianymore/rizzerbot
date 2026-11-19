@@ -13,7 +13,9 @@ export default {
     }
     const confirm = args?.[0];
     if (confirm !== "--confirm") {
-      return reply("[!] Perintah reset database!\nGunakan: `.resetdb --confirm` untuk menghapus database. Tindakan tidak dapat dibatalkan.");
+      return reply(
+        "[!] Perintah reset database!\nGunakan: `.resetdb --confirm` untuk menghapus database. Tindakan tidak dapat dibatalkan."
+      );
     }
     logger?.warn?.(`[OwnerCmd] resetdb oleh ${msg.key.participant || msg.key.remoteJid}`);
     const { execSync } = await import("child_process");

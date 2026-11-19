@@ -17,11 +17,11 @@ export default {
     if (!email) {
       return context.reply(
         `*OSINT DATA BREACH & LEAK CHECK*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}leakcheck <alamat-email>\n\n` +
-        `*Contoh:*\n` +
-        `${context.prefix || "."}leakcheck target@gmail.com\n\n` +
-        `Fitur ini memeriksa apakah email Anda pernah terekspos di database kebocoran data publik (e-commerce, game, platform sosial).`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}leakcheck <alamat-email>\n\n` +
+          `*Contoh:*\n` +
+          `${context.prefix || "."}leakcheck target@gmail.com\n\n` +
+          `Fitur ini memeriksa apakah email Anda pernah terekspos di database kebocoran data publik (e-commerce, game, platform sosial).`
       );
     }
 

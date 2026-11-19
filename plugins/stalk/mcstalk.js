@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT MINECRAFT PLAYER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}mcstalk <username-minecraft>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}mcstalk Notch\n` +
-        `│ ${context.prefix || "."}mcstalk Dream`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}mcstalk <username-minecraft>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}mcstalk Notch\n` +
+          `│ ${context.prefix || "."}mcstalk Dream`
       );
     }
 
@@ -38,8 +38,10 @@ export default {
       res.skinUrl ? `Skin File  : 🔗 ${res.skinUrl}` : "",
       ``,
       `*Profil Riwayat NameMC:*`,
-      `👉 ${res.namemcUrl}`
-    ].filter(Boolean).join("\n");
+      `👉 ${res.namemcUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {
       try {

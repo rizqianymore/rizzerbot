@@ -22,10 +22,7 @@ export async function encodeLSB(imageBuffer, secretText) {
   const fullData = Buffer.concat([header, payload]);
   const totalBits = fullData.length * 8;
 
-  const { data: rawPixels, info } = await sharp(imageBuffer)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+  const { data: rawPixels, info } = await sharp(imageBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 
   const totalChannels = info.width * info.height * info.channels;
   // We use RGB channels (skip Alpha to prevent transparency distortion)
@@ -66,10 +63,7 @@ export async function encodeLSB(imageBuffer, secretText) {
  * Decode secret text from image pixels using LSB.
  */
 export async function decodeLSB(imageBuffer) {
-  const { data: rawPixels, info } = await sharp(imageBuffer)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+  const { data: rawPixels, info } = await sharp(imageBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 
   // Baca 8 bytes pertama (Header: MAGIC 4 bytes + Length 4 bytes)
   const headerBits = 8 * 8;

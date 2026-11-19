@@ -76,11 +76,7 @@ export default {
       if (mime.startsWith("image/")) {
         return await sock.sendMessage(remoteJid, { image: mediaBuf, caption }, { quoted: msg });
       } else {
-        return await sock.sendMessage(
-          remoteJid,
-          { video: mediaBuf, mimetype: "video/mp4", caption },
-          { quoted: msg }
-        );
+        return await sock.sendMessage(remoteJid, { video: mediaBuf, mimetype: "video/mp4", caption }, { quoted: msg });
       }
     } catch (err) {
       logger?.warn?.(`[pindl] ${err?.message || err}`);

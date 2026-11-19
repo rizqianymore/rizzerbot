@@ -40,7 +40,9 @@ export default {
 
       const caption =
         `*PINTEREST SEARCH*\n\n` +
-        `*Judul:* ${String(chosen.title || query).trim().slice(0, 200)}\n` +
+        `*Judul:* ${String(chosen.title || query)
+          .trim()
+          .slice(0, 200)}\n` +
         `*Pinner:* ${chosen.author || "-"}\n` +
         `*Tautan:* ${chosen.pin || "-"}\n` +
         `*Hasil:* ${results.length} pin`;

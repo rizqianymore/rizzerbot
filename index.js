@@ -20,7 +20,7 @@ try {
     if (!fs.existsSync(linkPath)) {
       try {
         fs.symlinkSync(path.join("..", "..", t), linkPath, process.platform === "win32" ? "junction" : "dir");
-      } catch (_) {}
+      } catch (_) { }
     }
   }
 
@@ -30,10 +30,10 @@ try {
     if (f.startsWith(".node_modules-")) {
       try {
         fs.rmSync(path.join(process.cwd(), f), { recursive: true, force: true });
-      } catch (_) {}
+      } catch (_) { }
     }
   }
-} catch (_) {}
+} catch (_) { }
 
 const envPath = path.join(process.cwd(), ".env");
 if (fs.existsSync(envPath)) {
@@ -90,7 +90,6 @@ for (const p of candidateFfmpegPaths) {
 const { startBot, logger } = await import("./src/core/connection.js");
 
 try {
-
   const { stealthBrowser } = await import("./src/utils/request/browser.js");
   stealthBrowser.setLogger?.(logger);
 } catch (_) { }

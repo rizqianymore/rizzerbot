@@ -11,7 +11,6 @@ function shouldSkipBeforeQueue(msg, _sock = null) {
   if (!msg?.key?.id || !msg?.key?.remoteJid) return true;
   const rjid = msg.key.remoteJid;
   if (rjid === "status@broadcast") {
-
     return true;
   }
   if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) return true;

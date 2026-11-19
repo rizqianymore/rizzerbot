@@ -27,7 +27,11 @@ export default {
       const mimetype = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await sock.sendMessage(
         msg.key.remoteJid,
-        isAudio ? { audio: buffer, mimetype: "audio/mpeg" } : mimetype.startsWith("image/") ? { image: buffer, caption: caption + extra } : { video: buffer, caption: caption + extra, mimetype: "video/mp4" },
+        isAudio
+          ? { audio: buffer, mimetype: "audio/mpeg" }
+          : mimetype.startsWith("image/")
+            ? { image: buffer, caption: caption + extra }
+            : { video: buffer, caption: caption + extra, mimetype: "video/mp4" },
         { quoted: msg }
       );
     } catch (err) {

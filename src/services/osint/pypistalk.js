@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupPypi(packageName) {
-  const clean = String(packageName || "").trim().toLowerCase();
+  const clean = String(packageName || "")
+    .trim()
+    .toLowerCase();
   if (!clean) {
     return { valid: false, reason: "Nama paket PyPI tidak boleh kosong." };
   }

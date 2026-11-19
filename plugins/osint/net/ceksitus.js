@@ -17,13 +17,13 @@ export default {
     if (!input) {
       return context.reply(
         `*DETEKTOR LINK SCAM, PHISHING & MALWARE*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}ceksitus <link-atau-domain>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}ceksitus https://undian-berhadiah.xyz\n` +
-        `│ ${context.prefix || "."}ceksitus tokopedla.site/klaim-dana\n` +
-        `│ ${context.prefix || "."}ceksitus google.com\n\n` +
-        `Tip: Anda juga bisa me-reply pesan teks yang memuat tautan mencurigakan.`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}ceksitus <link-atau-domain>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}ceksitus https://undian-berhadiah.xyz\n` +
+          `│ ${context.prefix || "."}ceksitus tokopedla.site/klaim-dana\n` +
+          `│ ${context.prefix || "."}ceksitus google.com\n\n` +
+          `Tip: Anda juga bisa me-reply pesan teks yang memuat tautan mencurigakan.`
       );
     }
 

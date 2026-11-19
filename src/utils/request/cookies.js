@@ -76,7 +76,11 @@ class CookieJar {
       let targetDomain = defaultDomain;
       for (const attr of attributes) {
         if (/^domain=/i.test(attr)) {
-          const customDomain = attr.replace(/^domain=/i, "").trim().replace(/^\./, "").toLowerCase();
+          const customDomain = attr
+            .replace(/^domain=/i, "")
+            .trim()
+            .replace(/^\./, "")
+            .toLowerCase();
           if (customDomain) targetDomain = customDomain;
           break;
         }

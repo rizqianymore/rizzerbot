@@ -12,9 +12,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT STEAM GAMER STALKER\n` +
-        `│ Format: ${context.prefix || "."}steamstalk <steamid64 / custom URL>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}steamstalk gabelogannewell`
+          `│ Format: ${context.prefix || "."}steamstalk <steamid64 / custom URL>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}steamstalk gabelogannewell`
       );
     }
 
@@ -39,8 +39,10 @@ export default {
       res.memberSince !== "-" ? `│ Sejak: ${res.memberSince}` : "",
       `│ Bio: ${res.headline || "-"}`,
       `└──\n`,
-      `Tautan: ${res.profileUrl}`
-    ].filter(Boolean).join("\n");
+      `Tautan: ${res.profileUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     if (res.avatarFull && /^https?:\/\//i.test(res.avatarFull)) {
       try {

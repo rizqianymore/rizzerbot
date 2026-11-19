@@ -43,10 +43,10 @@ export default {
 
       return reply(
         `┌── EMAIL SEMENTARA BARU\n` +
-        `│ Alamat: ${mailbox.address}\n` +
-        `│ Status: Aktif & Siap Menerima\n` +
-        `└──\n\n` +
-        `Ketik ${p}tempmail check untuk melihat kotak masuk.`
+          `│ Alamat: ${mailbox.address}\n` +
+          `│ Status: Aktif & Siap Menerima\n` +
+          `└──\n\n` +
+          `Ketik ${p}tempmail check untuk melihat kotak masuk.`
       );
     }
 
@@ -100,7 +100,10 @@ export default {
 
         let content = fullMsg.textBody ? fullMsg.textBody.trim() : "";
         if (!content && fullMsg.htmlBody) {
-          content = fullMsg.htmlBody.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          content = fullMsg.htmlBody
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
         }
 
         let result =

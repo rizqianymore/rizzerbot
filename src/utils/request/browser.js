@@ -47,7 +47,11 @@ export class StealthBrowserManager extends StealthBrowserCore {
     })();
   }
 
-  async solveChallengeOnPage(page, targetUrl, { timeoutMs = 25000, preferredDevice = "desktop", blockHeavyMedia = true } = {}) {
+  async solveChallengeOnPage(
+    page,
+    targetUrl,
+    { timeoutMs = 25000, preferredDevice = "desktop", blockHeavyMedia = true } = {}
+  ) {
     const device = getRandomDevice(preferredDevice);
     await this.preparePage(page, device);
     await this.restoreCookies(page, targetUrl);

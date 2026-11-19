@@ -50,7 +50,10 @@ function randomString(length = 8) {
  */
 export function createMailbox(customLogin = null) {
   const login = customLogin
-    ? String(customLogin).toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 16) || randomString(8)
+    ? String(customLogin)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 16) || randomString(8)
     : randomString(8);
   const domain = DOMAINS[Math.floor(Math.random() * DOMAINS.length)];
   const address = `${login}@${domain}`;
@@ -63,7 +66,9 @@ export function createMailbox(customLogin = null) {
  * @returns {Promise<Array>}
  */
 export async function getMessages(address) {
-  const clean = String(address || "").trim().toLowerCase();
+  const clean = String(address || "")
+    .trim()
+    .toLowerCase();
   const [login, domain] = clean.split("@");
   if (!login || !domain) {
     throw new Error("Format alamat email tidak valid (harus user@domain).");
@@ -81,7 +86,9 @@ export async function getMessages(address) {
  * @returns {Promise<object>}
  */
 export async function readMessage(address, messageId) {
-  const clean = String(address || "").trim().toLowerCase();
+  const clean = String(address || "")
+    .trim()
+    .toLowerCase();
   const [login, domain] = clean.split("@");
   if (!login || !domain) {
     throw new Error("Format alamat email tidak valid.");

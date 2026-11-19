@@ -43,7 +43,8 @@ const SUBCOMMANDS = {
 export default {
   name: "cek",
   aliases: [],
-  description: "Pintasan: cek nim/dosen/nis/bansos/plat/operator/cert/kodepos/gtk/sekolah/kampus/halal/bpom/alkes/nakes/isbn/nik/geocode",
+  description:
+    "Pintasan: cek nim/dosen/nis/bansos/plat/operator/cert/kodepos/gtk/sekolah/kampus/halal/bpom/alkes/nakes/isbn/nik/geocode",
   usage: "<sub> <query>, cth: cek nim 201311413 | cek halal produk | cek nik 3171...",
   premiumOnly: true,
   cooldownMs: 8000,

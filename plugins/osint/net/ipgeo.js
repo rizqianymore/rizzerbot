@@ -13,10 +13,7 @@ export default {
     const target = args[0];
     if (!target) {
       return reply(
-        `┌── OSINT IP & RECON\n` +
-        `│ Format: .ipgeo <ip / domain>\n` +
-        `└──\n\n` +
-        `Contoh: .ipgeo 1.1.1.1`
+        `┌── OSINT IP & RECON\n` + `│ Format: .ipgeo <ip / domain>\n` + `└──\n\n` + `Contoh: .ipgeo 1.1.1.1`
       );
     }
 

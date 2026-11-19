@@ -47,8 +47,7 @@ export default {
     await reply(`Mengubah kecepatan menjadi *${multiplier}x*...`);
 
     const isVideo = Boolean(
-      msg.message?.videoMessage ||
-      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage
+      msg.message?.videoMessage || msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage
     );
 
     const tmpDir = path.join(process.cwd(), "assets", "cache");
@@ -100,11 +99,7 @@ export default {
         ];
         await execFileAsync(getFfmpegPath(), ffmpegArgs, { timeout: 60000 });
         const out = await fs.readFile(outFile);
-        await sock.sendMessage(
-          msg.key.remoteJid,
-          { audio: out, mimetype: "audio/mp4", ptt: false },
-          { quoted: msg }
-        );
+        await sock.sendMessage(msg.key.remoteJid, { audio: out, mimetype: "audio/mp4", ptt: false }, { quoted: msg });
       }
     } catch (err) {
       return reply(`Gagal mengubah kecepatan: ${err?.message || err}`);

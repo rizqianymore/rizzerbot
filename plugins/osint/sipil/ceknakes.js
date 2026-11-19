@@ -148,8 +148,7 @@ export default {
         const profesiCode = await resolveProfesi(JENIS.medis, profesiTerm);
         if (!profesiCode) {
           return reply(
-            `Profesi *"${profesiTerm}"* tidak ditemukan.\n` +
-              `Lihat daftar: \`${currentPrefix}ceknakes profesi medis\``
+            `Profesi *"${profesiTerm}"* tidak ditemukan.\n` + `Lihat daftar: \`${currentPrefix}ceknakes profesi medis\``
           );
         }
         const result = await searchNakes(nama, {
@@ -176,7 +175,6 @@ export default {
         const resolved = await resolveProfesi(JENIS.nakes, maybeProfesi);
 
         if (resolved && parts.length - 1 >= 1) {
-
           const candidateQuery = parts.slice(0, -1).join(" ");
           if (candidateQuery.length >= 2) {
             profesiCode = resolved;
@@ -227,7 +225,6 @@ async function fetchDetails(rows, jenis) {
       }
       details.push(d);
     } catch {
-
       details.push({
         nama: row.nama,
         kualifikasi: "-",

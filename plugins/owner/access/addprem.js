@@ -48,12 +48,12 @@ export default {
     if (isOwner) {
       reply(
         `Owner otomatis memiliki akses Premium selamanya.\n` +
-        `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
+          `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
       );
     } else if (isAdmin) {
       reply(
         `Admin Bot otomatis memiliki akses Premium selamanya.\n` +
-        `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
+          `Berhasil menambahkan *${jid.split("@")[0]}* ke Premium${durationDays ? ` selama ${durationDays} hari` : " (Permanen)"}.`
       );
     } else {
       reply(

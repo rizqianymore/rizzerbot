@@ -17,12 +17,12 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITHUB REPOSITORY STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}gitrepostalk <owner/repository>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}gitrepostalk torvalds/linux\n` +
-        `│ ${context.prefix || "."}gitrepostalk expressjs/express\n` +
-        `│ ${context.prefix || "."}gitrepostalk https://github.com/facebook/react`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}gitrepostalk <owner/repository>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}gitrepostalk torvalds/linux\n` +
+          `│ ${context.prefix || "."}gitrepostalk expressjs/express\n` +
+          `│ ${context.prefix || "."}gitrepostalk https://github.com/facebook/react`
       );
     }
 
@@ -53,7 +53,7 @@ export default {
       `${res.description}`,
       ``,
       `*Link Repositori:*`,
-      `👉 ${res.repoUrl}`
+      `👉 ${res.repoUrl}`,
     ].join("\n");
 
     if (res.ownerAvatar && /^https?:\/\//i.test(res.ownerAvatar)) {

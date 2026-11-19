@@ -26,7 +26,10 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
       fs.mkdirSync(STATUSES_DIR, { recursive: true });
     }
 
-    const sender = String(msg.key.participant || "").split("@")[0].replace(/\D/g, "") || "unknown";
+    const sender =
+      String(msg.key.participant || "")
+        .split("@")[0]
+        .replace(/\D/g, "") || "unknown";
     const ts = Date.now();
 
     // 2. Status berupa teks

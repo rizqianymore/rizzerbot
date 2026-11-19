@@ -61,12 +61,7 @@ export default {
     const key = q.replace(/\s+/g, "");
     const tz = zones[key] || zones[q] || null;
     if (tz) {
-      return reply(
-        `┌── JAM ${q.toUpperCase()}\n` +
-        `│ Waktu: ${fmt(tz)}\n` +
-        `│ Zona: ${tz}\n` +
-        `└──`
-      );
+      return reply(`┌── JAM ${q.toUpperCase()}\n` + `│ Waktu: ${fmt(tz)}\n` + `│ Zona: ${tz}\n` + `└──`);
     }
 
     try {

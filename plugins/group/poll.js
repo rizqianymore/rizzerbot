@@ -10,15 +10,18 @@ export default {
     if (!raw || !raw.includes("|")) {
       return context.reply(
         `Gunakan format:\n` +
-        `${context.prefix || "."}poll Pertanyaan | Opsi 1 | Opsi 2 [| Opsi 3...]\n\n` +
-        `Contoh Single Choice:\n` +
-        `${context.prefix || "."}poll Mabar nanti malam? | Gas | Skip | Nanti kabarin\n\n` +
-        `Contoh Multi Choice (bisa pilih lebih dari 1):\n` +
-        `${context.prefix || "."}poll Pilih hobi kamu | Futsal | Game | Coding | -m`
+          `${context.prefix || "."}poll Pertanyaan | Opsi 1 | Opsi 2 [| Opsi 3...]\n\n` +
+          `Contoh Single Choice:\n` +
+          `${context.prefix || "."}poll Mabar nanti malam? | Gas | Skip | Nanti kabarin\n\n` +
+          `Contoh Multi Choice (bisa pilih lebih dari 1):\n` +
+          `${context.prefix || "."}poll Pilih hobi kamu | Futsal | Game | Coding | -m`
       );
     }
 
-    const parts = raw.split("|").map((p) => p.trim()).filter(Boolean);
+    const parts = raw
+      .split("|")
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (parts.length < 3) {
       return context.reply("Polling memerlukan minimal 1 pertanyaan dan minimal 2 opsi pilihan.");
     }

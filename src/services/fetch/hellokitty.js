@@ -91,7 +91,6 @@ export async function createHelloKittyImage(rawText, options = {}) {
   ctx.textBaseline = "alphabetic";
 
   for (const line of layout.lines) {
-
     ctx.lineWidth = 7;
     ctx.strokeStyle = "#FFFFFF";
     ctx.lineJoin = "round";
@@ -106,8 +105,5 @@ export async function createHelloKittyImage(rawText, options = {}) {
   const png = await canvas.encode("png");
   const sharp = getSharp();
   if (!sharp) return png;
-  return sharp(png)
-    .resize(SIZE, SIZE, { kernel: sharp.kernel.lanczos3 })
-    .webp({ quality: 90, effort: 3 })
-    .toBuffer();
+  return sharp(png).resize(SIZE, SIZE, { kernel: sharp.kernel.lanczos3 }).webp({ quality: 90, effort: 3 }).toBuffer();
 }

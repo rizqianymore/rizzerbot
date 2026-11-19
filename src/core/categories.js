@@ -92,10 +92,7 @@ export function resolveCategoryAlias(raw, existingCategories = []) {
     return CATEGORY_ALIASES[alphaOnly];
   }
 
-  const candidatePool = new Set([
-    ...CATEGORY_ORDER,
-    ...(Array.isArray(existingCategories) ? existingCategories : []),
-  ]);
+  const candidatePool = new Set([...CATEGORY_ORDER, ...(Array.isArray(existingCategories) ? existingCategories : [])]);
 
   for (const cat of candidatePool) {
     if (!cat) continue;

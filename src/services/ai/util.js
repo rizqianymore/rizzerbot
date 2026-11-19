@@ -36,7 +36,16 @@ export function mkWaiter(timeoutMs = AI_TIMEOUT_MS) {
   };
 }
 
-export async function chatFetch({ url, apiKey, model, messages, extraBody = {}, extraHeaders = {}, timeoutMs = AI_TIMEOUT_MS, wait }) {
+export async function chatFetch({
+  url,
+  apiKey,
+  model,
+  messages,
+  extraBody = {},
+  extraHeaders = {},
+  timeoutMs = AI_TIMEOUT_MS,
+  wait,
+}) {
   const budget = Math.max(1000, wait ? wait.remaining() : timeoutMs);
   const res = await fetch(url, {
     method: "POST",
@@ -77,9 +86,7 @@ export function buildMessages(prompt, options = {}) {
   return [
     {
       role: "system",
-      content:
-        options.system ||
-        "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.",
+      content: options.system || "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.",
     },
     ...(Array.isArray(options.history) ? options.history : []),
     { role: "user", content: String(prompt).trim() },

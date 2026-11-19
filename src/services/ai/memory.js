@@ -17,7 +17,9 @@ function sanitizeTurns(raw) {
   const out = [];
   for (const m of raw) {
     if (!m || (m.role !== "user" && m.role !== "assistant")) continue;
-    const content = String(m.content || "").trim().slice(0, MAX_CHARS);
+    const content = String(m.content || "")
+      .trim()
+      .slice(0, MAX_CHARS);
     if (!content) continue;
     out.push({ role: m.role, content });
   }
@@ -54,8 +56,12 @@ export function getHistory(jid) {
 /** @param {string} jid @param {string} userText @param {string} assistantText */
 export function pushTurn(jid, userText, assistantText) {
   const bucket = getBucket(groupIdFrom(jid));
-  const u = String(userText || "").trim().slice(0, MAX_CHARS);
-  const a = String(assistantText || "").trim().slice(0, MAX_CHARS);
+  const u = String(userText || "")
+    .trim()
+    .slice(0, MAX_CHARS);
+  const a = String(assistantText || "")
+    .trim()
+    .slice(0, MAX_CHARS);
   if (u) bucket.turns.push({ role: "user", content: u });
   if (a) bucket.turns.push({ role: "assistant", content: a });
   bucket.turns = sanitizeTurns(bucket.turns).slice(-MAX_TURNS * 2);

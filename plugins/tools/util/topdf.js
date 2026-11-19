@@ -62,7 +62,10 @@ function buildPdfFromStreams(streams) {
     const contentNum = 5 + i * 2;
     const stream = streams[i];
     const length = Buffer.byteLength(stream, "latin1");
-    addObj(pageNum, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNum} 0 R >>`);
+    addObj(
+      pageNum,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNum} 0 R >>`
+    );
     addObj(contentNum, `<< /Length ${length} >>\nstream\n${stream}\nendstream`);
   }
 
@@ -201,10 +204,19 @@ async function createImagePdf(imageBuffer) {
   const catalog = Buffer.from("<< /Type /Catalog /Pages 2 0 R >>", "latin1");
   const pages = Buffer.from("<< /Type /Pages /Kids [4 0 R] /Count 1 >>", "latin1");
   const font = Buffer.from("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "latin1");
-  const page = Buffer.from(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 6 0 R >> /Font << /F1 3 0 R >> >> /Contents 5 0 R >>`, "latin1");
+  const page = Buffer.from(
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 6 0 R >> /Font << /F1 3 0 R >> >> /Contents 5 0 R >>`,
+    "latin1"
+  );
   const contentStreamStr = `q\n${drawW} 0 0 ${drawH} ${x} ${y} cm\n/Im0 Do\nQ`;
-  const contentStream = Buffer.from(`<< /Length ${Buffer.byteLength(contentStreamStr, "latin1")} >>\nstream\n${contentStreamStr}\nendstream`, "latin1");
-  const imageHeader = Buffer.from(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${buf.length} >>\nstream\n`, "latin1");
+  const contentStream = Buffer.from(
+    `<< /Length ${Buffer.byteLength(contentStreamStr, "latin1")} >>\nstream\n${contentStreamStr}\nendstream`,
+    "latin1"
+  );
+  const imageHeader = Buffer.from(
+    `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${buf.length} >>\nstream\n`,
+    "latin1"
+  );
   const imageFooter = Buffer.from(`\nendstream`, "latin1");
   const imageObjContent = Buffer.concat([imageHeader, buf, imageFooter]);
 
@@ -268,9 +280,7 @@ export default {
     const target = findDownloadableTarget(msg);
     if (target) {
       const isImageTarget =
-        !!target.message?.imageMessage ||
-        !!target.message?.stickerMessage ||
-        !!target.message?.documentMessage;
+        !!target.message?.imageMessage || !!target.message?.stickerMessage || !!target.message?.documentMessage;
       // also check mimetype if available
       const mimetype =
         target.message?.imageMessage?.mimetype ||
@@ -342,10 +352,7 @@ export default {
     // also try extendedTextMessage direct fallback
     if (!text) {
       const direct =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text ||
-        msg.message?.imageMessage?.caption ||
-        "";
+        msg.message?.conversation || msg.message?.extendedTextMessage?.text || msg.message?.imageMessage?.caption || "";
       if (direct.trim()) text = direct.trim();
     }
 

@@ -17,9 +17,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT TELEGRAM STALKER\n` +
-        `│ Format: ${context.prefix || "."}tgstalk <username / link t.me>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}tgstalk @durov`
+          `│ Format: ${context.prefix || "."}tgstalk <username / link t.me>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}tgstalk @durov`
       );
     }
 
@@ -41,7 +41,7 @@ export default {
       `│ Statistik: ${res.extra}`,
       `│ Bio: ${res.description || "-"}`,
       `└──\n`,
-      `Tautan: https://t.me/${res.username}`
+      `Tautan: https://t.me/${res.username}`,
     ].join("\n");
 
     // Kirim avatar foto profil jika tersedia

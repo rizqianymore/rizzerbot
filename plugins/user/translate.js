@@ -22,7 +22,9 @@ export default {
     }
 
     if (!text) {
-      return reply("Masukkan teks atau reply pesan yang ingin diterjemahkan!\nContoh: *.translate hello world* atau reply teks lalu ketik *.tr en*");
+      return reply(
+        "Masukkan teks atau reply pesan yang ingin diterjemahkan!\nContoh: *.translate hello world* atau reply teks lalu ketik *.tr en*"
+      );
     }
     try {
       const result = await translateText(text, lang);

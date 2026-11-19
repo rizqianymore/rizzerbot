@@ -16,10 +16,10 @@ export default {
     try {
       const html = await request.text(url, { timeout: 15000 });
 
-      const m = html.match(/href="(https:\/\/[^"]*sfile\.mobi[^"]*)"/i) || html.match(/id="download"[^>]*href="([^"]+)"/i);
+      const m =
+        html.match(/href="(https:\/\/[^"]*sfile\.mobi[^"]*)"/i) || html.match(/id="download"[^>]*href="([^"]+)"/i);
       let dlUrl = m ? m[1] : null;
       if (!dlUrl) {
-
         const m2 = html.match(/https:\/\/[^\s"']*download[^\s"']*/i);
         dlUrl = m2 ? m2[0] : null;
       }

@@ -1,15 +1,13 @@
 import { VIDEO_CONFIG } from "./config.js";
 
 export function normalizeText(text) {
-  return (
-    String(text || "")
-      .replace(/\r/g, "")
+  return String(text || "")
+    .replace(/\r/g, "")
 
-      .replace(/[\u00A0\u2007\u202F]/g, " ")
-      .replace(/[ \t]+/g, " ")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-  );
+    .replace(/[\u00A0\u2007\u202F]/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function tokenizeLine(line) {
@@ -31,7 +29,6 @@ function clamp(value, min, max) {
 }
 
 export function buildRevealFrames(lines, configObj = VIDEO_CONFIG) {
-
   const wordLines = (Array.isArray(lines) ? lines : [])
     .map((line) => splitWords(line))
     .filter((tokens) => tokens.length > 0);

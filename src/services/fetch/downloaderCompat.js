@@ -175,7 +175,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
       if (/tiktok\.com/i.test(lower)) {
         const { downloadTiktok } = await import("./kolid.js");
         const kd = await downloadTiktok(targetUrl);
-        const targetDl = isAudio ? kd?.mp3 : (kd?.noWatermark || kd?.watermark);
+        const targetDl = isAudio ? kd?.mp3 : kd?.noWatermark || kd?.watermark;
         if (targetDl) {
           const buf = await request.buffer(targetDl, { timeout: 15000, bypassCloudflare: "auto" });
           if (buf?.length > 100) {

@@ -2,11 +2,7 @@ import { AI_TIMEOUT_MS, AIError, mkWaiter, chatFetch, buildMessages } from "./ut
 
 const BASE = "https://opencode.ai/zen/v1";
 
-export const OPENCODE_MODELS = [
-  "deepseek-v4.1-flash-free",
-  "mimo-v2.6-flash-free",
-  "big-pickle",
-];
+export const OPENCODE_MODELS = ["deepseek-v4.1-flash-free", "mimo-v2.6-flash-free", "big-pickle"];
 
 export function isOpenCodeConfigured() {
   return true;

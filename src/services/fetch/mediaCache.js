@@ -67,7 +67,10 @@ function getDb() {
 }
 
 export function hashUrl(url) {
-  return crypto.createHash("sha256").update(String(url || "").trim()).digest("hex");
+  return crypto
+    .createHash("sha256")
+    .update(String(url || "").trim())
+    .digest("hex");
 }
 
 /**
@@ -137,16 +140,7 @@ export async function setCachedMedia(url, buffer, { mime = "video/mp4", info = n
     await fsp.writeFile(filePath, buffer);
     const infoJson = info ? JSON.stringify(info) : null;
 
-    setStmt.run(
-      key,
-      String(url).slice(0, 500),
-      filename,
-      mime,
-      buffer.length,
-      infoJson,
-      now,
-      now
-    );
+    setStmt.run(key, String(url).slice(0, 500), filename, mime, buffer.length, infoJson, now, now);
     return true;
   } catch (err) {
     console.warn("[MediaCache] Gagal menyimpan cache media:", err.message);

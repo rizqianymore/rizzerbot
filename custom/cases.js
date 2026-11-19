@@ -79,7 +79,10 @@ export function renderCustomMenu(data) {
 /**
  * 2. CUSTOM CASES & PERINTAH MANDIRI
  */
-export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, reply, sendTyping: _sendTyping, isOwner, isAdmin, isPremium, prefix }) {
+export async function handleCustomCase(
+  command,
+  { sock: _sock, msg: _msg, args, reply, sendTyping: _sendTyping, isOwner, isAdmin, isPremium, prefix }
+) {
   const p = prefix || ".";
   const cmd = command.toLowerCase();
   const q = (args || []).join(" ").trim();
@@ -97,9 +100,9 @@ export async function handleCustomCase(command, { sock: _sock, msg: _msg, args, 
     case "myrole":
       return reply(
         `*STATUS ROLE ANDA:*\n` +
-        `Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
-        `Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
-        `Premium: ${isPremium ? "Ya" : "Bukan"}`
+          `Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
+          `Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
+          `Premium: ${isPremium ? "Ya" : "Bukan"}`
       );
 
     default:

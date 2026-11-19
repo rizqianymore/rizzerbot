@@ -50,7 +50,9 @@ function loadData() {
  */
 export function checkPinjol(query) {
   loadData();
-  const q = String(query || "").trim().toLowerCase();
+  const q = String(query || "")
+    .trim()
+    .toLowerCase();
   if (!q) {
     return {
       success: false,

@@ -74,9 +74,7 @@ export async function fetchRawSimpkb(keyword, page = 1) {
 }
 
 export function formatGtkItem(item, index) {
-  const statusList = (item.status || [])
-    .filter((s) => s && s[1])
-    .map((s) => s[0]);
+  const statusList = (item.status || []).filter((s) => s && s[1]).map((s) => s[0]);
 
   const satminkal = item.satminkal || {};
   const kota = satminkal.m_kota?.keterangan || "-";
@@ -147,7 +145,9 @@ export async function searchGtk(keyword, page = 1) {
     });
 
     if (items.length > shown.length) {
-      lines.push(`_...dan ${total - shown.length} data lainnya. Perjelas pencarian dengan Nama lengkap / No. UKG / NUPTK._\n`);
+      lines.push(
+        `_...dan ${total - shown.length} data lainnya. Perjelas pencarian dengan Nama lengkap / No. UKG / NUPTK._\n`
+      );
     }
 
     lines.push(`_Sumber: portal.simpkb.id • ${Date.now() - startTime} ms_`);

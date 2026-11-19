@@ -50,7 +50,12 @@ function makeScraper({ name, source, path, param }) {
   };
 }
 
-export const scrapeDeepSeekR1 = makeScraper({ name: "DeepSeek-R1", source: "deepseek-scrape", path: "deepseekr1", param: "prompt" });
+export const scrapeDeepSeekR1 = makeScraper({
+  name: "DeepSeek-R1",
+  source: "deepseek-scrape",
+  path: "deepseekr1",
+  param: "prompt",
+});
 export const scrapeDuckAI = makeScraper({ name: "DuckAI", source: "duckai-scrape", path: "duckai", param: "message" });
 export const scrapeMetaAI = makeScraper({ name: "Meta AI", source: "metaai-scrape", path: "metaai", param: "prompt" });
 

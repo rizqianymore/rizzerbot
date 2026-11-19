@@ -36,7 +36,7 @@ export function detectBank(rawQuery) {
 /**
  * Cek nomor rekening / e-wallet penipu menggunakan scraping via Bright Data Web Unlocker
  * Fallback ke portal resmi pengaduan
- * @param {string} accountNo 
+ * @param {string} accountNo
  * @param {string} [bankName]
  * @returns {Promise<object>}
  */

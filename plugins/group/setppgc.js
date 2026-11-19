@@ -20,7 +20,9 @@ export default {
 
     const target = findDownloadableTarget(msg);
     if (!target || target.type !== "image") {
-      return context.reply("Kirim gambar dengan caption *.setppgc* atau balas (reply) foto yang ingin dijadikan foto grup!");
+      return context.reply(
+        "Kirim gambar dengan caption *.setppgc* atau balas (reply) foto yang ingin dijadikan foto grup!"
+      );
     }
 
     try {

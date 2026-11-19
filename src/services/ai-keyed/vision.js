@@ -22,14 +22,11 @@ export async function askGeminiVision(imageBuffer, prompt, mimeType = "image/jpe
 
   const key = apiKey();
   if (!key) {
-    throw new Error(
-      "GEMINI_API_KEY belum dikonfigurasi di config/settings.js untuk menjalankan AI Vision."
-    );
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi di config/settings.js untuk menjalankan AI Vision.");
   }
 
   const cleanPrompt =
-    String(prompt || "").trim() ||
-    "Jelaskan gambar ini secara detail, akurat, dan informatif dalam bahasa Indonesia.";
+    String(prompt || "").trim() || "Jelaskan gambar ini secara detail, akurat, dan informatif dalam bahasa Indonesia.";
 
   const base64Data = imageBuffer.toString("base64");
   const model = DEFAULT_VISION_MODEL;

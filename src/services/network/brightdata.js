@@ -19,7 +19,11 @@ export function getBrightDataProxy() {
   const direct = (process.env.BRIGHTDATA_PROXY || "").trim();
   if (direct) return direct;
   const customer = (process.env.BRIGHTDATA_CUSTOMER || DEFAULT_CUSTOMER).trim();
-  const password = (process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || DEFAULT_PASSWORD).trim();
+  const password = (
+    process.env.BRIGHTDATA_PROXY_PASSWORD ||
+    process.env.BRIGHTDATA_PASSWORD ||
+    DEFAULT_PASSWORD
+  ).trim();
   const zone = (process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || DEFAULT_ZONE).trim();
   const host = (process.env.BRIGHTDATA_PROXY_HOST || DEFAULT_HOST).trim();
   const port = (process.env.BRIGHTDATA_PROXY_PORT || DEFAULT_PORT).trim();
@@ -33,9 +37,7 @@ export function isBrightDataEnabled() {
   if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
   // Aktif HANYA jika pengguna secara eksplisit mengisi BRIGHTDATA_API_KEY atau BRIGHTDATA_PROXY di environment
   const hasExplicitEnv = Boolean(
-    process.env.BRIGHTDATA_API_KEY ||
-    process.env.BRIGHTDATA_PROXY ||
-    process.env.BRIGHTDATA_CUSTOMER
+    process.env.BRIGHTDATA_API_KEY || process.env.BRIGHTDATA_PROXY || process.env.BRIGHTDATA_CUSTOMER
   );
   if (!hasExplicitEnv) return false;
   const hasApiKey = Boolean(getBrightDataConfig().apiKey);

@@ -172,7 +172,7 @@ export async function solveCaptcha(imageBuffer) {
     if (!guess) return;
     const entry = votes.get(guess) || { count: 0, vias: [], weight: 0 };
     entry.count += 1;
-    entry.weight += (ENGINE_WEIGHTS[via] || 0.5);
+    entry.weight += ENGINE_WEIGHTS[via] || 0.5;
     if (!entry.vias.includes(via)) entry.vias.push(via);
     votes.set(guess, entry);
   };

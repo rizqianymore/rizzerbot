@@ -43,11 +43,7 @@ export default {
         out = await img.resize(width, height, { kernel: sharp.kernel.lanczos3 }).png().toBuffer();
       }
 
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { image: out, caption: " HD 2x" },
-        { quoted: msg }
-      );
+      await sock.sendMessage(msg.key.remoteJid, { image: out, caption: " HD 2x" }, { quoted: msg });
     } catch (err) {
       return reply(`Gagal HD: ${err?.message || err}`);
     }

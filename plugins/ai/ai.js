@@ -18,7 +18,9 @@ export default {
     const p = prefix || ".";
     if (!args || args.length === 0) return reply(renderHelp(p));
 
-    const firstWord = String(args[0] || "").toLowerCase().replace(/^--/, "");
+    const firstWord = String(args[0] || "")
+      .toLowerCase()
+      .replace(/^--/, "");
     if (TRIVIAL.has(firstWord)) {
       if (firstWord === "stats") {
         const m = memoryStats();

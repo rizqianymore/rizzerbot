@@ -53,7 +53,6 @@ export async function connectRemoteBrowser({ timeoutMs = CONNECT_TIMEOUT_MS } = 
 
   const close = async () => {
     try {
-
       if (String(process.env.BRIGHTDATA_SCRAPING_BROWSER_CLOSE || "1").trim() !== "0") await browser.close();
       else browser.disconnect();
     } catch (_) {

@@ -1,14 +1,6 @@
 import { db } from "@/src/core/database.js";
-import {
-  getOrder,
-  updateOrderStatus,
-  listOrders,
-  listProducts,
-} from "@/src/services/shop/shop.js";
-import {
-  formatTestimonyMessage,
-  forwardTestimonyToChannel,
-} from "@/src/services/shop/testimony.js";
+import { getOrder, updateOrderStatus, listOrders, listProducts } from "@/src/services/shop/shop.js";
+import { formatTestimonyMessage, forwardTestimonyToChannel } from "@/src/services/shop/testimony.js";
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 export default {

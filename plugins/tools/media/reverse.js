@@ -49,18 +49,7 @@ export default {
       // reverse video & areverse audio
       await execFileAsync(
         getFfmpegPath(),
-        [
-          "-y",
-          "-i",
-          inFile,
-          "-vf",
-          "reverse",
-          "-af",
-          "areverse",
-          "-preset",
-          "ultrafast",
-          outFile,
-        ],
+        ["-y", "-i", inFile, "-vf", "reverse", "-af", "areverse", "-preset", "ultrafast", outFile],
         { timeout: 75000 }
       );
 

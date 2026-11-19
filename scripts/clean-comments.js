@@ -230,7 +230,6 @@ function stripComments(source, options = {}) {
     }
 
     if (c === "<" && c2 === "!" && source[i + 2] === "-" && source[i + 3] === "-") {
-
       const prev = out.length ? out[out.length - 1] : "\n";
       if (prev === "\n" || prev === "\r") {
         stack.push({ type: "line" });
@@ -248,7 +247,6 @@ function stripComments(source, options = {}) {
     if (c === "/" && c2 === "*") {
       const isDoc = keepJSDoc && source[i + 2] === "*";
       if (isDoc) {
-
         const third = source[i + 2] === "*" && source[i + 3] !== "/";
         if (third || source[i + 2] === "*") {
           out += "/*";
@@ -326,7 +324,6 @@ function stripComments(source, options = {}) {
         i = j;
 
         while (i < n && /[a-z]/i.test(source[i])) {
-
           if (!/[gimsuydv]/i.test(source[i])) break;
           out += source[i];
           i++;

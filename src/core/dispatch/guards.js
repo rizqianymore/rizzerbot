@@ -66,6 +66,10 @@ const ownerThrottles = new Map();
 const OWNER_WINDOW_MS = 10 * 1000;
 const OWNER_MAX = 10;
 
+export function clearOwnerThrottles() {
+  ownerThrottles.clear();
+}
+
 export function registerOwnerCommand(jid) {
   if (!jid) return false;
   const now = Date.now();

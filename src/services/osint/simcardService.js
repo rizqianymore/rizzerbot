@@ -99,7 +99,9 @@ export function searchSimcardByNik(nik) {
   const db = getDatabase();
   if (!db || !queryNikStmt) return [];
 
-  const cleanNik = String(nik || "").replace(/\D+/g, "").trim();
+  const cleanNik = String(nik || "")
+    .replace(/\D+/g, "")
+    .trim();
   if (!cleanNik) return [];
 
   try {

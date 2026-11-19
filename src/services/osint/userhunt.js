@@ -167,7 +167,6 @@ export const USERHUNT_PLATFORMS = [
 ];
 
 export function isValidUsername(username) {
-
   return /^[a-zA-Z0-9_.-]{2,39}$/.test(username || "");
 }
 
@@ -215,7 +214,6 @@ export async function checkUsernameOn(platform, username) {
 }
 
 export async function checkUsernameAll(username) {
-
   const CONCURRENCY = 5;
   const queue = [...USERHUNT_PLATFORMS];
   const results = [];

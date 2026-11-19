@@ -3,7 +3,8 @@ import { trackResi, COURIERS } from "@/src/services/osint/resi.js";
 export default {
   name: "cekresi",
   aliases: ["resi", "lacakresi", "trackingresi", "lacakpaket"],
-  description: "Lacak riwayat pengiriman paket & nomor resi ekspedisi (JNE, J&T, SiCepat, SPX, Anteraja, Pos, Lion Parcel, TIKI)",
+  description:
+    "Lacak riwayat pengiriman paket & nomor resi ekspedisi (JNE, J&T, SiCepat, SPX, Anteraja, Pos, Lion Parcel, TIKI)",
   usage: "<nomor_resi> [kurir]",
   category: "OSINT",
   cooldownMs: 3000,
@@ -14,17 +15,19 @@ export default {
     }
 
     if (!input) {
-      const courierList = Object.keys(COURIERS).map((k) => COURIERS[k].name).join(", ");
+      const courierList = Object.keys(COURIERS)
+        .map((k) => COURIERS[k].name)
+        .join(", ");
       return context.reply(
         `*PELACAKAN NOMOR RESI PENGIRIMAN PAKET*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}cekresi <nomor-resi> [kurir]\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}cekresi SPXID04819284192\n` +
-        `│ ${context.prefix || "."}cekresi 004123456789 sicepat\n` +
-        `│ ${context.prefix || "."}cekresi JP1234567890 jnt\n\n` +
-        `*Daftar Ekspedisi Didukung:*\n${courierList}\n\n` +
-        `_Tip: Anda tidak wajib menuliskan nama kurir bila nomor resi memiliki kode awalan resmi (seperti SPXID, JP, dsb)._`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}cekresi <nomor-resi> [kurir]\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}cekresi SPXID04819284192\n` +
+          `│ ${context.prefix || "."}cekresi 004123456789 sicepat\n` +
+          `│ ${context.prefix || "."}cekresi JP1234567890 jnt\n\n` +
+          `*Daftar Ekspedisi Didukung:*\n${courierList}\n\n` +
+          `_Tip: Anda tidak wajib menuliskan nama kurir bila nomor resi memiliki kode awalan resmi (seperti SPXID, JP, dsb)._`
       );
     }
 
@@ -57,11 +60,7 @@ export default {
       }
     }
 
-    out.push(
-      ``,
-      `*Tautan Tracking Resmi:*`,
-      `👉 ${res.directTrackUrl}`
-    );
+    out.push(``, `*Tautan Tracking Resmi:*`, `👉 ${res.directTrackUrl}`);
 
     return context.reply(out.join("\n"));
   },

@@ -10,7 +10,12 @@ const tiktokCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
  */
 export async function lookupTiktok(rawUsername) {
   let username = String(rawUsername || "").trim();
-  username = username.replace(/^https?:\/\/(?:www\.)?tiktok\.com\/@?/i, "").replace(/^@/, "").split("/")[0].split("?")[0].trim();
+  username = username
+    .replace(/^https?:\/\/(?:www\.)?tiktok\.com\/@?/i, "")
+    .replace(/^@/, "")
+    .split("/")[0]
+    .split("?")[0]
+    .trim();
 
   if (!username || !/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return {

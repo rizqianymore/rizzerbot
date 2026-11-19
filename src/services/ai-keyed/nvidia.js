@@ -1,11 +1,7 @@
 import { postChatCompletions, buildMessages } from "../ai/openai-compat.js";
 
 const BASE = "https://integrate.api.nvidia.com/v1";
-const FREE_MODELS = [
-  "meta/llama-3.3-70b-instruct",
-  "deepseek-ai/deepseek-r1",
-  "mistralai/mistral-large-2-instruct",
-];
+const FREE_MODELS = ["meta/llama-3.3-70b-instruct", "deepseek-ai/deepseek-r1", "mistralai/mistral-large-2-instruct"];
 
 export function isNvidiaConfigured() {
   return Boolean(process.env.NVIDIA_API_KEY);

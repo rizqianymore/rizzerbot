@@ -16,12 +16,12 @@ export default {
     if (!raw) {
       return context.reply(
         `*CEK NOMOR REKENING / E-WALLET PENIPU*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}cekrekening <nomor-rekening> [bank/wallet]\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}cekrekening 1234567890 BCA\n` +
-        `│ ${context.prefix || "."}cekrekening 08123456789 DANA\n` +
-        `│ ${context.prefix || "."}cekrekening 539241249`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}cekrekening <nomor-rekening> [bank/wallet]\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}cekrekening 1234567890 BCA\n` +
+          `│ ${context.prefix || "."}cekrekening 08123456789 DANA\n` +
+          `│ ${context.prefix || "."}cekrekening 539241249`
       );
     }
 

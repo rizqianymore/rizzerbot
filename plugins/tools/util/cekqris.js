@@ -16,7 +16,9 @@ function extractQrisInfo(rawText) {
   const merchantName = dataMap["59"]?.value || "-";
   const merchantCity = dataMap["60"]?.value || "-";
   const postalCode = dataMap["61"]?.value || "-";
-  const amount = dataMap["54"]?.value ? `Rp ${Number(dataMap["54"].value).toLocaleString("id-ID")}` : "Dinamis / Input Manual";
+  const amount = dataMap["54"]?.value
+    ? `Rp ${Number(dataMap["54"].value).toLocaleString("id-ID")}`
+    : "Dinamis / Input Manual";
   const poi = dataMap["01"]?.value === "12" ? "Dinamis" : "Statis";
 
   // Check CRC16
@@ -25,7 +27,8 @@ function extractQrisInfo(rawText) {
     const payloadWithoutCRC = rawText.slice(0, -4);
     const expectedCRC = calculateCRC16(payloadWithoutCRC);
     const actualCRC = dataMap["63"].value.toUpperCase();
-    crcStatus = actualCRC === expectedCRC ? `Valid (${actualCRC})` : `Invalid (Actual: ${actualCRC}, Expected: ${expectedCRC})`;
+    crcStatus =
+      actualCRC === expectedCRC ? `Valid (${actualCRC})` : `Invalid (Actual: ${actualCRC}, Expected: ${expectedCRC})`;
   }
 
   // Acquirer / Operator list from tag 26-51
@@ -119,9 +122,9 @@ export default {
     if (!rawQris) {
       return context.reply(
         `Gunakan format:\n` +
-        `${context.prefix || "."}cekqris <string-qris>\n` +
-        `Atau reply gambar QRIS dengan perintah:\n` +
-        `${context.prefix || "."}cekqris`
+          `${context.prefix || "."}cekqris <string-qris>\n` +
+          `Atau reply gambar QRIS dengan perintah:\n` +
+          `${context.prefix || "."}cekqris`
       );
     }
 

@@ -91,7 +91,9 @@ export default {
     }
 
     if (Number.isNaN(start) || Number.isNaN(end) || end <= 0 || end <= start || start < 0) {
-      return reply("Waktu tidak valid. Contoh: `.trim 00:05-00:15` (start < end)\nSingle: `.trim 10` = potong 0-10 detik");
+      return reply(
+        "Waktu tidak valid. Contoh: `.trim 00:05-00:15` (start < end)\nSingle: `.trim 10` = potong 0-10 detik"
+      );
     }
 
     const target = findDownloadableTarget(msg);

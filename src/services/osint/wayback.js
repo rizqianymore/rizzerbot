@@ -8,7 +8,10 @@ import axios from "axios";
  */
 export async function lookupWayback(rawUrl) {
   let target = String(rawUrl || "").trim();
-  target = target.replace(/^https?:\/\//i, "").replace(/\/+$/, "").trim();
+  target = target
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "")
+    .trim();
 
   if (!target || !target.includes(".")) {
     return {

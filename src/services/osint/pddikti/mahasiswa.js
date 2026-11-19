@@ -66,9 +66,7 @@ export async function detailMahasiswa(encId, { timeoutMs = 45000 } = {}) {
         return data;
       }
     }
-  } catch (_) {
-
-  }
+  } catch (_) {}
 
   try {
     const token = await getRecaptchaToken();

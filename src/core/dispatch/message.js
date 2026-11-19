@@ -26,6 +26,31 @@ export function isDuplicateMessage(botIdentity, key) {
   return false;
 }
 
+export function unwrapMessageContent(message) {
+  if (!message || typeof message !== "object") return message;
+  let current = message;
+  for (let i = 0; i < 6; i++) {
+    if (current.deviceSentMessage?.message) {
+      current = current.deviceSentMessage.message;
+    } else if (current.ephemeralMessage?.message) {
+      current = current.ephemeralMessage.message;
+    } else if (current.viewOnceMessage?.message) {
+      current = current.viewOnceMessage.message;
+    } else if (current.viewOnceMessageV2?.message) {
+      current = current.viewOnceMessageV2.message;
+    } else if (current.viewOnceMessageV2Extension?.message) {
+      current = current.viewOnceMessageV2Extension.message;
+    } else if (current.documentWithCaptionMessage?.message) {
+      current = current.documentWithCaptionMessage.message;
+    } else if (current.editedMessage?.message?.protocolMessage?.editedMessage) {
+      current = current.editedMessage.message.protocolMessage.editedMessage;
+    } else {
+      break;
+    }
+  }
+  return current;
+}
+
 export function getUniversalContextInfo(message) {
   if (!message || typeof message !== "object") return null;
   const candidates = [

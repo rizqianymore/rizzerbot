@@ -112,21 +112,16 @@ export default {
     if (!expr) {
       return reply(
         `┌── KALKULATOR\n` +
-        `│ Format: ${prefix || "."}calc <ekspresi>\n` +
-        `│ Operator: + - * / % ^ ( )\n` +
-        `└──\n\n` +
-        `Contoh: ${prefix || "."}calc (12+8)*2.5`
+          `│ Format: ${prefix || "."}calc <ekspresi>\n` +
+          `│ Operator: + - * / % ^ ( )\n` +
+          `└──\n\n` +
+          `Contoh: ${prefix || "."}calc (12+8)*2.5`
       );
     }
     if (expr.length > 200) return reply("Ekspresi terlalu panjang (maks 200 karakter).");
     try {
       const res = formatResult(evaluate(expr));
-      return reply(
-        `┌── HASIL HITUNG\n` +
-        `│ Soal: ${expr}\n` +
-        `│ Hasil: ${res}\n` +
-        `└──`
-      );
+      return reply(`┌── HASIL HITUNG\n` + `│ Soal: ${expr}\n` + `│ Hasil: ${res}\n` + `└──`);
     } catch (err) {
       return reply(`Ekspresi tidak valid: ${err?.message || "cek lagi"}\nContoh: ${prefix || "."}calc (12+8)*2.5`);
     }

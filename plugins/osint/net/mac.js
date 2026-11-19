@@ -14,7 +14,9 @@ export default {
   run: async (_sock, _msg, args, context) => {
     const rawInput = args.join(" ").trim();
     if (!rawInput) {
-      return context.reply(`Gunakan format:\n${context.prefix || "."}mac <mac-address>\n\nContoh:\n${context.prefix || "."}mac 00:1A:2B:3C:4D:5E`);
+      return context.reply(
+        `Gunakan format:\n${context.prefix || "."}mac <mac-address>\n\nContoh:\n${context.prefix || "."}mac 00:1A:2B:3C:4D:5E`
+      );
     }
 
     const cleaned = cleanMac(rawInput);
@@ -24,7 +26,10 @@ export default {
 
     await context.sendTyping();
 
-    const formattedMac = cleaned.slice(0, 12).match(/.{1,2}/g).join(":");
+    const formattedMac = cleaned
+      .slice(0, 12)
+      .match(/.{1,2}/g)
+      .join(":");
 
     try {
       const vendor = await request.text(`https://api.macvendors.com/${encodeURIComponent(formattedMac)}`, {

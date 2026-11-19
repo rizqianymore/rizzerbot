@@ -126,7 +126,10 @@ export function isValidUrl(s) {
 }
 
 export function sanitizeFilename(name, maxLen = 80) {
-  const base = String(name || "file").replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_").slice(0, maxLen);
+  const base = String(name || "file")
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, "_")
+    .slice(0, maxLen);
   return base || "file";
 }
 
@@ -139,7 +142,9 @@ export function formatBytes(bytes) {
 }
 
 export function parseDuration(str) {
-  const s = String(str || "").trim().toLowerCase();
+  const s = String(str || "")
+    .trim()
+    .toLowerCase();
   const m = s.match(/^(\d+)\s*([smhd])$/);
   if (!m) return null;
   const n = Number(m[1]);

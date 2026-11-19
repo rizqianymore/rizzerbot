@@ -45,7 +45,6 @@ function joinRscPayload(html) {
 }
 
 function extractBalancedArray(str, startIdx) {
-
   const open = str.indexOf("[", startIdx);
   if (open === -1) return null;
   let depth = 0;
@@ -134,7 +133,6 @@ export async function searchHalal(query, { key = "produk", page = 1 } = {}) {
   const payload = joinRscPayload(res.data);
   const di = payload.indexOf('"data":');
   if (di === -1) {
-
     return { data: [], totalItems: 0, pageSize: 10, totalPages: 1, currentPage: 1 };
   }
 

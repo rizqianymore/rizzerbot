@@ -81,16 +81,17 @@ export async function executeCommand(sock, msg, logger, env) {
       ).trim();
     },
     sendTyping: async () => {
-      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
+      Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => {});
     },
     reply: async (text) => {
       const formatted = typeof text === "string" ? autoFormatToLinux(text) : text;
+      const targetJid = remoteJid.endsWith("@lid") ? db.resolvePhoneJid(remoteJid) || remoteJid : remoteJid;
       if (responseDelay > 0) {
-        Promise.resolve(sock.sendPresenceUpdate?.("composing", remoteJid)).catch(() => { });
+        Promise.resolve(sock.sendPresenceUpdate?.("composing", targetJid)).catch(() => {});
         await delay(responseDelay);
       }
-      return sock.sendMessage(remoteJid, { text: formatted }, { quoted: msg }).catch((e) => {
-        logger?.warn?.(`[Reply Send Error] ${remoteJid}: ${e?.message || e}`);
+      return sock.sendMessage(targetJid, { text: formatted }, { quoted: msg }).catch((e) => {
+        logger?.warn?.(`[Reply Send Error] ${targetJid}: ${e?.message || e}`);
       });
     },
     getTargetJid: (targetArgs) => {
@@ -135,6 +136,6 @@ export async function executeCommand(sock, msg, logger, env) {
     logger?.error?.(`[Command Error] ${cmd.name}:`, err?.message || err);
     try {
       await context.reply(`❌ Error: ${err?.message || "Terjadi kesalahan saat mengeksekusi perintah."}`);
-    } catch (_) { }
+    } catch (_) {}
   }
 }

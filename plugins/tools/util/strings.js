@@ -95,7 +95,10 @@ export default {
       lines.push(
         "",
         "*Sample String Biner Lainnya:*",
-        result.samples.slice(0, 15).map((s) => `│ \`${s.slice(0, 80)}\``).join("\n")
+        result.samples
+          .slice(0, 15)
+          .map((s) => `│ \`${s.slice(0, 80)}\``)
+          .join("\n")
       );
     }
 

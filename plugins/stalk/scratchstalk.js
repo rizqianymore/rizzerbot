@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT SCRATCH DEVELOPER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}scratchstalk <username-scratch>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}scratchstalk griffpatch\n` +
-        `│ ${context.prefix || "."}scratchstalk Will_Wam`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}scratchstalk <username-scratch>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}scratchstalk griffpatch\n` +
+          `│ ${context.prefix || "."}scratchstalk Will_Wam`
       );
     }
 
@@ -45,7 +45,7 @@ export default {
       `${res.status}`,
       ``,
       `*Link Profil Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `👉 ${res.profileUrl}`,
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

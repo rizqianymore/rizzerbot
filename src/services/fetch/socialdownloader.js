@@ -81,9 +81,7 @@ export async function downloadSocialMedia(targetUrl, opts = {}) {
   const isAudio = opts.type === "audio" || opts.isAudio === true;
   const info = await fetchSocialDownloader(targetUrl, { ...opts, type: isAudio ? "audio" : "video" });
 
-  const fetchUrl = isAudio
-    ? info.downloadUrl || info.directAudioUrl
-    : info.downloadUrl || info.directVideoUrl;
+  const fetchUrl = isAudio ? info.downloadUrl || info.directAudioUrl : info.downloadUrl || info.directVideoUrl;
 
   if (!fetchUrl) {
     throw new Error("URL file media tidak ditemukan pada respon SocialDownloader");

@@ -17,9 +17,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT TIKTOK STALKER\n` +
-        `│ Format: ${context.prefix || "."}tiktokstalk <username>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}tiktokstalk @khaby.lame`
+          `│ Format: ${context.prefix || "."}tiktokstalk <username>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}tiktokstalk @khaby.lame`
       );
     }
 
@@ -39,7 +39,7 @@ export default {
       `│ Nama: ${res.authorName}`,
       `│ Status: Akun Aktif Terverifikasi`,
       `└──\n`,
-      `Tautan: ${res.profileUrl}`
+      `Tautan: ${res.profileUrl}`,
     ];
 
     return context.reply(out.join("\n"));

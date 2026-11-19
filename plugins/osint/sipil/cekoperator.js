@@ -5,11 +5,7 @@ import {
   isDukcapilReady,
   formatTtlWithCurrentAge,
 } from "@/src/services/osint/dukcapilService.js";
-import {
-  searchSimcardByPhone,
-  searchSimcardByNik,
-  isSimcardReady,
-} from "@/src/services/osint/simcardService.js";
+import { searchSimcardByPhone, searchSimcardByNik, isSimcardReady } from "@/src/services/osint/simcardService.js";
 
 export default {
   name: "cekoperator",

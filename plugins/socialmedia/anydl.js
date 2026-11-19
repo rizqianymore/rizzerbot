@@ -13,10 +13,10 @@ export default {
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
         `┌── UNIVERSAL DOWNLOADER\n` +
-        `│ Format: ${prefix || "."}dl <url> [mp3]\n` +
-        `│ Dukungan: YouTube, IG, TikTok, X, FB, dll\n` +
-        `└──\n\n` +
-        `Contoh: ${prefix || "."}dl https://vt.tiktok.com/xxxx`
+          `│ Format: ${prefix || "."}dl <url> [mp3]\n` +
+          `│ Dukungan: YouTube, IG, TikTok, X, FB, dll\n` +
+          `└──\n\n` +
+          `Contoh: ${prefix || "."}dl https://vt.tiktok.com/xxxx`
       );
     }
 
@@ -29,7 +29,8 @@ export default {
       let caption = `┌── UNIVERSAL DOWNLOADER\n`;
       if (info?.extractor_key || info?.platform) caption += `│ Platform: ${info.extractor_key || info.platform}\n`;
       if (info?.title) caption += `│ Judul: ${String(info.title).slice(0, 150)}\n`;
-      if (info?.uploader || info?.channel || info?.author) caption += `│ Author: ${info.uploader || info.channel || info.author}\n`;
+      if (info?.uploader || info?.channel || info?.author)
+        caption += `│ Author: ${info.uploader || info.channel || info.author}\n`;
       if (info?.duration) {
         const d = Number(info.duration);
         if (Number.isFinite(d) && d > 0) {

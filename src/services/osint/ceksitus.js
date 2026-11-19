@@ -3,15 +3,45 @@ import dns from "node:dns/promises";
 
 // Pola kata kunci mencurigakan yang sering dipakai penipuan online / phishing di WhatsApp
 const SUSPICIOUS_KEYWORDS = [
-  "undian", "berhadiah", "klaim-saldo", "bansos", "prakerja", "dana-kaget",
-  "login-bca", "bri-mo", "bni-mobile", "pulsa-gratis", "kuota-gratis",
-  "crypto-profit", "investasi-pasti", "slot-gacor", "judol", "maxwin",
-  "apk-undangan", "surat-tilang.apk", "paket-jne.apk"
+  "undian",
+  "berhadiah",
+  "klaim-saldo",
+  "bansos",
+  "prakerja",
+  "dana-kaget",
+  "login-bca",
+  "bri-mo",
+  "bni-mobile",
+  "pulsa-gratis",
+  "kuota-gratis",
+  "crypto-profit",
+  "investasi-pasti",
+  "slot-gacor",
+  "judol",
+  "maxwin",
+  "apk-undangan",
+  "surat-tilang.apk",
+  "paket-jne.apk",
 ];
 
 const SUSPICIOUS_TLDS = [
-  ".xyz", ".top", ".club", ".buzz", ".work", ".site", ".online", ".icu",
-  ".fun", ".space", ".monster", ".fit", ".rest", ".tk", ".ml", ".cf", ".gq"
+  ".xyz",
+  ".top",
+  ".club",
+  ".buzz",
+  ".work",
+  ".site",
+  ".online",
+  ".icu",
+  ".fun",
+  ".space",
+  ".monster",
+  ".fit",
+  ".rest",
+  ".tk",
+  ".ml",
+  ".cf",
+  ".gq",
 ];
 
 /**

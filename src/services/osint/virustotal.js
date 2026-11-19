@@ -43,7 +43,9 @@ async function checkUrlHaus(targetUrl) {
 async function checkUrlScan(targetUrl) {
   try {
     let host = targetUrl;
-    try { host = new URL(targetUrl).hostname; } catch {}
+    try {
+      host = new URL(targetUrl).hostname;
+    } catch {}
     const data = await request.json(`https://urlscan.io/api/v1/search/?q=domain:${encodeURIComponent(host)}`, {
       timeout: 15000,
     });
@@ -59,10 +61,12 @@ async function checkUrlScan(targetUrl) {
 
 async function checkPhishTankFree(targetUrl) {
   try {
-
-    const html = await request.text(`https://checkurl.phishtank.com/checkurl/index.php?url=${encodeURIComponent(targetUrl)}`, {
-      timeout: 15000,
-    });
+    const html = await request.text(
+      `https://checkurl.phishtank.com/checkurl/index.php?url=${encodeURIComponent(targetUrl)}`,
+      {
+        timeout: 15000,
+      }
+    );
     if (typeof html === "string" && /phish/i.test(html) && /verified/i.test(html)) {
       return { maybePhish: html.toLowerCase().includes("phish") };
     }
@@ -131,11 +135,15 @@ export async function scanUrlFree(targetUrl) {
 
 async function checkMalwareBazaar(hash) {
   try {
-    const data = await request.post("https://mb-api.abuse.ch/api/v1/", `query=get_info&hash=${encodeURIComponent(hash)}`, {
-      timeout: 15000,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      responseType: "json",
-    });
+    const data = await request.post(
+      "https://mb-api.abuse.ch/api/v1/",
+      `query=get_info&hash=${encodeURIComponent(hash)}`,
+      {
+        timeout: 15000,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        responseType: "json",
+      }
+    );
     if (data?.query_status === "ok" && Array.isArray(data.data) && data.data.length > 0) {
       const info = data.data[0];
       return {
@@ -146,7 +154,8 @@ async function checkMalwareBazaar(hash) {
         raw: info,
       };
     }
-    if (data?.query_status === "hash_not_found" || data?.query_status === "no_results") return { found: false, malicious: false };
+    if (data?.query_status === "hash_not_found" || data?.query_status === "no_results")
+      return { found: false, malicious: false };
     return null;
   } catch {
     return null;
@@ -161,7 +170,6 @@ async function checkHashLookup(hash) {
     if (data?.hash) return { found: true, raw: data };
     return { found: false };
   } catch (e) {
-
     if (String(e?.message || "").includes("404")) return { found: false };
     return null;
   }
@@ -169,7 +177,6 @@ async function checkHashLookup(hash) {
 
 async function checkVtGuiFree(hash) {
   try {
-
     const data = await request.json(`https://www.virustotal.com/ui/files/${encodeURIComponent(hash)}`, {
       timeout: 15000,
       headers: {
@@ -193,7 +200,6 @@ export async function fileReportFree(buffer, fileName = "file") {
   const [mb, hl, vtGui] = await Promise.all([checkMalwareBazaar(hash), checkHashLookup(hash), checkVtGuiFree(hash)]);
 
   if (vtGui?.found) {
-
     return {
       hash,
       fileName,
@@ -213,7 +219,7 @@ export async function fileReportFree(buffer, fileName = "file") {
       free: true,
       known: true,
       stats: { malicious: 1, suspicious: 0, harmless: 0, undetected: 0 },
-      results: { "MalwareBazaar": { category: "malicious", result: mb.signature } },
+      results: { MalwareBazaar: { category: "malicious", result: mb.signature } },
       detections: [`MalwareBazaar: ${mb.signature} [${(mb.tags || []).slice(0, 3).join(", ")}]`],
       sources: { mb, hl },
     };

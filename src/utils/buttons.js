@@ -21,9 +21,6 @@ export function isButtonTap(msg) {
   const m = msg?.message;
   if (!m || typeof m !== "object") return false;
   return Boolean(
-    m.buttonsResponseMessage ||
-      m.listResponseMessage ||
-      m.templateButtonReplyMessage ||
-      m.interactiveResponseMessage
+    m.buttonsResponseMessage || m.listResponseMessage || m.templateButtonReplyMessage || m.interactiveResponseMessage
   );
 }

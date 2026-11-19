@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupCrates(crateName) {
-  const clean = String(crateName || "").trim().toLowerCase();
+  const clean = String(crateName || "")
+    .trim()
+    .toLowerCase();
   if (!clean) {
     return { valid: false, reason: "Nama crate tidak boleh kosong." };
   }

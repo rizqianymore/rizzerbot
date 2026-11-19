@@ -1,5 +1,4 @@
 const PREFIXES = [
-
   { prefix: "0811", operator: "Telkomsel", brand: "kartuHalo" },
   { prefix: "0812", operator: "Telkomsel", brand: "simPATI" },
   { prefix: "0813", operator: "Telkomsel", brand: "simPATI" },

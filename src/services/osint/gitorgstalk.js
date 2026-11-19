@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupGitOrg(orgName) {
-  const clean = String(orgName || "").trim().replace(/^@/, "");
+  const clean = String(orgName || "")
+    .trim()
+    .replace(/^@/, "");
   if (!clean) {
     return { valid: false, reason: "Nama organisasi GitHub tidak boleh kosong." };
   }

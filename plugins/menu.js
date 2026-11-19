@@ -121,7 +121,7 @@ export default {
       }
       return await reply(
         `Kategori atau perintah *"${rawArg}"* tidak ditemukan.\n\n` +
-        `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`
+          `Ketik *${prefix}menu* untuk melihat seluruh daftar menu yang tersedia.`
       );
     }
 
@@ -177,7 +177,7 @@ export default {
         if (imagePayload) {
           return await sendWithImage(sock, jid, imagePayload, body, msg);
         }
-      } catch (_) { }
+      } catch (_) {}
     }
 
     return await reply(body);

@@ -17,9 +17,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT INSTAGRAM STALKER\n` +
-        `│ Format: ${context.prefix || "."}igstalk <username>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}igstalk instagram`
+          `│ Format: ${context.prefix || "."}igstalk <username>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}igstalk instagram`
       );
     }
 
@@ -41,7 +41,7 @@ export default {
       `│ Following: ${res.following}`,
       `│ Posts: ${res.posts}`,
       `└──\n`,
-      `Tautan: ${res.profileUrl}`
+      `Tautan: ${res.profileUrl}`,
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

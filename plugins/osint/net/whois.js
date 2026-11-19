@@ -12,10 +12,7 @@ export default {
     const raw = (args || []).join(" ").trim() || args[0];
     if (!raw) {
       return reply(
-        `┌── WHOIS DOMAIN LOOKUP\n` +
-        `│ Format: .whois <domain>\n` +
-        `└──\n\n` +
-        `Contoh: .whois openai.com`
+        `┌── WHOIS DOMAIN LOOKUP\n` + `│ Format: .whois <domain>\n` + `└──\n\n` + `Contoh: .whois openai.com`
       );
     }
     const domain = cleanDomain(raw);

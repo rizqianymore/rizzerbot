@@ -48,7 +48,9 @@ export async function runChat(prompt, opts = {}) {
   const cached = cacheGet(clean, scope);
   if (cached) return { ...cached, source: cached.source || "cache", cached: true };
 
-  const result = await runQueued(() => askAI(clean, { prefer: opts.prefer, history: scope.history, system: opts.system }));
+  const result = await runQueued(() =>
+    askAI(clean, { prefer: opts.prefer, history: scope.history, system: opts.system })
+  );
 
   cacheSet(clean, scope, { text: result.text, model: result.model, source: result.source });
   pushTurn(senderJid, clean, result.text);

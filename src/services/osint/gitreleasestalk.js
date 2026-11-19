@@ -7,7 +7,10 @@ import axios from "axios";
  */
 export async function lookupGitRelease(rawRepo) {
   let target = String(rawRepo || "").trim();
-  target = target.replace(/^https?:\/\/github\.com\//i, "").replace(/\/+$/, "").trim();
+  target = target
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/\/+$/, "")
+    .trim();
 
   const parts = target.split("/");
   if (parts.length < 2) {

@@ -11,6 +11,7 @@ import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
 import { attachConnectionEvents, attachMessageHandler } from "./handlers.js";
 import { startKeepAlive, startStabilityWatchdog } from "./keepalive.js";
+import { recordDecryptionFailure, resetSessionIfThresholdReached } from "@/src/core/session-recovery.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,9 +50,11 @@ export async function startBot() {
     const activeSettings = db.getSettings();
 
     if (!connectionState.isPluginsLoaded) {
-      loadPlugins().then(() => {
-        connectionState.isPluginsLoaded = true;
-      }).catch((e) => logger.error("Plugin load error:", e));
+      loadPlugins()
+        .then(() => {
+          connectionState.isPluginsLoaded = true;
+        })
+        .catch((e) => logger.error("Plugin load error:", e));
     }
 
     if (!connectionState.cleanIntervalStarted) {
@@ -84,7 +87,9 @@ export async function startBot() {
           fs.writeFileSync(credsPath, JSON.stringify(parsed, null, 2));
         }
       } catch (err) {
-        logger.warn(`Sesi lama tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru secara bersih...`);
+        logger.warn(
+          `Sesi lama tidak valid (${err.message}). Menghapus sesi lama dan membuat sesi baru secara bersih...`
+        );
         deleteFolderRecursive(authDir);
         fs.mkdirSync(authDir, { recursive: true });
       }
@@ -97,17 +102,39 @@ export async function startBot() {
       delete state.creds.me;
     }
 
-    logger.info(
-      `Initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`
-    );
+    logger.info(`Initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`);
 
     const usePairingCode = activeSettings.usePairingCode;
     const msgRetryCounterCache = new Map();
 
+    let sockInstance = null;
+    const baileysPino = pino(
+      { level: "warn" },
+      {
+        write(str) {
+          try {
+            const data = JSON.parse(str);
+            const msg = data.msg || "";
+            if (msg.includes("failed to decrypt") || msg.includes("Failed to decrypt") || msg.includes("Session error")) {
+              const target = data.author || data.sender;
+              const errText = data.err?.message || msg;
+              logger.warn(`[Baileys Session Warning] ${msg}${target ? ` (target: ${target})` : ""}`);
+              if (target && sockInstance) {
+                const failCount = recordDecryptionFailure(target, errText);
+                if (failCount) {
+                  resetSessionIfThresholdReached(target, sockInstance, failCount).catch(() => {});
+                }
+              }
+            }
+          } catch (_) {}
+        },
+      }
+    );
+
     const sock = makeWASocket({
       version: STABLE_WA_VERSION,
       auth: state,
-      logger: pino({ level: "silent" }),
+      logger: baileysPino,
       printQRInTerminal: !usePairingCode,
       browser: Browsers.ubuntu("Chrome"),
       markOnlineOnConnect: activeSettings.autoOnline,
@@ -124,6 +151,7 @@ export async function startBot() {
       autoFollowNewsletterOnConnect: false,
     });
 
+    sockInstance = sock;
     connectionState.primarySock = sock;
 
     sock.ev.on("creds.update", saveCreds);

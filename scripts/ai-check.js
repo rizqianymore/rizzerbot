@@ -21,7 +21,10 @@ ok(normalizeSource("OC") === "opencode", "alias case-insensitive oc -> opencode"
 ok(normalizeSource("llama") === "meta", "alias llama -> meta");
 ok(normalizeSource("ngawur") === null, "alias tak dikenal -> null");
 const list = listSources();
-ok(list.every((s) => typeof s.ready === "boolean"), "listSources melaporkan readiness");
+ok(
+  list.every((s) => typeof s.ready === "boolean"),
+  "listSources melaporkan readiness"
+);
 const st = getAIStatus();
 ok(!st.r1.includes("siap"), "scraper R1 ditandai nonaktif saat node down", st.r1);
 
@@ -29,9 +32,15 @@ console.log("[2/6] Util teks");
 const long = "kata ".repeat(1200);
 const parts = splitChunks(long, 1000);
 ok(parts.length > 1 && parts.every((p) => p.length <= 1000), `splitChunks ${parts.length} bagian <=1000 char`);
-ok(parts.join(" ").replace(/\s+/g, " ").length === long.trim().replace(/\s+/g, " ").length, "isi tidak hilang saat split");
+ok(
+  parts.join(" ").replace(/\s+/g, " ").length === long.trim().replace(/\s+/g, " ").length,
+  "isi tidak hilang saat split"
+);
 ok(stripThink("a<think>rahasia</think>b") === "ab", "stripThink membuang blok reasoning");
-ok(buildMessages("hi", { history: [{ role: "user", content: "x" }] }).length === 3, "buildMessages menyertakan history");
+ok(
+  buildMessages("hi", { history: [{ role: "user", content: "x" }] }).length === 3,
+  "buildMessages menyertakan history"
+);
 
 console.log("[3/6] Cache");
 cacheClear();
@@ -72,7 +81,10 @@ const { askAI } = await import("../src/services/ai/router.js");
 try {
   const r = await askAI("Jawab satu kata: halo", { timeoutMs: 40000 });
   ok(Boolean(r.text), `jawaban diterima dari ${r.source}`, r.text.slice(0, 60));
-  ok(Array.isArray(r.attempts), `jumlah percobaan: ${r.attempts.length} (${r.attempts.map((a) => a.source + ":" + (a.code || a.skipped)).join(", ") || "langsung sukses"})`);
+  ok(
+    Array.isArray(r.attempts),
+    `jumlah percobaan: ${r.attempts.length} (${r.attempts.map((a) => a.source + ":" + (a.code || a.skipped)).join(", ") || "langsung sukses"})`
+  );
 } catch (err) {
   console.log(`  SKIP request live gagal (lingkungan tanpa jaringan/kuota): ${err.message.slice(0, 120)}`);
 }

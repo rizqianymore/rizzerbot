@@ -29,9 +29,8 @@ export default {
 
     let result;
     try {
-      const codeToRun = rawCode.includes("return") || rawCode.includes("await")
-        ? `(async () => { ${rawCode} })()`
-        : rawCode;
+      const codeToRun =
+        rawCode.includes("return") || rawCode.includes("await") ? `(async () => { ${rawCode} })()` : rawCode;
 
       result = await eval(codeToRun);
 

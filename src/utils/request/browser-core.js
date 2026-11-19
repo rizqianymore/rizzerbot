@@ -151,7 +151,10 @@ export class StealthBrowserCore {
 
           return this.browser;
         } catch (remoteErr) {
-          this._log("warn", `gagal konek BrightData Scraping Browser: ${remoteErr?.message}. Fallback ke browser lokal.`);
+          this._log(
+            "warn",
+            `gagal konek BrightData Scraping Browser: ${remoteErr?.message}. Fallback ke browser lokal.`
+          );
         }
       }
 

@@ -104,11 +104,19 @@ export default {
           const buf = await request.buffer(item.url, { timeout: 25000, bypassCloudflare: "auto" });
           const mime = sniffMime(buf);
           if (mime.startsWith("image/")) {
-            await sock.sendMessage(remoteJid, { image: buf, caption: mediaResults.length === 1 ? captionText : "" }, { quoted: msg });
+            await sock.sendMessage(
+              remoteJid,
+              { image: buf, caption: mediaResults.length === 1 ? captionText : "" },
+              { quoted: msg }
+            );
           } else {
             const { ensureVideoCompatible } = await import("@/src/services/fetch/downloaderCompat.js");
             const vbuf = await ensureVideoCompatible(buf);
-            await sock.sendMessage(remoteJid, { video: vbuf, mimetype: "video/mp4", caption: mediaResults.length === 1 ? captionText : "" }, { quoted: msg });
+            await sock.sendMessage(
+              remoteJid,
+              { video: vbuf, mimetype: "video/mp4", caption: mediaResults.length === 1 ? captionText : "" },
+              { quoted: msg }
+            );
           }
         } catch (_) {
           if (item.type === "image") await sock.sendMessage(remoteJid, { image: { url: item.url } }, { quoted: msg });

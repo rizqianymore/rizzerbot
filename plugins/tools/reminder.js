@@ -1,11 +1,19 @@
 const activeReminders = new Map();
 
 function parseDuration(input) {
-  const m = String(input || "").trim().match(/^(\d+)\s*(s|detik|m|menit|min|h|jam|hour|d|hari|day)$/i);
+  const m = String(input || "")
+    .trim()
+    .match(/^(\d+)\s*(s|detik|m|menit|min|h|jam|hour|d|hari|day)$/i);
   if (!m) return null;
   const n = Number(m[1]);
   const u = m[2].toLowerCase();
-  const mult = ["s", "detik"].includes(u) ? 1000 : ["m", "menit", "min"].includes(u) ? 60000 : ["h", "jam", "hour"].includes(u) ? 3600000 : 86400000;
+  const mult = ["s", "detik"].includes(u)
+    ? 1000
+    : ["m", "menit", "min"].includes(u)
+      ? 60000
+      : ["h", "jam", "hour"].includes(u)
+        ? 3600000
+        : 86400000;
   const ms = n * mult;
   if (!Number.isFinite(ms) || ms < 1000 || ms > 7 * 24 * 60 * 60 * 1000) return null;
   return ms;
@@ -26,7 +34,9 @@ export default {
     if (sub === "list") {
       const list = [...activeReminders.values()].filter((r) => r.jid === msg.key.remoteJid);
       if (!list.length) return reply("Tidak ada pengingat aktif di chat ini.");
-      const lines = list.map((r) => `│ #${r.id} ${r.human} → ${r.text} (sisa ${Math.max(0, Math.ceil((r.at - Date.now()) / 1000))}s)`);
+      const lines = list.map(
+        (r) => `│ #${r.id} ${r.human} → ${r.text} (sisa ${Math.max(0, Math.ceil((r.at - Date.now()) / 1000))}s)`
+      );
       return reply(`*DAFTAR PENGINGAT*\n\n${lines.join("\n")}\n\nBatalkan: \`${currentPrefix}ingat cancel <id>\``);
     }
     if (sub === "cancel" || sub === "del" || sub === "hapus") {
@@ -61,7 +71,9 @@ export default {
     const human = args[0];
     const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const at = Date.now() + dur;
-    await reply(`⏰ Pengingat #${id} diset: *${human}* → "${text}"\nKetik \`${currentPrefix}ingat list\` untuk melihat.`);
+    await reply(
+      `⏰ Pengingat #${id} diset: *${human}* → "${text}"\nKetik \`${currentPrefix}ingat list\` untuk melihat.`
+    );
 
     const timer = setTimeout(async () => {
       activeReminders.delete(id);

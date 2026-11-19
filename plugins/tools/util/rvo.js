@@ -43,10 +43,7 @@ export default {
         const stream = await downloadContentFromMessage(imageMsg, "image");
         const buffer = await streamToBuffer(stream);
 
-        let caption =
-          `┌── MEDIA SEKALI LIHAT (FOTO)\n` +
-          `│ Tipe: Foto\n` +
-          `└──`;
+        let caption = `┌── MEDIA SEKALI LIHAT (FOTO)\n` + `│ Tipe: Foto\n` + `└──`;
         if (imageMsg.caption) {
           caption += `\n\nKeterangan: ${imageMsg.caption}`;
         }
@@ -65,10 +62,7 @@ export default {
         const rawBuffer = await streamToBuffer(stream);
         const buffer = await ensureVideoCompatible(rawBuffer);
 
-        let caption =
-          `┌── MEDIA SEKALI LIHAT (VIDEO)\n` +
-          `│ Tipe: Video\n` +
-          `└──`;
+        let caption = `┌── MEDIA SEKALI LIHAT (VIDEO)\n` + `│ Tipe: Video\n` + `└──`;
         if (videoMsg.caption) {
           caption += `\n\nKeterangan: ${videoMsg.caption}`;
         }

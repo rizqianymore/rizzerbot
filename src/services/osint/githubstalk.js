@@ -45,10 +45,10 @@ async function scrapeGithubProfile(username) {
       headers: { Accept: "text/html" },
     });
     if (!html || typeof html !== "string") return null;
-    if (html.includes("404") && html.includes("This is not the web page you are looking for")) return { notFound: true };
+    if (html.includes("404") && html.includes("This is not the web page you are looking for"))
+      return { notFound: true };
 
     if (html.toLowerCase().includes("not found") && html.length < 5000) {
-
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       if (titleMatch && /not found/i.test(titleMatch[1])) return { notFound: true };
     }
@@ -57,7 +57,10 @@ async function scrapeGithubProfile(username) {
       return m ? m[1].trim().replace(/\s+/g, " ").slice(0, 200) : "-";
     };
     const name = extract(/<span[^>]*class="[^"]*p-name[^"]*"[^>]*>([^<]+)<\/span>/i) || username;
-    const bio = extract(/<div[^>]*class="[^"]*p-note[^"]*"[^>]*>([\s\S]*?)<\/div>/i).replace(/<[^>]+>/g, " ").trim() || "-";
+    const bio =
+      extract(/<div[^>]*class="[^"]*p-note[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
+        .replace(/<[^>]+>/g, " ")
+        .trim() || "-";
     const followers = extract(/<span[^>]*class="[^"]*text-bold[^"]*"[^>]*>(\d[\d,.]*)<\/span>\s*followers/i) || "-";
     const following = extract(/<span[^>]*class="[^"]*text-bold[^"]*"[^>]*>(\d[\d,.]*)<\/span>\s*following/i) || "-";
     const reposMatch = html.match(/<span[^>]*data-view-component[^>]*>(\d+)<\/span>\s*repositories/i);
@@ -128,8 +131,11 @@ export async function getGithubProfile(username) {
     return detail;
   } catch (err) {
     if (/HTTP 404\b/.test(err?.message || "")) return { notFound: true };
-    if (/HTTP 403\b/.test(err?.message || "") || /HTTP 429\b/.test(err?.message || "") || /limit/i.test(err?.message || "")) {
-
+    if (
+      /HTTP 403\b/.test(err?.message || "") ||
+      /HTTP 429\b/.test(err?.message || "") ||
+      /limit/i.test(err?.message || "")
+    ) {
       const scraped = await scrapeGithubProfile(user);
       if (scraped) {
         if (scraped.notFound) return { notFound: true };

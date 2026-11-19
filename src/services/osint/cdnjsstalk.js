@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupCdnjs(libName) {
-  const clean = String(libName || "").trim().toLowerCase();
+  const clean = String(libName || "")
+    .trim()
+    .toLowerCase();
   if (!clean) {
     return { valid: false, reason: "Nama library CDNJS tidak boleh kosong." };
   }

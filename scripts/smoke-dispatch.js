@@ -144,7 +144,11 @@ clearSentMessageCache();
   assert(sent.length > 0, "owner (fromMe) tanpa participant tetap dilayani .menu di grup");
   const menuText = sent[0]?.content?.caption || sent[0]?.content?.text || "";
   assert(menuText.includes("Role: Owner"), "owner (fromMe) di grup terdeteksi Role: Owner", menuText.slice(0, 80));
-  assert(/Total:\s*\d+\s*Perintah/i.test(menuText), "owner (fromMe) di grup mendapatkan total perintah owner", menuText.slice(0, 100));
+  assert(
+    /Total:\s*\d+\s*Perintah/i.test(menuText),
+    "owner (fromMe) di grup mendapatkan total perintah owner",
+    menuText.slice(0, 100)
+  );
 }
 
 {
@@ -239,6 +243,30 @@ clearSentMessageCache();
     if (hit) throttled = hit;
   }
   assert(Boolean(throttled), "owner throttle tetap dibalas walau silentDeny=true");
+}
+
+{
+  clearSentMessageCache();
+  const { clearOwnerThrottles } = await import("@/src/core/dispatch/guards.js");
+  clearOwnerThrottles();
+  const sock = makeSock();
+  const msgObj = {
+    key: { id: "DEV-SYNC-1", remoteJid: OWNER_JID, fromMe: true },
+    message: {
+      deviceSentMessage: {
+        destinationJid: OWNER_JID,
+        message: { conversation: ".ping" },
+      },
+    },
+  };
+  const sent = [];
+  sock.sendMessage = async (jid, content, opts) => {
+    sent.push({ jid, content });
+    return { key: { id: "REPLY-1", remoteJid: jid } };
+  };
+  await dispatchMessage(sock, msgObj, logger);
+  const speedReply = sent.find((s) => (s.content?.text || "").includes("SPEED TEST"));
+  assert(Boolean(speedReply), "deviceSentMessage (.ping dari perangkat tertaut) dieksekusi dan dibalas");
 }
 
 {

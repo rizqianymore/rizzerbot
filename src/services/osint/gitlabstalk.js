@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupGitlab(rawUsername) {
-  const username = String(rawUsername || "").trim().replace(/^@/, "");
+  const username = String(rawUsername || "")
+    .trim()
+    .replace(/^@/, "");
   if (!username) {
     return { valid: false, reason: "Username GitLab tidak boleh kosong." };
   }

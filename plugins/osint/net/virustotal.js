@@ -1,10 +1,18 @@
-import { scanUrl, fileReport, scanUrlFree, fileReportFree, formatVerdict, hasVtKey } from "@/src/services/osint/virustotal.js";
+import {
+  scanUrl,
+  fileReport,
+  scanUrlFree,
+  fileReportFree,
+  formatVerdict,
+  hasVtKey,
+} from "@/src/services/osint/virustotal.js";
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 export default {
   name: "virustotal",
   aliases: ["vt", "vtscan", "cekmalware", "scanlink"],
-  description: "Cek URL/file dengan antivirus (VirusTotal 70+ engine jika ada VT_API_KEY, atau free scraping URLHaus/urlscan/MalwareBazaar tanpa key)",
+  description:
+    "Cek URL/file dengan antivirus (VirusTotal 70+ engine jika ada VT_API_KEY, atau free scraping URLHaus/urlscan/MalwareBazaar tanpa key)",
   usage: "<url> atau reply file, cth: vt https://contoh.com/x.apk",
   premiumOnly: true,
   cooldownMs: 15000,
@@ -72,7 +80,8 @@ export default {
     const raw = (args[0] || "").trim();
     if (!raw) {
       return reply(
-        `Kirim URL atau reply sebuah file!\n` + `Contoh: \`${currentPrefix}virustotal https://contoh.com/app.apk\` (free mode aktif jika tanpa VT_API_KEY)`
+        `Kirim URL atau reply sebuah file!\n` +
+          `Contoh: \`${currentPrefix}virustotal https://contoh.com/app.apk\` (free mode aktif jika tanpa VT_API_KEY)`
       );
     }
     if (useFree) {
@@ -85,7 +94,9 @@ export default {
             results: rep.results,
             extra: [
               `│ Mode: FREE (tanpa VT_API_KEY)`,
-              ...(rep.detections?.length ? [`│ Sumber: ${rep.detections.join(", ")}`] : [`│ Tidak ada deteksi di free DB`]),
+              ...(rep.detections?.length
+                ? [`│ Sumber: ${rep.detections.join(", ")}`]
+                : [`│ Tidak ada deteksi di free DB`]),
               `_Isi VT_API_KEY untuk hasil 70+ engine lebih akurat_`,
             ],
           })

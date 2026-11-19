@@ -72,7 +72,6 @@ export async function withDapoPage(fn) {
       );
 
       if (!result.ok) {
-
         if (result.status === 401 || result.status === 403) tokenCache = { value: "", expires: 0 };
         throw new Error(result.error || `Dapodik HTTP ${result.status}${result.snippet ? `: ${result.snippet}` : ""}`);
       }

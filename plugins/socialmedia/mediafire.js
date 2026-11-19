@@ -30,7 +30,7 @@ export default {
       const gb = text.match(/([\d.]+)\s*GB/i);
       if (gb) return parseFloat(gb[1].replace(",", ".")) * 1024;
       const mb = text.match(/([\d.]+)\s*MB/i);
-      if (mb) return parseFloat(mb[1].replace(",", ".")) ;
+      if (mb) return parseFloat(mb[1].replace(",", "."));
       const kb = text.match(/([\d.]+)\s*KB/i);
       if (kb) return parseFloat(kb[1].replace(",", ".")) / 1024;
       return 0;

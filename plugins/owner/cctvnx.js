@@ -91,7 +91,9 @@ export default {
 
       if (action === "snap" || action === "snapshot" || action === "capture") {
         if (!targetQuery) {
-          return reply(`Masukkan nomor kamera atau nama lokasi.\nContoh: \`${p}nx snap 1\` atau \`${p}nx snap harmoni\``);
+          return reply(
+            `Masukkan nomor kamera atau nama lokasi.\nContoh: \`${p}nx snap 1\` atau \`${p}nx snap harmoni\``
+          );
         }
 
         const cameras = await fetchOrGetCachedCameras();
@@ -183,11 +185,11 @@ export default {
 
       return reply(
         `Perintah tidak dikenal.\n\n` +
-        `Gunakan:\n` +
-        `${p}nx list - Daftar semua kamera\n` +
-        `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
-        `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
-        `${p}nx info <nomor/nama> - Cek info kamera`
+          `Gunakan:\n` +
+          `${p}nx list - Daftar semua kamera\n` +
+          `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
+          `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
+          `${p}nx info <nomor/nama> - Cek info kamera`
       );
     } catch (err) {
       logger?.error?.(`[cctvnx] ${err.message}`);

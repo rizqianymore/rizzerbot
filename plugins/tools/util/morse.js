@@ -25,16 +25,16 @@ const MORSE = {
   X: "-..-",
   Y: "-.--",
   Z: "--..",
-  "0": "-----",
-  "1": ".----",
-  "2": "..---",
-  "3": "...--",
-  "4": "....-",
-  "5": ".....",
-  "6": "-....",
-  "7": "--...",
-  "8": "---..",
-  "9": "----.",
+  0: "-----",
+  1: ".----",
+  2: "..---",
+  3: "...--",
+  4: "....-",
+  5: ".....",
+  6: "-....",
+  7: "--...",
+  8: "---..",
+  9: "----.",
   " ": "/",
 };
 const REVERSE = Object.fromEntries(Object.entries(MORSE).map(([k, v]) => [v, k]));
@@ -69,9 +69,7 @@ export default {
     const mode = (args[0] || "").toLowerCase();
     const text = args.slice(1).join(" ").trim();
     if (!text || !["enc", "encode", "dec", "decode"].includes(mode)) {
-      return reply(
-        `*MORSE*\nContoh:\n│ \`${cur}morse enc hello world\`\n│ \`${cur}morse dec .... . .-.. .-.. ---\``
-      );
+      return reply(`*MORSE*\nContoh:\n│ \`${cur}morse enc hello world\`\n│ \`${cur}morse dec .... . .-.. .-.. ---\``);
     }
     const isDec = ["dec", "decode"].includes(mode);
     const out = isDec ? decodeMorse(text) : encodeMorse(text);

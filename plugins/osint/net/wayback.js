@@ -3,7 +3,8 @@ import { lookupWayback } from "@/src/services/osint/wayback.js";
 export default {
   name: "wayback",
   aliases: ["webarchive", "arsipweb", "waybackmachine", "webhistory"],
-  description: "Investigasi jejak digital dan rekaman arsip historis halaman web/situs yang sudah terhapus atau berubah",
+  description:
+    "Investigasi jejak digital dan rekaman arsip historis halaman web/situs yang sudah terhapus atau berubah",
   usage: "<url / domain>",
   category: "OSINT",
   cooldownMs: 3000,
@@ -17,13 +18,13 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT FORENSIK DIGITAL WAYBACK MACHINE*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}wayback <domain / tautan-web>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}wayback detik.com\n` +
-        `│ ${context.prefix || "."}wayback kpu.go.id\n` +
-        `│ ${context.prefix || "."}wayback https://target-scam.com/promo\n\n` +
-        `Fitur ini digunakan untuk membongkar riwayat tampilan situs di masa lalu atau membuka artikel/postingan yang sengaja dihapus pemiliknya.`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}wayback <domain / tautan-web>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}wayback detik.com\n` +
+          `│ ${context.prefix || "."}wayback kpu.go.id\n` +
+          `│ ${context.prefix || "."}wayback https://target-scam.com/promo\n\n` +
+          `Fitur ini digunakan untuk membongkar riwayat tampilan situs di masa lalu atau membuka artikel/postingan yang sengaja dihapus pemiliknya.`
       );
     }
 
@@ -51,7 +52,7 @@ export default {
       `│ Snapshot   : 🔗 ${res.latestArchivedUrl}`,
       ``,
       `*Kalender Riwayat Lengkap (Semua Snapshot):*`,
-      `👉 ${res.calendarUrl}`
+      `👉 ${res.calendarUrl}`,
     ];
 
     return context.reply(out.join("\n"));

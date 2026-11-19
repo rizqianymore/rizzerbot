@@ -1,9 +1,4 @@
-import {
-  listProducts,
-  getProduct,
-  getShopConfig,
-  recordOrder,
-} from "@/src/services/shop/shop.js";
+import { listProducts, getProduct, getShopConfig, recordOrder } from "@/src/services/shop/shop.js";
 
 function formatRupiah(num) {
   return "Rp" + Number(num).toLocaleString("id-ID");

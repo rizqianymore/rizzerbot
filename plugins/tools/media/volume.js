@@ -37,7 +37,9 @@ export default {
 
     // parse alias / arg
     const invoked = String(commandName || "").toLowerCase();
-    const firstArg = String(args?.[0] ?? "").toLowerCase().trim();
+    const firstArg = String(args?.[0] ?? "")
+      .toLowerCase()
+      .trim();
 
     const isBassAlias = invoked === "bass";
     const isBassArg = firstArg === "bass";
@@ -101,7 +103,22 @@ export default {
           // fallback re-encode video if copy fails
           await execFileAsync(
             getFfmpegPath(),
-            ["-y", "-i", inFile, "-af", audioFilter, "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", outFile],
+            [
+              "-y",
+              "-i",
+              inFile,
+              "-af",
+              audioFilter,
+              "-c:v",
+              "libx264",
+              "-preset",
+              "veryfast",
+              "-crf",
+              "23",
+              "-c:a",
+              "aac",
+              outFile,
+            ],
             { timeout: 90000 }
           );
         }

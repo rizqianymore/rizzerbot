@@ -44,7 +44,11 @@ function fetchTelegramHtml(targetUrl, timeoutMs = 8000) {
  */
 export async function lookupTelegram(rawUsername) {
   let username = String(rawUsername || "").trim();
-  username = username.replace(/^https?:\/\/t\.me\//i, "").replace(/^@/, "").split("/")[0].trim();
+  username = username
+    .replace(/^https?:\/\/t\.me\//i, "")
+    .replace(/^@/, "")
+    .split("/")[0]
+    .trim();
 
   if (!username || !/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
     return {
@@ -110,11 +114,17 @@ export async function lookupTelegram(rawUsername) {
 
   // Ekstrak Description / Bio
   const descMatch = html.match(/<div[^>]*class="[^"]*tgme_page_description[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-  const description = descMatch ? descMatch[1].replace(/<br\s*[\/]?>/gi, "\n").replace(/<[^>]+>/g, "").trim() : null;
+  const description = descMatch
+    ? descMatch[1]
+        .replace(/<br\s*[\/]?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .trim()
+    : null;
 
   // Ekstrak Foto Profil (Avatar HD)
-  const avatarMatch = html.match(/<img[^>]*class="[^"]*tgme_page_photo_image[^"]*"[^>]*src="([^"]+)"/i) ||
-                      html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
+  const avatarMatch =
+    html.match(/<img[^>]*class="[^"]*tgme_page_photo_image[^"]*"[^>]*src="([^"]+)"/i) ||
+    html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
   const avatarUrl = avatarMatch ? avatarMatch[1] : null;
 
   // Klasifikasi Tipe Entitas

@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITLAB USER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}gitlabstalk <username-gitlab>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}gitlabstalk gitlab\n` +
-        `│ ${context.prefix || "."}gitlabstalk sytses`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}gitlabstalk <username-gitlab>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}gitlabstalk gitlab\n` +
+          `│ ${context.prefix || "."}gitlabstalk sytses`
       );
     }
 
@@ -40,7 +40,7 @@ export default {
       `Locked     : ${res.isLocked ? "🔒 Terkunci" : "🔓 Normal"}`,
       ``,
       `*Link Profil Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `👉 ${res.profileUrl}`,
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

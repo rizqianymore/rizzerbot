@@ -75,7 +75,9 @@ export async function checkAntiCrash(sock, msg, logger, remoteJid, messageConten
     const pollCount = Array.isArray(pollOpts) ? pollOpts.length : 0;
     const docCapLen = m.documentMessage?.caption?.length || 0;
     const listSections = m.listMessage?.sections;
-    const listCount = Array.isArray(listSections) ? listSections.reduce((a, s) => a + (Array.isArray(s.rows) ? s.rows.length : 0), 0) : 0;
+    const listCount = Array.isArray(listSections)
+      ? listSections.reduce((a, s) => a + (Array.isArray(s.rows) ? s.rows.length : 0), 0)
+      : 0;
     const tapPayloadTooBig = unparsedButtonTap && rawStr.length > LIMIT.rawScan;
     const flood = rawStr.length > LIMIT.rawScan && FLOOD_RE.test(rawStr);
     if (

@@ -87,7 +87,8 @@ export function getSamsatStatus() {
   try {
     if (!fs.existsSync(DB_PATH)) return { ready: false, reason: "file tidak ada" };
     const stat = fs.statSync(DB_PATH);
-    if (stat.size < 1024) return { ready: false, reason: `file kosong (${stat.size} bytes) — fallback parse plat aktif` };
+    if (stat.size < 1024)
+      return { ready: false, reason: `file kosong (${stat.size} bytes) — fallback parse plat aktif` };
     const db = getDatabase();
     if (!db) return { ready: false, reason: "gagal membuka database" };
     return { ready: true, size: stat.size };

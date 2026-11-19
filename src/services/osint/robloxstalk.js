@@ -9,7 +9,9 @@ const robloxCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
  * @returns {Promise<object>}
  */
 export async function lookupRoblox(rawUsername) {
-  const username = String(rawUsername || "").trim().replace(/^@/, "");
+  const username = String(rawUsername || "")
+    .trim()
+    .replace(/^@/, "");
   if (!username) {
     return { valid: false, reason: "Username Roblox tidak boleh kosong." };
   }
@@ -41,10 +43,12 @@ export async function lookupRoblox(rawUsername) {
     // 2. Dapatkan detail profil lengkap & avatar headshot
     const [resProfile, resAvatar] = await Promise.all([
       axios.get(`https://users.roblox.com/v1/users/${userId}`, { timeout: 8000 }).catch(() => null),
-      axios.get(
-        `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
-        { timeout: 8000 }
-      ).catch(() => null),
+      axios
+        .get(
+          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
+          { timeout: 8000 }
+        )
+        .catch(() => null),
     ]);
 
     const profileData = resProfile?.data || {};

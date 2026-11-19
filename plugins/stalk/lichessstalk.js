@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT LICHESS CHESS PLAYER STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}lichessstalk <username-lichess>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}lichessstalk MagnusCarlsen\n` +
-        `│ ${context.prefix || "."}lichessstalk DanielNaroditsky`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}lichessstalk <username-lichess>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}lichessstalk MagnusCarlsen\n` +
+          `│ ${context.prefix || "."}lichessstalk DanielNaroditsky`
       );
     }
 
@@ -49,7 +49,7 @@ export default {
       `│ Classical  : ⏳ ${res.classical}`,
       ``,
       `*Link Profil Resmi:*`,
-      `👉 ${res.profileUrl}`
+      `👉 ${res.profileUrl}`,
     ];
 
     return context.reply(out.join("\n"));

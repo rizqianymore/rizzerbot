@@ -4,7 +4,8 @@ export default {
   name: "sticker",
   aliases: ["s", "stiker", "stikermeme", "smeme", "stikerteks"],
   description: "Convert image/video to sticker (support meme teks atas | bawah)",
-  usage: "[--font=Nama --size=48 --wrap=4 --tengah/--atas/--bawah --justify] [teks atas | bawah] (reply/kirim gambar atau video)",
+  usage:
+    "[--font=Nama --size=48 --wrap=4 --tengah/--atas/--bawah --justify] [teks atas | bawah] (reply/kirim gambar atau video)",
   category: "Sticker",
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
@@ -88,7 +89,15 @@ export default {
     }
 
     try {
-      const stickerBuffer = await createSticker(buffer, { topText, bottomText, font, fontSize, wordsPerLine, position, align });
+      const stickerBuffer = await createSticker(buffer, {
+        topText,
+        bottomText,
+        font,
+        fontSize,
+        wordsPerLine,
+        position,
+        align,
+      });
       await sock.sendMessage(msg.key.remoteJid, { sticker: stickerBuffer, mimetype: "image/webp" }, { quoted: msg });
     } catch (err) {
       await reply(`Gagal membuat stiker: ${err.message}`);

@@ -10,7 +10,9 @@ export default {
     const currentPrefix = prefix || ".";
     const raw = (args[0] || "").trim();
     if (!raw) {
-      return reply(`Masukkan URL!\nContoh: \`${currentPrefix}headercheck https://example.com\` atau \`${currentPrefix}cekheader https://example.com\``);
+      return reply(
+        `Masukkan URL!\nContoh: \`${currentPrefix}headercheck https://example.com\` atau \`${currentPrefix}cekheader https://example.com\``
+      );
     }
 
     let url = raw;
@@ -35,7 +37,11 @@ export default {
       { key: "strict-transport-security", label: "HSTS", good: !!h("strict-transport-security") },
       { key: "content-security-policy", label: "CSP", good: !!h("content-security-policy") },
       { key: "x-frame-options", label: "X-Frame-Options", good: !!h("x-frame-options") },
-      { key: "x-content-type-options", label: "X-Content-Type-Options", good: h("x-content-type-options").toLowerCase() === "nosniff" },
+      {
+        key: "x-content-type-options",
+        label: "X-Content-Type-Options",
+        good: h("x-content-type-options").toLowerCase() === "nosniff",
+      },
       { key: "referrer-policy", label: "Referrer-Policy", good: !!h("referrer-policy") },
       { key: "permissions-policy", label: "Permissions-Policy", good: !!h("permissions-policy") },
     ];

@@ -22,11 +22,7 @@ export default {
     await reply("Upscale 4x...");
     try {
       const out = await upscaleImage(buffer, 4);
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { image: out, caption: "*UPSCALE 4X DONE*" },
-        { quoted: msg }
-      );
+      await sock.sendMessage(msg.key.remoteJid, { image: out, caption: "*UPSCALE 4X DONE*" }, { quoted: msg });
     } catch (err) {
       return reply(`Gagal upscale: ${err?.message || err}`);
     }

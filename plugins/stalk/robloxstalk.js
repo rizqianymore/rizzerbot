@@ -12,9 +12,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT ROBLOX PLAYER STALKER\n` +
-        `│ Format: ${context.prefix || "."}robloxstalk <username>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}robloxstalk Roblox`
+          `│ Format: ${context.prefix || "."}robloxstalk <username>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}robloxstalk Roblox`
       );
     }
 
@@ -37,7 +37,7 @@ export default {
       `│ Status: ${res.isBanned ? "BANNED" : "Aktif"}`,
       `│ Bio: ${res.description || "-"}`,
       `└──\n`,
-      `Tautan: ${res.profileUrl}`
+      `Tautan: ${res.profileUrl}`,
     ].join("\n");
 
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {

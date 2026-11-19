@@ -11,7 +11,10 @@ function checkMs() {
 
 function botDigits(sock) {
   try {
-    return String(sock?.user?.id || "").split("@")[0].split(":")[0].replace(/\D/g, "");
+    return String(sock?.user?.id || "")
+      .split("@")[0]
+      .split(":")[0]
+      .replace(/\D/g, "");
   } catch (_) {
     return "";
   }
@@ -21,11 +24,15 @@ async function handleInactive(sock, logger, reason) {
   if (inactiveFired) return;
   inactiveFired = true;
   try {
-    logger?.error?.(`[ActiveCheck] nomor bot tidak aktif (${reason}). Koneksi dihentikan, reconnect otomatis dimatikan.`);
+    logger?.error?.(
+      `[ActiveCheck] nomor bot tidak aktif (${reason}). Koneksi dihentikan, reconnect otomatis dimatikan.`
+    );
   } catch (_) {}
   try {
     const { notifyOwner } = await import("@/src/services/system/health.js");
-    await notifyOwner(`[ActiveCheck] Nomor bot tidak aktif (${reason}). Pairing ulang diperlukan. Auto-reconnect dimatikan.`);
+    await notifyOwner(
+      `[ActiveCheck] Nomor bot tidak aktif (${reason}). Pairing ulang diperlukan. Auto-reconnect dimatikan.`
+    );
   } catch (_) {}
   try {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);

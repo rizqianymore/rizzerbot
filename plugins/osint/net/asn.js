@@ -12,9 +12,9 @@ export default {
     if (!query) {
       return context.reply(
         `┌── AUTONOMOUS SYSTEM (ASN) LOOKUP\n` +
-        `│ Format: ${context.prefix || "."}asn <ip / AS number>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}asn 1.1.1.1`
+          `│ Format: ${context.prefix || "."}asn <ip / AS number>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}asn 1.1.1.1`
       );
     }
 
@@ -47,10 +47,7 @@ export default {
           `└──`;
         return context.reply(out);
       } else if (parts.length >= 2) {
-        const out =
-          `┌── ASN: AS${parts[0]}\n` +
-          `│ Operator: ${parts.slice(1).join(",").trim()}\n` +
-          `└──`;
+        const out = `┌── ASN: AS${parts[0]}\n` + `│ Operator: ${parts.slice(1).join(",").trim()}\n` + `└──`;
         return context.reply(out);
       }
       return context.reply(`Data ASN:\n${raw}`);

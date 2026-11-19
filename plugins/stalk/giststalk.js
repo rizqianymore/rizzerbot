@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITHUB GIST STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}giststalk <username-github>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}giststalk torvalds\n` +
-        `│ ${context.prefix || "."}giststalk sindresorhus`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}giststalk <username-github>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}giststalk torvalds\n` +
+          `│ ${context.prefix || "."}giststalk sindresorhus`
       );
     }
 

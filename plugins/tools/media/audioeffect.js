@@ -109,19 +109,7 @@ export default {
       const filterStr = EFFECTS[chosenEffect].filter;
       await execFileAsync(
         getFfmpegPath(),
-        [
-          "-y",
-          "-i",
-          inFile,
-          "-vn",
-          "-af",
-          filterStr,
-          "-c:a",
-          "libmp3lame",
-          "-b:a",
-          "128k",
-          outFile,
-        ],
+        ["-y", "-i", inFile, "-vn", "-af", filterStr, "-c:a", "libmp3lame", "-b:a", "128k", outFile],
         { timeout: 60000 }
       );
 

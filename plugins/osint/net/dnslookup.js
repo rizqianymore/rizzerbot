@@ -13,10 +13,7 @@ export default {
     const domain = args[0];
     if (!domain) {
       return reply(
-        `┌── DNS RECORDS LOOKUP\n` +
-        `│ Format: .dnslookup <domain>\n` +
-        `└──\n\n` +
-        `Contoh: .dnslookup google.com`
+        `┌── DNS RECORDS LOOKUP\n` + `│ Format: .dnslookup <domain>\n` + `└──\n\n` + `Contoh: .dnslookup google.com`
       );
     }
 

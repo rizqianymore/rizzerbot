@@ -28,11 +28,11 @@ export default {
     }
 
     const exifData = extractExifMetadata(buffer);
-    if (!exifData || (!exifData.rawTags || Object.keys(exifData.rawTags).length === 0)) {
+    if (!exifData || !exifData.rawTags || Object.keys(exifData.rawTags).length === 0) {
       return context.reply(
         "Tidak ada metadata EXIF yang ditemukan.\n\n" +
-        "Tip: WhatsApp otomatis menghapus metadata EXIF jika dikirim sebagai 'Gambar'. " +
-        "Minta pengirim mengirimkan foto sebagai 'Dokumen' (*Send as Document*) untuk forensik penuh."
+          "Tip: WhatsApp otomatis menghapus metadata EXIF jika dikirim sebagai 'Gambar'. " +
+          "Minta pengirim mengirimkan foto sebagai 'Dokumen' (*Send as Document*) untuk forensik penuh."
       );
     }
 

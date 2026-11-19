@@ -15,9 +15,9 @@ export default {
     if (!text || !/open\.spotify\.com\/track/i.test(text)) {
       return reply(
         `┌── SPOTIFY DOWNLOADER\n` +
-        `│ Format: ${currentPrefix}spdl <url track>\n` +
-        `└──\n\n` +
-        `Contoh: ${currentPrefix}spdl https://open.spotify.com/track/xxxx`
+          `│ Format: ${currentPrefix}spdl <url track>\n` +
+          `└──\n\n` +
+          `Contoh: ${currentPrefix}spdl https://open.spotify.com/track/xxxx`
       );
     }
 

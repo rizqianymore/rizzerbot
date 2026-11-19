@@ -38,7 +38,10 @@ export default {
       }
       if (!imgBuffer || !chosen) return reply("Gagal mengunduh gambar, coba kata kunci lain.");
       const caption =
-        `*WEB IMAGE SEARCH*\n\n` + `*Judul:* ${chosen.title}\n` + `*Sumber:* ${chosen.source || "-"}\n` + `*Hasil:* ${results.length} ditemukan`;
+        `*WEB IMAGE SEARCH*\n\n` +
+        `*Judul:* ${chosen.title}\n` +
+        `*Sumber:* ${chosen.source || "-"}\n` +
+        `*Hasil:* ${results.length} ditemukan`;
 
       await sock.sendMessage(msg.key.remoteJid, { image: imgBuffer, caption }, { quoted: msg });
     } catch (err) {

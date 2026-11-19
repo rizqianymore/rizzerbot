@@ -1,10 +1,4 @@
-import {
-  saveProduct,
-  deleteProduct,
-  listOrders,
-  getOrder,
-  updateOrderStatus,
-} from "@/src/services/shop/shop.js";
+import { saveProduct, deleteProduct, listOrders, getOrder, updateOrderStatus } from "@/src/services/shop/shop.js";
 import { forwardTestimonyToChannel } from "@/src/services/shop/testimony.js";
 
 function formatRupiah(num) {

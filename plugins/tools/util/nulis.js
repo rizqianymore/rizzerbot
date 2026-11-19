@@ -11,7 +11,9 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const text = args.join(" ").trim();
     if (!text) {
-      return reply(`Masukkan teks yang ingin ditulis!\nContoh: \`${prefix || "."}nulis Halo dunia, ini tulisan tangan\``);
+      return reply(
+        `Masukkan teks yang ingin ditulis!\nContoh: \`${prefix || "."}nulis Halo dunia, ini tulisan tangan\``
+      );
     }
     if (text.length > 2000) {
       return reply("Teks terlalu panjang (maks 2000 karakter).");

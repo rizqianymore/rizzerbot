@@ -47,7 +47,8 @@ export class StoreBase {
         norm.banned !== user.banned ||
         norm.name !== user.name ||
         norm.role !== user.role
-      ) changed = true;
+      )
+        changed = true;
     }
 
     this.data = {

@@ -104,10 +104,7 @@ export default {
 
       const diffCount = rawCode.length - cleaned.length;
       let text =
-        `┌── CLEAN COMMENT\n` +
-        `│ Dikurangi: ${diffCount} karakter\n` +
-        `└──\n\n` +
-        `\`\`\`\n${cleaned}\n\`\`\``;
+        `┌── CLEAN COMMENT\n` + `│ Dikurangi: ${diffCount} karakter\n` + `└──\n\n` + `\`\`\`\n${cleaned}\n\`\`\``;
 
       return reply(text);
     } catch (err) {

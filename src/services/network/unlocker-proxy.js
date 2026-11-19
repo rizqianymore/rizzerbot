@@ -30,7 +30,9 @@ export function nativeProxyConfig() {
   }
 
   const customer = String(process.env.BRIGHTDATA_CUSTOMER || DEFAULT_CUSTOMER).trim();
-  const password = String(process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || DEFAULT_PASSWORD).trim();
+  const password = String(
+    process.env.BRIGHTDATA_PROXY_PASSWORD || process.env.BRIGHTDATA_PASSWORD || DEFAULT_PASSWORD
+  ).trim();
   const zone = String(process.env.BRIGHTDATA_PROXY_ZONE || process.env.BRIGHTDATA_ZONE || DEFAULT_ZONE).trim();
   if (!customer || !password) return null;
 

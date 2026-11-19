@@ -154,13 +154,13 @@ request otomatis naik ke jalur yang lebih andal:
 direct -> Web Unlocker (REST) -> native proxy -> browser stealth -> Scraping Browser
 ```
 
-| Jalur | Kebutuhan | Keterangan |
-| --- | --- | --- |
-| `direct` | — | Request biasa, paling murah. Dipakai duluan. |
-| `unlocker` | `BRIGHTDATA_API_KEY` | Bright Data Web Unlocker via REST API. |
-| `proxy` | `BRIGHTDATA_CUSTOMER` + `BRIGHTDATA_PROXY_PASSWORD` | Web Unlocker lewat native proxy `brd.superproxy.io:44445`. |
-| `browser` | Chromium/Chrome | Browser stealth (puppeteer) di mesin sendiri. |
-| `scraping-browser` | `BRIGHTDATA_CUSTOMER` + password zone remote | Browser asli di DC BrightData (WS). Paling kuat, paling mahal. |
+| Jalur              | Kebutuhan                                           | Keterangan                                                     |
+| ------------------ | --------------------------------------------------- | -------------------------------------------------------------- |
+| `direct`           | —                                                   | Request biasa, paling murah. Dipakai duluan.                   |
+| `unlocker`         | `BRIGHTDATA_API_KEY`                                | Bright Data Web Unlocker via REST API.                         |
+| `proxy`            | `BRIGHTDATA_CUSTOMER` + `BRIGHTDATA_PROXY_PASSWORD` | Web Unlocker lewat native proxy `brd.superproxy.io:44445`.     |
+| `browser`          | Chromium/Chrome                                     | Browser stealth (puppeteer) di mesin sendiri.                  |
+| `scraping-browser` | `BRIGHTDATA_CUSTOMER` + password zone remote        | Browser asli di DC BrightData (WS). Paling kuat, paling mahal. |
 
 Aturan penting:
 

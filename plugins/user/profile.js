@@ -64,9 +64,7 @@ export default {
     if (targetUser.profile) {
       text += `│ Catatan: ${targetUser.profile}\n`;
     }
-    text += `└──\n\n` +
-      `Tautan: wa.me/${phoneNum}\n` +
-      `Ketik ${prefix}profile @tag untuk melihat info pengguna lain.`;
+    text += `└──\n\n` + `Tautan: wa.me/${phoneNum}\n` + `Ketik ${prefix}profile @tag untuk melihat info pengguna lain.`;
 
     const captionText = text;
 

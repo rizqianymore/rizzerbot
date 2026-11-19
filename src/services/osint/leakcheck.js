@@ -7,7 +7,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function checkEmailBreach(email) {
-  const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanEmail = String(email || "")
+    .trim()
+    .toLowerCase();
   if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
     return {
       valid: false,

@@ -6,7 +6,9 @@ import axios from "axios";
  * @returns {Promise<object>}
  */
 export async function lookupGitGists(username) {
-  const clean = String(username || "").trim().replace(/^@/, "");
+  const clean = String(username || "")
+    .trim()
+    .replace(/^@/, "");
   if (!clean) {
     return { valid: false, reason: "Username GitHub tidak boleh kosong." };
   }

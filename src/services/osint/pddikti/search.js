@@ -74,7 +74,7 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
           }
         } catch (inPageErr) {
           lastErr = inPageErr;
-      }
+        }
       }
 
       if (data) {
@@ -87,7 +87,12 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
         continue;
       }
 
-      if (/403|token|recaptcha/i.test(String(lastErr?.message || "")) && attempt < retries && apiKey && !brightDataTried) {
+      if (
+        /403|token|recaptcha/i.test(String(lastErr?.message || "")) &&
+        attempt < retries &&
+        apiKey &&
+        !brightDataTried
+      ) {
         brightDataTried = true;
         try {
           const bdRes = await brightDataRequest(searchUrl, {
@@ -117,7 +122,12 @@ export async function searchPddikti(keyword, { retries = 2 } = {}) {
     } catch (err) {
       lastErr = err;
 
-      if (/ECONN|ENOTFOUND|ETIMEDOUT|network|NETWORK/i.test(err.message || "") && attempt < retries && apiKey && !brightDataTried) {
+      if (
+        /ECONN|ENOTFOUND|ETIMEDOUT|network|NETWORK/i.test(err.message || "") &&
+        attempt < retries &&
+        apiKey &&
+        !brightDataTried
+      ) {
         brightDataTried = true;
         try {
           const bdRes = await brightDataRequest(searchUrl, {

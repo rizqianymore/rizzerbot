@@ -7,9 +7,7 @@ export async function askPollinations(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new AIError("Prompt kosong.", { source: "pollinations", code: "INPUT" });
 
-  const seed = Number.isFinite(Number(options.seed))
-    ? Number(options.seed)
-    : Math.floor(Math.random() * 1_000_000);
+  const seed = Number.isFinite(Number(options.seed)) ? Number(options.seed) : Math.floor(Math.random() * 1_000_000);
 
   try {
     const r = await chatFetch({

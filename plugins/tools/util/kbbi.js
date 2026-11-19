@@ -39,14 +39,21 @@ export default {
       if (!html || typeof html !== "string" || html.length < 200) {
         return reply(`Gagal ambil KBBI: ${lastErr || "host tidak respon"}`);
       }
-      if (html.includes("Entri tidak ditemukan") || html.includes("tidak ditemukan") || html.includes("404 Not Found")) {
+      if (
+        html.includes("Entri tidak ditemukan") ||
+        html.includes("tidak ditemukan") ||
+        html.includes("404 Not Found")
+      ) {
         return reply(`Kata *${word}* tidak ditemukan di KBBI.`);
       }
       const olMatch = html.match(/<ol[^>]*>([\s\S]*?)<\/ol>/i);
       let defs = [];
       if (olMatch) {
         const li = [...olMatch[1].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)];
-        defs = li.map((m) => stripHtml(m[1])).filter(Boolean).slice(0, 5);
+        defs = li
+          .map((m) => stripHtml(m[1]))
+          .filter(Boolean)
+          .slice(0, 5);
       }
       if (!defs.length) {
         const alt = html.match(/<div[^>]*class="[^"]*container[^"]*"[^>]*>([\s\S]{200,1200})<\/div>/i);
@@ -56,11 +63,11 @@ export default {
         }
       }
       if (!defs.length) {
-
         const meta = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
         if (meta) defs = [stripHtml(meta[1]).slice(0, 500)];
       }
-      if (!defs.length) return reply(`Kata *${word}* ditemukan tapi definisi tidak ter-parse. Cek: https://kbbi.web.id/${word}`);
+      if (!defs.length)
+        return reply(`Kata *${word}* ditemukan tapi definisi tidak ter-parse. Cek: https://kbbi.web.id/${word}`);
       let text = `┌── DEFINISI KBBI: ${word.toUpperCase()}\n`;
       defs.forEach((d) => {
         text += `│ • ${d}\n`;

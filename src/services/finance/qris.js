@@ -3,24 +3,21 @@ import QRCode from "qrcode";
 const TAG_NAMES = {
   "00": "Payload Format Indicator",
   "01": "Point of Initiation Method",
-  "52": "Merchant Category Code",
-  "53": "Transaction Currency",
-  "54": "Transaction Amount",
-  "55": "Tip or Convenience Indicator",
-  "56": "Value of Convenience Fee (Fixed)",
-  "57": "Value of Convenience Fee (%)",
-  "58": "Country Code",
-  "59": "Merchant Name",
-  "60": "Merchant City",
-  "61": "Postal Code",
-  "62": "Additional Data Field",
-  "63": "CRC",
+  52: "Merchant Category Code",
+  53: "Transaction Currency",
+  54: "Transaction Amount",
+  55: "Tip or Convenience Indicator",
+  56: "Value of Convenience Fee (Fixed)",
+  57: "Value of Convenience Fee (%)",
+  58: "Country Code",
+  59: "Merchant Name",
+  60: "Merchant City",
+  61: "Postal Code",
+  62: "Additional Data Field",
+  63: "CRC",
 };
 
-const NESTED_TAGS = new Set([
-  ...Array.from({ length: 26 }, (_, i) => String(i + 26).padStart(2, "0")),
-  "62",
-]);
+const NESTED_TAGS = new Set([...Array.from({ length: 26 }, (_, i) => String(i + 26).padStart(2, "0")), "62"]);
 
 export function calculateCRC16(str) {
   let crc = 0xffff;
@@ -106,22 +103,10 @@ export function convertQRIS(qrisString, options = {}) {
       if (options.fee) {
         if (options.fee.type === "fixed") {
           result.push(makeTLV("55", "02", "Tip or Convenience Indicator"));
-          result.push(
-            makeTLV(
-              "56",
-              options.fee.value.toString(),
-              "Value of Convenience Fee (Fixed)"
-            )
-          );
+          result.push(makeTLV("56", options.fee.value.toString(), "Value of Convenience Fee (Fixed)"));
         } else {
           result.push(makeTLV("55", "03", "Tip or Convenience Indicator"));
-          result.push(
-            makeTLV(
-              "57",
-              options.fee.value.toString(),
-              "Value of Convenience Fee (%)"
-            )
-          );
+          result.push(makeTLV("57", options.fee.value.toString(), "Value of Convenience Fee (%)"));
         }
       }
 

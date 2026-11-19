@@ -12,9 +12,9 @@ export default {
     if (!input) {
       return context.reply(
         `┌── OSINT NPM MAINTAINER\n` +
-        `│ Format: ${context.prefix || "."}npmstalk <username>\n` +
-        `└──\n\n` +
-        `Contoh: ${context.prefix || "."}npmstalk sindresorhus`
+          `│ Format: ${context.prefix || "."}npmstalk <username>\n` +
+          `└──\n\n` +
+          `Contoh: ${context.prefix || "."}npmstalk sindresorhus`
       );
     }
 
@@ -37,9 +37,7 @@ export default {
     ];
 
     for (const pkg of res.packages.slice(0, 5)) {
-      out.push(
-        `│ • ${pkg.name} (v${pkg.version}) — ${pkg.monthlyDownloads.toLocaleString("id-ID")} dl/bln`
-      );
+      out.push(`│ • ${pkg.name} (v${pkg.version}) — ${pkg.monthlyDownloads.toLocaleString("id-ID")} dl/bln`);
     }
     out.push(`└──`);
 

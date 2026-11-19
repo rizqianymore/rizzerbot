@@ -46,7 +46,12 @@ function fetchIgHtml(username, timeoutMs = 8000) {
  */
 export async function lookupInstagram(rawUsername) {
   let username = String(rawUsername || "").trim();
-  username = username.replace(/^https?:\/\/(?:www\.)?instagram\.com\//i, "").replace(/^@/, "").split("/")[0].split("?")[0].trim();
+  username = username
+    .replace(/^https?:\/\/(?:www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .split("/")[0]
+    .split("?")[0]
+    .trim();
 
   if (!username || !/^[a-zA-Z0-9_.-]{1,30}$/.test(username)) {
     return { valid: false, reason: "Username Instagram tidak valid." };
@@ -77,8 +82,9 @@ export async function lookupInstagram(rawUsername) {
   }
 
   // Parse og:description: "686M Followers, 168 Following, 8,636 Posts - See Instagram photos and videos from Instagram (@instagram)"
-  const descMatch = html.match(/property="og:description"\s+content="([^"]+)"/i) ||
-                    html.match(/name="description"\s+content="([^"]+)"/i);
+  const descMatch =
+    html.match(/property="og:description"\s+content="([^"]+)"/i) ||
+    html.match(/name="description"\s+content="([^"]+)"/i);
   const ogDesc = descMatch ? descMatch[1] : null;
 
   if (!ogDesc || html.includes("Sorry, this page isn't available.")) {
@@ -104,7 +110,9 @@ export async function lookupInstagram(rawUsername) {
   let following = "-";
   let posts = "-";
 
-  const statsMatch = ogDesc.match(/([\d\.,KMkm]+)\s*Followers,\s*([\d\.,KMkm]+)\s*Following,\s*([\d\.,KMkm]+)\s*Posts/i);
+  const statsMatch = ogDesc.match(
+    /([\d\.,KMkm]+)\s*Followers,\s*([\d\.,KMkm]+)\s*Following,\s*([\d\.,KMkm]+)\s*Posts/i
+  );
   if (statsMatch) {
     followers = statsMatch[1];
     following = statsMatch[2];

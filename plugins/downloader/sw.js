@@ -167,11 +167,7 @@ export default {
     if (quotedText) {
       await sendTyping();
       const num = quotedInfo?.participant ? String(quotedInfo.participant).split("@")[0] : "kontak";
-      return await reply(
-        `*STATUS WHATSAPP (TEKS)*\n\n` +
-        `"${quotedText}"\n\n` +
-        `_Dari: +${num}_`
-      );
+      return await reply(`*STATUS WHATSAPP (TEKS)*\n\n` + `"${quotedText}"\n\n` + `_Dari: +${num}_`);
     }
 
     const targetJid = getTargetJid?.(args);
@@ -203,15 +199,15 @@ export default {
       if (targetNumber) {
         return reply(
           `Belum ada status yang terekam dari nomor *+${targetNumber}*.\n` +
-          `_Pastikan bot sudah menyimpan kontak tersebut dan statusnya pernah dibuka/muncul di WhatsApp bot._`
+            `_Pastikan bot sudah menyimpan kontak tersebut dan statusnya pernah dibuka/muncul di WhatsApp bot._`
         );
       }
       return reply(
         `*DOWNLOAD STATUS (SW)*\n\n` +
-        `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
-        `*Cara Penggunaan:*\n` +
-        `│ Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
-        `│ Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
+          `Belum ada status yang terekam dalam 24 jam terakhir.\n\n` +
+          `*Cara Penggunaan:*\n` +
+          `│ Reply status orang lain lalu ketik \`${prefix || "."}sw\`\n` +
+          `│ Ketik \`${prefix || "."}sw <nomor/tag kontak> [urutan]\` untuk mengambil status tersimpan.`
       );
     }
 
@@ -247,18 +243,14 @@ export default {
       const textContent = buffer.toString("utf8");
       return await reply(
         `*STATUS WHATSAPP (TEKS)*\n\n` +
-        `"${textContent}"\n\n` +
-        `Dari: *+${senderNumber}*\n` +
-        `Status: #${idx} dari ${files.length} tersimpan.`
+          `"${textContent}"\n\n` +
+          `Dari: *+${senderNumber}*\n` +
+          `Status: #${idx} dari ${files.length} tersimpan.`
       );
     }
 
     if (isVideo) {
-      await sock.sendMessage(
-        msg.key.remoteJid,
-        { video: buffer, caption, mimetype: "video/mp4" },
-        { quoted: msg }
-      );
+      await sock.sendMessage(msg.key.remoteJid, { video: buffer, caption, mimetype: "video/mp4" }, { quoted: msg });
     } else if (isImage) {
       await sock.sendMessage(
         msg.key.remoteJid,

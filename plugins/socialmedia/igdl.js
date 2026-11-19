@@ -24,9 +24,9 @@ export default {
     if (!input) {
       return reply(
         `┌── INSTAGRAM DOWNLOADER\n` +
-        `│ Format: ${currentPrefix}igdl <url> [nomor slide]\n` +
-        `└──\n\n` +
-        `Contoh: ${currentPrefix}igdl https://instagram.com/p/xxxx`
+          `│ Format: ${currentPrefix}igdl <url> [nomor slide]\n` +
+          `└──\n\n` +
+          `Contoh: ${currentPrefix}igdl https://instagram.com/p/xxxx`
       );
     }
 
@@ -62,9 +62,7 @@ export default {
         selectedIndices = parseMediaIndexSelection(selectorArg, mediaList.length);
       }
 
-      const targetItems = selectedIndices
-        ? mediaList.filter((_, idx) => selectedIndices.includes(idx))
-        : mediaList;
+      const targetItems = selectedIndices ? mediaList.filter((_, idx) => selectedIndices.includes(idx)) : mediaList;
 
       const lines = ["*INSTAGRAM DOWNLOADER*"];
       if (info.author || info.uploader) lines.push(`Author: ${cleanText(info.author || info.uploader)}`);

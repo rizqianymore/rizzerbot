@@ -21,8 +21,7 @@ export default {
 
     if (!target) {
       return reply(
-        `*MUTE VIDEO (HAPUS AUDIO)*\n\n` +
-          `Balas (reply) video yang ingin dihilangkan suaranya dengan *${p}mute*.`
+        `*MUTE VIDEO (HAPUS AUDIO)*\n\n` + `Balas (reply) video yang ingin dihilangkan suaranya dengan *${p}mute*.`
       );
     }
 
@@ -47,11 +46,7 @@ export default {
       await fs.writeFile(inFile, buffer);
 
       // Gunakan -an (audio null) dan salin video stream langsung tanpa re-encode
-      await execFileAsync(
-        getFfmpegPath(),
-        ["-y", "-i", inFile, "-c:v", "copy", "-an", outFile],
-        { timeout: 60000 }
-      );
+      await execFileAsync(getFfmpegPath(), ["-y", "-i", inFile, "-c:v", "copy", "-an", outFile], { timeout: 60000 });
 
       const out = await fs.readFile(outFile);
       await sock.sendMessage(

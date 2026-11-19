@@ -12,11 +12,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT GITHUB PULL REQUEST STALKER*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}gitprstalk <username-github>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}gitprstalk torvalds\n` +
-        `│ ${context.prefix || "."}gitprstalk sindresorhus`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}gitprstalk <username-github>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}gitprstalk torvalds\n` +
+          `│ ${context.prefix || "."}gitprstalk sindresorhus`
       );
     }
 
@@ -40,12 +40,7 @@ export default {
 
     for (const pr of res.prs) {
       const icon = pr.state === "open" ? "🟢 [OPEN]" : "🟣 [MERGED/CLOSED]";
-      out.push(
-        `${icon} *${pr.title}*`,
-        `  │ Tanggal: 📅 ${pr.createdDate}`,
-        `  │ Link   : 🔗 ${pr.url}`,
-        ``
-      );
+      out.push(`${icon} *${pr.title}*`, `  │ Tanggal: 📅 ${pr.createdDate}`, `  │ Link   : 🔗 ${pr.url}`, ``);
     }
 
     return context.reply(out.join("\n"));

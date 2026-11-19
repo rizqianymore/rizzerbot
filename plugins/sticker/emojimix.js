@@ -18,7 +18,11 @@ function splitEmoji(text) {
       if (segment.trim()) parts.push(segment);
     }
   } catch (_) {
-    parts.push(...String(text || "").split("").filter((c) => c.trim()));
+    parts.push(
+      ...String(text || "")
+        .split("")
+        .filter((c) => c.trim())
+    );
   }
   return parts.filter((p) => /\p{Extended_Pictographic}/u.test(p));
 }
@@ -47,9 +51,7 @@ export default {
     const pair = cleaned.includes("+") ? cleaned.split("+") : splitEmoji(raw);
     const emojis = pair.map((e) => String(e || "").trim()).filter(Boolean);
     if (emojis.length !== 2) {
-      return reply(
-        `*EMOJIMIX*\n\nKirim 2 emoji: ${prefix || "."}emojimix 😀+😎\natau: ${prefix || "."}emojimix 😀 😎`
-      );
+      return reply(`*EMOJIMIX*\n\nKirim 2 emoji: ${prefix || "."}emojimix 😀+😎\natau: ${prefix || "."}emojimix 😀 😎`);
     }
     const codes = emojis.map(emojiCodepoints);
     if (codes.some((c) => !c)) return reply("Emoji tidak dikenali, coba emoji lain.");

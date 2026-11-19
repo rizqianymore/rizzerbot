@@ -22,9 +22,7 @@ async function apiGet(path) {
       headers: { Accept: "application/json, text/plain, */*", "User-Agent": UA },
     });
     if (res.ok) payload = await res.json();
-  } catch (_) {
-
-  }
+  } catch (_) {}
 
   if (!payload) {
     const inPage = await stealthBrowser.inPageFetch(url, { headers: { Accept: "application/json, text/plain, */*" } });
@@ -86,9 +84,7 @@ async function getProdi(ptId) {
       const json = await apiGet(`/api/pt/prodi/${ptId}/${code}`);
       const rows = Array.isArray(json?.data) ? json.data : [];
       if (rows.length) return rows;
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
   return [];
 }

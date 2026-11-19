@@ -43,7 +43,10 @@ function fetchSteamXml(targetUrl, timeoutMs = 8000) {
  */
 export async function lookupSteam(rawInput) {
   let target = String(rawInput || "").trim();
-  target = target.replace(/^https?:\/\/steamcommunity\.com\/(?:id|profiles)\//i, "").replace(/\/+$/, "").trim();
+  target = target
+    .replace(/^https?:\/\/steamcommunity\.com\/(?:id|profiles)\//i, "")
+    .replace(/\/+$/, "")
+    .trim();
 
   if (!target) {
     return { valid: false, reason: "ID atau Custom URL Steam tidak boleh kosong." };

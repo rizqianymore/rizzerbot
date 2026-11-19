@@ -25,12 +25,12 @@ const phoneStmts = new Map();
 const nameStmts = new Map();
 
 const TABLE_PREFIX_MAP = {
-  "31": "dki_jakarta",
-  "32": "jawa_barat",
-  "33": "jawa_tengah",
-  "35": "jawa_timur",
-  "36": "banten",
-  "12": "sumatera_utara",
+  31: "dki_jakarta",
+  32: "jawa_barat",
+  33: "jawa_tengah",
+  35: "jawa_timur",
+  36: "banten",
+  12: "sumatera_utara",
 };
 
 const geoCache = new Map();
@@ -69,18 +69,9 @@ function getDatabase() {
     detectedTables = tableRows.map((r) => r.name);
 
     for (const table of detectedTables) {
-      nikStmts.set(
-        table,
-        dbInstance.prepare(`SELECT * FROM ${table} WHERE nik = ? LIMIT 1`)
-      );
-      phoneStmts.set(
-        table,
-        dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp = ? OR nohp = ? LIMIT 10`)
-      );
-      nameStmts.set(
-        table,
-        dbInstance.prepare(`SELECT * FROM ${table} WHERE nama LIKE ? LIMIT 10`)
-      );
+      nikStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nik = ? LIMIT 1`));
+      phoneStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp = ? OR nohp = ? LIMIT 10`));
+      nameStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama LIKE ? LIMIT 10`));
     }
 
     return dbInstance;
@@ -109,8 +100,22 @@ export function getDukcapilInfo() {
 export function parseBirthDate(ttl) {
   if (!ttl) return null;
   const MONTHS = {
-    JAN: 0, FEB: 1, MAR: 2, APR: 3, MEI: 4, MAY: 4, JUN: 5, JUL: 6,
-    AGU: 7, AUG: 7, SEP: 8, OKT: 9, OCT: 9, NOV: 10, DES: 11, DEC: 11
+    JAN: 0,
+    FEB: 1,
+    MAR: 2,
+    APR: 3,
+    MEI: 4,
+    MAY: 4,
+    JUN: 5,
+    JUL: 6,
+    AGU: 7,
+    AUG: 7,
+    SEP: 8,
+    OKT: 9,
+    OCT: 9,
+    NOV: 10,
+    DES: 11,
+    DEC: 11,
   };
   const match = String(ttl).match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
   if (!match) return null;
@@ -204,11 +209,12 @@ export async function getCoordinates(query) {
  * Penentuan titik koordinat akurat bertingkat (Jalan spesifik -> Kelurahan -> Kecamatan -> Kota)
  */
 export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, kota_kab) {
-  const cleanCity = String(kota_kab || "")
-    .replace(/KOTA\s+ADM\.?\s*/i, "")
-    .replace(/KABUPATEN\s*/i, "")
-    .replace(/KAB\.?\s*/i, "")
-    .trim() || "Jakarta";
+  const cleanCity =
+    String(kota_kab || "")
+      .replace(/KOTA\s+ADM\.?\s*/i, "")
+      .replace(/KABUPATEN\s*/i, "")
+      .replace(/KAB\.?\s*/i, "")
+      .trim() || "Jakarta";
 
   const cleanKel = String(kelurahan || "").trim();
   const cleanKec = String(kecamatan || "").trim();
@@ -265,7 +271,9 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
  * Normalisasi nomor HP ke format internasional (628...) dan lokal (08...)
  */
 export function normalizePhone(raw) {
-  let clean = String(raw || "").trim().replace(/[^0-9]/g, "");
+  let clean = String(raw || "")
+    .trim()
+    .replace(/[^0-9]/g, "");
   if (!clean) return { intl: "", local: "" };
 
   if (clean.startsWith("62")) {
@@ -302,7 +310,11 @@ export function classifyQuery(input) {
     return { type: "phone", value: phones.intl, phones };
   }
 
-  if (digitsOnly.length >= 9 && digitsOnly.length <= 15 && (digitsOnly.startsWith("62") || digitsOnly.startsWith("08"))) {
+  if (
+    digitsOnly.length >= 9 &&
+    digitsOnly.length <= 15 &&
+    (digitsOnly.startsWith("62") || digitsOnly.startsWith("08"))
+  ) {
     const phones = normalizePhone(digitsOnly);
     return { type: "phone", value: phones.intl, phones };
   }
@@ -315,7 +327,9 @@ export function classifyQuery(input) {
  */
 export async function searchByNik(rawNik) {
   const db = getDatabase();
-  const nik = String(rawNik).trim().replace(/[^0-9]/g, "");
+  const nik = String(rawNik)
+    .trim()
+    .replace(/[^0-9]/g, "");
   if (!nik) return null;
 
   let nikInfo = null;
@@ -360,12 +374,7 @@ export async function searchByNik(rawNik) {
 
   let location = null;
   if (record) {
-    location = await resolveAccurateCoordinates(
-      record.alamat,
-      record.kelurahan,
-      record.kecamatan,
-      record.kota_kab
-    );
+    location = await resolveAccurateCoordinates(record.alamat, record.kelurahan, record.kecamatan, record.kota_kab);
   }
 
   return {
@@ -404,12 +413,7 @@ export async function searchByPhone(rawPhone) {
   let location = null;
   if (records.length > 0) {
     const primary = records[0];
-    location = await resolveAccurateCoordinates(
-      primary.alamat,
-      primary.kelurahan,
-      primary.kecamatan,
-      primary.kota_kab
-    );
+    location = await resolveAccurateCoordinates(primary.alamat, primary.kelurahan, primary.kecamatan, primary.kota_kab);
   }
 
   const enrichedRecords = await Promise.all(

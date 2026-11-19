@@ -33,7 +33,10 @@ function readTiffData(buf, tiffOffset, isLE, type, count, valOrOff) {
     const dataOffset = count > 4 ? tiffOffset + valOrOff : null;
     if (dataOffset !== null) {
       if (dataOffset + count <= buf.length) {
-        return buf.toString("utf8", dataOffset, dataOffset + count).replace(/\0+$/, "").trim();
+        return buf
+          .toString("utf8", dataOffset, dataOffset + count)
+          .replace(/\0+$/, "")
+          .trim();
       }
     } else {
       // 4 bytes in valOrOff

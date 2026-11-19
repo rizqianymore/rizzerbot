@@ -6,7 +6,9 @@ export function formatRupiah(num) {
 }
 
 function maskPhone(jid) {
-  const digits = String(jid || "").split("@")[0].replace(/\D/g, "");
+  const digits = String(jid || "")
+    .split("@")[0]
+    .replace(/\D/g, "");
   if (digits.length <= 6) return digits;
   return digits.slice(0, 4) + "xxxx" + digits.slice(-3);
 }

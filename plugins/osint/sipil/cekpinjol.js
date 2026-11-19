@@ -16,12 +16,12 @@ export default {
     if (!query) {
       return context.reply(
         `*CEK LEGALITAS PINJOL OJK & ILEGAL*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}cekpinjol <nama pinjol/perusahaan>\n\n` +
-        `*Contoh:*\n` +
-        `│ ${context.prefix || "."}cekpinjol AdaKami\n` +
-        `│ ${context.prefix || "."}cekpinjol Aku Rupiah\n` +
-        `│ ${context.prefix || "."}cekpinjol Akulaku`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}cekpinjol <nama pinjol/perusahaan>\n\n` +
+          `*Contoh:*\n` +
+          `│ ${context.prefix || "."}cekpinjol AdaKami\n` +
+          `│ ${context.prefix || "."}cekpinjol Aku Rupiah\n` +
+          `│ ${context.prefix || "."}cekpinjol Akulaku`
       );
     }
 
@@ -62,7 +62,9 @@ export default {
         out.push(``);
       });
 
-      out.push(`⚠️ *Peringatan:* Jangan mengunduh atau melakukan transaksi pinjaman pada aplikasi ini demi keamanan data pribadi & kontak Anda!`);
+      out.push(
+        `⚠️ *Peringatan:* Jangan mengunduh atau melakukan transaksi pinjaman pada aplikasi ini demi keamanan data pribadi & kontak Anda!`
+      );
     } else if (res.isWarning) {
       out.push(`Status: ⚠️ *PERINGATAN (Ditemukan di Daftar Legal & Ilegal)*`);
       out.push(`Ada kemungkinan aplikasi ilegal meniru / mencatut nama platform resmi berizin OJK.`);
@@ -70,7 +72,9 @@ export default {
     } else {
       out.push(`Status: ❓ *TIDAK DITEMUKAN DI DAFTAR RESMI OJK*`);
       out.push(`Platform dengan kata kunci "${res.query}" tidak tercatat di data resmi P2P Lending OJK.`);
-      out.push(`\n⚠️ *Waspada:* Bila platform tersebut menawarkan pinjaman melalui SMS, WhatsApp, atau link APK luar Play Store/App Store, patut diduga sebagai *PINJOL ILEGAL*.`);
+      out.push(
+        `\n⚠️ *Waspada:* Bila platform tersebut menawarkan pinjaman melalui SMS, WhatsApp, atau link APK luar Play Store/App Store, patut diduga sebagai *PINJOL ILEGAL*.`
+      );
     }
 
     out.push(`\n*Tips Aman OJK:*`);

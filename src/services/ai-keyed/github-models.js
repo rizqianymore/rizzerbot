@@ -1,12 +1,7 @@
 import { postChatCompletions, buildMessages } from "../ai/openai-compat.js";
 
 const BASE = "https://models.inference.ai.azure.com";
-const FREE_MODELS = [
-  "gpt-4o-mini",
-  "meta-llama-3.1-70b-instruct",
-  "DeepSeek-R1",
-  "Phi-4",
-];
+const FREE_MODELS = ["gpt-4o-mini", "meta-llama-3.1-70b-instruct", "DeepSeek-R1", "Phi-4"];
 
 export function isGithubModelsConfigured() {
   return Boolean(process.env.GITHUB_TOKEN);

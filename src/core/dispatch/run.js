@@ -3,7 +3,7 @@ import { extractButtonText } from "@/src/utils/buttons.js";
 import { db } from "@/src/core/database.js";
 import { isGroupJid, resolveSenderJid, resolveBotJid, resolveBotIdentity } from "./identity.js";
 import { isCrashBlocked, registerOwnerCommand } from "./guards.js";
-import { isDuplicateMessage } from "./message.js";
+import { isDuplicateMessage, unwrapMessageContent } from "./message.js";
 
 let _staleCount = 0;
 let _lastStaleLog = 0;
@@ -56,7 +56,9 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
+  msg.message = unwrapMessageContent(msg.message);
   msg.message = extractMessageContent(msg.message);
+  msg.message = unwrapMessageContent(msg.message);
   if (!msg.message) return;
 
   if (msg.message.protocolMessage || msg.message.reactionMessage) return;
@@ -65,9 +67,7 @@ async function dispatchInner(sock, msg, logger) {
   if (!remoteJid || remoteJid === "status@broadcast") return;
   const crashCandidate = msg.key.participant || remoteJid;
   if (!db.isOwner(crashCandidate) && !db.isOwner(remoteJid) && isCrashBlocked(crashCandidate)) {
-    logger?.warn?.(
-      `[CrashBlock] ${crashCandidate} sedang diblokir (payload sebelumnya mencurigakan)`
-    );
+    logger?.warn?.(`[CrashBlock] ${crashCandidate} sedang diblokir (payload sebelumnya mencurigakan)`);
     return;
   }
 
@@ -132,7 +132,6 @@ async function dispatchInner(sock, msg, logger) {
     logger,
   });
   if (resolved.drop) {
-
     if (resolved.code === "not_command" && (await runMediaHandlers(sock, msg, logger))) {
       return;
     }
@@ -158,7 +157,7 @@ async function dispatchInner(sock, msg, logger) {
   if (isCustomCase) {
     const reply = async (text) => sock.sendMessage(remoteJid, { text: String(text) }, { quoted: msg });
     const sendTyping = async () => sock.sendPresenceUpdate("composing", remoteJid).catch(() => {});
-    
+
     try {
       const handled = await handleCustomCase(commandName, {
         sock,
@@ -183,7 +182,9 @@ async function dispatchInner(sock, msg, logger) {
     }
 
     // Jika custom case me-return false (tidak cocok), beri tahu unknown command
-    logger?.info?.(`[Drop] ${remoteJid} <- ${msg.pushName || "?"}: perintah tidak dikenal: ${commandName} (cmd: ${commandName})`);
+    logger?.info?.(
+      `[Drop] ${remoteJid} <- ${msg.pushName || "?"}: perintah tidak dikenal: ${commandName} (cmd: ${commandName})`
+    );
     if (activeSettings.silentDeny === false) {
       await sock
         .sendMessage(

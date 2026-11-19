@@ -119,7 +119,6 @@ export async function searchNakes(
     res = await client.post(SEARCH_URL, params, { headers });
   } catch (err) {
     if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
-
       await new Promise((r) => setTimeout(r, 1500));
       await ensureCookies(true);
       res = await client.post(SEARCH_URL, buildSearchParams(query.trim(), { jenis, tipe, profesi, start, length }), {
@@ -213,9 +212,7 @@ function extractDetailPhoto(html) {
     if (BAD.test(checkStr)) continue;
     const url = norm(src);
     if (!url) continue;
-    const score =
-      (GOOD.test(checkStr) ? 2 : 0) +
-      (isDataUri ? 1 : /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? 1 : 0);
+    const score = (GOOD.test(checkStr) ? 2 : 0) + (isDataUri ? 1 : /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? 1 : 0);
     cands.push({ url, score });
   }
   cands.sort((a, b) => b.score - a.score);
@@ -332,7 +329,9 @@ function statusTag(status) {
 }
 
 export function rankByRelevance(rows, query) {
-  const q = String(query || "").trim().toLowerCase();
+  const q = String(query || "")
+    .trim()
+    .toLowerCase();
   if (!q || !Array.isArray(rows)) return rows;
   const score = (nama) => {
     const n = String(nama || "").toLowerCase();

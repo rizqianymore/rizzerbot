@@ -72,7 +72,6 @@ export async function searchProduk(query) {
     });
 
     if (res.status !== 200) {
-
       if (res.status === 419 || res.status === 401) {
         cachedCsrf = null;
         cachedCookies = "";

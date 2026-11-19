@@ -29,7 +29,10 @@ export function detectProtection({ status = 0, headers = {}, html = "", title = 
 
   if (
     has("challenges.cloudflare.com/turnstile", "cf-turnstile", "data-sitekey") &&
-    (head.includes("just a moment") || head.includes("attention required") || head.includes("please wait") || body.includes("verifying you are human"))
+    (head.includes("just a moment") ||
+      head.includes("attention required") ||
+      head.includes("please wait") ||
+      body.includes("verifying you are human"))
   ) {
     return { type: "cloudflare-turnstile", confidence: "high" };
   }
@@ -38,14 +41,25 @@ export function detectProtection({ status = 0, headers = {}, html = "", title = 
     hBlob.includes("cf-mitigated") ||
     hBlob.includes("server: cloudflare") ||
     head.includes("just a moment...") ||
-    has("window._cf_chl_opt", "cf-browser-verification", "checking your browser before accessing", "attention required! | cloudflare", "please wait... | cloudflare")
+    has(
+      "window._cf_chl_opt",
+      "cf-browser-verification",
+      "checking your browser before accessing",
+      "attention required! | cloudflare",
+      "please wait... | cloudflare"
+    )
   ) {
     return { type: "cloudflare-challenge", confidence: "high" };
   }
   if (has("safeline", "doonsec", "rejected by safe line", "waf blocked", "safeline-waf")) {
     return { type: "safeline", confidence: "high" };
   }
-  if (hBlob.includes("incap_ses_") || hBlob.includes("visid_incap") || hBlob.includes("x-iinfo") || has("incapsula", "_incapsula_resource", "request unsuccessful. incapsula")) {
+  if (
+    hBlob.includes("incap_ses_") ||
+    hBlob.includes("visid_incap") ||
+    hBlob.includes("x-iinfo") ||
+    has("incapsula", "_incapsula_resource", "request unsuccessful. incapsula")
+  ) {
     return { type: "incapsula", confidence: "high" };
   }
   if (hBlob.includes("datadome") || has("datadome", "geo.captcha-delivery.com", "captcha-delivery.com")) {
@@ -67,7 +81,17 @@ export function detectProtection({ status = 0, headers = {}, html = "", title = 
   const blockedStatus = [401, 403, 406, 418, 503].includes(Number(status));
   if (
     blockedStatus &&
-    has("grecaptcha", "recaptcha", "hcaptcha", "turnstile", "captcha", "are you human", "verify you are human", "access denied", "forbidden")
+    has(
+      "grecaptcha",
+      "recaptcha",
+      "hcaptcha",
+      "turnstile",
+      "captcha",
+      "are you human",
+      "verify you are human",
+      "access denied",
+      "forbidden"
+    )
   ) {
     return { type: "generic-captcha", confidence: "medium" };
   }
@@ -172,7 +196,12 @@ export async function waitForClearance(page, { timeoutMs = 25000, clickCheckbox 
         try {
           cookies = await page.cookies();
         } catch (_) {}
-        return { cleared: true, type: "none", waitedMs: Date.now() - start, hasClearanceCookie: hasClearanceCookie(cookies) };
+        return {
+          cleared: true,
+          type: "none",
+          waitedMs: Date.now() - start,
+          hasClearanceCookie: hasClearanceCookie(cookies),
+        };
       }
     } else {
       stableHits = 0;
@@ -191,7 +220,9 @@ export async function waitForClearance(page, { timeoutMs = 25000, clickCheckbox 
       if (!reloaded && stuck && elapsed > timeoutMs / 2) {
         reloaded = true;
         try {
-          await page.reload({ waitUntil: "domcontentloaded", timeout: Math.min(15000, timeoutMs - elapsed) }).catch(() => {});
+          await page
+            .reload({ waitUntil: "domcontentloaded", timeout: Math.min(15000, timeoutMs - elapsed) })
+            .catch(() => {});
         } catch (_) {}
         clicked = false;
       }

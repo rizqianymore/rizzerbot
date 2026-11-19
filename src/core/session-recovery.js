@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "./connection/logger.js";
+import { db } from "@/src/core/database.js";
 
 /*
  * Pemulihan sesi Signal yang desinkron.
@@ -112,23 +113,26 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
 
     // 2. Bersihkan file sesi fisik dari disk (authDir)
     const rawId = String(jid).split("@")[0].split(":")[0];
-    if (rawId && rawId.length >= 5) {
-      const authDir = path.resolve(process.cwd(), "assets", "sessions", "primary_bot");
-      if (fs.existsSync(authDir)) {
-        try {
-          const files = fs.readdirSync(authDir);
-          for (const file of files) {
-            if (
-              (file.startsWith(`session-${rawId}`) || file.startsWith(`identity-key-${rawId}`)) &&
-              file.endsWith(".json")
-            ) {
+    const candidateIds = new Set([rawId]);
+    try {
+      const mappedPn = db.resolvePhoneJid(jid);
+      if (mappedPn) candidateIds.add(String(mappedPn).split("@")[0].split(":")[0]);
+    } catch (_) {}
+
+    const authDir = path.resolve(process.cwd(), "assets", "sessions", "primary_bot");
+    if (fs.existsSync(authDir)) {
+      try {
+        const files = fs.readdirSync(authDir);
+        for (const file of files) {
+          for (const id of candidateIds) {
+            if (id && id.length >= 5 && (file.startsWith(`session-${id}`) || file.startsWith(`identity-key-${id}`)) && file.endsWith(".json")) {
               try {
                 fs.unlinkSync(path.join(authDir, file));
-              } catch (_) { }
+              } catch (_) {}
             }
           }
-        } catch (_) { }
-      }
+        }
+      } catch (_) {}
     }
 
     const entry = failureTracker.get(jid) || {};
