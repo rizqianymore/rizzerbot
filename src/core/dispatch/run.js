@@ -58,9 +58,7 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
-  msg.message = unwrapMessageContent(msg.message);
-  msg.message = extractMessageContent(msg.message);
-  msg.message = unwrapMessageContent(msg.message);
+  msg.message = extractMessageContent(unwrapMessageContent(msg.message));
   if (!msg.message) return;
 
   if (msg.message.protocolMessage || msg.message.reactionMessage) return;

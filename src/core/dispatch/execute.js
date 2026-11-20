@@ -43,6 +43,9 @@ export async function executeCommand(sock, msg, logger, env) {
   const isPrimarySuperOwner = db.isPrimaryOwner(senderJid);
   const isSub = Boolean(sock.isSubBot);
 
+  const rawContextInfo = getUniversalContextInfo(msg.message);
+  const quotedMessage = rawContextInfo?.quotedMessage || null;
+
   const context = {
     logger,
     botJid,
@@ -66,9 +69,9 @@ export async function executeCommand(sock, msg, logger, env) {
     isGroup: isGroupJid(remoteJid),
     user,
     msg,
-    quoted: getUniversalContextInfo(msg.message)?.quotedMessage || null,
+    quoted: quotedMessage,
     get quotedText() {
-      const q = getUniversalContextInfo(msg.message)?.quotedMessage;
+      const q = quotedMessage;
       if (!q || typeof q !== "object") return "";
       return (
         q.conversation ||
@@ -94,7 +97,7 @@ export async function executeCommand(sock, msg, logger, env) {
       });
     },
     getTargetJid: (targetArgs) => {
-      const _ctx = getUniversalContextInfo(msg.message) || {};
+      const _ctx = rawContextInfo || {};
       const quotedJid = _ctx.participant || _ctx.remoteJid;
       if (quotedJid && !String(quotedJid).endsWith("@g.us")) {
         const resolved = db.resolvePhoneJid(quotedJid);

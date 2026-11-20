@@ -95,11 +95,13 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
       try {
         const files = fs.readdirSync(authDir);
         for (const file of files) {
+          if (!file.endsWith(".json")) continue;
           for (const id of candidateIds) {
-            if (id && id.length >= 5 && (file.startsWith(`session-${id}`) || file.startsWith(`identity-key-${id}`)) && file.endsWith(".json")) {
+            if (id && id.length >= 5 && (file.startsWith(`session-${id}`) || file.startsWith(`identity-key-${id}`))) {
               try {
                 fs.unlinkSync(path.join(authDir, file));
               } catch (_) {}
+              break;
             }
           }
         }
