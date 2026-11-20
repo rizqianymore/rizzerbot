@@ -15,7 +15,7 @@ import urllib.error
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-PROXY_URL = "http://brd-customer-hl_66a04297-zone-web_unlocker2:lahl63zlmvrs@brd.superproxy.io:22225"
+PROXY_URL = os.environ.get("BRIGHTDATA_PROXY", "")
 BASE_DIR = os.path.join(os.getcwd(), "database", "jkt48")
 IMAGES_DIR = os.path.join(BASE_DIR, "images")
 
@@ -26,8 +26,10 @@ MONTH_NAMES_ID = [
 
 def get_opener():
     ctx = ssl._create_unverified_context()
-    proxy_handler = urllib.request.ProxyHandler({"http": PROXY_URL, "https": PROXY_URL})
-    return urllib.request.build_opener(proxy_handler, urllib.request.HTTPSHandler(context=ctx))
+    if PROXY_URL:
+        proxy_handler = urllib.request.ProxyHandler({"http": PROXY_URL, "https": PROXY_URL})
+        return urllib.request.build_opener(proxy_handler, urllib.request.HTTPSHandler(context=ctx))
+    return urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx))
 
 opener = get_opener()
 

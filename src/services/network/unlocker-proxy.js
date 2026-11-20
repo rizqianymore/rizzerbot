@@ -9,8 +9,8 @@ if (!Object.prototype.hasOwnProperty.call(HttpsProxyAgent.prototype || {}, "conn
 
 const DEFAULT_HOST = "brd.superproxy.io";
 const DEFAULT_PORT = 22225;
-const DEFAULT_CUSTOMER = process.env.BRIGHTDATA_CUSTOMER || "hl_66a04297";
-const DEFAULT_ZONE = "web_unlocker2";
+const DEFAULT_CUSTOMER = process.env.BRIGHTDATA_CUSTOMER || "";
+const DEFAULT_ZONE = process.env.BRIGHTDATA_ZONE || "web_unlocker2";
 const DEFAULT_PASSWORD = "";
 
 export function nativeProxyConfig() {

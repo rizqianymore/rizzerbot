@@ -1,16 +1,17 @@
 import { ProxyAgent, fetch } from "undici";
-
-const DEFAULT_PROXY = "http://brd-customer-hl_66a04297-zone-web_unlocker2:lahl63zlmvrs@brd.superproxy.io:22225";
+import { getBrightDataProxy } from "../network/brightdata.js";
 
 let proxyAgentInstance = null;
 
 function getUnlockerAgent() {
   if (proxyAgentInstance) return proxyAgentInstance;
-  const proxyUrl = process.env.BRIGHTDATA_PROXY || DEFAULT_PROXY;
-  proxyAgentInstance = new ProxyAgent({
-    uri: proxyUrl,
-    requestTls: { rejectUnauthorized: false },
-  });
+  const proxyUrl = getBrightDataProxy();
+  if (proxyUrl) {
+    proxyAgentInstance = new ProxyAgent({
+      uri: proxyUrl,
+      requestTls: { rejectUnauthorized: false },
+    });
+  }
   return proxyAgentInstance;
 }
 
