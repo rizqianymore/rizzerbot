@@ -42,8 +42,7 @@ export function findDownloadableTarget(msg) {
 
   const { quotedMsg, stanzaId, participant } = getQuotedMessage(msg);
   if (quotedMsg) {
-    const unwrappedQuoted = unwrapMessageContent(quotedMsg) || {};
-    const quotedType = Object.keys(unwrappedQuoted).find((k) => MEDIA_TYPES.includes(k));
+    const quotedType = Object.keys(quotedMsg).find((k) => MEDIA_TYPES.includes(k));
     if (quotedType) {
       return {
         key: {
@@ -51,7 +50,7 @@ export function findDownloadableTarget(msg) {
           ...(stanzaId ? { id: stanzaId } : {}),
           ...(participant ? { participant } : {}),
         },
-        message: unwrappedQuoted,
+        message: quotedMsg,
       };
     }
   }

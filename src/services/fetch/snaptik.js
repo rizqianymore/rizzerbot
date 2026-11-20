@@ -1,6 +1,13 @@
 import { ProxyAgent, fetch } from "undici";
 import { getBrightDataProxy } from "../network/brightdata.js";
 
+const DEFAULT_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const SNAPTIK_HEADERS = {
+  Referer: "https://snaptik.fi/",
+  "User-Agent": DEFAULT_UA,
+};
+
 let proxyAgentInstance = null;
 
 function getUnlockerAgent() {
@@ -18,13 +25,7 @@ function getUnlockerAgent() {
 async function fetchMediaBuffer(dlLink) {
 
   try {
-    const res = await fetch(dlLink, {
-      headers: {
-        Referer: "https://snaptik.fi/",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      },
-    });
+    const res = await fetch(dlLink, { headers: SNAPTIK_HEADERS });
     if (res.ok) {
       const arrayBuf = await res.arrayBuffer();
       if (arrayBuf.byteLength > 1000) {
@@ -35,11 +36,7 @@ async function fetchMediaBuffer(dlLink) {
 
   const agent = getUnlockerAgent();
   const res = await fetch(dlLink, {
-    headers: {
-      Referer: "https://snaptik.fi/",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
+    headers: SNAPTIK_HEADERS,
     dispatcher: agent,
   });
 
@@ -64,8 +61,7 @@ export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
         "Content-Type": "application/json",
         Origin: "https://snaptik.fi",
         Referer: "https://snaptik.fi/en/download-tiktok-video",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": DEFAULT_UA,
       },
       body: JSON.stringify({ url: tiktokUrl }),
       dispatcher: agent,
