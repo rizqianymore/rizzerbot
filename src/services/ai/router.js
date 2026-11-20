@@ -7,12 +7,6 @@ import { askOpenRouter, isOpenRouterConfigured } from "../ai-keyed/openrouter.js
 import { askZen, ZEN_FREE } from "../ai-keyed/opencode-zen.js";
 import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } from "./aiscrape.js";
 
-/**
- * Registry tunggal. `tier` menentukan urutan fallback:
- *   1 = gratis tanpa key (paling murah, paling sering kena limit)
- *   2 = butuh API key (lebih stabil kalau key terpasang)
- * timeouts bersifat kumulatif: request berhenti saat budget habis, bukan 7x timeout penuh.
- */
 export const AI_SOURCES = {
   pollinations: { tier: 1, run: askPollinations, caps: pollinationsCapabilities, label: "Pollinations Public" },
   opencode: { tier: 1, run: askOpenCode, caps: opencodeCapabilities, label: "OpenCode Zen Free" },
@@ -93,11 +87,6 @@ function shouldSkip(source) {
   return Boolean(skipReason(source.name, source.tier));
 }
 
-/**
- * Gateway AI universal. Selalu mengembalikan { text, model, source, attempts }.
- * @param {string} prompt
- * @param {{prefer?: string, history?: object[], system?: string, timeoutMs?: number, model?: string}} options
- */
 export async function askAI(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new AIError("Pertanyaan tidak boleh kosong.", { code: "INPUT" });

@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Crate / Paket Bahasa Rust di Crates.io
- * @param {string} crateName
- * @returns {Promise<object>}
- */
 export async function lookupCrates(crateName) {
   const clean = String(crateName || "")
     .trim()

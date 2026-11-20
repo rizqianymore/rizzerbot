@@ -13,7 +13,6 @@ export default {
     const target = findDownloadableTarget(msg);
     if (!target) return reply("Reply gambar yang mau di-HD-kan.\nContoh: reply foto lalu `.hd`");
 
-    // ensure target is image
     const content = target.message || {};
     const type = Object.keys(content)[0] || "";
     const isImage = type === "imageMessage" || !!content.imageMessage;
@@ -33,7 +32,7 @@ export default {
       try {
         out = await upscaleImage(buffer, 2);
       } catch (err) {
-        // fallback to sharp directly
+
         const sharp = getSharp();
         if (!sharp) throw err;
         const img = sharp(buffer);

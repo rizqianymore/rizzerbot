@@ -43,11 +43,6 @@ function randomString(length = 8) {
   return result;
 }
 
-/**
- * Buat alamat temporary email baru secara instan
- * @param {string} [customLogin]
- * @returns {object}
- */
 export function createMailbox(customLogin = null) {
   const login = customLogin
     ? String(customLogin)
@@ -60,11 +55,6 @@ export function createMailbox(customLogin = null) {
   return { address, login, domain };
 }
 
-/**
- * Ambil daftar pesan masuk (inbox) real-time
- * @param {string} address - format "user@domain.com"
- * @returns {Promise<Array>}
- */
 export async function getMessages(address) {
   const clean = String(address || "")
     .trim()
@@ -79,12 +69,6 @@ export async function getMessages(address) {
   return Array.isArray(list) ? list : [];
 }
 
-/**
- * Baca isi pesan spesifik
- * @param {string} address - format "user@domain.com"
- * @param {number|string} messageId
- * @returns {Promise<object>}
- */
 export async function readMessage(address, messageId) {
   const clean = String(address || "")
     .trim()

@@ -5,7 +5,7 @@ function fetchTelegramHtml(targetUrl, timeoutMs = 8000) {
     const req = https.request(
       targetUrl,
       {
-        family: 4, // Paksa IPv4 untuk menghindari timeout dual-stack
+        family: 4,
         timeout: timeoutMs,
         headers: {
           "User-Agent":
@@ -37,11 +37,6 @@ function fetchTelegramHtml(targetUrl, timeoutMs = 8000) {
   });
 }
 
-/**
- * Scraping & Intelijen Profil Telegram (Channel, User, Group, Bot)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupTelegram(rawUsername) {
   let username = String(rawUsername || "").trim();
   username = username
@@ -61,11 +56,10 @@ export async function lookupTelegram(rawUsername) {
   let html = null;
   let source = "direct";
 
-  // 1. Coba request langsung dengan socket IPv4
   try {
     html = await fetchTelegramHtml(targetUrl);
   } catch (err) {
-    // 2. Fallback via Bright Data Scraping API bila direct gagal
+
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {
@@ -85,7 +79,6 @@ export async function lookupTelegram(rawUsername) {
     };
   }
 
-  // Cek apakah akun tidak ditemukan atau username belum dipakai
   if (html.includes("If you have <strong>Telegram</strong>, you can contact") && !html.includes("tgme_page_title")) {
     return {
       valid: true,
@@ -95,7 +88,6 @@ export async function lookupTelegram(rawUsername) {
     };
   }
 
-  // Ekstrak Title / Display Name
   const titleMatch = html.match(/<div[^>]*class="[^"]*tgme_page_title[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
   const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : null;
 
@@ -108,11 +100,9 @@ export async function lookupTelegram(rawUsername) {
     };
   }
 
-  // Ekstrak Extra info (jumlah subscribers / members / type)
   const extraMatch = html.match(/<div[^>]*class="[^"]*tgme_page_extra[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
   const extra = extraMatch ? extraMatch[1].replace(/<[^>]+>/g, "").trim() : null;
 
-  // Ekstrak Description / Bio
   const descMatch = html.match(/<div[^>]*class="[^"]*tgme_page_description[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
   const description = descMatch
     ? descMatch[1]
@@ -121,13 +111,11 @@ export async function lookupTelegram(rawUsername) {
         .trim()
     : null;
 
-  // Ekstrak Foto Profil (Avatar HD)
   const avatarMatch =
     html.match(/<img[^>]*class="[^"]*tgme_page_photo_image[^"]*"[^>]*src="([^"]+)"/i) ||
     html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
   const avatarUrl = avatarMatch ? avatarMatch[1] : null;
 
-  // Klasifikasi Tipe Entitas
   let entityType = "User / Profile Personal";
   if (extra?.toLowerCase().includes("subscribers")) {
     entityType = "📢 Channel / Saluran Publik";

@@ -10,7 +10,6 @@ function extractQrisInfo(rawText) {
     dataMap[item.tag] = item;
   }
 
-  // Tag 00 wajib '01' untuk QRIS EMVCo
   if (!dataMap["00"] || dataMap["00"].value !== "01") return null;
 
   const merchantName = dataMap["59"]?.value || "-";
@@ -21,7 +20,6 @@ function extractQrisInfo(rawText) {
     : "Dinamis / Input Manual";
   const poi = dataMap["01"]?.value === "12" ? "Dinamis" : "Statis";
 
-  // Check CRC16
   let crcStatus = "Tidak ada CRC";
   if (dataMap["63"] && rawText.length >= 4) {
     const payloadWithoutCRC = rawText.slice(0, -4);
@@ -31,7 +29,6 @@ function extractQrisInfo(rawText) {
       actualCRC === expectedCRC ? `Valid (${actualCRC})` : `Invalid (Actual: ${actualCRC}, Expected: ${expectedCRC})`;
   }
 
-  // Acquirer / Operator list from tag 26-51
   const acquirers = [];
   for (let i = 26; i <= 51; i++) {
     const tagStr = String(i).padStart(2, "0");
@@ -79,7 +76,6 @@ export default {
           return context.reply("Gagal mengunduh gambar QRIS.");
         }
 
-        // Prioritas 1: Decode offline secara lokal menggunakan sharp + jsqr
         try {
           const { default: jsqr } = await import("jsqr");
           const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
@@ -93,7 +89,6 @@ export default {
           }
         } catch (_) {}
 
-        // Prioritas 2: Fallback ke api qrserver jika offline scanner belum dapat
         if (!rawQris) {
           try {
             const form = new FormData();

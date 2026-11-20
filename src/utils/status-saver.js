@@ -15,7 +15,6 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
   try {
     if (!msg.key || msg.key.remoteJid !== "status@broadcast") return;
 
-    // 1. Auto-read status jika autoRead diaktifkan
     if (autoRead) {
       sock.readMessages([msg.key]).catch(() => {});
     }
@@ -32,7 +31,6 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
         .replace(/\D/g, "") || "unknown";
     const ts = Date.now();
 
-    // 2. Status berupa teks
     const text = msg.message.extendedTextMessage?.text || msg.message.conversation;
     if (text) {
       const fileName = `status_${sender}_${ts}.txt`;
@@ -40,7 +38,6 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
       return;
     }
 
-    // 3. Status berupa media (foto / video / audio / voice note)
     const m = msg.message;
     const media = m.imageMessage || m.videoMessage || m.audioMessage;
     const type = m.imageMessage ? "image" : m.videoMessage ? "video" : m.audioMessage ? "audio" : null;
@@ -58,6 +55,6 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
     const fileName = `status_${sender}_${ts}${ext}`;
     fs.writeFileSync(path.join(STATUSES_DIR, fileName), buf);
   } catch (_) {
-    // Abaikan kegagalan download status individual agar tidak memblokir queue pesan utama
+
   }
 }

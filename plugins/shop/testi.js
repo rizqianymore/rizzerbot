@@ -28,7 +28,6 @@ export default {
 
     const sub = (args[0] || "").toLowerCase();
 
-    // 1. Cek apakah ada lampiran gambar struk/transaksi
     let imageBuffer = null;
     const target = findDownloadableTarget(msg);
     if (target) {
@@ -37,7 +36,6 @@ export default {
       } catch (_) {}
     }
 
-    // 2. Mode Otomatis dari ID Order (.testi ORD-XXXX)
     if (sub && sub.startsWith("ord-")) {
       const order = getOrder(sub);
       if (!order) return reply(`Pesanan dengan ID *${sub.toUpperCase()}* tidak ditemukan.`);
@@ -56,7 +54,6 @@ export default {
       return reply("Gagal mengirim testimoni ke saluran. Pastikan bot adalah Admin di saluran tersebut.");
     }
 
-    // 3. Mode Manual (.testi manual <PRODUK> <HARGA> <NOHP>)
     if (sub === "manual") {
       const prodName = args[1];
       const price = parseInt(args[2], 10);
@@ -87,7 +84,6 @@ export default {
       return reply("Gagal mengirim testimoni ke saluran. Periksa perizinan bot di saluran.");
     }
 
-    // Panduan jika argumen kosong
     return reply(
       `*POSTING TESTIMONI KE SALURAN*\n\n` +
         `│ Berdasarkan Order: \`${p}testi <ID_ORDER>\`\n` +

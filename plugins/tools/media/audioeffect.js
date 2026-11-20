@@ -49,7 +49,6 @@ export default {
     await sendTyping();
     const p = prefix || ".";
 
-    // Cek perintah alias yang langsung spesifik
     const invoked = String(msg.message?.extendedTextMessage?.text || msg.message?.conversation || "")
       .trim()
       .split(/\s+/)[0]

@@ -1,9 +1,5 @@
 import { AI_TIMEOUT_MS, AIError, mkWaiter, chatFetch, buildMessages } from "../ai/util.js";
 
-/**
- * OpenRouter — banyak model gratis (`:free`).
- * Tier 2: hanya dipakai kalau OPENROUTER_API_KEY terpasang.
- */
 const BASE = "https://openrouter.ai/api/v1";
 const FREE_MODELS = [
   "deepseek/deepseek-chat-v3-0324:free",

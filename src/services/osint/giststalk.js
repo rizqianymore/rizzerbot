@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil & Riwayat Gist Pengembang GitHub
- * @param {string} username
- * @returns {Promise<object>}
- */
 export async function lookupGitGists(username) {
   const clean = String(username || "")
     .trim()

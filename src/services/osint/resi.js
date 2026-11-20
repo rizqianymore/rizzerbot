@@ -1,6 +1,3 @@
-/**
- * Daftar Ekspedisi dan format deteksi nomor resi umum
- */
 export const COURIERS = {
   jne: {
     name: "JNE Express",
@@ -47,9 +44,6 @@ export const COURIERS = {
   },
 };
 
-/**
- * Deteksi ekspedisi otomatis dari awb / input
- */
 export function detectCourier(rawCourier = "", awb = "") {
   const c = String(rawCourier || "")
     .trim()
@@ -64,7 +58,6 @@ export function detectCourier(rawCourier = "", awb = "") {
     }
   }
 
-  // Cek pattern AWB jika kurir tidak dispesifikasikan
   const cleanAwb = String(awb || "").trim();
   for (const [key, val] of Object.entries(COURIERS)) {
     if (val.pattern && val.pattern.test(cleanAwb)) {
@@ -75,12 +68,6 @@ export function detectCourier(rawCourier = "", awb = "") {
   return null;
 }
 
-/**
- * Lacak nomor resi paket dengan fallback web scraping via Bright Data
- * @param {string} awb
- * @param {string} [courierInput]
- * @returns {Promise<object>}
- */
 export async function trackResi(awb, courierInput = "") {
   const cleanAwb = String(awb || "")
     .trim()
@@ -96,7 +83,6 @@ export async function trackResi(awb, courierInput = "") {
   const courierKey = detected ? detected.key : "jne";
   const courierName = detected ? detected.name : courierInput.toUpperCase() || "Ekspedisi Otomatis";
 
-  // Portal agregator publik dengan Bright Data Unlocker
   const targetUrl = `https://cekresi.com/?noresi=${encodeURIComponent(cleanAwb)}`;
 
   let scraped = false;
@@ -111,13 +97,12 @@ export async function trackResi(awb, courierInput = "") {
       const html = await brightDataRequest(targetUrl, { format: "raw", timeout: 30000 });
       if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
         scraped = true;
-        // Parsing status pengiriman
+
         const statusMatch =
           html.match(/<(?:td|span|div)[^>]*class="[^"]*status[^"]*"[^>]*>([^<]+)<\/(?:td|span|div)>/i) ||
           html.match(/Status\s*:\s*<[^>]+>([^<]+)<\/[^>]+>/i);
         if (statusMatch) status = statusMatch[1].trim();
 
-        // Riwayat transit
         const historyRegex =
           /<li[^>]*>\s*<span[^>]*class="[^"]*date[^"]*"[^>]*>([^<]+)<\/span>\s*<div[^>]*>([^<]+)<\/div>/gi;
         let match;

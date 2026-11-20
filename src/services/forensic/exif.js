@@ -8,7 +8,7 @@ const EXIF_TAG_NAMES = {
   0x8298: "Copyright",
   0x8769: "ExifIFDPointer",
   0x8825: "GPSInfoIFDPointer",
-  // Exif SubIFD
+
   0x829a: "ExposureTime",
   0x829d: "FNumber",
   0x8827: "ISOSpeedRatings",
@@ -16,7 +16,7 @@ const EXIF_TAG_NAMES = {
   0x9004: "DateTimeDigitized",
   0x920a: "FocalLength",
   0xa434: "LensModel",
-  // GPS Tags
+
   0x0001: "GPSLatitudeRef",
   0x0002: "GPSLatitude",
   0x0003: "GPSLongitudeRef",
@@ -28,7 +28,6 @@ const EXIF_TAG_NAMES = {
 function readTiffData(buf, tiffOffset, isLE, type, count, valOrOff) {
   const readU32 = (off) => (isLE ? buf.readUInt32LE(off) : buf.readUInt32BE(off));
 
-  // Type 2: ASCII string
   if (type === 2) {
     const dataOffset = count > 4 ? tiffOffset + valOrOff : null;
     if (dataOffset !== null) {
@@ -39,7 +38,7 @@ function readTiffData(buf, tiffOffset, isLE, type, count, valOrOff) {
           .trim();
       }
     } else {
-      // 4 bytes in valOrOff
+
       const slice = Buffer.alloc(4);
       if (isLE) slice.writeUInt32LE(valOrOff);
       else slice.writeUInt32BE(valOrOff);
@@ -47,17 +46,14 @@ function readTiffData(buf, tiffOffset, isLE, type, count, valOrOff) {
     }
   }
 
-  // Type 3: SHORT (uint16)
   if (type === 3) {
     return isLE ? valOrOff & 0xffff : (valOrOff >> 16) & 0xffff;
   }
 
-  // Type 4: LONG (uint32)
   if (type === 4) {
     return valOrOff;
   }
 
-  // Type 5: RATIONAL (two uint32: numerator / denominator)
   if (type === 5) {
     const dataOffset = tiffOffset + valOrOff;
     if (dataOffset + 8 * count <= buf.length) {
@@ -97,7 +93,6 @@ function parseIFD(buf, tiffOffset, ifdOffset, isLE, targetObj = {}) {
 
     const tagName = EXIF_TAG_NAMES[tag] || `Tag_0x${tag.toString(16).toUpperCase()}`;
 
-    // Sub-IFDs
     if (tagName === "ExifIFDPointer" || tagName === "GPSInfoIFDPointer") {
       parseIFD(buf, tiffOffset, tiffOffset + valOrOff, isLE, targetObj);
       continue;
@@ -115,7 +110,6 @@ function parseIFD(buf, tiffOffset, ifdOffset, isLE, targetObj = {}) {
 export function extractExifMetadata(buffer) {
   if (!buffer || buffer.length < 16) return null;
 
-  // Cari marker JPEG Exif APP1 (0xFFE1)
   let tiffOffset = -1;
   for (let i = 0; i < Math.min(buffer.length - 14, 65536); i++) {
     if (
@@ -130,7 +124,6 @@ export function extractExifMetadata(buffer) {
     }
   }
 
-  // Jika tidak ditemukan JPEG Exif, periksa WebP EXIF
   if (tiffOffset === -1) {
     const riff = buffer.toString("latin1", 0, 4);
     const webp = buffer.toString("latin1", 8, 12);
@@ -156,7 +149,6 @@ export function extractExifMetadata(buffer) {
   const rawTags = {};
   parseIFD(buffer, tiffOffset, ifd0Offset, isLE, rawTags);
 
-  // Parse GPS coordinates to Decimal Degrees
   let coordinates = null;
   if (Array.isArray(rawTags.GPSLatitude) && Array.isArray(rawTags.GPSLongitude)) {
     const lat = rawTags.GPSLatitude[0] + rawTags.GPSLatitude[1] / 60 + (rawTags.GPSLatitude[2] || 0) / 3600;

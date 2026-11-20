@@ -56,7 +56,6 @@ export default {
       );
     }
 
-    // 1. Tambah / Edit Produk
     if (sub === "add" || sub === "tambah") {
       const code = subArgs[0];
       const price = parseInt(subArgs[1], 10);
@@ -81,7 +80,6 @@ export default {
       );
     }
 
-    // 2. Hapus Produk
     if (sub === "del" || sub === "delete" || sub === "hapus") {
       const code = subArgs[0];
       if (!code) return reply(`Masukkan kode produk yang ingin dihapus. Contoh: \`${p}delproduct CANVA\``);
@@ -90,7 +88,6 @@ export default {
       return reply(`Produk *${code.toUpperCase()}* berhasil dihapus dari toko.`);
     }
 
-    // 3. Lihat Pesanan
     if (sub === "orders" || sub === "pesanan") {
       const orders = listOrders(15);
       if (orders.length === 0) return reply("Belum ada transaksi / pesanan yang tercatat.");
@@ -105,7 +102,6 @@ export default {
       return reply(out.trim());
     }
 
-    // 4. Ubah Status Pesanan
     if (sub === "set" || sub === "status") {
       const orderId = subArgs[0];
       const status = (subArgs[1] || "").toUpperCase();
@@ -120,7 +116,6 @@ export default {
 
       updateOrderStatus(orderId, status);
 
-      // Jika status diset ke COMPLETED atau PAID, tanyakan atau otomatis forward jika aktif
       let extraNotice = "";
       if (status === "COMPLETED" || status === "PAID") {
         const posted = await forwardTestimonyToChannel(sock, ord);

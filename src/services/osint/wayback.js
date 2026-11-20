@@ -1,11 +1,5 @@
 import axios from "axios";
 
-/**
- * Investigasi Arsip Digital Web Wayback Machine (CDX Server API)
- * Bebas rate-limit 429 dan memberikan data arsip pertama & terakhir
- * @param {string} rawUrl
- * @returns {Promise<object>}
- */
 export async function lookupWayback(rawUrl) {
   let target = String(rawUrl || "").trim();
   target = target
@@ -20,7 +14,6 @@ export async function lookupWayback(rawUrl) {
     };
   }
 
-  // CDX API: Ambil arsip pertama dan arsip terkini
   const oldestUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(target)}&output=json&limit=1`;
   const latestUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(target)}&output=json&limit=1&fastLatest=true`;
 
@@ -35,7 +28,7 @@ export async function lookupWayback(rawUrl) {
     oldestData = resOld?.data;
     latestData = resNew?.data;
   } catch (err) {
-    // Fallback via Bright Data Scraping API
+
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {
@@ -54,7 +47,6 @@ export async function lookupWayback(rawUrl) {
     };
   }
 
-  // Row format: ["urlkey","timestamp","original","mimetype","statuscode","digest","length"]
   const oldRow = oldestData[1];
   const oldTs = String(oldRow[1] || "");
   const oldUrl = `https://web.archive.org/web/${oldTs}/${oldRow[2] || target}`;

@@ -3,12 +3,6 @@ import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const wikiCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 300 });
 
-/**
- * Intelijen Profil Tokoh, Publik Figur, & Entitas dari Ensiklopedia Wikipedia (ID & EN)
- * @param {string} query
- * @param {string} [lang] - "id" atau "en"
- * @returns {Promise<object>}
- */
 export async function lookupWiki(query, lang = "id") {
   const clean = String(query || "").trim();
   if (!clean) {
@@ -32,7 +26,7 @@ export async function lookupWiki(query, lang = "id") {
     const pageId = Object.keys(pages)[0];
 
     if (!pageId || pageId === "-1") {
-      // Coba fallback ke bahasa Inggris bila di ID tidak ada
+
       if (langCode === "id") {
         return lookupWiki(query, "en");
       }

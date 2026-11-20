@@ -15,7 +15,6 @@ const BULAN = [
   "Desember",
 ];
 
-// Hari Libur Nasional Tetap Indonesia
 const LIBUR_NASIONAL_TETAP = {
   "01-01": "Tahun Baru Masehi",
   "05-01": "Hari Buruh Internasional",
@@ -24,18 +23,11 @@ const LIBUR_NASIONAL_TETAP = {
   "12-25": "Hari Raya Natal",
 };
 
-/**
- * Menghitung Pasaran Jawa (Legi, Pahing, Pon, Wage, Kliwon)
- * 1 Januari 1970 UTC = Kamis Wage (index 3)
- */
 export function getPasaranJawa(date) {
   const utcDays = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
   return PASARAN[((utcDays % 5) + 5 + 3) % 5];
 }
 
-/**
- * Mengonversi tanggal Masehi ke Kalender Hijriah (Umm al-Qura) menggunakan Intl native Node.js
- */
 export function getKalenderHijriah(date) {
   try {
     const formatter = new Intl.DateTimeFormat("id-ID-u-ca-islamic-umalqura", {
@@ -61,7 +53,7 @@ export default {
 
     if (args.length > 0) {
       const input = args.join(" ").trim();
-      // Dukung format YYYY-MM-DD atau DD-MM-YYYY
+
       const dmy = input.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
       const ymd = input.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
 
@@ -88,7 +80,6 @@ export default {
     const yearNum = targetDate.getFullYear();
     const hijriah = getKalenderHijriah(targetDate);
 
-    // Cek libur nasional tetap
     const mmdd = `${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(dateNum).padStart(2, "0")}`;
     const libur = LIBUR_NASIONAL_TETAP[mmdd] || (targetDate.getDay() === 0 ? "Hari Minggu (Libur Akhir Pekan)" : null);
 

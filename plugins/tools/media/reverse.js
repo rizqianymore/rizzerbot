@@ -46,7 +46,6 @@ export default {
     try {
       await fs.writeFile(inFile, buffer);
 
-      // reverse video & areverse audio
       await execFileAsync(
         getFfmpegPath(),
         ["-y", "-i", inFile, "-vf", "reverse", "-af", "areverse", "-preset", "ultrafast", outFile],

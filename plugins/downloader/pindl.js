@@ -29,7 +29,7 @@ export default {
     }
 
     try {
-      // 1. Coba download via pure link downloader (SocialDownloader / direct link)
+
       const res = await unifiedDownload(url, { mode: "video", logger, timeoutMs: 15000 }).catch(() => null);
       if (res?.buffer?.length > 100) {
         const mime = sniffMime(res.buffer);
@@ -47,7 +47,6 @@ export default {
         }
       }
 
-      // 2. Fallback: Direct scrape halaman Pinterest untuk ekstrak gambar/video resolusi tinggi
       const html = await request
         .text(url, {
           headers: { "User-Agent": UA, Referer: "https://www.pinterest.com/" },

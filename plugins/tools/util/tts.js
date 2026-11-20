@@ -11,7 +11,7 @@ function getQuotedText(quoted) {
   if (quoted.viewOnceMessage?.message) return getQuotedText(quoted.viewOnceMessage.message);
   if (quoted.viewOnceMessageV2?.message) return getQuotedText(quoted.viewOnceMessageV2.message);
   if (quoted.viewOnceMessageV2Extension?.message) return getQuotedText(quoted.viewOnceMessageV2Extension.message);
-  // fallback scan values
+
   for (const v of Object.values(quoted)) {
     if (v && typeof v === "object" && (v.text || v.caption || v.conversation)) {
       if (v.text) return String(v.text);
@@ -27,7 +27,7 @@ function chunkText(text, size = 200) {
   let start = 0;
   while (start < text.length) {
     let end = Math.min(start + size, text.length);
-    // try not to cut in the middle of a word if possible
+
     if (end < text.length) {
       const slice = text.slice(start, end);
       const lastSpace = slice.lastIndexOf(" ");
@@ -38,7 +38,7 @@ function chunkText(text, size = 200) {
     const chunk = text.slice(start, end).trim();
     if (chunk) chunks.push(chunk);
     start = end;
-    // skip leading spaces for next chunk
+
     while (text[start] === " ") start++;
   }
   return chunks;
@@ -54,19 +54,18 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, prefix, quoted }) => {
     const cur = prefix || ".";
 
-    // parse lang
     let lang = "id";
     let textParts = [...(args || [])];
     if (textParts.length > 0) {
       const candRaw = String(textParts[0] || "").trim();
-      // lang pattern: 2 chars or 2-2 with dash/underscore (e.g. en, id, ja, ko, ar, en-US, jp)
+
       const isLangCode = /^[a-z]{2}(?:[-_][a-z]{2})?$/i.test(candRaw) && candRaw.length <= 5;
       if (isLangCode) {
         lang = candRaw.toLowerCase();
-        // normalize jp -> ja, underscore -> dash
+
         if (lang === "jp") lang = "ja";
         lang = lang.replace("_", "-");
-        // keep dash case for BCP-47: en-us -> en-US not needed, google accepts lower
+
         textParts = textParts.slice(1);
       }
     }
@@ -74,20 +73,20 @@ export default {
     let text = textParts.join(" ").trim();
 
     if (!text) {
-      // try quoted from context (provided by execute.js)
+
       let qText = getQuotedText(quoted);
       if (!qText) {
-        // fallback directly from msg
+
         const ctxQuoted =
           msg.message?.extendedTextMessage?.contextInfo?.quotedMessage ||
           msg.message?.imageMessage?.contextInfo?.quotedMessage ||
           msg.message?.videoMessage?.contextInfo?.quotedMessage ||
           msg.message?.documentMessage?.contextInfo?.quotedMessage ||
           null;
-        // also scan universal
+
         if (ctxQuoted) qText = getQuotedText(ctxQuoted);
         else {
-          // last resort: scan any contextInfo
+
           for (const v of Object.values(msg.message || {})) {
             if (v?.contextInfo?.quotedMessage) {
               qText = getQuotedText(v.contextInfo.quotedMessage);
@@ -122,7 +121,6 @@ export default {
     const chunks = chunkText(text, 200);
     if (!chunks.length) return reply("Teks kosong.");
 
-    // limit chunks to prevent abuse (max 5 chunks = 1000 chars)
     const limited = chunks.slice(0, 5);
 
     const headers = {
@@ -140,7 +138,7 @@ export default {
         try {
           buf = await request.buffer(url, { headers, timeout: 15000 });
         } catch (_) {
-          // fallback to native fetch
+
           const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const ab = await res.arrayBuffer();

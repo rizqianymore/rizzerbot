@@ -9,7 +9,6 @@ export async function probe(url, opts = {}) {
   const targetUrl = String(url || "").trim();
   if (!targetUrl) throw new Error("URL tidak valid.");
 
-  // Fast metadata extraction via link engines
   const { fetchSocialDownloader } = await import("./socialdownloader.js").catch(() => ({}));
   if (typeof fetchSocialDownloader === "function") {
     try {

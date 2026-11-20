@@ -36,11 +36,6 @@ function fetchSteamXml(targetUrl, timeoutMs = 8000) {
   });
 }
 
-/**
- * Intelijen Profil Steam Player (Steam XML Public Profile API)
- * @param {string} rawInput - Vanity ID, SteamID64, atau URL profil
- * @returns {Promise<object>}
- */
 export async function lookupSteam(rawInput) {
   let target = String(rawInput || "").trim();
   target = target
@@ -61,7 +56,7 @@ export async function lookupSteam(rawInput) {
   try {
     xml = await fetchSteamXml(targetUrl);
   } catch (err) {
-    // Fallback via Bright Data Scraping API
+
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {

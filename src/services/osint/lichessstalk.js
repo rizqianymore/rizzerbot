@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil Grandmaster & Pemain Catur Lichess (Official Lichess API)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupLichess(rawUsername) {
   const username = String(rawUsername || "")
     .trim()

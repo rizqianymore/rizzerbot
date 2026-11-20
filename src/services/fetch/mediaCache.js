@@ -11,9 +11,8 @@ const __dirname = path.dirname(__filename);
 const CACHE_DIR = path.resolve(__dirname, "../../../tmp/media-cache");
 const DB_PATH = path.resolve(__dirname, "../../../tmp/media-cache.db");
 
-// Default retention 24 jam (dalam milidetik)
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
-const MAX_CACHE_SIZE_BYTES = 500 * 1024 * 1024; // 500 MB batas total cache
+const MAX_CACHE_SIZE_BYTES = 500 * 1024 * 1024;
 
 let dbInstance = null;
 let getStmt = null;
@@ -73,9 +72,6 @@ export function hashUrl(url) {
     .digest("hex");
 }
 
-/**
- * Mengambil media ter-cache jika tersedia dan belum expired
- */
 export async function getCachedMedia(url, ttlMs = DEFAULT_TTL_MS) {
   const db = getDb();
   if (!db || !getStmt) return null;
@@ -117,14 +113,10 @@ export async function getCachedMedia(url, ttlMs = DEFAULT_TTL_MS) {
   }
 }
 
-/**
- * Menyimpan buffer media ke cache SQLite + file sistem
- */
 export async function setCachedMedia(url, buffer, { mime = "video/mp4", info = null } = {}) {
   const db = getDb();
   if (!db || !setStmt || !buffer || !buffer.length) return false;
 
-  // Jangan cache file di atas 80MB
   if (buffer.length > 80 * 1024 * 1024) return false;
 
   const key = hashUrl(url);
@@ -134,7 +126,7 @@ export async function setCachedMedia(url, buffer, { mime = "video/mp4", info = n
   const filePath = path.join(CACHE_DIR, filename);
 
   try {
-    // Periksa kuota kapasitas cache
+
     await enforceCacheLimit();
 
     await fsp.writeFile(filePath, buffer);
@@ -173,9 +165,6 @@ async function enforceCacheLimit() {
   } catch (_) {}
 }
 
-/**
- * Membersihkan cache usang yang melewati masa simpan
- */
 export async function cleanupExpiredCache(ttlMs = DEFAULT_TTL_MS) {
   const db = getDb();
   if (!db || !purgeOldStmt) return 0;

@@ -41,7 +41,7 @@ export async function sendImage(sock, remoteJid, msg, target, cap) {
 export async function sendVideo(sock, remoteJid, msg, target, cap) {
   try {
     let buf = await toBuffer(target);
-    // auto convert biar kebuka di WA (webm/mkv -> mp4 h264/aac)
+
     try {
       const { ensureVideoCompatible, sniffMime } = await import("@/src/services/fetch/downloaderCompat.js");
       const mime = sniffMime(buf);
@@ -53,7 +53,7 @@ export async function sendVideo(sock, remoteJid, msg, target, cap) {
     await sock.sendMessage(remoteJid, { video: buf, caption: cap, mimetype: "video/mp4" }, { quoted: msg });
   } catch (_) {
     if (target.url) {
-      // fallback url langsung, tapi coba buffer+convert dulu biar tidak gagal buka
+
       try {
         const { request } = await import("@/src/utils/request.js");
         const b = await request.buffer(target.url, { timeout: 25000, bypassCloudflare: "auto" });

@@ -1,7 +1,7 @@
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 const SIGNATURES = [
-  // Eksekusi / Payload
+
   { sig: [0x4d, 0x5a], ext: "EXE / DLL", desc: "Windows Executable (PE32/PE64)", category: "Executable" },
   { sig: [0x7f, 0x45, 0x4c, 0x46], ext: "ELF", desc: "Linux / Android Executable Binary", category: "Executable" },
   {
@@ -12,7 +12,6 @@ const SIGNATURES = [
   },
   { sig: [0x64, 0x65, 0x78, 0x0a], ext: "DEX", desc: "Android Dalvik Executable", category: "Android" },
 
-  // Arsip / Dokumen
   {
     sig: [0x50, 0x4b, 0x03, 0x04],
     ext: "ZIP / APK / DOCX",
@@ -30,7 +29,6 @@ const SIGNATURES = [
     category: "Database",
   },
 
-  // Gambar
   { sig: [0xff, 0xd8, 0xff], ext: "JPEG / JPG", desc: "JPEG Image", category: "Image" },
   {
     sig: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
@@ -46,7 +44,6 @@ const SIGNATURES = [
     category: "Media",
   },
 
-  // Jaringan / Dump
   { sig: [0xd4, 0xc3, 0xb2, 0xa1], ext: "PCAP", desc: "Network Packet Capture (Wireshark PCAP)", category: "Network" },
   {
     sig: [0x0a, 0x0d, 0x0d, 0x0a],

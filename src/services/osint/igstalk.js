@@ -39,11 +39,6 @@ function fetchIgHtml(username, timeoutMs = 8000) {
   });
 }
 
-/**
- * Intelijen Profil Instagram (Followers, Following, Posts, Bio, Avatar HD)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupInstagram(rawUsername) {
   let username = String(rawUsername || "").trim();
   username = username
@@ -64,7 +59,7 @@ export async function lookupInstagram(rawUsername) {
   try {
     html = await fetchIgHtml(username);
   } catch (err) {
-    // Fallback via Bright Data Scraping API
+
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {
@@ -81,7 +76,6 @@ export async function lookupInstagram(rawUsername) {
     return { valid: false, reason: "Gagal mengambil data dari server Instagram." };
   }
 
-  // Parse og:description: "686M Followers, 168 Following, 8,636 Posts - See Instagram photos and videos from Instagram (@instagram)"
   const descMatch =
     html.match(/property="og:description"\s+content="([^"]+)"/i) ||
     html.match(/name="description"\s+content="([^"]+)"/i);
@@ -96,7 +90,6 @@ export async function lookupInstagram(rawUsername) {
     };
   }
 
-  // Parse title: "Instagram (@instagram) • Instagram photos and videos"
   const titleMatch = html.match(/property="og:title"\s+content="([^"]+)"/i);
   let fullName = username;
   if (titleMatch) {
@@ -105,7 +98,6 @@ export async function lookupInstagram(rawUsername) {
     if (namePart) fullName = namePart;
   }
 
-  // Parse stats dari ogDesc
   let followers = "-";
   let following = "-";
   let posts = "-";
@@ -119,7 +111,6 @@ export async function lookupInstagram(rawUsername) {
     posts = statsMatch[3];
   }
 
-  // Parse Avatar URL
   const imgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i);
   let avatarUrl = imgMatch ? imgMatch[1].replace(/&amp;/g, "&") : null;
 

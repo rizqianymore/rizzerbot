@@ -22,7 +22,6 @@ export default {
     await sendTyping?.();
     const remoteJid = msg.key?.remoteJid;
 
-    // wrap text by ~40 chars per line, preserve words and explicit newlines
     function wrapText(input, maxChars = 40) {
       const paragraphs = input.split("\n");
       const lines = [];
@@ -35,7 +34,7 @@ export default {
         let cur = "";
         for (const w of words) {
           if (!w) continue;
-          // hard split overly long word
+
           if (w.length > maxChars) {
             if (cur) {
               lines.push(cur);
@@ -59,7 +58,6 @@ export default {
       return lines.length ? lines : [input.slice(0, maxChars)];
     }
 
-    // try canvas first
     let createCanvas = null;
     let GlobalFonts = null;
     let canvasAvailable = false;
@@ -70,7 +68,7 @@ export default {
       GlobalFonts = mod.GlobalFonts || mod.default?.GlobalFonts || null;
       if (createCanvas) canvasAvailable = true;
     } catch (_) {
-      // try via native helper (handles require fallback)
+
       try {
         const { getCanvas } = await import("@/src/utils/native.js");
         const mod = getCanvas();
@@ -82,7 +80,6 @@ export default {
       } catch (_) {}
     }
 
-    // attempt to register handwriting font if available (optional)
     if (GlobalFonts) {
       try {
         const candidates = [
@@ -114,16 +111,13 @@ export default {
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext("2d");
 
-        // paper background
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
 
-        // subtle paper border
         ctx.strokeStyle = "#e0e0e0";
         ctx.lineWidth = 2;
         ctx.strokeRect(4, 4, width - 8, height - 8);
 
-        // red margin line (folio style)
         const marginX = 68;
         ctx.strokeStyle = "#e57373";
         ctx.lineWidth = 1.5;
@@ -132,7 +126,6 @@ export default {
         ctx.lineTo(marginX, height);
         ctx.stroke();
 
-        // horizontal ruled lines
         ctx.strokeStyle = "#90caf9";
         ctx.lineWidth = 0.9;
         for (let y = paddingTop - 28; y < height - 20; y += lineHeight) {
@@ -142,7 +135,6 @@ export default {
           ctx.stroke();
         }
 
-        // header line (thicker)
         ctx.strokeStyle = "#ef9a9a";
         ctx.lineWidth = 1;
         const headerY = paddingTop - 28 - lineHeight;
@@ -153,7 +145,6 @@ export default {
           ctx.stroke();
         }
 
-        // holes for binder (folio)
         ctx.fillStyle = "#f5f5f5";
         ctx.strokeStyle = "#bdbdbd";
         ctx.lineWidth = 1;
@@ -164,7 +155,7 @@ export default {
           ctx.arc(holeX, hy, 14, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-          // inner shadow
+
           ctx.beginPath();
           ctx.arc(holeX, hy, 7, 0, Math.PI * 2);
           ctx.fillStyle = "#e0e0e0";
@@ -172,10 +163,9 @@ export default {
           ctx.fillStyle = "#f5f5f5";
         }
 
-        // write text with handwriting simulation
         const fontFamily = GlobalFonts ? "Handwriting, Courier, monospace" : "Courier, Courier New, monospace";
         ctx.fillStyle = "#1a237e";
-        // slight ink color variation: dark blue
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
           if (!line && lines.length > 1) continue;
@@ -183,20 +173,19 @@ export default {
           const x = marginX + 18;
 
           ctx.save();
-          // slight random rotation and offset to simulate handwriting
-          const rot = (Math.random() - 0.5) * 0.018; // ~ +/-0.5 deg
+
+          const rot = (Math.random() - 0.5) * 0.018;
           const offY = (Math.random() - 0.5) * 2.2;
           const offX = (Math.random() - 0.5) * 1.2;
           ctx.translate(x + offX, y + offY);
           ctx.rotate(rot);
           ctx.font = `28px ${fontFamily}`;
-          // ctx.font = '28px Courier';
+
           ctx.textBaseline = "alphabetic";
           ctx.fillText(line, 0, 0);
           ctx.restore();
         }
 
-        // encode to buffer
         if (typeof canvas.encode === "function") {
           const encoded = await canvas.encode("png");
           buffer = Buffer.from(encoded);
@@ -207,13 +196,12 @@ export default {
           buffer = Buffer.from(canvas.encodeSync("png"));
         }
       } catch (err) {
-        // canvas failed -> fallback to API
+
         console.warn(`[nulis] canvas render failed: ${err?.message}`);
         buffer = null;
       }
     }
 
-    // fallback to API if canvas not available or failed
     if (!buffer) {
       try {
         const url = `https://api.siputzx.my.id/api/canvas/nulis?text=${encodeURIComponent(text)}`;

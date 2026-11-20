@@ -12,18 +12,18 @@ function wrapText(text, maxLen = 85) {
       lines.push("");
       continue;
     }
-    // also handle very long word without spaces
+
     let remaining = para;
     while (remaining.length > maxLen) {
       let cut = remaining.lastIndexOf(" ", maxLen);
       if (cut === -1) cut = maxLen;
       lines.push(remaining.slice(0, cut));
       remaining = remaining.slice(cut).trimStart();
-      // avoid infinite loop
+
       if (remaining.length === 0) break;
     }
     if (remaining.length > 0 || para.length <= maxLen) {
-      // when para exactly consumed, remaining already pushed
+
       if (remaining.length > 0) lines.push(remaining);
       else if (para.length <= maxLen) lines.push(para);
     }
@@ -35,8 +35,7 @@ function buildPdfFromStreams(streams) {
   const header = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
   const totalPages = streams.length;
   const totalObjects = 3 + totalPages * 2;
-  // object numbers:
-  // 1 catalog, 2 pages, 3 font, then per page: page, content
+
   let pdf = header;
   const offsets = new Array(totalObjects + 1).fill(0);
 
@@ -45,16 +44,15 @@ function buildPdfFromStreams(streams) {
     pdf += `${num} 0 obj\n${content}\nendobj\n`;
   }
 
-  // 1 catalog
   addObj(1, "<< /Type /Catalog /Pages 2 0 R >>");
-  // 2 pages
+
   const kids = [];
   for (let i = 0; i < totalPages; i++) {
     const pageNum = 4 + i * 2;
     kids.push(`${pageNum} 0 R`);
   }
   addObj(2, `<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${totalPages} >>`);
-  // 3 font Helvetica
+
   addObj(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
 
   for (let i = 0; i < totalPages; i++) {
@@ -82,7 +80,7 @@ function buildPdfFromStreams(streams) {
 
 function createSimplePdf(text) {
   const clean = String(text).replace(/\r/g, "");
-  // limit to avoid huge PDF (max ~5000 chars per spec, but allow more with pagination)
+
   const truncated = clean.length > 8000 ? clean.slice(0, 8000) + "\n... (truncated)" : clean;
   const lines = wrapText(truncated, 82);
   const linesPerPage = 46;
@@ -113,7 +111,7 @@ function isPng(buf) {
 }
 
 async function getImageDimensions(buf) {
-  // try sharp
+
   try {
     const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
     if (sharpMod) {
@@ -121,7 +119,7 @@ async function getImageDimensions(buf) {
       if (meta?.width && meta?.height) return { width: meta.width, height: meta.height };
     }
   } catch {}
-  // fallback: parse PNG IHDR
+
   try {
     if (isPng(buf) && buf.length >= 24) {
       const w = buf.readUInt32BE(16);
@@ -129,7 +127,7 @@ async function getImageDimensions(buf) {
       if (w > 0 && h > 0 && w < 10000 && h < 10000) return { width: w, height: h };
     }
   } catch {}
-  // fallback: parse JPEG SOF
+
   try {
     if (isJpeg(buf)) {
       let offset = 2;
@@ -154,7 +152,6 @@ async function createImagePdf(imageBuffer) {
   let width;
   let height;
 
-  // normalize to JPEG via sharp if png
   if (isPng(buf)) {
     try {
       const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
@@ -168,11 +165,11 @@ async function createImagePdf(imageBuffer) {
   }
 
   if (!buf || !isJpeg(buf)) {
-    // if still not jpeg and not png converted, check if jpeg directly
+
     if (!isJpeg(buf) && !isPng(buf)) {
       throw new Error("Format gambar tidak didukung (hanya JPG/PNG)");
     }
-    // if png without sharp, can't embed directly with DCTDecode; throw
+
     if (isPng(buf)) {
       throw new Error("PNG tanpa sharp tidak dapat dibuat PDF, kirim sebagai JPG.");
     }
@@ -182,7 +179,6 @@ async function createImagePdf(imageBuffer) {
   width = width || dim.width;
   height = height || dim.height;
 
-  // scale to fit A4 with margin 20
   const maxW = 555;
   const maxH = 802;
   const scale = Math.min(maxW / width, maxH / height, 1);
@@ -191,7 +187,6 @@ async function createImagePdf(imageBuffer) {
   const x = Math.round((595 - drawW) / 2);
   const y = Math.round((842 - drawH) / 2);
 
-  // Build PDF with image XObject (jpeg DCTDecode)
   const header = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
 
   function objToBuf(num, contentBuf) {
@@ -200,7 +195,6 @@ async function createImagePdf(imageBuffer) {
     return Buffer.concat([head, contentBuf, tail]);
   }
 
-  // Prepare content strings
   const catalog = Buffer.from("<< /Type /Catalog /Pages 2 0 R >>", "latin1");
   const pages = Buffer.from("<< /Type /Pages /Kids [4 0 R] /Count 1 >>", "latin1");
   const font = Buffer.from("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "latin1");
@@ -229,7 +223,7 @@ async function createImagePdf(imageBuffer) {
   const obj6 = objToBuf(6, imageObjContent);
 
   const allObjs = [obj1, obj2, obj3, obj4, obj5, obj6];
-  // compute offsets
+
   let offset = headerBuf.length;
   const xrefOffsets = [0];
   for (let i = 0; i < allObjs.length; i++) {
@@ -276,12 +270,11 @@ export default {
     await sendTyping?.();
     const remoteJid = msg.key?.remoteJid;
 
-    // Try image first via findDownloadableTarget
     const target = findDownloadableTarget(msg);
     if (target) {
       const isImageTarget =
         !!target.message?.imageMessage || !!target.message?.stickerMessage || !!target.message?.documentMessage;
-      // also check mimetype if available
+
       const mimetype =
         target.message?.imageMessage?.mimetype ||
         target.message?.documentMessage?.mimetype ||
@@ -297,14 +290,14 @@ export default {
           return reply(`Gagal ambil gambar: ${err?.message || err}`);
         }
         if (buffer?.length) {
-          // Detect if really image by magic bytes
+
           const headerIsImage = isJpeg(buffer) || isPng(buffer);
-          // sticker webp -> try convert via sharp to jpeg
+
           if (!headerIsImage) {
             try {
               const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
               if (sharpMod) {
-                // try convert webp -> jpeg
+
                 const jpegBuf = await sharpMod(buffer).jpeg({ quality: 85 }).toBuffer();
                 if (jpegBuf?.length) buffer = jpegBuf;
               }
@@ -320,8 +313,7 @@ export default {
               );
               return;
             } catch (err) {
-              // fallback to text placeholder PDF if image pdf fails
-              // try API fallback if available
+
               try {
                 const apiUrl = `https://api.siputzx.my.id/api/convert/txt2pdf?text=${encodeURIComponent("Image PDF - " + (err?.message || ""))}`;
                 const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
@@ -345,11 +337,9 @@ export default {
       }
     }
 
-    // Text case: get text from args or quoted
     const quotedText = getQuotedText(msg);
     let text = args.join(" ").trim() || quotedText.trim();
 
-    // also try extendedTextMessage direct fallback
     if (!text) {
       const direct =
         msg.message?.conversation || msg.message?.extendedTextMessage?.text || msg.message?.imageMessage?.caption || "";
@@ -374,7 +364,7 @@ export default {
         { quoted: msg }
       );
     } catch (err) {
-      // API fallback
+
       try {
         const res = await fetch(`https://api.siputzx.my.id/api/convert/txt2pdf?text=${encodeURIComponent(text)}`, {
           signal: AbortSignal.timeout(10000),

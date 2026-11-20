@@ -3,11 +3,6 @@ import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const robloxCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
-/**
- * Stalker Profil Roblox (Official Roblox Users & Thumbnails API)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupRoblox(rawUsername) {
   const username = String(rawUsername || "")
     .trim()
@@ -20,7 +15,7 @@ export async function lookupRoblox(rawUsername) {
   if (cached) return cached;
 
   try {
-    // 1. Dapatkan User ID dari username
+
     const resId = await axios.post(
       "https://users.roblox.com/v1/usernames/users",
       { usernames: [username], excludeBannedUsers: false },
@@ -40,7 +35,6 @@ export async function lookupRoblox(rawUsername) {
     const userId = userEntry.id;
     const displayName = userEntry.displayName || userEntry.name;
 
-    // 2. Dapatkan detail profil lengkap & avatar headshot
     const [resProfile, resAvatar] = await Promise.all([
       axios.get(`https://users.roblox.com/v1/users/${userId}`, { timeout: 8000 }).catch(() => null),
       axios

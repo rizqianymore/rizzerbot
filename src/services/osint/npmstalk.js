@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil Developer & Publisher NPM Registry
- * @param {string} username
- * @returns {Promise<object>}
- */
 export async function lookupNpm(username) {
   const clean = String(username || "")
     .trim()

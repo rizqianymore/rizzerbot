@@ -3,20 +3,6 @@ import path from "node:path";
 import { logger } from "./connection/logger.js";
 import { db } from "@/src/core/database.js";
 
-/*
- * Pemulihan sesi Signal yang desinkron.
- *
- * Saat pesan masuk gagal didekripsi oleh libsignal karena sesi tidak sinkron
- * (Over 2000 messages into the future / Bad MAC / no matching session), baileys
- * hanya mencatat kesalahan dan menyisipkan pesan sebagai CIPHERTEXT stub (stubType 2).
- * Sesi yang rusak akan terus digunakan untuk pesan berikutnya dari kontak yang sama,
- * sehingga kegagalan berulang dan pesan tidak masuk ke bot.
- *
- * Modul ini mendeteksi kegagalan dekripsi per JID dan mereset sesi Signal
- * (menghapusnya dari auth store & disk), sehingga pesan selanjutnya akan
- * memaksa pembentukan sesi baru melalui pre-key / ratchet exchange.
- */
-
 const SESSION_ERROR_PATTERNS = [
   "Over 2000 messages into the future",
   "Bad MAC",
@@ -28,16 +14,14 @@ const SESSION_ERROR_PATTERNS = [
   "CIPHERTEXT",
 ];
 
-// Reset segera pada kegagalan pertama agar pesan berikutnya langsung pulih
 const MAX_SESSION_FAILURES = 1;
-// Jendela waktu untuk menghitung kegagalan (10 menit).
+
 const FAILURE_WINDOW_MS = 10 * 60 * 1000;
-// Cooldown minimal (5 detik) untuk mencegah reset loop dalam millisecond yang sama
+
 const RESET_COOLDOWN_MS = 5 * 1000;
-// Bersihkan entri tracker yang lebih tua dari jendela ini (1 jam).
+
 const TRACKER_TTL_MS = 60 * 60 * 1000;
 
-// jid => { count, lastError, lastTime, lastReset }
 const failureTracker = new Map();
 
 let _cleanupTimer = null;
@@ -58,15 +42,11 @@ function startCleanupTimer() {
 startCleanupTimer();
 
 function isSessionDesyncError(errorMessage) {
-  if (!errorMessage) return true; // Default anggap session error jika stub ciphertext tanpa parameter
+  if (!errorMessage) return true;
   const message = String(errorMessage);
   return SESSION_ERROR_PATTERNS.some((pattern) => message.toLowerCase().includes(pattern.toLowerCase()));
 }
 
-/**
- * Catat kegagalan dekripsi sesi untuk sebuah JID.
- * Mengembalikan jumlah kegagalan terkini, atau null jika bukan kesalahan sesi.
- */
 export function recordDecryptionFailure(jid, errorMessage) {
   if (!jid) return null;
   if (errorMessage && !isSessionDesyncError(errorMessage)) return null;
@@ -83,9 +63,6 @@ export function recordDecryptionFailure(jid, errorMessage) {
   return entry.count;
 }
 
-/**
- * Cek apakah JID masih dalam cooldown setelah reset terakhir.
- */
 export function isInResetCooldown(jid) {
   if (!jid) return false;
   const entry = failureTracker.get(jid);
@@ -93,25 +70,19 @@ export function isInResetCooldown(jid) {
   return Date.now() - entry.lastReset < RESET_COOLDOWN_MS;
 }
 
-/**
- * Hapus sesi Signal untuk JID jika ambang batas kegagalan tercapai.
- * Membersihkan sesi dari memori soket Baileys serta file sesi di disk.
- */
 export async function resetSessionIfThresholdReached(jid, sock, count) {
   if (!jid) return false;
   const targetCount = count || 1;
   if (targetCount < MAX_SESSION_FAILURES) return false;
 
-  // Hindari reset berulang dalam interval milidetik yang sama
   if (isInResetCooldown(jid)) {
     return false;
   }
 
   try {
-    // 1. Hapus dari Baileys Signal Repository
+
     await sock.signalRepository?.deleteSession?.([jid]);
 
-    // 2. Bersihkan file sesi fisik dari disk (authDir)
     const rawId = String(jid).split("@")[0].split(":")[0];
     const candidateIds = new Set([rawId]);
     try {
@@ -151,10 +122,6 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
   }
 }
 
-/**
- * Reset paksa semua sesi Signal individu (nuclear option).
- * Digunakan ketika terlalu banyak ciphertext berurutan.
- */
 export async function emergencyResetAllSessions(sock) {
   try {
     const authDir = path.resolve(process.cwd(), "assets", "sessions", "primary_bot");

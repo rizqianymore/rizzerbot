@@ -1,7 +1,6 @@
 import axios from "axios";
 import dns from "node:dns/promises";
 
-// Pola kata kunci mencurigakan yang sering dipakai penipuan online / phishing di WhatsApp
 const SUSPICIOUS_KEYWORDS = [
   "undian",
   "berhadiah",
@@ -44,12 +43,6 @@ const SUSPICIOUS_TLDS = [
   ".gq",
 ];
 
-/**
- * Menganalisis keamanan domain & situs link
- * Menggunakan deteksi DNS, RDAP ICANN, heuristik phishing & fallback Bright Data
- * @param {string} rawUrl
- * @returns {Promise<object>}
- */
 export async function analyzeWebsite(rawUrl) {
   let target = String(rawUrl || "").trim();
   if (!/^https?:\/\//i.test(target)) {
@@ -69,9 +62,8 @@ export async function analyzeWebsite(rawUrl) {
   }
 
   const riskFactors = [];
-  let riskScore = 0; // 0 - 100
+  let riskScore = 0;
 
-  // 1. Analisis nama domain & ekstensi TLD
   const hasSuspiciousTld = SUSPICIOUS_TLDS.some((tld) => hostname.endsWith(tld));
   if (hasSuspiciousTld) {
     riskScore += 25;
@@ -84,23 +76,20 @@ export async function analyzeWebsite(rawUrl) {
     riskFactors.push(`Terdapat kata kunci mencurigakan: ${matchedKeywords.join(", ")}`);
   }
 
-  // Cek apakah targetnya file APK palsu
   if (parsedUrl.pathname.toLowerCase().endsWith(".apk")) {
     riskScore += 40;
     riskFactors.push("Tautan mengarah langsung ke unduhan file .APK (Bahaya pencurian SMS/OTP/Sniffer)");
   }
 
-  // 2. DNS Lookup IP
   let ips = [];
   try {
     const resolved = await dns.lookup(hostname, { all: true });
     ips = resolved.map((r) => r.address);
   } catch (err) {
-    // Domain tidak dapat di-resolve atau sudah suspended
+
     riskFactors.push("Domain gagal di-resolve ke IP (Bisa jadi sudah di-takedown / belum aktif)");
   }
 
-  // 3. Cek RDAP usia domain (khusus .com / generic via RDAP)
   let registrar = "-";
   let createdDate = "-";
   let ageDays = null;
@@ -136,7 +125,6 @@ export async function analyzeWebsite(rawUrl) {
     }
   } catch (_) {}
 
-  // 4. Fallback Scraping status judul via Bright Data bila diperlukan
   let siteTitle = null;
   try {
     const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
@@ -149,7 +137,6 @@ export async function analyzeWebsite(rawUrl) {
     }
   } catch (_) {}
 
-  // Tentukan Level Status
   let level = "AMAN (LOW RISK)";
   if (riskScore >= 60) {
     level = "🚨 SANGAT BERBAHAYA / TINGGI POTENSI PHISHING";

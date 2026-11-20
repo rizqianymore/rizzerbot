@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil Repositori GitHub (Bintang, Fork, License, Issues, Bahasa)
- * @param {string} rawRepo - format "owner/repo" atau link github
- * @returns {Promise<object>}
- */
 export async function lookupGitRepo(rawRepo) {
   let target = String(rawRepo || "").trim();
   target = target

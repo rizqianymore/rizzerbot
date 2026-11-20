@@ -74,9 +74,6 @@ export function normalizePhoneVariants(raw) {
   };
 }
 
-/**
- * Mencari data registrasi simcard berdasarkan Nomor HP
- */
 export function searchSimcardByPhone(rawPhone) {
   const db = getDatabase();
   if (!db || !queryPhoneStmt) return [];
@@ -92,9 +89,6 @@ export function searchSimcardByPhone(rawPhone) {
   }
 }
 
-/**
- * Mencari data nomor terdaftar berdasarkan NIK
- */
 export function searchSimcardByNik(nik) {
   const db = getDatabase();
   if (!db || !queryNikStmt) return [];

@@ -1,10 +1,6 @@
 import https from "node:https";
 import http from "node:http";
 
-/**
- * Follow HTTP redirects up to maxRedirects to find final destination URL
- * (Zero API key needed)
- */
 function resolveRedirects(initialUrl, maxRedirects = 10, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     let currentUrl = initialUrl;
@@ -39,17 +35,15 @@ function resolveRedirects(initialUrl, maxRedirects = 10, timeoutMs = 8000) {
           const status = res.statusCode || 200;
           const location = res.headers.location;
 
-          // Periksa apakah status redirect 3xx
           if ([301, 302, 303, 307, 308].includes(status) && location) {
             redirectCount++;
             if (redirectCount > maxRedirects) {
               return resolve({ finalUrl: currentUrl, redirects: history, status });
             }
 
-            // Resolve relative link
             const nextUrl = new URL(location, currentUrl).href;
             currentUrl = nextUrl;
-            res.resume(); // consume response stream
+            res.resume();
             return makeRequest(nextUrl);
           }
 
@@ -64,7 +58,7 @@ function resolveRedirects(initialUrl, maxRedirects = 10, timeoutMs = 8000) {
       });
 
       req.on("error", (err) => {
-        // Jika HEAD ditolak (misal 405 Method Not Allowed), coba GET
+
         if (req.method === "HEAD") {
           const getReq = client.request(
             urlStr,

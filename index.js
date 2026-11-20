@@ -6,7 +6,6 @@ try {
 import fs from "fs";
 import path from "path";
 
-// Pastikan alias scoping @ (src, config, custom) ada tanpa circular symlink ke root node_modules
 try {
   const atDir = path.join(process.cwd(), "node_modules", "@");
   if (fs.existsSync(atDir) && fs.lstatSync(atDir).isSymbolicLink()) {
@@ -24,7 +23,6 @@ try {
     }
   }
 
-  // Bersihkan folder orphan .node_modules-* jika pernah terbuat oleh npm
   const cwdFiles = fs.readdirSync(process.cwd());
   for (const f of cwdFiles) {
     if (f.startsWith(".node_modules-")) {

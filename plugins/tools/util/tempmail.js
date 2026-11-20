@@ -114,7 +114,6 @@ export default {
           `• *Subjek:* ${fullMsg.subject || "(Tanpa Subjek)"}\n` +
           `• *Waktu:* ${fullMsg.date}\n\n`;
 
-        // Ekstraksi otomatis kode verifikasi / OTP (angka 4-8 digit)
         const combined = `${fullMsg.subject || ""} ${content || ""}`;
         const otpMatch = combined.match(/\b(?<!\w)(\d{4,8})\b/);
         if (otpMatch) {

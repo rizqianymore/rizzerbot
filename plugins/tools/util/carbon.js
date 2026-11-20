@@ -44,7 +44,6 @@ export default {
 
     let buffer = null;
 
-    // Primary: carbonara.solopov.dev
     try {
       const res = await fetch("https://carbonara.solopov.dev/api/cook", {
         method: "POST",
@@ -54,14 +53,13 @@ export default {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const ab = await res.arrayBuffer();
       const buf = Buffer.from(ab);
-      // validate is image (png)
+
       if (buf?.length > 500) buffer = buf;
       else throw new Error("Empty response from carbonara");
     } catch (_) {
       buffer = null;
     }
 
-    // Fallback: siputzx
     if (!buffer) {
       try {
         const url = `https://api.siputzx.my.id/api/maker/carbon?text=${encodeURIComponent(text)}`;

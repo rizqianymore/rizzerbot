@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil Pengguna & Developer GitLab (GitLab Community API v4)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupGitlab(rawUsername) {
   const username = String(rawUsername || "")
     .trim()

@@ -184,7 +184,6 @@ export default {
     try {
       const classification = classifyQuery(rawQuery);
 
-      // KASUS 1: NIK
       if (classification.type === "nik") {
         const { record, nikInfo, operatorInfo, location, simcards } = await searchByNik(classification.value);
 
@@ -231,7 +230,6 @@ export default {
         );
       }
 
-      // KASUS 2: PHONE
       if (classification.type === "phone") {
         const { records, operatorInfo, location, simcards } = await searchByPhone(rawQuery);
 
@@ -270,7 +268,6 @@ export default {
         return reply(resultString);
       }
 
-      // KASUS 3: NAMA
       const records = await searchByName(rawQuery, 5);
 
       if (records.length === 0) {

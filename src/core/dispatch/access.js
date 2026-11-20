@@ -70,7 +70,7 @@ export async function resolveCommandAccess(
 
   const cmd = commands.get(commandName);
   if (!cmd) {
-    // Beri kesempatan ke custom case sebelum menolak
+
     return {
       drop: false,
       isCustomCase: true,

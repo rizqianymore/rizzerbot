@@ -3,11 +3,6 @@ import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const tiktokCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
-/**
- * Intelijen Profil TikTok (oEmbed Official API + Bright Data Scraping Fallback)
- * @param {string} rawUsername
- * @returns {Promise<object>}
- */
 export async function lookupTiktok(rawUsername) {
   let username = String(rawUsername || "").trim();
   username = username

@@ -1,11 +1,5 @@
 import axios from "axios";
 
-/**
- * Memeriksa riwayat kebocoran data (data breach) email publik
- * Menggunakan XposedOrNot Public API dengan fallback Bright Data
- * @param {string} email
- * @returns {Promise<object>}
- */
 export async function checkEmailBreach(email) {
   const cleanEmail = String(email || "")
     .trim()
@@ -22,7 +16,6 @@ export async function checkEmailBreach(email) {
   let data = null;
   let source = "direct";
 
-  // 1. Coba request langsung
   try {
     const res = await axios.get(targetUrl, {
       timeout: 15000,
@@ -33,7 +26,7 @@ export async function checkEmailBreach(email) {
     });
     data = res.data;
   } catch (err) {
-    // 404 pada xposedornot berarti email aman / tidak ditemukan di breach
+
     if (err.response?.status === 404 || err.response?.data?.Error === "Not found") {
       return {
         valid: true,
@@ -44,7 +37,6 @@ export async function checkEmailBreach(email) {
       };
     }
 
-    // 2. Fallback via Bright Data Scraping bila direct gagal atau diblokir
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {
@@ -78,7 +70,6 @@ export async function checkEmailBreach(email) {
     };
   }
 
-  // Format array dari XposedOrNot biasanya: { breaches: [ ["Site1", "Site2", ...] ] }
   let breachList = [];
   if (Array.isArray(data?.breaches)) {
     if (Array.isArray(data.breaches[0])) {

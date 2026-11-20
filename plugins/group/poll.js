@@ -29,11 +29,10 @@ export default {
     const question = parts[0];
     const options = parts.slice(1);
 
-    // Cek flag multi-select "-m" di akhir
     let selectableCount = 1;
     if (options[options.length - 1] === "-m" || options[options.length - 1] === "--multi") {
       options.pop();
-      selectableCount = 0; // 0 di Baileys berarti multi-select (semua opsi bisa dipilih)
+      selectableCount = 0;
     }
 
     if (options.length < 2) {

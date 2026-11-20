@@ -24,7 +24,6 @@ export default {
       return reply("Opsi `--all` hanya dapat digunakan oleh SuperOwner (Owner Bot Utama).");
     }
 
-    // Tanpa argumen -> tampilkan status saja (tidak mengubah)
     if (normalizedArgs.length === 0) {
       const cur = db.getBotSettings(activeBotJid)?.public;
       const current = cur === false ? "private (self)" : "public";

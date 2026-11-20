@@ -15,7 +15,7 @@ function getUnlockerAgent() {
 }
 
 async function fetchMediaBuffer(dlLink) {
-  // 1. Coba download langsung tanpa proxy (hemat kuota & latensi sangat cepat)
+
   try {
     const res = await fetch(dlLink, {
       headers: {
@@ -32,7 +32,6 @@ async function fetchMediaBuffer(dlLink) {
     }
   } catch (_) {}
 
-  // 2. Fallback download melalui Bright Data Web Unlocker jika IP hosting diblokir
   const agent = getUnlockerAgent();
   const res = await fetch(dlLink, {
     headers: {
@@ -51,16 +50,12 @@ async function fetchMediaBuffer(dlLink) {
   return Buffer.from(arrayBuf);
 }
 
-/**
- * Download TikTok video / audio via Snaptik.fi & TikWM menggunakan Bright Data Web Unlocker
- */
 export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
   const tiktokUrl = String(url || "").trim();
   if (!tiktokUrl) throw new Error("URL TikTok tidak boleh kosong.");
 
   const agent = getUnlockerAgent();
 
-  // 1. Snaptik.fi via Web Unlocker (Prioritas Utama)
   try {
     const apiRes = await fetch("https://snaptik.fi/api/tiktok", {
       method: "POST",
@@ -101,7 +96,6 @@ export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
     }
   } catch (_) {}
 
-  // 2. Fallback: TikWM via Web Unlocker
   try {
     const tikwmUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`;
     const tikRes = await fetch(tikwmUrl, {

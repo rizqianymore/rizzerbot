@@ -8,6 +8,8 @@ import { isDuplicateMessage, unwrapMessageContent } from "./message.js";
 let _staleCount = 0;
 let _lastStaleLog = 0;
 
+const PROCESS_START_TIME_SEC = Math.floor(Date.now() / 1000);
+
 function logStaleThrottled(logger, ageSec, msgId) {
   _staleCount++;
   const now = Date.now();
@@ -76,9 +78,15 @@ async function dispatchInner(sock, msg, logger) {
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
+
+      if (ts < PROCESS_START_TIME_SEC - 10) {
+        logStaleThrottled(logger, Math.round(PROCESS_START_TIME_SEC - ts), msg.key?.id || "?");
+        return;
+      }
+
       const ageMs = Date.now() - ts * 1000;
 
-      if (ageMs > 5 * 60 * 1000) {
+      if (ageMs > 2 * 60 * 1000) {
         logStaleThrottled(logger, Math.round(ageMs / 1000), msg.key?.id || "?");
         return;
       }
@@ -153,7 +161,6 @@ async function dispatchInner(sock, msg, logger) {
   const { isOwner, isAdmin, isPremium } = resolved;
   let { access, user } = resolved;
 
-  // Tangani custom case jika bukan command plugin biasa
   if (isCustomCase) {
     const reply = async (text) => sock.sendMessage(remoteJid, { text: String(text) }, { quoted: msg });
     const sendTyping = async () => sock.sendPresenceUpdate("composing", remoteJid).catch(() => {});
@@ -181,7 +188,6 @@ async function dispatchInner(sock, msg, logger) {
       return;
     }
 
-    // Jika custom case me-return false (tidak cocok), beri tahu unknown command
     logger?.info?.(
       `[Drop] ${remoteJid} <- ${msg.pushName || "?"}: perintah tidak dikenal: ${commandName} (cmd: ${commandName})`
     );

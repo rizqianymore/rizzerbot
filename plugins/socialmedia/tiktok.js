@@ -24,7 +24,6 @@ export default {
       const selectorArg = args.find((a) => a !== url && a?.toLowerCase() !== "mp3" && a?.toLowerCase() !== "audio");
       const remoteJid = msg.key.remoteJid;
 
-      // 1. Cek apakah ini postingan slide foto TikTok
       if (!isAudio) {
         const multi = await extractMultiMedia(url, { isAudio: false, logger });
         if (multi.items && multi.items.length > 0) {
@@ -62,7 +61,6 @@ export default {
         }
       }
 
-      // 2. Jika video atau audio biasa, unduh via unifiedDownload
       const { buffer, info } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });
       if (!buffer?.length) throw new Error("Gagal mengunduh media TikTok.");
 

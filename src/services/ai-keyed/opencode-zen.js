@@ -15,7 +15,6 @@ async function zenFetch({ options, model, messages }) {
   });
 }
 
-/** Model gratis OpenCode Zen terakhir yang diketahui hidup. */
 export const ZEN_FREE = ["deepseek-v4.1-flash-free", "mimo-v2.6-flash-free", "big-pickle"];
 
 export async function askZen(prompt, options = {}) {

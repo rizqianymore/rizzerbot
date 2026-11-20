@@ -23,7 +23,7 @@ export default {
     }
 
     try {
-      // unified dulu (yt-dlp + socialdownloader) — lebih stabil dari workers API
+
       const { buffer, info } = await unifiedDownload(url, { mode: "video", logger });
       if (!buffer?.length) throw new Error("Gagal ambil media Threads");
       const mime = sniffMime(buffer);
@@ -42,7 +42,6 @@ export default {
       logger?.warn?.(`[threaddl unified] ${uniErr?.message || uniErr}`);
     }
 
-    // fallback lama: workers API hanya sebagai cadangan terakhir
     const BASE_URL = "https://workers-playground-cool-wood-c008.accoutydusra.workers.dev";
     const decodeEntities = (str = "") =>
       String(str || "")
@@ -98,7 +97,7 @@ export default {
       lines.push(`Total Media: ${mediaResults.length} file`);
       const captionText = lines.join("\n");
       const remoteJid = msg.key.remoteJid;
-      // buffer fetch biar kebuka, jangan url langsung
+
       for (const item of mediaResults) {
         try {
           const buf = await request.buffer(item.url, { timeout: 25000, bypassCloudflare: "auto" });

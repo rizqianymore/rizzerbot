@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Rilis & Versi Software GitHub (Release Tracker)
- * @param {string} rawRepo - Format "owner/repo" atau link github
- * @returns {Promise<object>}
- */
 export async function lookupGitRelease(rawRepo) {
   let target = String(rawRepo || "").trim();
   target = target

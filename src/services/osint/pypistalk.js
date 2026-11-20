@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Paket Python PyPI Registry (Python Software Foundation)
- * @param {string} packageName
- * @returns {Promise<object>}
- */
 export async function lookupPypi(packageName) {
   const clean = String(packageName || "")
     .trim()

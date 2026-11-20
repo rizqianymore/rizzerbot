@@ -13,9 +13,6 @@ function maskPhone(jid) {
   return digits.slice(0, 4) + "xxxx" + digits.slice(-3);
 }
 
-/**
- * Format postingan testimoni transaksi untuk saluran (Newsletter)
- */
 export function formatTestimonyMessage({
   orderId,
   buyerJid,
@@ -51,9 +48,6 @@ export function formatTestimonyMessage({
   return out.trim();
 }
 
-/**
- * Kirim bukti testimoni / transaksi ke saluran (newsletter) resmi
- */
 export async function forwardTestimonyToChannel(sock, order, options = {}) {
   try {
     const settings = db.main().getSettings();

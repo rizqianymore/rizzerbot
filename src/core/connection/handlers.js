@@ -51,8 +51,6 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       if (!wasRegistered) {
         const is401Reject = statusCode === DisconnectReason.loggedOut;
 
-        // Jika 401 (loggedOut) saat belum terdaftar → sesi pairing ditolak WA server.
-        // Langsung hapus sesi lama agar fresh pairing code baru dapat dibuat secara bersih.
         if (is401Reject) {
           connectionState.unregisteredFailures = 0;
           logger.warn(
@@ -145,7 +143,6 @@ export function attachWelcomeHandler(sock) {
       const jid = update?.id;
       if (!jid || !jid.endsWith("@g.us")) return;
 
-      // Invalidate metadata grup seketika saat ada perubahan anggota (add/remove/promote/demote)
       invalidateGroupMeta(jid, sock);
 
       if (!db.getGroupSetting?.(jid, "welcome")) return;
@@ -170,7 +167,6 @@ export function attachMessageHandler(sock) {
   attachEchoTracker(sock);
   attachWelcomeHandler(sock);
 
-  // Rekam pemetaan LID -> PN secara real time saat Baileys menerimanya
   sock.ev.on("lid-mapping.update", (mapping) => {
     try {
       if (mapping && typeof mapping === "object") {
@@ -194,7 +190,6 @@ export function attachMessageHandler(sock) {
         }
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
 
-        // Otomatis tangkap dan simpan pemetaan LID -> PN dari pesan yang masuk
         try {
           const pLid = msg.key.participant?.endsWith("@lid")
             ? msg.key.participant
@@ -209,7 +204,6 @@ export function attachMessageHandler(sock) {
           }
         } catch (_) {}
 
-        // Unpack nested deviceSentMessage jika pesan dikirim dari perangkat terhubung / web
         if (msg.message?.deviceSentMessage?.message) {
           msg.message = msg.message.deviceSentMessage.message;
         }
@@ -223,9 +217,6 @@ export function attachMessageHandler(sock) {
             continue;
         }
 
-        // Pulihkan sesi Signal yang desinkron (Over 2000 messages into the future / Bad MAC / ...)
-        // Pesan yang gagal didekripsi oleh libsignal muncul HANYA sebagai CIPHERTEXT stub (stubType 2).
-        // PENTING: Jangan masukkan stubType 1 (REVOKE) atau stubType 3 (FUTUREPROOF) ke failure recovery.
         const stubType = Number(msg.messageStubType) || 0;
         const stubStr = String(msg.messageStubType || "").toLowerCase();
         const isDecryptionFailure = stubType === 2 || stubStr === "ciphertext";
@@ -239,7 +230,6 @@ export function attachMessageHandler(sock) {
           logger.info(`[Msg In] ${rjid} (fromMe=${Boolean(msg.key.fromMe)}): ${String(preview).slice(0, 60)}`);
         }
 
-        // Auto-read pesan jika diaktifkan di konfigurasi
         try {
           const autoRead = Boolean(db.getSettings?.()?.autoRead);
           if (autoRead && !msg.key.fromMe) {
@@ -264,7 +254,6 @@ export function attachMessageHandler(sock) {
           }
         }
 
-        // Jika pesan tidak memiliki isi dan bukan kegagalan dekripsi (misal: revoke/status stub), abaikan
         if (!msg.message && !isDecryptionFailure) {
           continue;
         }

@@ -31,7 +31,6 @@ export default {
 
     const sub = (args[0] || "").toLowerCase().trim();
 
-    // 1. HELP / LIST TEAMS
     if (!sub || sub === "help" || sub === "menu") {
       return reply(
         `*JKT48 MEMBER INFO*\n\n` +
@@ -46,7 +45,6 @@ export default {
       );
     }
 
-    // 2. TEAM LIST
     const teamFiles = {
       love: "love.json",
       dream: "dream.json",
@@ -65,7 +63,6 @@ export default {
       return reply(text);
     }
 
-    // 3. FULL LIST
     if (sub === "list" || sub === "all") {
       let text = `*DAFTAR LENGKAP MEMBER JKT48* (${allMembers.length})\n\n`;
       allMembers.forEach((m, idx) => {
@@ -75,20 +72,19 @@ export default {
       return reply(text);
     }
 
-    // 4. RANDOM MEMBER
     let target = null;
     if (sub === "random" || sub === "acak") {
       target = allMembers[Math.floor(Math.random() * allMembers.length)];
     } else {
-      // 5. SEARCH BY NAME, NICKNAME, OR CODE
+
       const query = args.join(" ").toLowerCase().trim();
-      // exact nickname
+
       target = allMembers.find((m) => m.panggilan.toLowerCase() === query);
-      // exact name
+
       if (!target) {
         target = allMembers.find((m) => m.nama.toLowerCase() === query);
       }
-      // partial match
+
       if (!target) {
         target = allMembers.find(
           (m) =>
@@ -103,7 +99,6 @@ export default {
       return reply(`Member dengan kata kunci "*${args.join(" ")}*" tidak ditemukan.\nKetik *${currentPrefix}jkt48 list* untuk melihat daftar.`);
     }
 
-    // BUILD CAPTION PROFILE
     const caption =
       `*PROFIL MEMBER JKT48*\n\n` +
       `• *Nama Lengkap:* ${target.nama}\n` +
@@ -119,7 +114,6 @@ export default {
       (target.media_sosial?.tiktok ? `• TikTok: ${target.media_sosial.tiktok}\n` : "") +
       `\n🔗 *Website Resmi:* ${target.url_profil}`;
 
-    // Send with Photo (Local first, fallback to remote photo_url)
     const localImg = target.foto_lokal ? path.join(process.cwd(), target.foto_lokal) : null;
 
     try {
@@ -138,7 +132,7 @@ export default {
         );
       }
     } catch (err) {
-      // If sending photo fails, send plain text
+
     }
 
     return reply(caption);

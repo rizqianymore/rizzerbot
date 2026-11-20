@@ -1,6 +1,3 @@
-/**
- * Format Bank & E-Wallet di Indonesia
- */
 export const BANK_CODES = {
   bca: { name: "Bank Central Asia (BCA)", code: "014", digits: "10" },
   bri: { name: "Bank Rakyat Indonesia (BRI)", code: "002", digits: "15" },
@@ -20,9 +17,6 @@ export const BANK_CODES = {
   linkaja: { name: "LinkAja", code: "e-wallet", digits: "10-13" },
 };
 
-/**
- * Normalisasi dan deteksi kemungkinan Bank / E-Wallet
- */
 export function detectBank(rawQuery) {
   const q = String(rawQuery || "").toLowerCase();
   for (const [key, val] of Object.entries(BANK_CODES)) {
@@ -33,13 +27,6 @@ export function detectBank(rawQuery) {
   return null;
 }
 
-/**
- * Cek nomor rekening / e-wallet penipu menggunakan scraping via Bright Data Web Unlocker
- * Fallback ke portal resmi pengaduan
- * @param {string} accountNo
- * @param {string} [bankName]
- * @returns {Promise<object>}
- */
 export async function checkRekening(accountNo, bankName = "") {
   const cleanAccount = String(accountNo || "").replace(/[^0-9]/g, "");
   if (!cleanAccount || cleanAccount.length < 5 || cleanAccount.length > 25) {
@@ -67,7 +54,7 @@ export async function checkRekening(accountNo, bankName = "") {
 
       if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
         scraped = true;
-        // Parse laporan fraud
+
         const reportMatch = html.match(/(\d+)\s*(?:laporan|keluhan|kasus)/i);
         if (reportMatch) {
           reports = parseInt(reportMatch[1], 10);

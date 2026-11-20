@@ -1,7 +1,6 @@
 import { getNxCameras, getNxSnapshot, getNxVideo } from "@/src/services/network/nxClient.js";
 import { ensureVideoCompatible } from "@/src/services/fetch/downloaderCompat.js";
 
-// Cache daftar kamera selama 5 menit agar interaksi nomor urut responsif
 let cachedCameras = null;
 let cachedCamerasTime = 0;
 const CAM_CACHE_TTL = 5 * 60 * 1000;
@@ -21,17 +20,14 @@ function resolveCamera(cameras, target) {
   if (!target || !cameras?.length) return null;
   const q = String(target).trim().toLowerCase();
 
-  // 1. Cek nomor urut index (misal: 1, 2, 3)
   const idx = parseInt(q, 10);
   if (!isNaN(idx) && idx >= 1 && idx <= cameras.length) {
     return cameras[idx - 1];
   }
 
-  // 2. Cek kecocokan persis ID
   const exactId = cameras.find((c) => c.id.toLowerCase() === q);
   if (exactId) return exactId;
 
-  // 3. Cek pencarian nama (substring / fuzzy)
   const exactName = cameras.find((c) => c.name.toLowerCase() === q);
   if (exactName) return exactName;
 
@@ -173,7 +169,6 @@ export default {
         return reply(text);
       }
 
-      // Default jika query langsung berupa nomor/nama (shorthand: .nx 1 -> snap 1)
       const cameras = await fetchOrGetCachedCameras();
       const maybeCam = resolveCamera(cameras, action);
       if (maybeCam) {

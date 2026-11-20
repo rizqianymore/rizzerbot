@@ -8,7 +8,6 @@ import { parseNik, enrichWilayah } from "@/src/services/osint/nikparse.js";
 import { parseOperator } from "@/src/services/osint/cekoperator.js";
 import { searchSimcardByPhone, searchSimcardByNik, isSimcardReady } from "@/src/services/osint/simcardService.js";
 
-// Prioritaskan IPv4 untuk menghindari delay/timeout IPv6 pada Node.js
 try {
   dns.setDefaultResultOrder("ipv4first");
 } catch (_) { }
@@ -102,9 +101,6 @@ export function getDukcapilInfo() {
   };
 }
 
-/**
- * Parsing tanggal lahir dari string TTL database (cth: "26 APR 1988 (35 TH 2 BLN)")
- */
 export function parseBirthDate(ttl) {
   if (!ttl) return null;
   const MONTHS = {
@@ -135,9 +131,6 @@ export function parseBirthDate(ttl) {
   return new Date(year, month, day);
 }
 
-/**
- * Menghitung umur terkini secara akurat dan otomatis (real-time)
- */
 export function formatTtlWithCurrentAge(rawTtl, nikInfo) {
   let birthDate = parseBirthDate(rawTtl);
   let baseDateStr = rawTtl ? String(rawTtl).split("(")[0].trim() : "";
@@ -169,9 +162,6 @@ export function formatTtlWithCurrentAge(rawTtl, nikInfo) {
   return `${baseDateStr} (${ageStr})`;
 }
 
-/**
- * Geocoding OpenStreetMap dengan in-memory cache dan timeout cepat (tidak memblokir bot)
- */
 export async function getCoordinates(query) {
   if (!query) return null;
   const key = String(query).toLowerCase().trim();
@@ -204,16 +194,13 @@ export async function getCoordinates(query) {
       return coord;
     }
   } catch {
-    // Non-blocking fallback jika offline atau timeout
+
   }
 
   geoCache.set(key, null);
   return null;
 }
 
-/**
- * Penentuan titik koordinat akurat bertingkat (Jalan spesifik -> Kelurahan -> Kecamatan -> Kota)
- */
 export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, kota_kab) {
   const cleanCity =
     String(kota_kab || "")
@@ -266,9 +253,6 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
   return await Promise.race([getCoordinates(targetQuery), fastTimeout]);
 }
 
-/**
- * Helper rentang prefix B-Tree SQLite untuk pencarian nama ultra-cepat (< 3ms)
- */
 export function getPrefixRange(prefix) {
   const clean = String(prefix || "").trim().toUpperCase();
   if (!clean || clean.length < 2) return null;
@@ -278,9 +262,6 @@ export function getPrefixRange(prefix) {
   return { lower: clean, upper: upperBound };
 }
 
-/**
- * Normalisasi nomor HP ke format intl (628...), local (08...), plus (+628...), bare (8...)
- */
 export function normalizePhone(raw) {
   let clean = String(raw || "")
     .trim()
@@ -302,9 +283,6 @@ export function normalizePhone(raw) {
   };
 }
 
-/**
- * Deteksi jenis input: "nik", "phone", atau "name"
- */
 export function classifyQuery(input) {
   const clean = String(input || "").trim();
   const digitsOnly = clean.replace(/[^0-9]/g, "");
@@ -330,9 +308,6 @@ export function classifyQuery(input) {
   return { type: "name", value: clean };
 }
 
-/**
- * Cari data berdasarkan NIK dengan integrasi cross-reference Simcard
- */
 export async function searchByNik(rawNik) {
   const db = getDatabase();
   const nik = String(rawNik)
@@ -345,7 +320,7 @@ export async function searchByNik(rawNik) {
 
   let record = null;
   if (db && detectedTables.length > 0) {
-    // 1. Prioritaskan tabel berdasarkan 2 digit awal NIK (prefix provinsi)
+
     const prefix = nik.slice(0, 2);
     const targetTable = TABLE_PREFIX_MAP[prefix];
 
@@ -356,7 +331,6 @@ export async function searchByNik(rawNik) {
       }
     }
 
-    // 2. Jika belum ketemu, cari di seluruh tabel lain yang terdeteksi
     if (!record) {
       for (const table of detectedTables) {
         if (table === targetTable) continue;
@@ -371,7 +345,6 @@ export async function searchByNik(rawNik) {
     }
   }
 
-  // Jika tidak ditemukan di database, perkaya wilayah dari API wilayah
   if (!record && nikInfo) {
     nikInfo = await enrichWilayah(nikInfo);
   } else if (record && nikInfo) {
@@ -379,7 +352,6 @@ export async function searchByNik(rawNik) {
     nikInfo.district = record.kecamatan || nikInfo.district;
   }
 
-  // Cross-reference dengan simcard.db untuk nomor HP yang terdaftar pada NIK ini
   let simcards = [];
   if (isSimcardReady()) {
     try {
@@ -407,9 +379,6 @@ export async function searchByNik(rawNik) {
   };
 }
 
-/**
- * Cari data berdasarkan No HP (dengan auto-pivot via Simcard NIK)
- */
 export async function searchByPhone(rawPhone) {
   const db = getDatabase();
   const phones = normalizePhone(rawPhone);
@@ -439,7 +408,6 @@ export async function searchByPhone(rawPhone) {
     }
   }
 
-  // Jika tidak ditemukan di database Dukcapil langsung, coba pivot dari NIK Simcard
   if (records.length === 0 && simcards.length > 0) {
     for (const sim of simcards) {
       if (sim.nik && sim.nik.length === 16) {
@@ -485,9 +453,6 @@ export async function searchByPhone(rawPhone) {
   };
 }
 
-/**
- * Cari data berdasarkan Nama dengan pemanfaatan indeks B-Tree SQLite (< 3ms)
- */
 export async function searchByName(rawName, limit = 5) {
   const db = getDatabase();
   const name = String(rawName || "").trim().toUpperCase();
@@ -496,7 +461,6 @@ export async function searchByName(rawName, limit = 5) {
   const records = [];
   const seenNiks = new Set();
 
-  // 1. Exact Match via Indeks B-Tree (0ms)
   for (const table of detectedTables) {
     const stmt = nameExactStmts.get(table);
     if (!stmt) continue;
@@ -512,7 +476,6 @@ export async function searchByName(rawName, limit = 5) {
     }
   }
 
-  // 2. Multi-kata Range Prefix + Filter LIKE (1-3ms)
   const words = name.split(/\s+/).filter(Boolean);
   if (words.length >= 2) {
     const firstWord = words[0];
@@ -536,7 +499,6 @@ export async function searchByName(rawName, limit = 5) {
     }
   }
 
-  // 3. Single-word Prefix Range Search (1-3ms)
   if (records.length < limit && words.length > 0) {
     const range = getPrefixRange(words[0]);
     if (range && range.lower.length >= 3) {

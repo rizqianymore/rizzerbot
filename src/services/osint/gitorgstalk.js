@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Organisasi / Perusahaan di GitHub
- * @param {string} orgName
- * @returns {Promise<object>}
- */
 export async function lookupGitOrg(orgName) {
   const clean = String(orgName || "")
     .trim()

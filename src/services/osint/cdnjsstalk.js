@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Library Web CDNJS (Cloudflare CDNJS API)
- * @param {string} libName
- * @returns {Promise<object>}
- */
 export async function lookupCdnjs(libName) {
   const clean = String(libName || "")
     .trim()

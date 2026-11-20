@@ -45,7 +45,6 @@ export default {
     try {
       await fs.writeFile(inFile, buffer);
 
-      // Gunakan -an (audio null) dan salin video stream langsung tanpa re-encode
       await execFileAsync(getFfmpegPath(), ["-y", "-i", inFile, "-c:v", "copy", "-an", outFile], { timeout: 60000 });
 
       const out = await fs.readFile(outFile);

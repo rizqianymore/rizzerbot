@@ -1,11 +1,6 @@
 import { stealthBrowser } from "@/src/utils/request.js";
 import { SEARCH_TTL_MS, searchCache, cacheGet, cacheSet, BASE } from "./constants.js";
 
-/**
- * PDDikti Search Engine
- * Mengambil data PT, Mahasiswa, Dosen, dan Prodi langsung melalui
- * in-browser session rendering dengan intercept request reCAPTCHA otomatis.
- */
 export async function searchPddikti(keyword, { timeoutMs = 35000 } = {}) {
   const kw = String(keyword ?? "").trim();
   if (!kw) throw new Error("keyword wajib diisi");
@@ -36,7 +31,6 @@ export async function searchPddikti(keyword, { timeoutMs = 35000 } = {}) {
     const targetUrl = `${BASE}/search/${encodeURIComponent(kw)}`;
     await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: timeoutMs });
 
-    // Tunggu jika response belum sempat ditangkap
     const startTime = Date.now();
     while (!searchResult && Date.now() - startTime < 8000) {
       await new Promise((r) => setTimeout(r, 400));

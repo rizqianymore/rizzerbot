@@ -39,7 +39,6 @@ export default {
 
     const targetUrl = cleanUrl(rawUrl);
 
-    // Validasi URL dasar
     try {
       const parsed = new URL(targetUrl);
       if (!parsed.hostname || parsed.hostname.length < 3) {
@@ -82,7 +81,6 @@ export default {
         timeout: 25000,
       });
 
-      // Tunggu sebentar untuk render font & CSS dinamis
       await new Promise((r) => setTimeout(r, 1500));
 
       const screenshotBuf = await page.screenshot({

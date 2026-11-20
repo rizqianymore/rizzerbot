@@ -30,7 +30,6 @@ export function parsePlat(rawInput) {
   if (!raw) return { valid: false, reason: "input kosong" };
   const norm = normalizeInput(raw);
 
-  // 1. Deteksi Plat RI Pejabat Negara (cth: RI 1, RI 2, RI 14)
   const mRi = norm.match(/^RI\s*(\d{1,3})$/);
   if (mRi) {
     const num = Number(mRi[1]);

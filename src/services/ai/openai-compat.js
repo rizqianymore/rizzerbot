@@ -1,8 +1,3 @@
-/**
- * Jembatan kompatibilitas: layanan ai-keyed lama tetap memakai signature lama,
- * tapi transport-nya sekarang satu implementasi dengan gateway AI (util.js).
- * timeouts opsional supaya pemanggil lama yang tidak mengirimnya tetap jalan.
- */
 import { AI_TIMEOUT_MS, chatFetch, buildMessages, stripThink } from "./util.js";
 
 export async function postChatCompletions({

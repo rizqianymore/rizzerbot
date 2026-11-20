@@ -79,9 +79,6 @@ export async function startBot() {
           throw new Error("Format creds.json korup");
         }
 
-        // Jika sesi belum sukses terdaftar (registered !== true), pastikan 'me' tidak
-        // ada di disk. Jika 'me' tertinggal, Baileys akan salah mengirim generateLoginNode
-        // saat validateConnection, yang langsung ditolak oleh WhatsApp dengan Status 401.
         if (!parsed.registered && parsed.me) {
           delete parsed.me;
           fs.writeFileSync(credsPath, JSON.stringify(parsed, null, 2));
@@ -97,7 +94,6 @@ export async function startBot() {
 
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    // Sanitasi in-memory: jika belum registered, jangan pernah biarkan 'me' ada saat socket handshake
     if (state.creds && !state.creds.registered && state.creds.me) {
       delete state.creds.me;
     }
@@ -168,9 +164,6 @@ export async function startBot() {
           if (sock.authState?.creds?.registered) {
             return;
           }
-
-          // Jangan gunakan pairing code lama dari creds.json — bisa expired/reject 401.
-          // Selalu request kode baru dari server WA.
 
           try {
             logger.info(`Meminta kode pairing untuk: +${phoneNumber}...`);

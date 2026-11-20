@@ -9,14 +9,14 @@ function browserDisabledByEnv() {
 function idleTimeoutMs() {
   const raw = Number(process.env.BROWSER_IDLE_MS);
   if (Number.isFinite(raw) && raw >= 1000) return raw;
-  // Default agresif 3 detik: browser langsung ditutup jika idle agar RAM hemat
+
   return 3000;
 }
 
 function maxOldSpaceMb() {
   const raw = Number(process.env.BROWSER_MAX_OLD_SPACE_MB);
   if (Number.isFinite(raw) && raw >= 48) return Math.floor(raw);
-  // Default hemat RAM: 80 MB
+
   return 80;
 }
 
@@ -62,7 +62,6 @@ export class StealthBrowserCore {
     this.logger = null;
     this.launches = 0;
 
-    // Bersihkan zombie process saat Node keluar
     const cleanExit = () => {
       if (this.browser) {
         try {
@@ -128,7 +127,6 @@ export class StealthBrowserCore {
         this.browser = null;
       }
 
-      // Prioritas 1: Gunakan BrightData Scraping Browser jika tersedia
       if (remoteBrowserAvailable()) {
         try {
           const startedAt = Date.now();
@@ -171,16 +169,14 @@ export class StealthBrowserCore {
         );
       }
 
-      // Flags optimasi ekstrem: matikan semua subsistem berat yang tidak berguna untuk bot
       const launchOpts = {
         headless: true,
         args: [
-          // Keamanan & Sandbox
+
           "--no-sandbox",
           "--disable-setuid-sandbox",
           "--disable-dev-shm-usage",
 
-          // Matikan GPU & 3D / Hardware Acceleration (Hemat 100MB+ RAM)
           "--disable-gpu",
           "--disable-software-rasterizer",
           "--disable-accelerated-2d-canvas",
@@ -189,17 +185,14 @@ export class StealthBrowserCore {
           "--disable-webgl",
           "--disable-3d-apis",
 
-          // Batasi proses renderer (Hanya 1 proses render, bukan 4-8 proses terpisah)
           "--renderer-process-limit=1",
           "--no-first-run",
           "--no-zygote",
 
-          // Matikan fitur suara & speech
           "--mute-audio",
           "--disable-speech-api",
           "--disable-speech-synthesis-api",
 
-          // Matikan background services & extensions yang membebani CPU
           "--disable-extensions",
           "--disable-background-networking",
           "--disable-background-timer-throttling",
@@ -217,7 +210,6 @@ export class StealthBrowserCore {
           "--disable-ipc-flooding-protection",
           "--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication",
 
-          // Ukuran viewport & alokasi memori JS V8 minimum
           "--window-size=1280,800",
           `--js-flags=--max-old-space-size=${maxOldSpaceMb()}`,
           "--metrics-recording-only",
@@ -335,7 +327,7 @@ export class StealthBrowserCore {
       const rssMb = browserMemoryMb(pid);
 
       try {
-        // Beri waktu 2 detik untuk tutup dengan rapi, jika gantung langsung kill SIGKILL
+
         await Promise.race([
           this.browser.close(),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Close timeout")), 2000)),

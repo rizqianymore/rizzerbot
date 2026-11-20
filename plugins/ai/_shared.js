@@ -35,11 +35,6 @@ export function renderHelp(p) {
   );
 }
 
-/**
- * Satu jalur untuk semua plugin AI: cache → antrean → gateway → memori.
- * @param {string} prompt
- * @param {{prefer?: string|null, senderJid?: string, system?: string}} opts
- */
 export async function runChat(prompt, opts = {}) {
   const clean = String(prompt || "").trim();
   const senderJid = opts.senderJid || "global";
@@ -63,10 +58,6 @@ export function formatReply(result) {
   return `${header}\n\n${result.text}`;
 }
 
-/**
- * Plugin AI ramping yang menembak satu model spesifik.
- * @param {{name: string, aliases?: string[], model: string, description: string, extra?: string, cooldownMs?: number}} cfg
- */
 export function makeAICommand(cfg) {
   return {
     name: cfg.name,

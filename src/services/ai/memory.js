@@ -48,12 +48,10 @@ function groupIdFrom(jid) {
   return s.split("@")[0] || DEFAULT_GROUP;
 }
 
-/** @param {string} jid */
 export function getHistory(jid) {
   return getBucket(groupIdFrom(jid)).turns.map((t) => ({ ...t }));
 }
 
-/** @param {string} jid @param {string} userText @param {string} assistantText */
 export function pushTurn(jid, userText, assistantText) {
   const bucket = getBucket(groupIdFrom(jid));
   const u = String(userText || "")
@@ -68,7 +66,6 @@ export function pushTurn(jid, userText, assistantText) {
   bucket.touched = Date.now();
 }
 
-/** @param {string} jid */
 export function clearHistory(jid) {
   const k = bucketKey(groupIdFrom(jid));
   const had = (buckets.get(k)?.turns.length || 0) > 0;
@@ -82,7 +79,6 @@ export function memoryStats() {
   return { buckets: buckets.size, turns, ttlHours: TTL_MS / 3600000 };
 }
 
-/** Migrasi sekali jalan dari database user lama ke memori proses. */
 export function seedFromUser(store, jid) {
   try {
     const legacy = store?.getUser?.(jid)?.aiMemory;

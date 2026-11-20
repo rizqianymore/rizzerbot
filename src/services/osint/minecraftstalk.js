@@ -33,11 +33,6 @@ function fetchJson(url, timeoutMs = 8000) {
   });
 }
 
-/**
- * Intelijen Profil Minecraft Java (Mojang Official API & Textures)
- * @param {string} username
- * @returns {Promise<object>}
- */
 export async function lookupMinecraft(username) {
   const clean = String(username || "").trim();
   if (!clean || !/^[a-zA-Z0-9_]{3,16}$/.test(clean)) {
@@ -60,7 +55,6 @@ export async function lookupMinecraft(username) {
     const uuid = res.data.id;
     const name = res.data.name;
 
-    // Ambil texture skin HD
     const sessionUrl = `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`;
     const sessionRes = await fetchJson(sessionUrl).catch(() => ({ data: null }));
 

@@ -56,7 +56,6 @@ export class StealthBrowserManager extends StealthBrowserCore {
     await this.preparePage(page, device);
     await this.restoreCookies(page, targetUrl);
 
-    // Blokir video, audio, dan custom font yang rakus memori saat bypass challenge
     if (blockHeavyMedia) {
       try {
         await page.setRequestInterception(true);

@@ -1,11 +1,7 @@
 import { request } from "@/src/utils/request.js";
 
-/**
- * Upload text/code to public pastebins (Zero API Key needed)
- * Primary: katbin / dpaste / paste.rs
- */
 async function uploadPaste(content) {
-  // 1. Katbin
+
   try {
     const res = await request.json("https://katb.in/api/paste", {
       method: "POST",
@@ -18,7 +14,6 @@ async function uploadPaste(content) {
     }
   } catch (_) {}
 
-  // 2. dpaste
   try {
     const res = await request.text("https://dpaste.com/api/", {
       method: "POST",
@@ -32,7 +27,6 @@ async function uploadPaste(content) {
     }
   } catch (_) {}
 
-  // 3. paste.rs
   try {
     const res = await request.text("https://paste.rs", {
       method: "POST",
@@ -60,7 +54,6 @@ export default {
     await sendTyping();
     const p = prefix || ".";
 
-    // Cek apakah ada reply pesan teks
     const quotedText =
       msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
       msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||

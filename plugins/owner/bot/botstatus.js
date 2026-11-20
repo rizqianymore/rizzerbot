@@ -11,7 +11,6 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, logger, isPrimarySuperOwner }) => {
     const subCmd = (args[0] || "").toLowerCase().trim();
 
-    // 1. FITUR AUTO CLEAN / MANUAL CLEAN (.status clean)
     if (subCmd === "clean" || subCmd === "clear" || subCmd === "purge") {
       await sendTyping();
       await reply("Sedang membersihkan file sampah, cache sesi, dan proses menggantung...");
@@ -19,7 +18,6 @@ export default {
         const { deletedCount, freedBytes } = clearAllCache({ logger });
         const freedMB = (freedBytes / (1024 * 1024)).toFixed(2);
 
-        // Paksa Garbage Collection jika Node.js dijalankan dengan flag expose-gc
         if (typeof global.gc === "function") {
           global.gc();
         }
@@ -39,7 +37,6 @@ export default {
       }
     }
 
-    // 2. STATUS SISTEM BIASA (.status)
     await sendTyping();
 
     const mem = process.memoryUsage();

@@ -34,12 +34,11 @@ export default {
     await sendTyping();
 
     try {
-      // 1. Coba ekstraksi multi-media (carousel album) terlebih dahulu
+
       const multi = await extractMultiMedia(input, { logger });
       let mediaList = multi.items || [];
       const info = multi.info || {};
 
-      // 2. Jika multi-media kosong, gunakan single unified fallback
       if (mediaList.length === 0) {
         const { buffer, info: uInfo } = await unifiedDownload(input, { mode: "video", logger });
         if (buffer?.length) {
@@ -56,7 +55,6 @@ export default {
         throw new Error("Media tidak ditemukan atau akun privat.");
       }
 
-      // Filter nomor slide jika pengguna menentukan pilihan (cth: "1", "2", "1,3", "all")
       let selectedIndices = null;
       if (selectorArg && mediaList.length > 1) {
         selectedIndices = parseMediaIndexSelection(selectorArg, mediaList.length);
@@ -75,7 +73,6 @@ export default {
       }
       const caption = lines.join("\n");
 
-      // Kirim seluruh media yang dipilih
       for (let i = 0; i < targetItems.length; i++) {
         const item = targetItems[i];
         const isFirst = i === 0;

@@ -28,7 +28,7 @@ let cachedSession = {
   expireAt: 0,
 };
 
-const SESSION_TTL_MS = 25 * 60 * 1000; // 25 menit cache
+const SESSION_TTL_MS = 25 * 60 * 1000;
 
 export async function getNxToken(forceRefresh = false) {
   const now = Date.now();
@@ -101,7 +101,6 @@ export async function getNxSnapshot(cameraId) {
   let token = await getNxToken();
   const { baseUrl } = getNxConfig();
 
-  // 1. REST v2 devices image endpoint
   try {
     const response = await axios.get(`${baseUrl}/rest/v2/devices/${cameraId}/image`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -118,7 +117,6 @@ export async function getNxSnapshot(cameraId) {
     }
   }
 
-  // 2. Fallback EC2 cameraThumbnail endpoint
   try {
     const response = await axios.get(`${baseUrl}/ec2/cameraThumbnail`, {
       params: { cameraId, width: 1280, height: 720 },

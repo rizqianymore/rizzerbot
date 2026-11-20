@@ -22,13 +22,6 @@ export function queueStats() {
   return { active, queued: queue.length, maxConcurrent: MAX_CONCURRENT, maxQueue: MAX_QUEUE };
 }
 
-/**
- * Semua panggilan AI keluar lewat satu pintu supaya kuota free-tier tidak saling membakar.
- * @template T
- * @param {() => Promise<T>} fn
- * @param {number} [waitMs]
- * @returns {Promise<T>}
- */
 export function runQueued(fn, waitMs = 45000) {
   return new Promise((resolve, reject) => {
     if (queue.length >= MAX_QUEUE) {

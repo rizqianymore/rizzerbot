@@ -44,7 +44,6 @@ export default {
       `Tautan: https://t.me/${res.username}`,
     ].join("\n");
 
-    // Kirim avatar foto profil jika tersedia
     if (res.avatarUrl && /^https?:\/\//i.test(res.avatarUrl)) {
       try {
         const jid = context.remoteJid;

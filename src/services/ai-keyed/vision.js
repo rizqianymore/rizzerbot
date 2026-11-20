@@ -8,13 +8,6 @@ function apiKey() {
   return process.env.GEMINI_API_KEY || "";
 }
 
-/**
- * Analisis gambar multi-modal dengan Gemini Vision
- * @param {Buffer} imageBuffer
- * @param {string} prompt
- * @param {string} [mimeType="image/jpeg"]
- * @returns {Promise<string>}
- */
 export async function askGeminiVision(imageBuffer, prompt, mimeType = "image/jpeg") {
   if (!imageBuffer || imageBuffer.length === 0) {
     throw new Error("Buffer gambar tidak boleh kosong.");

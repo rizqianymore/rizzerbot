@@ -33,7 +33,6 @@ export function resolveSenderJid(msg, botJid = "") {
   const isFromMe = Boolean(key.fromMe);
   const normalizedBot = botJid ? db.normalizeJid(botJid) : "";
 
-  // Bila pesan dikirim oleh bot/self (fromMe: true), pengirim adalah akun bot itu sendiri
   if (isFromMe && normalizedBot) {
     return normalizedBot;
   }

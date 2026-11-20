@@ -8,7 +8,7 @@ export function startKeepAlive(sock, { logger = console, restart = null, interva
   let stopped = false;
   const timer = setInterval(async () => {
     if (stopped) return;
-    // Jangan kirim presence update jika soket belum login/terdaftar
+
     if (!sock?.authState?.creds?.registered || !sock?.ws?.isOpen) return;
     try {
       await sock?.sendPresenceUpdate?.("available");

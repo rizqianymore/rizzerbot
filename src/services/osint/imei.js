@@ -1,7 +1,3 @@
-/**
- * GSMA Reporting Body Identifier (RBI)
- * Dua digit pertama IMEI menentukan badan akreditasi yang mengalokasikan TAC.
- */
 export const GSMA_RBI = {
   "01": "CTIA (Amerika Serikat / Global)",
   30: "Iridium (Komunikasi Satelit Global)",
@@ -21,11 +17,8 @@ export const GSMA_RBI = {
   99: "TIA (CDMA Global)",
 };
 
-/**
- * Mapping TAC prefix 4-8 digit untuk merek dan model populer
- */
 export const TAC_DATABASE = {
-  // Apple
+
   3520: { brand: "Apple", model: "iPhone Series (11/12/13/14)" },
   3530: { brand: "Apple", model: "iPhone Series (SE/X/XR/XS)" },
   3533: { brand: "Apple", model: "iPhone Series (8/8 Plus)" },
@@ -38,19 +31,16 @@ export const TAC_DATABASE = {
   "0124": { brand: "Apple", model: "iPhone Series (US Model)" },
   "0134": { brand: "Apple", model: "iPhone Series (US Model)" },
 
-  // Samsung
   3590: { brand: "Samsung", model: "Galaxy A/M Series" },
   3592: { brand: "Samsung", model: "Galaxy S Series" },
   3594: { brand: "Samsung", model: "Galaxy Z Fold / Z Flip" },
   3584: { brand: "Samsung", model: "Galaxy Note / Ultra Series" },
   3565: { brand: "Samsung", model: "Galaxy Tab / Smart Device" },
 
-  // Xiaomi / POCO / Redmi
   8600: { brand: "Xiaomi", model: "Redmi / POCO Series" },
   8626: { brand: "Xiaomi", model: "Mi / Xiaomi Flagship Series" },
   8652: { brand: "Xiaomi", model: "Redmi Note Series" },
 
-  // BBK Group (Oppo, Vivo, Realme, OnePlus)
   8610: { brand: "Oppo", model: "Oppo A / Reno Series" },
   8615: { brand: "Oppo", model: "Oppo Find Series" },
   8620: { brand: "Vivo", model: "Vivo Y / V Series" },
@@ -59,27 +49,20 @@ export const TAC_DATABASE = {
   8635: { brand: "Realme", model: "Realme GT Series" },
   8670: { brand: "OnePlus", model: "OnePlus Series" },
 
-  // Transsion (Infinix, Tecno, Itel)
   8650: { brand: "Transsion (Infinix/Tecno/Itel)", model: "Infinix Hot / Note Series" },
   8655: { brand: "Transsion (Infinix/Tecno/Itel)", model: "Tecno Pova / Camon Series" },
   8658: { brand: "Transsion (Infinix/Tecno/Itel)", model: "Itel Series" },
 
-  // Huawei / Honor
   8640: { brand: "Huawei", model: "Huawei Nova / Mate Series" },
   8645: { brand: "Honor", model: "Honor Magic / X Series" },
 
-  // Google Pixel
   3577: { brand: "Google", model: "Pixel Series (Pixel 6/7/8/9)" },
   3578: { brand: "Google", model: "Pixel Pro Series" },
 
-  // Motorola / Lenovo
   3517: { brand: "Motorola", model: "Moto G / Edge Series" },
   8680: { brand: "Lenovo", model: "Lenovo Legion / Tab" },
 };
 
-/**
- * Validasi Check Digit IMEI menggunakan Algoritma Luhn (Modulus 10)
- */
 export function validateLuhn(imeiStr) {
   const digits = String(imeiStr || "").replace(/\D/g, "");
   if (digits.length < 14 || digits.length > 15) return { valid: false, expected: null };
@@ -95,7 +78,6 @@ export function validateLuhn(imeiStr) {
   }
   const expectedCheckDigit = (10 - (sum % 10)) % 10;
 
-  // 14 digit = tanpa check digit, jadi tidak bisa divalidasi silang
   if (digits.length === 14) return { valid: null, expected: expectedCheckDigit, actual: null };
 
   const actualCheckDigit = parseInt(digits[14], 10);
@@ -106,9 +88,6 @@ export function validateLuhn(imeiStr) {
   };
 }
 
-/**
- * Parse nomor IMEI lengkap secara forensik & OSINT
- */
 export function parseImei(rawImei) {
   const clean = String(rawImei || "").replace(/[^0-9]/g, "");
   if (!clean) {
@@ -129,7 +108,6 @@ export function parseImei(rawImei) {
 
   const luhn = clean.length === 15 ? validateLuhn(clean) : null;
 
-  // Lookup Manufacturer & Model dari TAC
   let identified = null;
   for (const len of [8, 6, 4]) {
     const subTac = tac.slice(0, len);
@@ -158,9 +136,6 @@ export function parseImei(rawImei) {
   };
 }
 
-/**
- * Helper untuk membersihkan tag HTML
- */
 function stripHtml(html = "") {
   return html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
@@ -211,12 +186,6 @@ function extractImeiDetails(html = "") {
   };
 }
 
-/**
- * Web scraping IMEI online lookup menggunakan Bright Data Web Unlocker / Scraping API
- * @param {string} rawImei
- * @param {object} [options]
- * @returns {Promise<object>}
- */
 export async function scrapeImeiOnline(rawImei, options = {}) {
   const baseParsed = parseImei(rawImei);
   if (!baseParsed.valid) {
@@ -242,7 +211,6 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
   const targetImei = baseParsed.imei;
   const timeout = options.timeout || 35000;
 
-  // imei.info diprioritaskan: tabelnya rapi & tidak digate captcha seperti imei24.
   const attempts = [
     {
       source: "imei.info",
@@ -251,7 +219,7 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
     },
     {
       source: "imei24.com",
-      // URL lama /check/<imei> sudah 404; jalur yang benar adalah POST /searching/
+
       url: "https://imei24.com/searching/",
       requestOptions: {
         format: "raw",

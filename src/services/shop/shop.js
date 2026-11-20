@@ -68,7 +68,7 @@ export function saveProduct({ code, name, price, stock, desc }) {
     code: c,
     name: name || c,
     price: Number(price) || 0,
-    stock: stock === undefined ? -1 : Number(stock), // -1 = unlimited
+    stock: stock === undefined ? -1 : Number(stock),
     desc: desc || "",
     updatedAt: new Date().toISOString(),
   };
@@ -107,7 +107,7 @@ export function recordOrder({ buyerJid, code, quantity, totalPrice, notes }) {
     quantity,
     totalPrice,
     notes: notes || "",
-    status: "PENDING", // PENDING, PAID, COMPLETED, CANCELLED
+    status: "PENDING",
     createdAt: new Date().toISOString(),
   };
 

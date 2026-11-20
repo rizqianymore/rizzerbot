@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Kontribusi Pull Request & Kode Developer di GitHub
- * @param {string} username
- * @returns {Promise<object>}
- */
 export async function lookupGitPr(username) {
   const clean = String(username || "")
     .trim()
@@ -39,7 +34,7 @@ export async function lookupGitPr(username) {
 
     const prs = d.items.slice(0, 5).map((item) => ({
       title: item.title,
-      state: item.state, // open / closed
+      state: item.state,
       createdDate: item.created_at ? item.created_at.split("T")[0] : "-",
       url: item.html_url,
     }));

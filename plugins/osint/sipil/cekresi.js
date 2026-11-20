@@ -37,7 +37,6 @@ export default {
     let resi = parts[0];
     let courier = parts.slice(1).join(" ");
 
-    // Bila argumen pertama nama kurir dan kedua no resi
     if (parts.length >= 2 && COURIERS[parts[0].toLowerCase()]) {
       courier = parts[0];
       resi = parts[1];

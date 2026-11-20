@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Self-check jalur AI: registry, cache, queue, memory, chunking, dan satu request live. */
+
 let failures = 0;
 const ok = (c, label, extra = "") => {
   if (c) console.log(`  OK   ${label}`);

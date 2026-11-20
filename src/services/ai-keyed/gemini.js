@@ -19,7 +19,6 @@ export async function askGemini(prompt, options = {}) {
   const system =
     options.system || "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.";
 
-  // Format riwayat chat untuk Gemini
   const contents = [];
   if (Array.isArray(options.history) && options.history.length > 0) {
     for (const h of options.history) {

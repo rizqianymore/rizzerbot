@@ -36,20 +36,17 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
         }
       }
     } else {
-      // FIX: owner bot-nya sendiri selalu dapat prioritas, jangan kalah winner-election
-      // case user: bot gue self tapi sticker gue ga keluar, malah kekirim bot temen
+
       if (db.isBotOwner(botJid, senderJid) || db.isOwner(senderJid)) {
         return false;
       }
 
-      // FIX: kalau bot ini sedang self/private dan sender bukan owner, ngalah ke bot lain
-      // KECUALI bila perintah yang dipanggil adalah whitelist (misal: menu, ping)
       try {
         const mySettings = db.getBotSettings(botJid);
         const isWhitelisted =
           Array.isArray(mySettings?.publicCommands) && mySettings.publicCommands.includes(commandName);
         if (mySettings?.public === false && !isWhitelisted) {
-          // sender sudah pasti bukan owner dan bukan whitelist, jadi yield
+
           const verdictSelf = await resolveGroupResponder(sock, remoteJid, botJid, isSubBotSock, senderJid);
           if (verdictSelf.mode !== "solo") return true;
           return true;

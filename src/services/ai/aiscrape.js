@@ -1,11 +1,5 @@
 import { AI_TIMEOUT_MS, AIError, mkWaiter } from "./util.js";
 
-/**
- * Catatan lapangan (diverifikasi 2026-11-19):
- * node siputzx.my.id mengembalikan HTTP 530 (origin down) untuk semua endpoint /api/ai/*.
- * Scraper tanpa API key dipertahankan sebagai last-resort, tapi statusnya DOWN by default
- * supaya tidak menghabiskan budget timeout di setiap request.
- */
 export const SCRAPE_NODE_ENABLED = process.env.AI_SCRAPE_ENABLED === "1";
 const NODE = "https://api.siputzx.my.id/api/ai";
 

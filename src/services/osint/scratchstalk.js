@@ -1,10 +1,5 @@
 import axios from "axios";
 
-/**
- * Intelijen Profil Scratch MIT Developer (Game & Kids Coding Community)
- * @param {string} username
- * @returns {Promise<object>}
- */
 export async function lookupScratch(username) {
   const clean = String(username || "").trim();
   if (!clean) {

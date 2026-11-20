@@ -1,8 +1,3 @@
-/**
- * Helper formatter respons bergaya Terminal Linux otentik (┌──, │, ├──, └──)
- * Konsisten, kaku, rapi, dan bersih tanpa backtick aneh atau kurung berlebih.
- */
-
 export function formatLinuxBox(title, rows = [], footer = "") {
   let out = `┌── ${String(title).toUpperCase()}\n`;
   for (const row of rows) {
@@ -39,22 +34,16 @@ export function formatLinuxTree(title, items = [], footer = "") {
   return out.trim();
 }
 
-/**
- * Otomatis mendeteksi dan mengonversi format respons lama (*TITLE*, bullets •, dll)
- * menjadi format kaku Terminal Linux (┌── │ └──) secara transparan.
- */
 export function autoFormatToLinux(raw) {
   if (typeof raw !== "string") return raw;
   const text = raw.trim();
 
-  // Jika sudah terformat atau berupa raw code block, pertahankan aslinya
   if (text.includes("┌──") || text.includes("├──")) return raw;
   if (text.startsWith("```") && text.endsWith("```")) return raw;
 
   const lines = text.split("\n");
   if (lines.length < 2) return raw;
 
-  // Tangkap judul di baris pertama: misal *JUDUL* atau *JUDUL:*
   const headerMatch = lines[0].match(/^\*([^*]+)\*[:\s]*$/);
   if (!headerMatch) return raw;
 

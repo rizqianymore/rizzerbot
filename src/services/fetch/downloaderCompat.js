@@ -8,23 +8,22 @@ import { isVideoOrAnimated } from "./media/buffer.js";
 
 const execFileAsync = promisify(execFile);
 
-// deteksi tipe via magic bytes
 export function detectMediaType(buffer) {
   if (!buffer || buffer.length < 4) return "unknown";
-  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image"; // jpeg
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image";
   if (buffer[0] === 0x89 && buffer.toString("ascii", 1, 4) === "PNG") return "image";
-  if (buffer.slice(0, 4).toString() === "RIFF" && buffer.slice(8, 12).toString() === "WEBP") return "image"; // webp may be animated
+  if (buffer.slice(0, 4).toString() === "RIFF" && buffer.slice(8, 12).toString() === "WEBP") return "image";
   if (buffer.slice(0, 3).toString() === "GIF") return "image";
   if (isVideoOrAnimated(buffer)) {
-    // cek webm/mkv via EBML
-    if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return "video"; // webm/mkv
+
+    if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return "video";
     return "video";
   }
-  // mp3 id3
+
   if (buffer.slice(0, 3).toString() === "ID3") return "audio";
-  // mp4 ftyp
+
   if (buffer.slice(4, 8).toString() === "ftyp") return "video";
-  // ogg
+
   if (buffer.slice(0, 4).toString() === "OggS") return "audio";
   return "unknown";
 }
@@ -64,15 +63,13 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
 export async function ensureVideoCompatible(buffer) {
   if (!buffer || buffer.length < 100) return buffer;
   const type = detectMediaType(buffer);
-  // sudah mp4 yang valid, coba kirim langsung dulu, ffmpeg hanya jika perlu
-  // Heuristic: coba transcode selalu ke mp4 h264+aac biar pasti kebuka di WA
-  // Tapi hindari transcode image yang terdeteksi video (gif)
+
   if (type === "image" && buffer.slice(0, 4).toString() !== "RIFF") {
-    // image tapi mode video -> biarkan, nanti dikirim sebagai image
+
     return buffer;
   }
   try {
-    // deteksi ext input via sniff
+
     let inputExt = "mp4";
     if (buffer[0] === 0x1a && buffer[1] === 0x45) inputExt = "webm";
     else if (buffer.slice(4, 8).toString() === "ftyp") inputExt = "mp4";
@@ -117,18 +114,16 @@ export async function ensureAudioCompatible(buffer) {
 
 export function isProbablyPlayable(buffer, mode) {
   const t = detectMediaType(buffer);
-  if (mode === "audio") return t === "audio" || t === "video"; // video dengan audio track juga bisa
-  if (mode === "video") return t === "video" || t === "image"; // gif masuk image
+  if (mode === "audio") return t === "audio" || t === "video";
+  if (mode === "video") return t === "video" || t === "image";
   return true;
 }
 
-// Unified downloader: snaptik -> kol.id -> socialdownloader -> direct link (100% pure link system, NO yt-dlp)
 export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 20000, skipCache = false } = {}) {
   const isAudio = mode === "audio";
   const cacheKey = `${mode}:${String(url).trim()}`;
   const targetUrl = String(url || "").trim();
 
-  // Cek Smart Cache SQLite terlebih dahulu
   if (!skipCache) {
     try {
       const { getCachedMedia } = await import("./mediaCache.js");
@@ -152,7 +147,6 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
 
   const lower = targetUrl.toLowerCase();
 
-  // 1) Link Engine TikTok: Snaptik & TikWM API
   if (/tiktok\.com|douyin\.com/i.test(lower)) {
     try {
       const { downloadViaSnaptik } = await import("./snaptik.js");
@@ -168,7 +162,6 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     }
   }
 
-  // 2) Link Engine Kol.id (khusus TikTok / Instagram / YouTube)
   if (!rawBuffer) {
     try {
       const { request } = await import("@/src/utils/request.js");
@@ -214,7 +207,6 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     }
   }
 
-  // 3) Link Engine SocialDownloader (cepat & multi-platform)
   if (!rawBuffer) {
     try {
       const { downloadSocialMedia } = await import("./socialdownloader.js");
@@ -230,7 +222,6 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     }
   }
 
-  // 4) Direct Link fallback jika URL adalah direct media stream (mp4/mp3/m3u8/dll)
   if (!rawBuffer && /\.(mp4|mp3|m4a|wav|mov|webm|webp|png|jpg|jpeg)(\?.*)?$/i.test(targetUrl)) {
     try {
       const { request } = await import("@/src/utils/request.js");
@@ -249,31 +240,29 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
     throw lastErr || new Error("Gagal mengunduh media dari seluruh link engine.");
   }
 
-  // 3) Auto convert biar bisa dibuka di WA
   let buffer = rawBuffer;
   if (isAudio) {
-    // jika buffer ternyata video (yt-dlp kadang balikin mp4 walau mode audio), convert ke mp3
+
     const t = detectMediaType(buffer);
     if (t === "video") {
       buffer = await ensureAudioCompatible(buffer);
     } else if (t !== "audio") {
-      // coba convert juga
+
       const conv = await ensureAudioCompatible(buffer);
       if (conv) buffer = conv;
     }
   } else {
     const t = detectMediaType(buffer);
     if (t === "video" || t === "unknown") {
-      // pastikan mp4 playable
+
       const conv = await ensureVideoCompatible(buffer);
-      // hanya pakai hasil convert kalau memang valid video
+
       if (conv && conv.length > 100) buffer = conv;
     } else if (t === "audio") {
-      // mode video tapi dapet audio -> biarin, nanti kirim sebagai audio
+
     }
   }
 
-  // Simpan hasil ke cache SQLite jika berhasil diunduh dan valid
   if (buffer && buffer.length > 100 && !skipCache) {
     try {
       const { setCachedMedia } = await import("./mediaCache.js");
@@ -285,13 +274,10 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
   return { buffer, info, source, rawBuffer };
 }
 
-/**
- * Parsing opsi pemilihan nomor index slide/gambar (cth: "1", "2", "1,3,4", "1-3", "all")
- */
 export function parseMediaIndexSelection(text, totalCount) {
   if (!text || typeof text !== "string") return null;
   const str = text.trim().toLowerCase();
-  if (str === "all" || str === "semua") return null; // download semua
+  if (str === "all" || str === "semua") return null;
 
   const indices = new Set();
   const parts = str.split(/[,\s]+/);
@@ -318,16 +304,11 @@ export function parseMediaIndexSelection(text, totalCount) {
   return Array.from(indices).sort((a, b) => a - b);
 }
 
-/**
- * Ekstraksi multi-media carousel (Instagram, TikTok, Threads, dll)
- * Mengembalikan list item: [{ type: "image" | "video", url?: string, buffer?: Buffer }]
- */
 export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
   const targetUrl = String(url || "").trim();
   const items = [];
   let meta = null;
 
-  // 1) Cek TikTok slide via Web Unlocker
   if (/tiktok\.com|douyin\.com/i.test(targetUrl)) {
     try {
       const { downloadViaSnaptik } = await import("./snaptik.js");
@@ -345,7 +326,6 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
     } catch (_) {}
   }
 
-  // 2) Cek SocialDownloader metadata (mendukung isPhotoCarousel & array images)
   try {
     const { fetchSocialDownloader } = await import("./socialdownloader.js");
     const sdInfo = await fetchSocialDownloader(targetUrl, { isAudio, logger, timeout: 25000 });
@@ -368,7 +348,6 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
     }
   } catch (_) {}
 
-  // 3) Cek via Kol.id Instagram (jika Instagram carousel)
   if (/instagram\.com/i.test(targetUrl)) {
     try {
       const { downloadInstagram } = await import("./kolid.js");

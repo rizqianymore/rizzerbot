@@ -35,7 +35,6 @@ export default {
       return context.reply("File gambar kosong.");
     }
 
-    // MODE 1: UNSTEGO (DECODE PESAN)
     if (isUnstego || args.length === 0) {
       try {
         const secretText = await decodeLSB(buffer);
@@ -43,7 +42,7 @@ export default {
           if (isUnstego) {
             return context.reply("Tidak ditemukan pesan tersembunyi (LSB) di dalam gambar ini.");
           }
-          // Jika dipanggil dengan `.stego` tanpa argumen
+
           return context.reply(
             `Tuliskan pesan yang mau disembunyikan!\nContoh: \`${context.prefix || "."}stego Password: Rahasia123\``
           );
@@ -65,7 +64,6 @@ export default {
       }
     }
 
-    // MODE 2: STEGO (ENCODE PESAN)
     const textToHide = args.join(" ").trim();
     if (!textToHide) {
       return context.reply(

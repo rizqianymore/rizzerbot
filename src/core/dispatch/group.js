@@ -60,7 +60,7 @@ export async function resolveGroupResponder(sock, remoteJid, botJid, isSubBot, _
   const considerBotJid = (rawJid) => {
     const pj = db.resolvePhoneJid(rawJid);
     if (!pj) return;
-    // deteksi bot: my bots + external botNumbers (bot temen)
+
     const isMyBot = db.isAnyBotJid(pj);
     const isExternal = (() => {
       try {

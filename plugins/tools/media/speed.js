@@ -60,7 +60,7 @@ export default {
       await fs.writeFile(inFile, buffer);
 
       if (isVideo) {
-        // pts multiplier = 1 / speed
+
         const videoPts = (1 / multiplier).toFixed(4);
         const ffmpegArgs = [
           "-y",

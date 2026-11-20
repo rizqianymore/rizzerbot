@@ -24,15 +24,15 @@ function parseTime(str) {
 
 function isImageBuffer(buf) {
   if (!buf || buf.length < 4) return false;
-  // JPEG
+
   if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return true;
-  // PNG
+
   if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return true;
-  // GIF
+
   if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return true;
-  // BMP
+
   if (buf[0] === 0x42 && buf[1] === 0x4d) return true;
-  // WEBP still image (RIFF + WEBP without ANIM)
+
   if (buf.length >= 12 && buf.slice(0, 4).toString() === "RIFF" && buf.slice(8, 12).toString() === "WEBP") {
     const hasAnim = buf.includes(Buffer.from("ANIM")) || buf.includes(Buffer.from("ANMF"));
     if (!hasAnim) return true;
@@ -99,7 +99,6 @@ export default {
     const target = findDownloadableTarget(msg);
     if (!target) return reply("Reply audio/video yang mau dipotong.\nContoh: reply video lalu `.trim 00:05-00:15`");
 
-    // detect image via message type early
     const targetType = Object.keys(target.message || {})[0] || "";
     if (targetType === "imageMessage") return reply("Hanya audio/video yang bisa dipotong.");
 
@@ -113,7 +112,6 @@ export default {
 
     if (isImageBuffer(buffer)) return reply("Hanya audio/video");
 
-    // determine video vs audio
     let isVideo = false;
     if (targetType === "videoMessage") isVideo = true;
     else if (targetType === "audioMessage") isVideo = false;
@@ -122,13 +120,12 @@ export default {
       if (mtype.startsWith("video")) isVideo = true;
       else if (mtype.startsWith("audio")) isVideo = false;
       else {
-        // fallback by buffer ftyp
+
         const ftyp = buffer.slice(4, 8).toString();
         isVideo = ftyp === "ftyp" || ftyp === "moov";
       }
     } else if (targetType === "stickerMessage") {
-      // sticker is not supported for trim, treat as image/video check already
-      // fallback to buffer check
+
       const ftyp = buffer.slice(4, 8).toString();
       isVideo = ftyp === "ftyp" || ftyp === "moov" || buffer.slice(0, 3).toString() === "GIF";
       if (!isVideo) return reply("Hanya audio/video");
@@ -140,7 +137,6 @@ export default {
 
     await reply(`Memotong ${formatSec(start)} → ${formatSec(end)}...`);
 
-    // resolve ffmpeg path (support both helpers)
     const ffmpegPath = typeof getFfmpegPath === "function" ? getFfmpegPath() : resolveFfmpegPath();
 
     const tmpDir = path.join(os.tmpdir(), "assets", "cache");
@@ -159,7 +155,7 @@ export default {
           { timeout: 60000 }
         );
       } catch (_) {
-        // fallback re-encode
+
         const reEncodeArgs = isVideo
           ? ["-y", "-i", inFile, "-ss", String(start), "-to", String(end), "-c:v", "libx264", "-c:a", "aac", outFile]
           : ["-y", "-i", inFile, "-ss", String(start), "-to", String(end), "-c:a", "aac", outFile];

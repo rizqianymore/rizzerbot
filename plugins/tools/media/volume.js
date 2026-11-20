@@ -35,7 +35,6 @@ export default {
     }
     if (!buffer?.length) return reply("Gagal baca media.");
 
-    // parse alias / arg
     const invoked = String(commandName || "").toLowerCase();
     const firstArg = String(args?.[0] ?? "")
       .toLowerCase()
@@ -49,28 +48,27 @@ export default {
     let audioFilter;
 
     if (isBass) {
-      // bass boost filter
+
       audioFilter = "bass=g=10:d=0.7";
     } else {
-      // volume mode: parse numeric arg
+
       if (args.length > 0 && firstArg) {
         const parsed = parseFloat(firstArg);
         if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
           level = parsed;
         } else {
-          // invalid arg -> default 2x for boost
+
           level = 2.0;
         }
       } else {
         level = 2.0;
       }
-      // clamp 0.5 - 3
+
       if (level < 0.5) level = 0.5;
       if (level > 3) level = 3;
       audioFilter = `volume=${level}`;
     }
 
-    // detect video vs audio
     let isVideo = false;
     try {
       if (target?.message?.videoMessage) isVideo = true;
@@ -81,7 +79,6 @@ export default {
     await fs.mkdir(tmpDir, { recursive: true }).catch(() => {});
     const base = path.join(tmpDir, `volume-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
-    // ext based on detect (mp4 vs mp3)
     const inFile = isVideo ? `${base}.mp4` : `${base}.mp3`;
     const outFile = isVideo ? `${base}-out.mp4` : `${base}-out.mp3`;
 
@@ -92,7 +89,7 @@ export default {
       await fs.writeFile(inFile, buffer);
 
       if (isVideo) {
-        // Try keep video codec copy if possible: -c:v copy -c:a aac
+
         try {
           await execFileAsync(
             getFfmpegPath(),
@@ -100,7 +97,7 @@ export default {
             { timeout: 90000 }
           );
         } catch (_) {
-          // fallback re-encode video if copy fails
+
           await execFileAsync(
             getFfmpegPath(),
             [
@@ -123,7 +120,7 @@ export default {
           );
         }
       } else {
-        // audio only
+
         await execFileAsync(
           getFfmpegPath(),
           ["-y", "-i", inFile, "-af", audioFilter, "-vn", "-c:a", "libmp3lame", "-q:a", "2", outFile],

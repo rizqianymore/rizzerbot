@@ -19,7 +19,6 @@ export default {
 
     await context.sendTyping();
 
-    // Normalisasi jika user ketik AS1234
     if (/^as\d+$/i.test(query)) {
       query = query.toUpperCase();
     }

@@ -29,7 +29,7 @@ function loadData() {
         .map((line) => line.trim())
         .filter(Boolean)
         .map((line) => {
-          // Format contoh: "1. Aku Rupiah dengan perusahaan developer Fnsudai Fintech Ltd"
+
           const clean = line.replace(/^[0-9]+[\.\)]\s*/, "");
           const parts = clean.split(/ dengan perusahaan developer /i);
           return {
@@ -43,11 +43,6 @@ function loadData() {
   }
 }
 
-/**
- * Mencari status pinjaman online berdasarkan nama aplikasi atau perusahaan
- * @param {string} query
- * @returns {object}
- */
 export function checkPinjol(query) {
   loadData();
   const q = String(query || "")
@@ -60,7 +55,6 @@ export function checkPinjol(query) {
     };
   }
 
-  // 1. Cek di daftar resmi OJK (Legal)
   const legalMatches = cachedLegal.filter((item) => {
     const platform = (item.platform_name || "").toLowerCase();
     const company = (item.company_name || "").toLowerCase();
@@ -68,7 +62,6 @@ export function checkPinjol(query) {
     return platform.includes(q) || company.includes(q) || sites.includes(q);
   });
 
-  // 2. Cek di daftar Ilegal / Satgas Waspada Investasi
   const illegalMatches = cachedIllegal.filter((item) => {
     const name = (item.name || "").toLowerCase();
     const dev = (item.developer || "").toLowerCase();

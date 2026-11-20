@@ -6,7 +6,7 @@ function extractPrintableStrings(buffer, minLength = 6, maxCount = 40) {
 
   for (let i = 0; i < buffer.length; i++) {
     const byte = buffer[i];
-    // Printable ASCII: 32 (space) to 126 (~)
+
     if (byte >= 32 && byte <= 126) {
       current.push(String.fromCharCode(byte));
     } else {
@@ -21,7 +21,6 @@ function extractPrintableStrings(buffer, minLength = 6, maxCount = 40) {
     strings.push(current.join(""));
   }
 
-  // Filter kata-kata menarik (URL, email, path file, token, secret)
   const interesting = [];
   const normal = [];
 

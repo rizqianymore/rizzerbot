@@ -1,19 +1,12 @@
 import crypto from "node:crypto";
 import axios from "axios";
 
-/**
- * Investigasi Keamanan Kata Sandi menggunakan K-Anonymity Model Pwned Passwords
- * Nilai password TIDAK pernah dikirim ke server luar (hanya 5 prefix SHA-1)
- * @param {string} password
- * @returns {Promise<object>}
- */
 export async function checkPasswordLeak(password) {
   const clean = String(password || "");
   if (!clean) {
     return { valid: false, reason: "Password yang akan dicek tidak boleh kosong." };
   }
 
-  // 1. Hitung hash SHA-1 secara lokal
   const sha1 = crypto.createHash("sha1").update(clean).digest("hex").toUpperCase();
   const prefix = sha1.slice(0, 5);
   const suffix = sha1.slice(5);

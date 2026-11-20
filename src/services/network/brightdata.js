@@ -35,7 +35,7 @@ export function getBrightDataProxy() {
 
 export function isBrightDataEnabled() {
   if (String(process.env.BRIGHTDATA_ENABLED || "").trim() === "0") return false;
-  // Aktif HANYA jika pengguna secara eksplisit mengisi BRIGHTDATA_API_KEY atau BRIGHTDATA_PROXY di environment
+
   const hasExplicitEnv = Boolean(
     process.env.BRIGHTDATA_API_KEY || process.env.BRIGHTDATA_PROXY || process.env.BRIGHTDATA_CUSTOMER
   );
@@ -48,7 +48,6 @@ export function isBrightDataEnabled() {
 export async function brightDataRequest(targetUrl, options = {}) {
   const { apiKey, zone: defaultZone } = getBrightDataConfig();
 
-  // Jika API key tidak ada tapi proxy ada, alihkan secara otomatis ke native proxy request
   if (!apiKey) {
     if (getBrightDataProxy()) {
       const { proxyRequest } = await import("./unlocker-proxy.js");
