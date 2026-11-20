@@ -73,13 +73,13 @@ export const settings = {
     BRIGHTDATA_ZONE: "web_unlocker2",
 
     BRIGHTDATA_PROXY_ZONE: "web_unlocker2",
-    BRIGHTDATA_PROXY_PASSWORD: "g3rcwgbqusu6",
+    BRIGHTDATA_PROXY_PASSWORD: process.env.BRIGHTDATA_PROXY_PASSWORD || "",
     BRIGHTDATA_PROXY: "",
     BRIGHTDATA_PROXY_HOST: "brd.superproxy.io",
     BRIGHTDATA_PROXY_PORT: "44445",
 
     BRIGHTDATA_ISP_ZONE: "isp_proxy1",
-    BRIGHTDATA_ISP_PASSWORD: "g0rh6l0cvv2w",
+    BRIGHTDATA_ISP_PASSWORD: process.env.BRIGHTDATA_ISP_PASSWORD || "",
 
     BRIGHTDATA_SCRAPING_BROWSER_ENABLED: "1",
     BRIGHTDATA_SCRAPING_BROWSER_ZONE: "scraping_browser1",
@@ -93,9 +93,9 @@ export const settings = {
     COMMAND_TIMEOUT_MS: "30000",
     PUPPETEER_EXECUTABLE_PATH: "",
 
-    CCTV_BASE_URL: "https://103.119.145.66:7002/",
-    CCTV_USER: "DPR",
-    CCTV_PASS: "JagaJakarta+",
+    CCTV_BASE_URL: process.env.CCTV_BASE_URL || "",
+    CCTV_USER: process.env.CCTV_USER || "",
+    CCTV_PASS: process.env.CCTV_PASS || "",
   },
 };
 

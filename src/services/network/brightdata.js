@@ -5,9 +5,9 @@ const DEFAULT_TEST_URL = "https://geo.brdtest.com/welcome.txt?product=unlocker&m
 
 const DEFAULT_HOST = "brd.superproxy.io";
 const DEFAULT_PORT = "22225";
-const DEFAULT_CUSTOMER = "hl_66a04297";
+const DEFAULT_CUSTOMER = process.env.BRIGHTDATA_CUSTOMER || "hl_66a04297";
 const DEFAULT_ZONE = "web_unlocker2";
-const DEFAULT_PASSWORD = "lahl63zlmvrs";
+const DEFAULT_PASSWORD = "";
 
 export function getBrightDataConfig() {
   const apiKey = (process.env.BRIGHTDATA_API_KEY || "").trim();
