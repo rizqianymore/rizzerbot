@@ -45,26 +45,24 @@ export async function checkRekening(accountNo, bankName = "") {
   let details = {};
 
   try {
-    const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
-    if (isBrightDataEnabled()) {
-      const html = await brightDataRequest(targetUrl, {
-        format: "raw",
-        timeout: 30000,
-      });
+    const { request } = await import("@/src/utils/request.js");
+    const html = await request.text(targetUrl, {
+      timeout: 20000,
+      bypassCloudflare: "auto",
+    });
 
-      if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
-        scraped = true;
+    if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
+      scraped = true;
 
-        const reportMatch = html.match(/(\d+)\s*(?:laporan|keluhan|kasus)/i);
-        if (reportMatch) {
-          reports = parseInt(reportMatch[1], 10);
-        }
+      const reportMatch = html.match(/(\d+)\s*(?:laporan|keluhan|kasus)/i);
+      if (reportMatch) {
+        reports = parseInt(reportMatch[1], 10);
+      }
 
-        if (html.includes("Berpotensi Penipuan") || html.includes("Pernah Dilaporkan") || reports > 0) {
-          status = "🚨 BERPOTENSI PENIPUAN (Pernah Dilaporkan)";
-        } else if (html.includes("Belum Pernah Dilaporkan") || html.includes("Terverifikasi")) {
-          status = "✅ Belum Pernah Dilaporkan / Bersih";
-        }
+      if (html.includes("Berpotensi Penipuan") || html.includes("Pernah Dilaporkan") || reports > 0) {
+        status = "🚨 BERPOTENSI PENIPUAN (Pernah Dilaporkan)";
+      } else if (html.includes("Belum Pernah Dilaporkan") || html.includes("Terverifikasi")) {
+        status = "✅ Belum Pernah Dilaporkan / Bersih";
       }
     }
   } catch (_) {}

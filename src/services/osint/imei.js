@@ -197,40 +197,25 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
     };
   }
 
-  const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
-  if (!isBrightDataEnabled()) {
-    return {
-      ...baseParsed,
-      scraped: false,
-      scrapeSource: null,
-      scrapeError: "Bright Data tidak aktif atau BRIGHTDATA_API_KEY belum dikonfigurasi.",
-      details: null,
-    };
-  }
+  const { request } = await import("@/src/utils/request.js");
 
   const targetImei = baseParsed.imei;
-  const timeout = options.timeout || 35000;
+  const timeout = options.timeout || 25000;
 
   const attempts = [
     {
       source: "imei.info",
       url: `https://www.imei.info/check/${targetImei}/`,
-      requestOptions: { format: "raw", timeout },
+      method: "GET",
     },
     {
       source: "imei24.com",
-
       url: "https://imei24.com/searching/",
-      requestOptions: {
-        format: "raw",
-        timeout,
-        method: "POST",
-        data: `s=${encodeURIComponent(targetImei)}&nr=0`,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-          Referer: "https://imei24.com/",
-        },
+      method: "POST",
+      data: `s=${encodeURIComponent(targetImei)}&nr=0`,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Referer: "https://imei24.com/",
       },
     },
   ];
@@ -238,7 +223,13 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
   const errors = [];
   for (const attempt of attempts) {
     try {
-      const rawHtml = await brightDataRequest(attempt.url, attempt.requestOptions);
+      const rawHtml = await request.text(attempt.url, {
+        method: attempt.method || "GET",
+        data: attempt.data,
+        headers: attempt.headers || {},
+        timeout,
+        bypassCloudflare: "auto",
+      });
       if (!rawHtml || typeof rawHtml !== "string") {
         errors.push(`${attempt.source}: respons bukan HTML`);
         continue;
@@ -263,11 +254,7 @@ export async function scrapeImeiOnline(rawImei, options = {}) {
         details: extracted.details,
       };
     } catch (err) {
-      const detail =
-        err.code === "brightdata_proxy_error"
-          ? `${err.message} — cek BRIGHTDATA_CUSTOMER / BRIGHTDATA_PROXY_PASSWORD / BRIGHTDATA_PROXY_ZONE`
-          : err.message || err;
-      errors.push(`${attempt.source}: ${detail}`);
+      errors.push(`${attempt.source}: ${err.message || err}`);
     }
   }
 

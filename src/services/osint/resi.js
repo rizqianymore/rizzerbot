@@ -92,27 +92,28 @@ export async function trackResi(awb, courierInput = "") {
   let receiver = "-";
 
   try {
-    const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
-    if (isBrightDataEnabled()) {
-      const html = await brightDataRequest(targetUrl, { format: "raw", timeout: 30000 });
-      if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
-        scraped = true;
+    const { request } = await import("@/src/utils/request.js");
+    const html = await request.text(targetUrl, {
+      timeout: 20000,
+      bypassCloudflare: "auto",
+    });
+    if (typeof html === "string" && html.length > 200 && !html.includes("Just a moment...")) {
+      scraped = true;
 
-        const statusMatch =
-          html.match(/<(?:td|span|div)[^>]*class="[^"]*status[^"]*"[^>]*>([^<]+)<\/(?:td|span|div)>/i) ||
-          html.match(/Status\s*:\s*<[^>]+>([^<]+)<\/[^>]+>/i);
-        if (statusMatch) status = statusMatch[1].trim();
+      const statusMatch =
+        html.match(/<(?:td|span|div)[^>]*class="[^"]*status[^"]*"[^>]*>([^<]+)<\/(?:td|span|div)>/i) ||
+        html.match(/Status\s*:\s*<[^>]+>([^<]+)<\/[^>]+>/i);
+      if (statusMatch) status = statusMatch[1].trim();
 
-        const historyRegex =
-          /<li[^>]*>\s*<span[^>]*class="[^"]*date[^"]*"[^>]*>([^<]+)<\/span>\s*<div[^>]*>([^<]+)<\/div>/gi;
-        let match;
-        while ((match = historyRegex.exec(html)) !== null) {
-          history.push({
-            date: match[1].trim(),
-            desc: match[2].trim(),
-          });
-          if (history.length >= 6) break;
-        }
+      const historyRegex =
+        /<li[^>]*>\s*<span[^>]*class="[^"]*date[^"]*"[^>]*>([^<]+)<\/span>\s*<div[^>]*>([^<]+)<\/div>/gi;
+      let match;
+      while ((match = historyRegex.exec(html)) !== null) {
+        history.push({
+          date: match[1].trim(),
+          desc: match[2].trim(),
+        });
+        if (history.length >= 6) break;
       }
     }
   } catch (_) {}

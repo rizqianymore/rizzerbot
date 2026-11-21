@@ -127,13 +127,11 @@ export async function analyzeWebsite(rawUrl) {
 
   let siteTitle = null;
   try {
-    const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
-    if (isBrightDataEnabled() && ips.length > 0) {
-      const html = await brightDataRequest(parsedUrl.origin, { format: "raw", timeout: 20000 });
-      if (typeof html === "string") {
-        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (titleMatch) siteTitle = titleMatch[1].trim();
-      }
+    const { request } = await import("@/src/utils/request.js");
+    const html = await request.text(parsedUrl.origin, { timeout: 15000, bypassCloudflare: "auto" });
+    if (typeof html === "string") {
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (titleMatch) siteTitle = titleMatch[1].trim();
     }
   } catch (_) {}
 
