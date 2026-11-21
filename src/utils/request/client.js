@@ -7,8 +7,20 @@ import { buildScraperHeaders } from "./headers.js";
 import { cookieJar, isCloudflareChallenge } from "./cookies.js";
 import { stealthBrowser } from "./browser.js";
 
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 20, keepAliveMsecs: 30000, timeout: 15000 });
+const httpAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  maxFreeSockets: 10,
+  keepAliveMsecs: 60000,
+  timeout: 15000,
+});
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  maxFreeSockets: 10,
+  keepAliveMsecs: 60000,
+  timeout: 15000,
+});
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_BUFFER_MAX_BYTES = 40 * 1024 * 1024;

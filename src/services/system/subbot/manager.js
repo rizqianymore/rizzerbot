@@ -6,6 +6,7 @@ import { logger } from "@/src/core/connection.js";
 import { db } from "@/src/core/database.js";
 import { attachEchoTracker } from "@/src/core/dispatch/echo.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
 import { subBots, baseSessionsDir } from "./store.js";
 import { setupSubBotEvents } from "./events.js";
 
@@ -63,7 +64,7 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
     version: [2, 3000, 1043857760],
   }));
 
-  const msgRetryCounterCache = new Map();
+  const msgRetryCounterCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 1000 });
   const sock = makeWASocket({
     version,
     auth: state,

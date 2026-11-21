@@ -20,6 +20,12 @@ export function createTtlCache({ ttlMs = 10 * 60 * 1000, max = 200 } = {}) {
       }
       map.set(key, { val, exp: Date.now() + ttlMs });
     },
+    has(key) {
+      return this.get(key) !== undefined;
+    },
+    delete(key) {
+      return map.delete(key);
+    },
     clear() {
       map.clear();
     },

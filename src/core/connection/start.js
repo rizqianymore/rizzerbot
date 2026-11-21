@@ -7,6 +7,7 @@ import { loadPlugins } from "@/src/core/loader.js";
 import { db } from "@/src/core/database.js";
 import { startAutoCleanInterval } from "@/src/utils/cleaner.js";
 import { deleteFolderRecursive } from "@/src/utils/helper.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
 import { logger } from "./logger.js";
 import { connectionState } from "./state.js";
 import { attachConnectionEvents, attachMessageHandler } from "./handlers.js";
@@ -101,7 +102,7 @@ export async function startBot() {
     logger.info(`Initializing Rizzer Bot connection (WA Version: ${STABLE_WA_VERSION.join(".")})...`);
 
     const usePairingCode = activeSettings.usePairingCode;
-    const msgRetryCounterCache = new Map();
+    const msgRetryCounterCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 2000 });
 
     let sockInstance = null;
     const baileysPino = pino(
