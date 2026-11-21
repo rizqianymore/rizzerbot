@@ -123,6 +123,10 @@ startBot()
       const { startHealthServer } = await import("./src/services/system/health-server.js");
       startHealthServer(logger);
     } catch (_) { }
+    try {
+      const { startMemoryGuard } = await import("./src/services/system/memory-guard.js");
+      startMemoryGuard(logger);
+    } catch (_) { }
   })
   .catch((err) => {
     logger?.error?.("Fatal initialization error:", err);

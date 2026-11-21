@@ -51,7 +51,7 @@ function resolveVia(url, viaOpt) {
   try {
     const host = new URL(String(url)).hostname.toLowerCase();
     if (brightDataFirstHosts().some((h) => host === h || host.endsWith(`.${h}`))) return "brightdata";
-  } catch (_) {}
+  } catch (_) { }
   return "auto";
 }
 
@@ -91,7 +91,7 @@ function dedupKey(url, { responseType, via, bypassCloudflare, country, state, ci
       }
     }
     full = u.toString();
-  } catch (_) {}
+  } catch (_) { }
   return [via || "auto", bypassCloudflare || "auto", responseType, country || "", state || "", city || "", full].join(
     "|"
   );
@@ -109,7 +109,7 @@ export async function smartRequest(url, options = {}) {
   const report = (v) => {
     try {
       onVia?.(v);
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const device = getRandomDevice(preferredDevice);
@@ -149,7 +149,7 @@ export async function smartRequest(url, options = {}) {
       const bdFirst = await tryBrightData();
       report("brightdata");
       return bdFirst;
-    } catch (_bdFirstErr) {}
+    } catch (_bdFirstErr) { }
   }
 
   if (bypassCloudflare === true) {
@@ -159,7 +159,7 @@ export async function smartRequest(url, options = {}) {
         const bdData = await tryBrightData();
         report("brightdata");
         return bdData;
-      } catch (_bdErr) {}
+      } catch (_bdErr) { }
     }
 
     if (responseType === "json") {
@@ -215,14 +215,14 @@ export async function smartRequest(url, options = {}) {
     via !== "brightdata";
   const key = canDedup
     ? dedupKey(url, {
-        responseType,
-        via,
-        bypassCloudflare,
-        country: options.country,
-        state: options.state,
-        city: options.city,
-        params: options.params,
-      })
+      responseType,
+      via,
+      bypassCloudflare,
+      country: options.country,
+      state: options.state,
+      city: options.city,
+      params: options.params,
+    })
     : null;
   if (key && inflight.has(key)) return inflight.get(key);
 
@@ -273,7 +273,7 @@ export async function smartRequest(url, options = {}) {
                 return Buffer.isBuffer(bdResult) ? bdResult : Buffer.from(bdResult);
               }
               return bdResult;
-            } catch (_) {}
+            } catch (_) { }
           }
 
           const solved = await stealthBrowser.solveChallenge(url, {
@@ -289,7 +289,7 @@ export async function smartRequest(url, options = {}) {
                 report("brightdata");
                 if (responseType === "buffer") return Buffer.isBuffer(bdLast) ? bdLast : Buffer.from(bdLast);
                 return bdLast;
-              } catch (_) {}
+              } catch (_) { }
             }
             throw new Error(`Protection challenge not cleared after timeout on ${url}`);
           }
@@ -306,7 +306,7 @@ export async function smartRequest(url, options = {}) {
               });
               report("browser");
               return inPage;
-            } catch (_) {}
+            } catch (_) { }
           }
 
           const secondRes = await axios({
@@ -341,7 +341,8 @@ export async function smartRequest(url, options = {}) {
           TRANSIENT_STATUS.has(statusCode);
 
         if (isTransient && attempt <= retries) {
-          await new Promise((r) => setTimeout(r, 800 * attempt));
+          const jitter = Math.floor(Math.random() * 300);
+          await new Promise((r) => setTimeout(r, 800 * attempt + jitter));
           continue;
         }
 
