@@ -53,19 +53,20 @@ export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
   if (!tiktokUrl) throw new Error("URL TikTok tidak boleh kosong.");
 
   const agent = getUnlockerAgent();
+  const fetchOpts = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: "https://snaptik.fi",
+      Referer: "https://snaptik.fi/en/download-tiktok-video",
+      "User-Agent": DEFAULT_UA,
+    },
+    body: JSON.stringify({ url: tiktokUrl }),
+    ...(agent ? { dispatcher: agent } : {}),
+  };
 
   try {
-    const apiRes = await fetch("https://snaptik.fi/api/tiktok", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Origin: "https://snaptik.fi",
-        Referer: "https://snaptik.fi/en/download-tiktok-video",
-        "User-Agent": DEFAULT_UA,
-      },
-      body: JSON.stringify({ url: tiktokUrl }),
-      dispatcher: agent,
-    });
+    const apiRes = await fetch("https://snaptik.fi/api/tiktok", fetchOpts);
 
     if (apiRes.ok) {
       const data = await apiRes.json();
@@ -98,10 +99,9 @@ export async function downloadViaSnaptik(url, { isAudio = false } = {}) {
     const tikRes = await fetch(tikwmUrl, {
       method: "GET",
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": DEFAULT_UA,
       },
-      dispatcher: agent,
+      ...(agent ? { dispatcher: agent } : {}),
     });
 
     if (tikRes.ok) {
