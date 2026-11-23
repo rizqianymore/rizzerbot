@@ -164,7 +164,7 @@ async function getGuestToken() {
         return tokenCache;
       }
     }
-  } catch (_) {}
+  } catch (_) { }
 
   return tokenCache || "";
 }
@@ -428,6 +428,11 @@ async function getRoutesList(keyword = null) {
   return routes;
 }
 
+function cleanInput(str) {
+  if (!str) return "";
+  return str.replace(/^["'`“”‘’\s]+|["'`“”‘’\s]+$/g, "").trim();
+}
+
 function getWibTime() {
   const now = new Date();
   const wibHours = (now.getUTCHours() + 7) % 24;
@@ -448,23 +453,23 @@ export default {
     if (!args[0]) {
       return reply(
         `┌── TRANSJAKARTA LIVE TRACKER (TIJE)\n` +
-          `│ Posisi bus real-time & estimasi kedatangan di halte.\n` +
-          `└──\n\n` +
-          `├── [1] Cek Bus Tiba di Halte\n` +
-          `│   Format: ${p}tj <nama halte>\n` +
-          `│   Contoh: ${p}tj Blok M\n` +
-          `│\n` +
-          `├── [2] Cari Nama / ID Halte\n` +
-          `│   Format: ${p}tj cari <kata kunci>\n` +
-          `│   Contoh: ${p}tj cari Kuningan\n` +
-          `│\n` +
-          `├── [3] Cek Rute dari Halte\n` +
-          `│   Format: ${p}tj rute <nama halte> [tujuan]\n` +
-          `│   Contoh: ${p}tj rute "Blok M" Monas\n` +
-          `│\n` +
-          `└── [4] Detail 1 Armada Bus\n` +
-          `    Format: ${p}tj bus <no bodi>\n` +
-          `    Contoh: ${p}tj bus TJ-336`
+        `│ Posisi bus real-time & estimasi kedatangan di halte.\n` +
+        `└──\n\n` +
+        `├── [1] Cek Bus Tiba di Halte\n` +
+        `│   Format: ${p}tj <nama halte>\n` +
+        `│   Contoh: ${p}tj Blok M\n` +
+        `│\n` +
+        `├── [2] Cari Nama / ID Halte\n` +
+        `│   Format: ${p}tj cari <kata kunci>\n` +
+        `│   Contoh: ${p}tj cari Kuningan\n` +
+        `│\n` +
+        `├── [3] Cek Rute dari Halte\n` +
+        `│   Format: ${p}tj rute <nama halte> [tujuan]\n` +
+        `│   Contoh: ${p}tj rute "Blok M" Monas\n` +
+        `│\n` +
+        `└── [4] Detail 1 Armada Bus\n` +
+        `    Format: ${p}tj bus <no bodi>\n` +
+        `    Contoh: ${p}tj bus TJ-336`
       );
     }
 
@@ -473,7 +478,7 @@ export default {
 
     // 1. CARI HALTE
     if (sub === "cari" || sub === "search") {
-      const keyword = args.slice(1).join(" ").trim();
+      const keyword = cleanInput(args.slice(1).join(" "));
       if (!keyword) {
         return reply(`Gunakan: \`${p}tj cari <nama halte>\`\nContoh: \`${p}tj cari Kuningan\``);
       }
@@ -562,9 +567,9 @@ export default {
       if (!res.routes || res.routes.length === 0) {
         return reply(
           `┌── RUTE DARI HALTE\n` +
-            `│ Halte : ${halte.stop_name} (${halte.stop_id})\n` +
-            `└──\n\n` +
-            `_Tidak ditemukan bus/rute aktif dari halte ini${tujuanQuery ? ` menuju "${tujuanQuery}"` : ""}_`
+          `│ Halte : ${halte.stop_name} (${halte.stop_id})\n` +
+          `└──\n\n` +
+          `_Tidak ditemukan bus/rute aktif dari halte ini${tujuanQuery ? ` menuju "${tujuanQuery}"` : ""}_`
         );
       }
 
@@ -659,7 +664,7 @@ export default {
     }
 
     // 5. DEFAULT: CEK BUS TIBA DI HALTE (ETA) / KORIDOR RUTE
-    const query = args.join(" ").trim();
+    const query = cleanInput(args.join(" "));
     await sendTyping();
 
     // 5a. Auto-detect jika input user adalah kode rute/koridor (e.g. B41, 3F, JAK.50, 4D, 1A)
@@ -700,7 +705,7 @@ export default {
     if (!halte) {
       return reply(
         `❌ Halte / Rute *"${query}"* tidak ditemukan di database TransJakarta.\n\n` +
-          `_Coba cari nama resminya terlebih dahulu dengan: \`${p}tj cari ${query}\`_`
+        `_Coba cari nama resminya terlebih dahulu dengan: \`${p}tj cari ${query}\`_`
       );
     }
 
@@ -716,11 +721,11 @@ export default {
     if (arrivals.length === 0) {
       return reply(
         `┌── TRANSJAKARTA LIVE BUS\n` +
-          `│ Halte       : ${halte.stop_name} (${halte.stop_id})\n` +
-          `│ Waktu Acuan : ${timeStr}\n` +
-          `└──\n\n` +
-          `_Saat ini tidak ada bus aktif dalam radius halte atau data GPS sedang diperbarui._\n` +
-          `_Coba ketik \`${p}tj rute "${halte.stop_name}"\` untuk melihat rute jalur halte ini._`
+        `│ Halte       : ${halte.stop_name} (${halte.stop_id})\n` +
+        `│ Waktu Acuan : ${timeStr}\n` +
+        `└──\n\n` +
+        `_Saat ini tidak ada bus aktif dalam radius halte atau data GPS sedang diperbarui._\n` +
+        `_Coba ketik \`${p}tj rute "${halte.stop_name}"\` untuk melihat rute jalur halte ini._`
       );
     }
 
