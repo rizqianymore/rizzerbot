@@ -6,7 +6,7 @@ export default {
   aliases: ["plat", "ceknopol", "nopol", "samsat", "ceknikplat"],
   description: "Cek data kendaraan SAMSAT / info plat nomor Indonesia",
   usage: "<plat nomor / NIK>",
-  premiumOnly: true,
+  ownerOnly: true,
   cooldownMs: 5000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

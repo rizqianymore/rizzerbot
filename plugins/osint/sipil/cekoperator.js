@@ -13,7 +13,7 @@ export default {
   description: "Cek operator seluler, registrasi simcard, dan data Dukcapil terhubung",
   usage: "<nomor HP, cth: 081212345678>",
   category: "OSINT",
-  premiumOnly: true,
+  ownerOnly: true,
   cooldownMs: 4000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const currentPrefix = prefix || ".";

@@ -143,6 +143,7 @@ export default {
   description: "Cek data penduduk Dukcapil mandiri (NIK, No. HP, atau Nama)",
   category: "OSINT",
   usage: "<NIK | nama | nohp>",
+  ownerOnly: true,
   cooldownMs: 3000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const rawQuery = args.join(" ").trim();
