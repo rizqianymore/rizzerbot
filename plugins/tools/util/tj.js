@@ -1,4 +1,326 @@
-import { resolveHalte, searchHalte, tjLive } from "@/src/services/transport/transjakarta.js";
+import fs from "fs";
+import path from "path";
+
+const BASE_URL = "https://tijeapi.transjakarta.co.id";
+const DEVICE_ID = "d4f8a1b2c3e4f5a6";
+const DB_PATH = path.join(process.cwd(), "assets", "transjakarta", "tj_database.json");
+const DEFAULT_TIMEOUT_MS = 15000;
+
+let tokenCache = null;
+let tokenExpiry = 0;
+let stopsCache = null;
+
+/**
+ * Geodesic distance in meters (Haversine formula)
+ */
+function haversine(lat1, lon1, lat2, lon2) {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+  const R = 6371000.0;
+  const p1 = (Number(lat1) * Math.PI) / 180.0;
+  const p2 = (Number(lat2) * Math.PI) / 180.0;
+  const dp = ((Number(lat2) - Number(lat1)) * Math.PI) / 180.0;
+  const dl = ((Number(lon2) - Number(lon1)) * Math.PI) / 180.0;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/**
+ * Calculate age of bus telemetry in seconds
+ */
+function busAgeSeconds(ts) {
+  if (!ts) return null;
+  const num = Number(ts);
+  if (!Number.isFinite(num)) return null;
+  return Math.max(0, Date.now() / 1000.0 - num / 1000.0);
+}
+
+/**
+ * Load 7.210 stops from local database
+ */
+function getStopsDatabase() {
+  if (stopsCache) return stopsCache;
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      const raw = fs.readFileSync(DB_PATH, "utf-8");
+      const parsed = JSON.parse(raw);
+      stopsCache = parsed?.stops || [];
+    }
+  } catch (_) {
+    stopsCache = [];
+  }
+  return stopsCache || [];
+}
+
+/**
+ * Resolve single best halte from name or code
+ */
+function resolveHalte(keyword) {
+  const stops = getStopsDatabase();
+  const k = String(keyword || "")
+    .trim()
+    .toLowerCase();
+  if (!k) return null;
+
+  const byId = stops.find((s) => s.stop_id?.toLowerCase() === k);
+  if (byId) return byId;
+
+  const exact = stops.find((s) => s.stop_name?.toLowerCase() === k);
+  if (exact) return exact;
+
+  const match = stops.find((s) => s.stop_name?.toLowerCase().includes(k));
+  return match || null;
+}
+
+/**
+ * Search halte in local DB
+ */
+function searchHalte(keyword, limit = 20) {
+  const stops = getStopsDatabase();
+  const k = String(keyword || "")
+    .trim()
+    .toLowerCase();
+  if (!k) return [];
+  const hits = stops.filter((s) => s.stop_name?.toLowerCase().includes(k));
+  return hits.slice(0, limit);
+}
+
+/**
+ * Obtain guest token from TransJakarta API
+ */
+async function getGuestToken() {
+  const now = Date.now();
+  if (tokenCache && now < tokenExpiry - 60000) {
+    return tokenCache;
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/v1/auth/login/guest`, {
+      method: "POST",
+      headers: {
+        "User-Agent": "TJ-Transjakarta/3.1.1 (Android)",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Device-Id": DEVICE_ID,
+      },
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.token) {
+        tokenCache = data.token;
+        tokenExpiry = data.token_valid_until ? Number(data.token_valid_until) * 1000 : now + 3600000;
+        return tokenCache;
+      }
+    }
+  } catch (_) {}
+
+  return tokenCache || "";
+}
+
+/**
+ * Generic fetch wrapper for TransJakarta API
+ */
+async function fetchTije(endpointPath, { method = "GET", params = null, body = null } = {}) {
+  const token = await getGuestToken();
+  let url = `${BASE_URL}${endpointPath}`;
+
+  const headers = {
+    "User-Agent": "TJ-Transjakarta/3.1.1 (Android)",
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Device-Id": DEVICE_ID,
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const fetchOpts = { method, headers, signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS) };
+
+  if (method === "GET" && params) {
+    const sp = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v != null) sp.append(k, String(v));
+    }
+    const qs = sp.toString();
+    if (qs) url += (url.includes("?") ? "&" : "?") + qs;
+  } else if (body) {
+    fetchOpts.body = JSON.stringify(body);
+  }
+
+  let res = await fetch(url, fetchOpts);
+  if (res.status === 401) {
+    tokenCache = null;
+    const freshToken = await getGuestToken();
+    if (freshToken) headers.Authorization = `Bearer ${freshToken}`;
+    res = await fetch(url, fetchOpts);
+  }
+
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 1) Bus yang AKAN DATANG ke halte + ETA
+ */
+async function getHalteArrivals(lat, lon, { radius = 500, stopId = null, maxAge = 60 } = {}) {
+  let resolvedStopId = stopId;
+  let resolvedStopName = stopId;
+
+  if (!resolvedStopId) {
+    const sd = await fetchTije("/v2/bus-stop", {
+      params: { latitude: lat, longitude: lon, radius: 300 },
+    });
+    const stops = Array.isArray(sd?.data) ? sd.data : [];
+    if (stops.length > 0) {
+      resolvedStopId = stops[0].stop_id;
+      resolvedStopName = stops[0].stop_name;
+    } else {
+      return { stopName: null, stopId: null, arrivals: [] };
+    }
+  }
+
+  const d = await fetchTije("/v1/bus", {
+    params: { latitude: lat, longitude: lon, radius },
+  });
+  const buses = Array.isArray(d?.data) ? d.data : [];
+  const arrivals = [];
+
+  for (const b of buses) {
+    const age = busAgeSeconds(b.timestamp);
+    if (age != null && age > maxAge) continue;
+
+    for (const st of b.stops || []) {
+      if (st.parent_stop_id === resolvedStopId || st.stop_id === resolvedStopId) {
+        arrivals.push({
+          body: b.bus_body_no || "-",
+          route: b.route_code || "-",
+          tujuan: st.headsign || b.trip_headsign || b.route_name || "-",
+          eta: st.eta,
+          jarak: haversine(lat, lon, b.latitude, b.longitude),
+          umur: age != null ? Math.round(age) : null,
+          speed: b.speed || 0,
+          trip: b.trip_id,
+          nextStop: b.next_stops || "-",
+        });
+        break;
+      }
+    }
+  }
+
+  arrivals.sort((a, b) => {
+    const ea = typeof a.eta === "number" ? a.eta : 1e9;
+    const eb = typeof b.eta === "number" ? b.eta : 1e9;
+    return ea - eb || (a.jarak ?? 1e9) - (b.jarak ?? 1e9);
+  });
+
+  return {
+    stopName: resolvedStopName,
+    stopId: resolvedStopId,
+    arrivals,
+  };
+}
+
+/**
+ * 2) Rute dari halte
+ */
+async function getRuteFromHalte(lat, lon, { radius = 1000, maxAge = 60, tujuan = null } = {}) {
+  const sd = await fetchTije("/v2/bus-stop", {
+    params: { latitude: lat, longitude: lon, radius: 300 },
+  });
+  const stops = Array.isArray(sd?.data) ? sd.data : [];
+  if (!stops.length) {
+    return { stopName: null, stopId: null, routes: [] };
+  }
+
+  const stop = stops[0];
+  const stopId = stop.stop_id;
+  const stopName = stop.stop_name;
+
+  const d = await fetchTije("/v1/bus", {
+    params: { latitude: lat, longitude: lon, radius },
+  });
+  const buses = Array.isArray(d?.data) ? d.data : [];
+  const groups = new Map();
+
+  for (const b of buses) {
+    const age = busAgeSeconds(b.timestamp);
+    if (age != null && age > maxAge) continue;
+
+    for (const st of b.stops || []) {
+      if (st.parent_stop_id !== stopId && st.stop_id !== stopId) continue;
+      const tujuanBus = st.headsign || b.trip_headsign || b.route_name || "-";
+      const key = `${b.route_code}:::${tujuanBus}`;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          route: b.route_code || "-",
+          tujuan: tujuanBus,
+          etas: [],
+          bodyNos: [],
+        });
+      }
+      const g = groups.get(key);
+      if (st.eta != null) g.etas.push(st.eta);
+      g.bodyNos.push(b.bus_body_no);
+      break;
+    }
+  }
+
+  let rows = [];
+  for (const g of groups.values()) {
+    const validEtas = g.etas.filter((e) => typeof e === "number");
+    const etaMin = validEtas.length > 0 ? Math.min(...validEtas) : null;
+    rows.push({
+      route: g.route,
+      tujuan: g.tujuan,
+      eta: etaMin,
+      jumlahBus: g.bodyNos.length,
+    });
+  }
+
+  rows.sort((a, b) => (a.eta ?? 1e9) - (b.eta ?? 1e9));
+
+  if (tujuan) {
+    const q = String(tujuan).toLowerCase();
+    rows = rows.filter((r) => r.tujuan.toLowerCase().includes(q) || r.route.toLowerCase().includes(q));
+  }
+
+  return { stopName, stopId, routes: rows };
+}
+
+/**
+ * 3) Detail 1 bus
+ */
+async function getBusDetail(bodyNo) {
+  const d = await fetchTije("/v1/bus", {
+    params: { latitude: -6.2088, longitude: 106.8456, radius: 25000 },
+  });
+  const buses = Array.isArray(d?.data) ? d.data : [];
+  const q = String(bodyNo).toLowerCase();
+  const hit = buses.find((b) =>
+    String(b.bus_body_no || "")
+      .toLowerCase()
+      .includes(q)
+  );
+  return hit || null;
+}
+
+/**
+ * 4) Semua rute
+ */
+async function getRoutesList(keyword = null) {
+  const d = await fetchTije("/v2/route");
+  let routes = d?.data?.routes || [];
+  if (keyword) {
+    const k = String(keyword).toLowerCase();
+    routes = routes.filter(
+      (r) => r.route_short_name?.toLowerCase().includes(k) || r.route_long_name?.toLowerCase().includes(k)
+    );
+  }
+  return routes;
+}
 
 function getWibTime() {
   const now = new Date();
@@ -74,7 +396,6 @@ export default {
 
         text += `${branch} [${i + 1}] ${h.stop_name} (${h.stop_id})\n`;
         if (routes) text += `${subPipe} Rute : ${routes}\n`;
-        if (!isLast) text += `│\n`;
       });
 
       text += `\n_Ketik \`${p}tj <nama halte>\` untuk cek jadwal kedatangan bus._`;
@@ -105,7 +426,7 @@ export default {
         return reply(`❌ Halte "*${halteQuery}*" tidak ditemukan. Coba ketik: \`${p}tj cari ${halteQuery}\``);
       }
 
-      const res = await tjLive.getRuteFromHalte(halte.stop_lat, halte.stop_lon, {
+      const res = await getRuteFromHalte(halte.stop_lat, halte.stop_lon, {
         radius: 1200,
         tujuan: tujuanQuery || null,
       });
@@ -136,7 +457,6 @@ export default {
         text += `${branch} [${i + 1}] Koridor ${r.route} ➔ ${r.tujuan}\n`;
         text += `${subPipe} Estimasi : ${etaText}\n`;
         text += `${subPipe} Armada   : ${r.jumlahBus} bus terdeteksi\n`;
-        if (!isLast) text += `│\n`;
       });
 
       text += `\n_Menampilkan ${displayRoutes.length} rute aktif. Sumber: tijeapi.transjakarta.co.id_`;
@@ -151,7 +471,7 @@ export default {
       }
 
       await sendTyping();
-      const bus = await tjLive.getBusDetail(bodyNo);
+      const bus = await getBusDetail(bodyNo);
       if (!bus) {
         return reply(`❌ Bus dengan nomor bodi "*${bodyNo}*" tidak ditemukan dalam area aktif saat ini.`);
       }
@@ -183,7 +503,7 @@ export default {
     if (sub === "koridor" || sub === "routes" || sub === "daftar") {
       const filterWord = args.slice(1).join(" ").trim();
       await sendTyping();
-      const routes = await tjLive.getRoutesList(filterWord);
+      const routes = await getRoutesList(filterWord);
 
       if (!routes || routes.length === 0) {
         return reply(`❌ Tidak ditemukan koridor / rute TransJakarta dengan kata kunci "*${filterWord}*".`);
@@ -202,7 +522,6 @@ export default {
         const subPipe = isLast ? "   " : "│  ";
         text += `${branch} [${r.route_short_name}] ${r.route_long_name}\n`;
         text += `${subPipe} Tipe: ${r.route_desc || "BRT"} | Tarif: Rp${r.price || "3.500"}\n`;
-        if (!isLast) text += `│\n`;
       });
 
       if (routes.length > 10) {
@@ -223,7 +542,7 @@ export default {
       );
     }
 
-    const arrivalsData = await tjLive.getHalteArrivals(halte.stop_lat, halte.stop_lon, {
+    const arrivalsData = await getHalteArrivals(halte.stop_lat, halte.stop_lon, {
       radius: 1200,
       stopId: halte.stop_id,
       maxAge: 120,
