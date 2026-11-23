@@ -38,7 +38,7 @@ export const TEMPLATES = {
     localPath: path.join(ASSETS_DIR, "cat1.png"),
     width: 715,
     height: 720,
-    safeZone: { a: 400, b: 680, c: 50, d: 665 },
+    safeZone: { a: 540, b: 700, c: 45, d: 670 },
     stroke: true,
   },
 };
