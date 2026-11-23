@@ -13,28 +13,24 @@ export function normalizeQuery(query = "") {
  * Format teks output profil anggota DPR RI
  */
 export function formatDprMember(member) {
-  const lines = [
-    `*PROFIL ANGGOTA DPR RI*`,
-    `├─ Nama        : ${member.nama || "-"}`,
-    `├─ Jabatan     : ${member.jabatan || "Anggota DPR RI"}`,
-    `├─ Fraksi      : ${member.fraksi || "-"}`,
-    `├─ Dapil       : ${member.dapil || "-"}`,
-    `├─ Komisi/AKD  : ${member.komisi || "-"}`,
+  const fields = [
+    ["Nama", member.nama || "-"],
+    ["Jabatan", member.jabatan || "Anggota DPR RI"],
+    ["Fraksi", member.fraksi || "-"],
+    ["Dapil", member.dapil || "-"],
+    ["Komisi/AKD", member.komisi || "-"],
   ];
 
-  if (member.ttl) {
-    lines.push(`├─ TTL         : ${member.ttl}`);
-  }
-  if (member.pendidikan) {
-    lines.push(`├─ Pendidikan  : ${member.pendidikan}`);
-  }
-  if (member.periode) {
-    lines.push(`├─ Periode     : ${member.periode}`);
-  }
-  if (member.url) {
-    lines.push(`├─ Sumber Data : ${member.url}`);
-  }
-  lines.push(`└─ [STATUS: VERIFIED PARLIAMENT DATA]`);
+  if (member.ttl) fields.push(["TTL", member.ttl]);
+  if (member.pendidikan) fields.push(["Pendidikan", member.pendidikan]);
+  if (member.periode) fields.push(["Periode", member.periode]);
+  if (member.url) fields.push(["Sumber Data", member.url]);
+
+  const lines = ["*PROFIL ANGGOTA DPR RI*"];
+  fields.forEach(([label, val], idx) => {
+    const isLast = idx === fields.length - 1;
+    lines.push(`${isLast ? "└─" : "├─"} ${label.padEnd(12, " ")}: ${val}`);
+  });
 
   return lines.join("\n");
 }

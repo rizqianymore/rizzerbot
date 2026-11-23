@@ -15,14 +15,14 @@ export default {
     if (!query) {
       return reply(
         `*CEK ANGGOTA DPR RI & PEJABAT*\n\n` +
-          `Gunakan format:\n` +
-          `│ \`${p}cekdpr <nama anggota / fraksi / dapil>\`\n` +
-          `│ \`${p}pejabat <nama pejabat>\`\n\n` +
-          `*Contoh:*\n` +
-          `│ \`${p}cekdpr Puan Maharani\`\n` +
-          `│ \`${p}cekdpr Gerindra\`\n` +
-          `│ \`${p}cekdpr Jawa Barat I\`\n\n` +
-          `Data bersumber dari direktori publik pejabat parlemen https://pejabat.id/dpr.`
+        `Gunakan format:\n` +
+        `│ \`${p}cekdpr <nama anggota / fraksi / dapil>\`\n` +
+        `│ \`${p}pejabat <nama pejabat>\`\n\n` +
+        `*Contoh:*\n` +
+        `│ \`${p}cekdpr Puan Maharani\`\n` +
+        `│ \`${p}cekdpr Gerindra\`\n` +
+        `│ \`${p}cekdpr Jawa Barat I\`\n\n` +
+        `Data bersumber dari direktori publik pejabat parlemen https://pejabat.id/dpr.`
       );
     }
 
@@ -34,7 +34,7 @@ export default {
       if (!results || results.length === 0) {
         return reply(
           `*OSINT DPR RI*\n\n` +
-            `Data anggota DPR dengan kata kunci "*${query}*" tidak ditemukan di pejabat.id/dpr.`
+          `Data anggota DPR dengan kata kunci "*${query}*" tidak ditemukan di pejabat.id/dpr.`
         );
       }
 
@@ -63,8 +63,8 @@ export default {
       logger?.warn?.(`[cekdpr] ${err.message}`);
       return reply(
         `*GAGAL CEK PEJABAT / DPR*\n\n` +
-          `Error: ${err.message}\n\n` +
-          `Catatan: Platform target (pejabat.id) menerapkan proteksi keamanan Cloudflare Managed Challenge.`
+        `Error: ${err.message}\n\n` +
+        `Catatan: Platform target (pejabat.id) menerapkan proteksi keamanan Cloudflare Managed Challenge.`
       );
     }
   },
