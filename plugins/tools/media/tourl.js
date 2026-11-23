@@ -1,6 +1,5 @@
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
 import { smartUpload } from "@/src/services/fetch/fileUploader.js";
-import { formatBytes } from "@/src/utils/format.js";
 
 function getMimeExtension(mime) {
   if (!mime) return "bin";

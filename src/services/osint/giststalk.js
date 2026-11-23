@@ -69,4 +69,3 @@ export async function lookupGitGists(username) {
     return { valid: false, reason: err.message || "Gagal menghubungi GitHub Gist API." };
   }
 }
-}

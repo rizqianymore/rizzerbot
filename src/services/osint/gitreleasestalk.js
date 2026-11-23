@@ -67,4 +67,3 @@ export async function lookupGitRelease(rawRepo) {
     return { valid: false, reason: err.message || "Gagal menghubungi GitHub Releases API." };
   }
 }
-}
