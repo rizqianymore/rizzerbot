@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const wikiCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 300 });
@@ -17,16 +17,15 @@ export async function lookupWiki(query, lang = "id") {
   const apiUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&titles=${encodeURIComponent(clean)}&pithumbsize=400&format=json&redirects=1`;
 
   try {
-    const res = await axios.get(apiUrl, {
+    const data = await request.json(apiUrl, {
       timeout: 10000,
       headers: { "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-Wiki" },
     });
 
-    const pages = res.data?.query?.pages || {};
+    const pages = data?.query?.pages || {};
     const pageId = Object.keys(pages)[0];
 
     if (!pageId || pageId === "-1") {
-
       if (langCode === "id") {
         return lookupWiki(query, "en");
       }

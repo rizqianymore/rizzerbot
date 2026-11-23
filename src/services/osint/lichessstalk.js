@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const lichessCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupLichess(rawUsername) {
   const username = String(rawUsername || "")
@@ -8,13 +11,16 @@ export async function lookupLichess(rawUsername) {
     return { valid: false, reason: "Username Lichess tidak boleh kosong." };
   }
 
+  const cacheKey = username.toLowerCase();
+  const cached = lichessCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://lichess.org/api/user/${encodeURIComponent(username)}`, {
+    const d = await request.json(`https://lichess.org/api/user/${encodeURIComponent(username)}`, {
       timeout: 10000,
       headers: { "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-Lichess", Accept: "application/json" },
     });
 
-    const d = res.data;
     if (!d?.id) {
       return {
         valid: true,
@@ -41,7 +47,7 @@ export async function lookupLichess(rawUsername) {
       createdDate = new Date(d.createdAt).toISOString().split("T")[0];
     }
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       username: d.username,
@@ -57,6 +63,9 @@ export async function lookupLichess(rawUsername) {
       createdDate,
       profileUrl: d.url || `https://lichess.org/@/${d.username}`,
     };
+
+    lichessCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     if (err.response?.status === 404) {
       return {

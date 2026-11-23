@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 
 export default {
   name: "geocode",
@@ -24,7 +24,7 @@ export default {
     }
 
     try {
-      const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+      const results = await request.json("https://nominatim.openstreetmap.org/search", {
         params: {
           q: query,
           format: "json",
@@ -38,7 +38,6 @@ export default {
         timeout: 12000,
       });
 
-      const results = res.data;
       if (!Array.isArray(results) || results.length === 0) {
         return reply(`[FAIL] Alamat/lokasi *"${query}"* tidak ditemukan. Coba ketik nama tempat yang lebih spesifik.`);
       }

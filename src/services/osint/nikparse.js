@@ -1,4 +1,3 @@
-import axios from "axios";
 import { request } from "@/src/utils/request.js";
 
 const PROVINCES = {
@@ -138,24 +137,20 @@ export function parseNik(nik) {
   };
 }
 
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
 const WILAYAH_BASE = "https://www.emsifa.com/api-wilayah-indonesia/api";
-const wilayahCache = new Map();
-const WILAYAH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const wilayahCache = createTtlCache({ ttlMs: 7 * 24 * 60 * 60 * 1000, max: 500 });
 
 async function fetchWilayah(path) {
   const hit = wilayahCache.get(path);
-  if (hit && hit.expires > Date.now()) return hit.data;
+  if (hit) return hit;
   try {
-    const res = await axios.get(`${WILAYAH_BASE}/${path}`, { timeout: 400 });
-    const data = Array.isArray(res.data) ? res.data : [];
-    wilayahCache.set(path, { data, expires: Date.now() + WILAYAH_TTL_MS });
-    if (wilayahCache.size > 200) {
-      const firstKey = wilayahCache.keys().next().value;
-      wilayahCache.delete(firstKey);
-    }
+    const res = await request.json(`${WILAYAH_BASE}/${path}`, { timeout: 1500 });
+    const data = Array.isArray(res) ? res : [];
+    wilayahCache.set(path, data);
     return data;
   } catch {
-    wilayahCache.set(path, { data: [], expires: Date.now() + 60 * 1000 });
     return [];
   }
 }

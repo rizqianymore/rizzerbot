@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const pypiCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupPypi(packageName) {
   const clean = String(packageName || "")
@@ -8,16 +11,18 @@ export async function lookupPypi(packageName) {
     return { valid: false, reason: "Nama paket PyPI tidak boleh kosong." };
   }
 
+  const cached = pypiCache.get(clean);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://pypi.org/pypi/${encodeURIComponent(clean)}/json`, {
+    const d = await request.json(`https://pypi.org/pypi/${encodeURIComponent(clean)}/json`, {
       timeout: 10000,
       headers: { "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-PyPI" },
     });
 
-    const d = res.data;
-    const info = d.info || {};
+    const info = d?.info || {};
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       name: info.name,
@@ -29,8 +34,11 @@ export async function lookupPypi(packageName) {
       packageUrl: info.package_url || `https://pypi.org/project/${info.name}/`,
       requiresPython: info.requires_python || "Python 3+",
     };
+
+    pypiCache.set(clean, result);
+    return result;
   } catch (err) {
-    if (err.response?.status === 404) {
+    if (err.status === 404 || err.response?.status === 404) {
       return {
         valid: true,
         exists: false,

@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const tiktokCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
@@ -27,13 +27,12 @@ export async function lookupTiktok(rawUsername) {
 
   let oembedData = null;
   try {
-    const res = await axios.get(oembedUrl, {
+    oembedData = await request.json(oembedUrl, {
       timeout: 10000,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RizzerBot/OSINT-TikTok",
       },
     });
-    oembedData = res.data;
   } catch (_) {}
 
   if (!oembedData || oembedData.code === 400 || !oembedData.author_name) {

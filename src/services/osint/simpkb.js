@@ -1,20 +1,8 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const SIMPKB_BASE_URL = "https://portal-backend.simpkb.id";
-
-const client = axios.create({
-  baseURL: SIMPKB_BASE_URL,
-  timeout: 15000,
-  headers: {
-    Accept: "application/json",
-    Origin: "https://portal.simpkb.id",
-    Referer: "https://portal.simpkb.id/",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  },
-});
-
-const cache = new Map();
+const cache = createTtlCache({ ttlMs: 10 * 60 * 1000, max: 200 });
 
 function formatDateString(isoString) {
   if (!isoString) return "-";
@@ -51,26 +39,29 @@ function formatDateString(isoString) {
 export async function fetchRawSimpkb(keyword, page = 1) {
   const cleanKeyword = String(keyword || "").trim();
   const cacheKey = `${cleanKeyword.toLowerCase()}_p${page}`;
-  const now = Date.now();
 
   const cached = cache.get(cacheKey);
-  if (cached && cached.expiresAt > now) {
-    return cached.data;
+  if (cached) {
+    return cached;
   }
 
-  const res = await client.get("/cari", {
+  const data = await request.json(`${SIMPKB_BASE_URL}/cari`, {
     params: {
       keyword: cleanKeyword,
       page: page || 1,
     },
+    timeout: 15000,
+    headers: {
+      Accept: "application/json",
+      Origin: "https://portal.simpkb.id",
+      Referer: "https://portal.simpkb.id/",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    },
   });
 
-  cache.set(cacheKey, {
-    data: res.data,
-    expiresAt: now + 5 * 60 * 1000,
-  });
-
-  return res.data;
+  cache.set(cacheKey, data);
+  return data;
 }
 
 export function formatGtkItem(item, index) {

@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const gitlabCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupGitlab(rawUsername) {
   const username = String(rawUsername || "")
@@ -8,15 +11,18 @@ export async function lookupGitlab(rawUsername) {
     return { valid: false, reason: "Username GitLab tidak boleh kosong." };
   }
 
+  const cacheKey = username.toLowerCase();
+  const cached = gitlabCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(username)}`, {
+    const list = await request.json(`https://gitlab.com/api/v4/users?username=${encodeURIComponent(username)}`, {
       timeout: 10000,
       headers: {
         "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-GitLab",
       },
     });
 
-    const list = res.data;
     if (!Array.isArray(list) || list.length === 0) {
       return {
         valid: true,
@@ -27,7 +33,7 @@ export async function lookupGitlab(rawUsername) {
     }
 
     const user = list[0];
-    return {
+    const result = {
       valid: true,
       exists: true,
       userId: user.id,
@@ -38,6 +44,9 @@ export async function lookupGitlab(rawUsername) {
       avatarUrl: user.avatar_url,
       profileUrl: user.web_url,
     };
+
+    gitlabCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     return { valid: false, reason: err.message || "Gagal menghubungi GitLab API." };
   }

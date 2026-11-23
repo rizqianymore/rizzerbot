@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const waybackCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 200 });
 
 export async function lookupWayback(rawUrl) {
   let target = String(rawUrl || "").trim();
@@ -14,6 +17,9 @@ export async function lookupWayback(rawUrl) {
     };
   }
 
+  const cached = waybackCache.get(target.toLowerCase());
+  if (cached) return cached;
+
   const oldestUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(target)}&output=json&limit=1`;
   const latestUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(target)}&output=json&limit=1&fastLatest=true`;
 
@@ -22,13 +28,12 @@ export async function lookupWayback(rawUrl) {
 
   try {
     const [resOld, resNew] = await Promise.all([
-      axios.get(oldestUrl, { timeout: 10000 }).catch(() => null),
-      axios.get(latestUrl, { timeout: 10000 }).catch(() => null),
+      request.json(oldestUrl, { timeout: 10000 }).catch(() => null),
+      request.json(latestUrl, { timeout: 10000 }).catch(() => null),
     ]);
-    oldestData = resOld?.data;
-    latestData = resNew?.data;
+    oldestData = resOld;
+    latestData = resNew;
   } catch (err) {
-
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {
@@ -66,7 +71,7 @@ export async function lookupWayback(rawUrl) {
     return ts;
   };
 
-  return {
+  const result = {
     valid: true,
     found: true,
     target,
@@ -76,4 +81,6 @@ export async function lookupWayback(rawUrl) {
     latestArchivedUrl: newUrl,
     calendarUrl: `https://web.archive.org/web/*/${target}`,
   };
+  waybackCache.set(target.toLowerCase(), result);
+  return result;
 }

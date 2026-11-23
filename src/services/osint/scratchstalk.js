@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const scratchCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupScratch(username) {
   const clean = String(username || "").trim();
@@ -6,14 +9,17 @@ export async function lookupScratch(username) {
     return { valid: false, reason: "Username Scratch tidak boleh kosong." };
   }
 
+  const cacheKey = clean.toLowerCase();
+  const cached = scratchCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
     const userUrl = `https://api.scratch.mit.edu/users/${encodeURIComponent(clean)}`;
-    const res = await axios.get(userUrl, {
+    const data = await request.json(userUrl, {
       timeout: 10000,
       headers: { "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-Scratch" },
     });
 
-    const data = res.data;
     if (!data?.id) {
       return {
         valid: true,
@@ -30,7 +36,7 @@ export async function lookupScratch(username) {
     const status = data.profile?.status || "Tidak ada status.";
     const avatarUrl = data.profile?.images?.["90x90"] || null;
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       userId,
@@ -42,8 +48,11 @@ export async function lookupScratch(username) {
       avatarUrl,
       profileUrl: `https://scratch.mit.edu/users/${data.username}/`,
     };
+
+    scratchCache.set(cacheKey, result);
+    return result;
   } catch (err) {
-    if (err.response?.status === 404) {
+    if (err.status === 404 || err.response?.status === 404) {
       return {
         valid: true,
         exists: false,

@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const cdnjsCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupCdnjs(libName) {
   const clean = String(libName || "")
@@ -8,13 +11,15 @@ export async function lookupCdnjs(libName) {
     return { valid: false, reason: "Nama library CDNJS tidak boleh kosong." };
   }
 
+  const cached = cdnjsCache.get(clean);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://api.cdnjs.com/libraries/${encodeURIComponent(clean)}`, {
+    const d = await request.json(`https://api.cdnjs.com/libraries/${encodeURIComponent(clean)}`, {
       timeout: 10000,
       headers: { "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-CDNJS" },
     });
 
-    const d = res.data;
     if (!d?.name) {
       return {
         valid: true,
@@ -23,7 +28,7 @@ export async function lookupCdnjs(libName) {
       };
     }
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       name: d.name,
@@ -34,8 +39,11 @@ export async function lookupCdnjs(libName) {
       license: d.license || "Open Source",
       repository: d.repository?.url || "-",
     };
+
+    cdnjsCache.set(clean, result);
+    return result;
   } catch (err) {
-    if (err.response?.status === 404) {
+    if (err.status === 404 || err.response?.status === 404) {
       return {
         valid: true,
         exists: false,

@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   DEVICE_PROFILES,
   ACCEPT_LANGUAGES,
@@ -53,11 +52,11 @@ export async function translateText(text, lang = "id") {
   } catch (_) {}
 
   try {
-    const res = await axios.get("https://api.mymemory.translated.net/get", {
+    const res = await request.json("https://api.mymemory.translated.net/get", {
       params: { q: clean, langpair: `autodetect|${lang}` },
       timeout: 12000,
     });
-    const translatedText = res.data?.responseData?.translatedText;
+    const translatedText = res?.responseData?.translatedText;
     if (translatedText) {
       return {
         original: clean,

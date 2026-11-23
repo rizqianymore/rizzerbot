@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const breachCache = createTtlCache({ ttlMs: 30 * 60 * 1000, max: 200 });
 
 export async function checkEmailBreach(email) {
   const cleanEmail = String(email || "")
@@ -11,30 +14,33 @@ export async function checkEmailBreach(email) {
     };
   }
 
+  const cached = breachCache.get(cleanEmail);
+  if (cached) return cached;
+
   const targetUrl = `https://api.xposedornot.com/v1/check-email/${encodeURIComponent(cleanEmail)}`;
 
   let data = null;
   let source = "direct";
 
   try {
-    const res = await axios.get(targetUrl, {
+    data = await request.json(targetUrl, {
       timeout: 15000,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RizzerBot/OSINT-BreachCheck",
         Accept: "application/json",
       },
     });
-    data = res.data;
   } catch (err) {
-
-    if (err.response?.status === 404 || err.response?.data?.Error === "Not found") {
-      return {
+    if (err.status === 404 || err.response?.status === 404 || err.response?.data?.Error === "Not found") {
+      const notFoundResult = {
         valid: true,
         email: cleanEmail,
         breached: false,
         totalBreaches: 0,
         breaches: [],
       };
+      breachCache.set(cleanEmail, notFoundResult);
+      return notFoundResult;
     }
 
     try {
@@ -61,13 +67,15 @@ export async function checkEmailBreach(email) {
   }
 
   if (data?.Error === "Not found" || (data?.status && data.status !== "success")) {
-    return {
+    const notFoundResult = {
       valid: true,
       email: cleanEmail,
       breached: false,
       totalBreaches: 0,
       breaches: [],
     };
+    breachCache.set(cleanEmail, notFoundResult);
+    return notFoundResult;
   }
 
   let breachList = [];
@@ -79,7 +87,7 @@ export async function checkEmailBreach(email) {
     }
   }
 
-  return {
+  const result = {
     valid: true,
     email: cleanEmail,
     breached: breachList.length > 0,
@@ -87,4 +95,6 @@ export async function checkEmailBreach(email) {
     breaches: breachList,
     source,
   };
+  breachCache.set(cleanEmail, result);
+  return result;
 }

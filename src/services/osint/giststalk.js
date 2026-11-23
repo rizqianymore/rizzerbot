@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const gistCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupGitGists(username) {
   const clean = String(username || "")
@@ -8,8 +11,12 @@ export async function lookupGitGists(username) {
     return { valid: false, reason: "Username GitHub tidak boleh kosong." };
   }
 
+  const cacheKey = clean.toLowerCase();
+  const cached = gistCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://api.github.com/users/${encodeURIComponent(clean)}/gists?per_page=5`, {
+    const list = await request.json(`https://api.github.com/users/${encodeURIComponent(clean)}/gists?per_page=5`, {
       timeout: 10000,
       headers: {
         "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-Gist",
@@ -17,7 +24,6 @@ export async function lookupGitGists(username) {
       },
     });
 
-    const list = res.data;
     if (!Array.isArray(list) || list.length === 0) {
       return {
         valid: true,
@@ -40,7 +46,7 @@ export async function lookupGitGists(username) {
       };
     });
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       username: clean,
@@ -48,8 +54,11 @@ export async function lookupGitGists(username) {
       gists,
       profileUrl: `https://gist.github.com/${clean}`,
     };
+
+    gistCache.set(cacheKey, result);
+    return result;
   } catch (err) {
-    if (err.response?.status === 404) {
+    if (err.status === 404 || err.response?.status === 404) {
       return {
         valid: true,
         exists: false,
@@ -59,4 +68,5 @@ export async function lookupGitGists(username) {
     }
     return { valid: false, reason: err.message || "Gagal menghubungi GitHub Gist API." };
   }
+}
 }

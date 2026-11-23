@@ -1,8 +1,8 @@
-import axios from "axios";
 import { request } from "@/src/utils/request.js";
 
 const GOOGLE_DRIVE_ID_REGEX = /(?:file\/d\/|[?&]id=)([a-zA-Z0-9_-]{10,})/;
 const TERABOX_REGEX = /(?:terabox\.com|1024terabox\.com|terabox\.app)\/(?:s|share|t)\/([a-zA-Z0-9_-]{4,})/;
+const PIXELDRAIN_REGEX = /(?:pixeldrain\.com)\/(?:u|d|file)\/([a-zA-Z0-9_-]{6,16})/;
 
 export const MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024;
 
@@ -23,7 +23,7 @@ function parseFileName(contentDisposition) {
   if (utf8) {
     try {
       return decodeURIComponent(utf8[1].trim().replace(/^"|"$/g, ""));
-    } catch (_) {}
+    } catch (_) { }
   }
   const plain = String(contentDisposition).match(/filename="?([^";]+)"?/i);
   return plain ? plain[1].trim() : null;
@@ -53,6 +53,10 @@ function looksLikeHtml(buffer) {
   return head.includes("<!doctype html") || head.includes("<html") || head.includes("<head");
 }
 
+export function isPixeldrainUrl(url) {
+  return PIXELDRAIN_REGEX.test(String(url || ""));
+}
+
 export function isTeraboxUrl(url) {
   return TERABOX_REGEX.test(String(url || ""));
 }
@@ -71,15 +75,12 @@ export async function downloadGoogleDrive(url, logger) {
 
   let headInfo = {};
   try {
-    const head = await axios({
+    const head = await request(directUrl, {
       method: "HEAD",
-      url: directUrl,
       headers,
       timeout: 20000,
-      maxRedirects: 5,
-      validateStatus: () => true,
     });
-    headInfo = head.headers || {};
+    headInfo = head?.headers || {};
   } catch (err) {
     logger?.warn?.(`[gdrive head] ${err?.message || err}`);
   }
@@ -206,6 +207,39 @@ export async function downloadTerabox(url, logger) {
 
   throw new Error(
     "Terabox membatasi unduhan langsung untuk link publik (butuh login/cookie). " +
-      `Buka link berikut di browser untuk mengunduh manual:\n${url}`
+    `Buka link berikut di browser untuk mengunduh manual:\n${url}`
   );
+}
+
+export async function downloadPixeldrain(url, logger) {
+  const match = String(url).match(PIXELDRAIN_REGEX);
+  if (!match) throw new Error("Link Pixeldrain tidak valid (contoh: https://pixeldrain.com/u/xxxxxx).");
+  const fileId = match[1];
+
+  let meta = null;
+  try {
+    meta = await request.json(`https://pixeldrain.com/api/file/${fileId}/info`, {
+      timeout: 10000,
+    });
+  } catch (err) {
+    logger?.warn?.(`[pixeldrain meta] ${err?.message || err}`);
+  }
+
+  const directUrl = `https://pixeldrain.com/api/file/${fileId}`;
+  const buffer = await request.buffer(directUrl, {
+    timeout: 90000,
+    maxBytes: MAX_DOWNLOAD_BYTES,
+    retries: 1,
+  });
+
+  if (!buffer?.length) throw new Error("File dari Pixeldrain kosong atau tidak ditemukan.");
+
+  const fileName = meta?.name || `pixeldrain_${fileId}${guessExt(meta?.mime_type)}`;
+  const mime = meta?.mime_type || "application/octet-stream";
+
+  return {
+    buffer,
+    fileName,
+    mime,
+  };
 }

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 
 export async function checkPasswordLeak(password) {
   const clean = String(password || "");
@@ -12,14 +12,14 @@ export async function checkPasswordLeak(password) {
   const suffix = sha1.slice(5);
 
   try {
-    const res = await axios.get(`https://api.pwnedpasswords.com/range/${prefix}`, {
+    const rawData = await request.text(`https://api.pwnedpasswords.com/range/${prefix}`, {
       timeout: 10000,
       headers: {
         "User-Agent": "Mozilla/5.0 RizzerBot/OSINT-PwnedPass",
       },
     });
 
-    const lines = String(res.data || "").split("\n");
+    const lines = String(rawData || "").split("\n");
     let matchCount = 0;
 
     for (const line of lines) {

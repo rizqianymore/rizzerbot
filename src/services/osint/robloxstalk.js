@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 import { createTtlCache } from "@/src/utils/ttl-cache.js";
 
 const robloxCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
@@ -15,14 +15,16 @@ export async function lookupRoblox(rawUsername) {
   if (cached) return cached;
 
   try {
-
-    const resId = await axios.post(
+    const resId = await request.json(
       "https://users.roblox.com/v1/usernames/users",
-      { usernames: [username], excludeBannedUsers: false },
-      { timeout: 8000 }
+      {
+        method: "POST",
+        data: { usernames: [username], excludeBannedUsers: false },
+        timeout: 8000,
+      }
     );
 
-    const userEntry = resId.data?.data?.[0];
+    const userEntry = resId?.data?.[0];
     if (!userEntry) {
       return {
         valid: true,
@@ -36,17 +38,15 @@ export async function lookupRoblox(rawUsername) {
     const displayName = userEntry.displayName || userEntry.name;
 
     const [resProfile, resAvatar] = await Promise.all([
-      axios.get(`https://users.roblox.com/v1/users/${userId}`, { timeout: 8000 }).catch(() => null),
-      axios
-        .get(
-          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
-          { timeout: 8000 }
-        )
-        .catch(() => null),
+      request.json(`https://users.roblox.com/v1/users/${userId}`, { timeout: 8000 }).catch(() => null),
+      request.json(
+        `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
+        { timeout: 8000 }
+      ).catch(() => null),
     ]);
 
-    const profileData = resProfile?.data || {};
-    const avatarUrl = resAvatar?.data?.data?.[0]?.imageUrl || null;
+    const profileData = resProfile || {};
+    const avatarUrl = resAvatar?.data?.[0]?.imageUrl || null;
 
     let createdDate = "-";
     if (profileData.created) {

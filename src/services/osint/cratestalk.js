@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const cratesCache = createTtlCache({ ttlMs: 15 * 60 * 1000, max: 200 });
 
 export async function lookupCrates(crateName) {
   const clean = String(crateName || "")
@@ -8,13 +11,16 @@ export async function lookupCrates(crateName) {
     return { valid: false, reason: "Nama crate tidak boleh kosong." };
   }
 
+  const cached = cratesCache.get(clean);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(`https://crates.io/api/v1/crates/${encodeURIComponent(clean)}`, {
+    const data = await request.json(`https://crates.io/api/v1/crates/${encodeURIComponent(clean)}`, {
       timeout: 10000,
       headers: { "User-Agent": "RizzerBot/OSINT-Crates (contact@rizzerbot.local)" },
     });
 
-    const d = res.data?.crate;
+    const d = data?.crate;
     if (!d?.id) {
       return {
         valid: true,
@@ -23,7 +29,7 @@ export async function lookupCrates(crateName) {
       };
     }
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       name: d.name,
@@ -37,8 +43,11 @@ export async function lookupCrates(crateName) {
       createdDate: d.created_at ? d.created_at.split("T")[0] : "-",
       crateUrl: `https://crates.io/crates/${d.name}`,
     };
+
+    cratesCache.set(clean, result);
+    return result;
   } catch (err) {
-    if (err.response?.status === 404) {
+    if (err.status === 404 || err.response?.status === 404) {
       return {
         valid: true,
         exists: false,

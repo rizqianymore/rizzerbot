@@ -3,7 +3,7 @@ import path from "path";
 import dns from "node:dns";
 import { fileURLToPath } from "url";
 import { DatabaseSync } from "node:sqlite";
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 import { parseNik, enrichWilayah } from "@/src/services/osint/nikparse.js";
 import { parseOperator } from "@/src/services/osint/cekoperator.js";
 import { searchSimcardByPhone, searchSimcardByNik, isSimcardReady } from "@/src/services/osint/simcardService.js";
@@ -170,7 +170,7 @@ export async function getCoordinates(query) {
   const cleanQuery = query.replace(/[^\w\s,.-]/gi, " ").trim();
 
   try {
-    const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+    const data = await request.json("https://nominatim.openstreetmap.org/search", {
       params: {
         q: cleanQuery,
         format: "json",
@@ -181,14 +181,14 @@ export async function getCoordinates(query) {
           "Mozilla/5.0 (compatible; RizzerBot/2.0; +https://rizzerbot.id)",
         "Accept-Language": "id,en;q=0.9",
       },
-      timeout: 250,
+      timeout: 1000,
     });
 
-    if (Array.isArray(res.data) && res.data.length > 0) {
+    if (Array.isArray(data) && data.length > 0) {
       const coord = {
-        lat: parseFloat(res.data[0].lat),
-        lon: parseFloat(res.data[0].lon),
-        displayName: res.data[0].display_name,
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        displayName: data[0].display_name,
       };
       geoCache.set(key, coord);
       return coord;

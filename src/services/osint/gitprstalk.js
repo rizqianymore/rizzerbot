@@ -1,4 +1,7 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
+import { createTtlCache } from "@/src/utils/ttl-cache.js";
+
+const gitPrCache = createTtlCache({ ttlMs: 10 * 60 * 1000, max: 200 });
 
 export async function lookupGitPr(username) {
   const clean = String(username || "")
@@ -8,8 +11,12 @@ export async function lookupGitPr(username) {
     return { valid: false, reason: "Username GitHub tidak boleh kosong." };
   }
 
+  const cacheKey = clean.toLowerCase();
+  const cached = gitPrCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
-    const res = await axios.get(
+    const d = await request.json(
       `https://api.github.com/search/issues?q=author:${encodeURIComponent(clean)}+type:pr&per_page=5`,
       {
         timeout: 10000,
@@ -20,10 +27,9 @@ export async function lookupGitPr(username) {
       }
     );
 
-    const d = res.data;
-    const totalCount = d.total_count || 0;
+    const totalCount = d?.total_count || 0;
 
-    if (totalCount === 0 || !Array.isArray(d.items)) {
+    if (totalCount === 0 || !Array.isArray(d?.items)) {
       return {
         valid: true,
         exists: false,
@@ -39,13 +45,16 @@ export async function lookupGitPr(username) {
       url: item.html_url,
     }));
 
-    return {
+    const result = {
       valid: true,
       exists: true,
       username: clean,
       totalCount,
       prs,
     };
+
+    gitPrCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     return { valid: false, reason: err.message || "Gagal menghubungi GitHub PR API." };
   }

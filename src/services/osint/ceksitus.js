@@ -1,4 +1,4 @@
-import axios from "axios";
+import { request } from "@/src/utils/request.js";
 import dns from "node:dns/promises";
 
 const SUSPICIOUS_KEYWORDS = [
@@ -101,16 +101,19 @@ export async function analyzeWebsite(rawUrl) {
       rdapUrl = `https://rdap.org/domain/${hostname}`;
     }
 
-    const rdapRes = await axios.get(rdapUrl, { timeout: 6000 }).catch(() => null);
-    if (rdapRes?.data) {
-      const entities = rdapRes.data.entities || [];
+    let rdapRes = null;
+    try {
+      rdapRes = await request.json(rdapUrl, { timeout: 6000 });
+    } catch (_) {}
+    if (rdapRes) {
+      const entities = rdapRes.entities || [];
       const registrarEntity = entities.find((e) => e.roles?.includes("registrar"));
       if (registrarEntity?.vcardArray?.[1]) {
         const fn = registrarEntity.vcardArray[1].find((item) => item[0] === "fn");
         if (fn) registrar = fn[3];
       }
 
-      const events = rdapRes.data.events || [];
+      const events = rdapRes.events || [];
       const regEvent = events.find((e) => e.eventAction === "registration");
       if (regEvent?.eventDate) {
         createdDate = regEvent.eventDate.split("T")[0];
