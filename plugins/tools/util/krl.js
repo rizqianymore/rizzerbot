@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { request } from "@/src/utils/request.js";
 
 const STATIONS_FILE = path.join(process.cwd(), "src", "utils", "krl-stations.json");
 let stationsCache = null;
@@ -45,24 +46,22 @@ function findStation(query) {
 
 /**
  * Fetch schedule from rutekrl.com API
+ * Uses the shared smartRequest client (retries + transient-error handling)
+ * so brief network hiccups don't surface as "no schedule available".
  * @param {string} stationId
  * @returns {Promise<Array<any> | null>}
  */
 async function fetchKrlSchedule(stationId) {
   try {
     const url = `https://rutekrl.com/api/schedules?stationId=${encodeURIComponent(stationId)}&from=00:00&to=24:00`;
-    const res = await fetch(url, {
-      method: "GET",
+    const json = await request.get(url, {
+      responseType: "json",
+      timeout: 15000,
+      retries: 2,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Referer: "https://rutekrl.com/jadwal",
       },
-      signal: AbortSignal.timeout(10000),
     });
-
-    if (!res.ok) return null;
-    const json = await res.json();
     return Array.isArray(json?.data) ? json.data : null;
   } catch {
     return null;
@@ -211,32 +210,34 @@ export default {
       }
     }
 
-    // Combine: prioritized upcoming trains first, followed by others if upcoming is low
-    let displayList = upcoming.slice(0, 15);
+    // Combine: prioritize 5 nearest upcoming trains first, followed by previous if needed
+    let displayList = upcoming.slice(0, 5);
     if (displayList.length < 5 && past.length > 0) {
-      displayList = [...displayList, ...past.slice(0, 10 - displayList.length)];
+      displayList = [...displayList, ...past.slice(0, 5 - displayList.length)];
     }
 
     const timeStr = `${String(wibHours).padStart(2, "0")}:${String(wibMinutes).padStart(2, "0")} WIB`;
 
-    const lines = displayList.map((t, i) => {
-      const diffStr = Number.isFinite(t.diff) && t.diff >= 0 && t.diff <= 180 ? ` _(±${t.diff} mnt lagi)_` : "";
-      return (
-        `*${i + 1}. KA ${t.trainId}* ➔ *${t.destination}*\n` +
-        `   🕒 Berangkat: *${t.departTime}*${diffStr}\n` +
-        `   🛤️ Jalur: ${t.lineName || t.routeName || "-"}`
-      );
+    let totalText =
+      `┌── JADWAL KRL COMMUTER LINE\n` +
+      `│ Stasiun Asal : ${station.name} (${station.id})\n` +
+      `│ Waktu Acuan  : ${timeStr}\n` +
+      (filterNote ? `│ Filter       :${filterNote}\n` : "") +
+      `└──\n\n`;
+
+    displayList.forEach((t, i) => {
+      const isLast = i === displayList.length - 1;
+      const branch = isLast ? "└──" : "├──";
+      const subPipe = isLast ? "   " : "│  ";
+      const diffStr = Number.isFinite(t.diff) && t.diff >= 0 && t.diff <= 180 ? ` (${t.diff} mnt lagi)` : "";
+
+      totalText += `${branch} [${i + 1}] KA ${t.trainId} ➔ ${t.destination}\n`;
+      totalText += `${subPipe} Berangkat : ${t.departTime} WIB${diffStr}\n`;
+      totalText += `${subPipe} Rute      : ${t.lineName || t.routeName || "-"}\n`;
+      if (!isLast) totalText += `│\n`;
     });
 
-    const totalText =
-      `🚆 *JADWAL KRL COMMUTER LINE*\n` +
-      `📍 Stasiun Asal: *${station.name} (${station.id})*${filterNote}\n` +
-      `⏰ Waktu Sekarang: *${timeStr}*\n` +
-      `─────────────────────────\n\n` +
-      lines.join("\n\n") +
-      `\n\n─────────────────────────\n` +
-      `_💡 Menampilkan ${displayList.length} dari ${filtered.length} jadwal keberangkatan._\n` +
-      `_🌐 Sumber: https://rutekrl.com_`;
+    totalText += `\n_Menampilkan 5 jadwal kereta terdekat. Sumber: rutekrl.com_`;
 
     return reply(totalText);
   },
