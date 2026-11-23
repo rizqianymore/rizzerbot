@@ -25,7 +25,7 @@ export default {
   premiumOnly: false,
   cooldownMs: 3000,
   category: "Sticker",
-  run: async (sock, msg, args, { reply, logger }) => {
+  run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     const { text, bgColor } = parseBratArgs(args, { allowVideo: false, allowGreen: true });
 
     // Jika tanpa teks, kirim stiker polosan cat1
@@ -35,6 +35,8 @@ export default {
     if (!check.ok) {
       return reply(check.error);
     }
+
+    await sendTyping();
 
     try {
       const template = TEMPLATES?.cat1 || CAT1_TEMPLATE;
