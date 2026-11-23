@@ -1,13 +1,19 @@
 export const settings = {
+  // ==========================================
+  // INFORMASI BOT & OWNER (Ambil dari .env)
+  // ==========================================
   botName: process.env.BOT_NAME || "Rizzer Bot",
   ownerName: process.env.OWNER_NAME || "Pentagon",
-  ownerNumber: process.env.OWNER_NUMBER || "6287847566690",
-  pairingNumber: process.env.PAIRING_NUMBER || "6287847566690",
+  ownerNumber: process.env.OWNER_NUMBER || "",
+  pairingNumber: process.env.PAIRING_NUMBER || "",
   ownerNumbers: [],
   premiumNumbers: [],
   adminNumbers: [],
   usePairingCode: true,
 
+  // ==========================================
+  // PENGATURAN UMUM BOT (Bisa diatur di sini)
+  // ==========================================
   public: true,
   maintenance: false,
   maintenanceMessage: "[!] Bot sedang maintenance. Coba lagi nanti.",
@@ -20,6 +26,9 @@ export const settings = {
   responseDelay: 0,
   menuImage: true,
 
+  // ==========================================
+  // KEAMANAN & PROTEKSI GRUP
+  // ==========================================
   antiBotLuar: true,
   botNumbers: [],
   antiVirtex: true,
@@ -27,6 +36,9 @@ export const settings = {
   antiBurst: true,
   antilinkExtra: true,
 
+  // ==========================================
+  // STIKER & BRANDING TAMPILAN
+  // ==========================================
   stickerPackName: process.env.STICKER_PACK_NAME || "Rizzer Bot Stickers",
   stickerAuthor: process.env.STICKER_AUTHOR || "Rizzer Bot [Private]",
   image: "assets/image/banner.png",
@@ -35,23 +47,26 @@ export const settings = {
   linkUrl: "https://whatsapp.com/",
   linkImage: "assets/image/banner.png",
 
+  // ==========================================
+  // CHANNEL / SALURAN WHATSAPP
+  // ==========================================
   channelJid: process.env.CHANNEL_JID || "",
   channelName: process.env.CHANNEL_NAME || "Official Channel",
   autoForwardTrxToChannel: false,
 
-  siswaApiUrl:
-    process.env.SISWA_API_URL ||
-    "https://script.google.com/macros/s/AKfycbzFd_CjY2y6jnle9hmlp71nyxy8mscur2tWF8gz773-IthSVkKF3v3Px3viPhPcA4U2mw/exec",
-
-  qrisPayload:
-    process.env.QRIS_PAYLOAD ||
-    "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
-  qrisString:
-    process.env.QRIS_PAYLOAD ||
-    "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
+  // ==========================================
+  // INTEGRASI API & PEMBAYARAN (Diambil dari .env)
+  // ==========================================
+  siswaApiUrl: process.env.SISWA_API_URL || "",
+  qrisPayload: process.env.QRIS_PAYLOAD || "",
+  qrisString: process.env.QRIS_PAYLOAD || "",
   qrisMerchantName: process.env.QRIS_MERCHANT_NAME || "Rizzer Cloud",
-  qrisCity: process.env.QRIS_CITY || "JAKARTA BARAT",
+  qrisCity: process.env.QRIS_CITY || "JAKARTA",
 
+  // ==========================================
+  // ENVIRONMENT VARIABLE DYNAMIC PROXY
+  // Menyediakan akses transparan ke process.env
+  // ==========================================
   env: new Proxy(
     {},
     {
