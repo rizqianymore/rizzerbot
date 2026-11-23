@@ -1,3 +1,4 @@
+import path from "path";
 import {
   TEMPLATES,
   createBratImage,
@@ -5,6 +6,15 @@ import {
   parseBratArgs,
   validateBratText,
 } from "@/src/services/fetch/brat.js";
+
+// Template fallback aman jika bot berjalan tanpa restart proses utama
+const CAT1_TEMPLATE = TEMPLATES?.cat1 || {
+  localPath: path.join(process.cwd(), "assets", "brat", "cat1.png"),
+  width: 715,
+  height: 720,
+  safeZone: { a: 400, b: 680, c: 50, d: 665 },
+  stroke: true,
+};
 
 export default {
   name: "cat1",
@@ -26,7 +36,8 @@ export default {
     }
 
     try {
-      const imageBuffer = await createBratImage(displayText, TEMPLATES.cat1, { bgColor });
+      const template = TEMPLATES?.cat1 || CAT1_TEMPLATE;
+      const imageBuffer = await createBratImage(displayText, template, { bgColor });
       await sendStickerBuffer(sock, msg, imageBuffer);
     } catch (err) {
       logger?.error?.(`[cat1] ${err?.stack || err?.message || err}`);
