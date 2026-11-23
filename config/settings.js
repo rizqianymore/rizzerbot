@@ -1,8 +1,8 @@
 export const settings = {
-  botName: "Rizzer Bot",
-  ownerName: "Pentagon",
-  ownerNumber: "6287847566690",
-  pairingNumber: "6287847566690",
+  botName: process.env.BOT_NAME || "Rizzer Bot",
+  ownerName: process.env.OWNER_NAME || "Pentagon",
+  ownerNumber: process.env.OWNER_NUMBER || "6287847566690",
+  pairingNumber: process.env.PAIRING_NUMBER || "6287847566690",
   ownerNumbers: [],
   premiumNumbers: [],
   adminNumbers: [],
@@ -11,7 +11,7 @@ export const settings = {
   public: true,
   maintenance: false,
   maintenanceMessage: "[!] Bot sedang maintenance. Coba lagi nanti.",
-  prefix: ".",
+  prefix: process.env.PREFIX || ".",
   publicCommands: ["sewa", "owner", "ping", "uptime", "menu", "help", "panduan"],
   silentDeny: false,
   autoRead: false,
@@ -27,82 +27,40 @@ export const settings = {
   antiBurst: true,
   antilinkExtra: true,
 
-  stickerPackName: "Rizzer Bot Stickers",
-  stickerAuthor: "Rizzer Bot [Private]",
+  stickerPackName: process.env.STICKER_PACK_NAME || "Rizzer Bot Stickers",
+  stickerAuthor: process.env.STICKER_AUTHOR || "Rizzer Bot [Private]",
   image: "assets/image/banner.png",
   linkTitle: "Rizzer Bot",
   linkBody: "Simple & Clean WhatsApp Bot",
   linkUrl: "https://whatsapp.com/",
   linkImage: "assets/image/banner.png",
 
-  channelJid: "",
-  channelName: "Official Channel",
+  channelJid: process.env.CHANNEL_JID || "",
+  channelName: process.env.CHANNEL_NAME || "Official Channel",
   autoForwardTrxToChannel: false,
 
   siswaApiUrl:
+    process.env.SISWA_API_URL ||
     "https://script.google.com/macros/s/AKfycbzFd_CjY2y6jnle9hmlp71nyxy8mscur2tWF8gz773-IthSVkKF3v3Px3viPhPcA4U2mw/exec",
 
   qrisPayload:
+    process.env.QRIS_PAYLOAD ||
     "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
   qrisString:
+    process.env.QRIS_PAYLOAD ||
     "00020101021126570011ID.DANA.WWW011893600915303511630202090351163020303UMI51440014ID.CO.QRIS.WWW0215ID10265955012340303UMI5204899953033605802ID5912Rizzer Cloud6013JAKARTA BARAT610511850630425C2",
-  qrisMerchantName: "Rizzer Cloud",
-  qrisCity: "JAKARTA BARAT",
+  qrisMerchantName: process.env.QRIS_MERCHANT_NAME || "Rizzer Cloud",
+  qrisCity: process.env.QRIS_CITY || "JAKARTA BARAT",
 
-  env: {
-    GEMINI_API_KEY: "",
-    GEMINI_MODEL: "gemini-2.0-flash",
-    DEEPSEEK_API_KEY: "",
-    DEEPSEEK_COOKIE_TOKEN: "",
-    GROQ_API_KEY: "",
-    OPENROUTER_API_KEY: "",
-    OPENCODE_API_KEY: "",
-    CEREBRAS_API_KEY: "",
-    MISTRAL_API_KEY: "",
-    GITHUB_TOKEN: "",
-    NVIDIA_API_KEY: "",
-    OCRSPACE_API_KEY: "",
-    VT_API_KEY: "",
-
-    BRIGHTDATA_ENABLED: process.env.BRIGHTDATA_ENABLED || "0",
-    BRIGHTDATA_CUSTOMER: process.env.BRIGHTDATA_CUSTOMER || "",
-    BRIGHTDATA_COUNTRY: "",
-    BRIGHTDATA_FIRST_HOSTS: "",
-
-    BRIGHTDATA_API_KEY: "",
-    BRIGHTDATA_ZONE: process.env.BRIGHTDATA_ZONE || "web_unlocker2",
-
-    BRIGHTDATA_PROXY_ZONE: process.env.BRIGHTDATA_PROXY_ZONE || "web_unlocker2",
-    BRIGHTDATA_PROXY_PASSWORD: process.env.BRIGHTDATA_PROXY_PASSWORD || "",
-    BRIGHTDATA_PROXY: "",
-    BRIGHTDATA_PROXY_HOST: process.env.BRIGHTDATA_PROXY_HOST || "brd.superproxy.io",
-    BRIGHTDATA_PROXY_PORT: process.env.BRIGHTDATA_PROXY_PORT || "44445",
-
-    BRIGHTDATA_ISP_ZONE: process.env.BRIGHTDATA_ISP_ZONE || "isp_proxy1",
-    BRIGHTDATA_ISP_PASSWORD: process.env.BRIGHTDATA_ISP_PASSWORD || "",
-
-    BRIGHTDATA_SCRAPING_BROWSER_ENABLED: "1",
-    BRIGHTDATA_SCRAPING_BROWSER_ZONE: "scraping_browser1",
-    BRIGHTDATA_SCRAPING_BROWSER_PASSWORD: "",
-    BRIGHTDATA_SCRAPING_BROWSER_WS: "",
-
-    BRIGHTDATA_DATASET_API_KEY: "",
-
-    ALLOW_EVAL: "true",
-    SLOW_CMD_MS: "3000",
-    COMMAND_TIMEOUT_MS: "30000",
-    PUPPETEER_EXECUTABLE_PATH: "",
-
-    CCTV_BASE_URL: process.env.CCTV_BASE_URL || "",
-    CCTV_USER: process.env.CCTV_USER || "",
-    CCTV_PASS: process.env.CCTV_PASS || "",
-  },
-};
-
-if (settings.env && typeof settings.env === "object") {
-  for (const [key, value] of Object.entries(settings.env)) {
-    if (value !== undefined && value !== null && String(value).trim() !== "") {
-      process.env[key] = String(value);
+  env: new Proxy(
+    {},
+    {
+      get: (_, prop) => process.env[prop] || "",
+      set: (_, prop, value) => {
+        process.env[prop] = String(value);
+        return true;
+      },
+      has: (_, prop) => prop in process.env,
     }
-  }
-}
+  ),
+};
