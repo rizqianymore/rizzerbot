@@ -15,6 +15,7 @@ export default {
   description: "Cek port terbuka, CPE, dan CVE vuln dari IP via Shodan InternetDB (Open Source)",
   usage: "<ip>",
   category: "OSINT",
+  ownerOnly: true,
   cooldownMs: 5000,
   run: async (_sock, _msg, args, context) => {
     const ip = (args[0] || "").trim();

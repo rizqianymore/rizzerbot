@@ -7,6 +7,7 @@ export default {
     "Cek apakah kata sandi pernah bocor di database data breach (menggunakan model privasi aman k-Anonymity HIBP)",
   usage: "<kata_sandi>",
   category: "Stalk",
+  ownerOnly: true,
   cooldownMs: 3000,
   run: async (_sock, _msg, args, context) => {
     const input = args.join(" ").trim();

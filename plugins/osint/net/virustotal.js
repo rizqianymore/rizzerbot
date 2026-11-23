@@ -14,7 +14,7 @@ export default {
   description:
     "Cek URL/file dengan antivirus (VirusTotal 70+ engine jika ada VT_API_KEY, atau free scraping URLHaus/urlscan/MalwareBazaar tanpa key)",
   usage: "<url> atau reply file, cth: vt https://contoh.com/x.apk",
-  premiumOnly: true,
+  ownerOnly: true,
   cooldownMs: 15000,
   category: "OSINT",
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

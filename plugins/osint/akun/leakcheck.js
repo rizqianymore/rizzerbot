@@ -6,6 +6,7 @@ export default {
   description: "Cek riwayat kebocoran data (data breach) email di internet",
   usage: "<email address>",
   category: "OSINT",
+  ownerOnly: true,
   cooldownMs: 3000,
   run: async (_sock, _msg, args, context) => {
     let email = args[0]?.trim();

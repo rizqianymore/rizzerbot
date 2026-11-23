@@ -7,6 +7,7 @@ export default {
   description: "Transkripsi pesan suara (VN) atau file audio menjadi teks menggunakan AI Whisper / Gemini",
   usage: "[reply VN/audio]",
   category: "Tools & Media",
+  premiumOnly: true,
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();
