@@ -3,7 +3,13 @@ import { settings } from "@/config/settings.js";
 import { cloneValue, isRecord, toBoolean, toJidList } from "./utils.js";
 
 export const configDefaults = cloneValue(settings);
-export const configuredOwnerValues = [settings.ownerNumber, settings.pairingNumber, settings.ownerNumbers];
+export const configuredOwnerValues = [
+  process.env.OWNER_NUMBER,
+  process.env.PAIRING_NUMBER,
+  settings.ownerNumber,
+  settings.pairingNumber,
+  settings.ownerNumbers,
+];
 export const configuredAdminValues = [settings.adminNumbers, settings.admins];
 export const configuredPremiumValues = [settings.premiumNumbers, settings.premiumUsers];
 export const schemaVersion = 2;

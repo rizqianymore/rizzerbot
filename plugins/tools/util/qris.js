@@ -21,11 +21,10 @@ export default {
       );
     }
 
-    const staticQris = settings.qrisPayload || settings.qrisString || "";
+    const staticQris = process.env.QRIS_PAYLOAD || settings.qrisPayload || settings.qrisString || "";
     if (!staticQris) {
       return reply(
-        "[!] Pengaturan QRIS belum ada.\n" +
-          "Isi `qrisPayload` di dalam file `config/settings.js` dengan string QRIS statis Anda."
+        "[!] Pengaturan QRIS belum ada.\n" + "Isi `QRIS_PAYLOAD` di dalam file `.env` dengan string QRIS statis Anda."
       );
     }
 
@@ -41,10 +40,13 @@ export default {
         minimumFractionDigits: 0,
       }).format(amount);
 
+      const mName = process.env.QRIS_MERCHANT_NAME || info.merchantName || settings.qrisMerchantName || "Merchant";
+      const mCity = process.env.QRIS_CITY || info.merchantCity || settings.qrisCity || "Indonesia";
+
       const caption =
         `┌── QRIS DINAMIS\n` +
-        `│ Merchant: ${info.merchantName || settings.qrisMerchantName}\n` +
-        `│ Kota: ${info.merchantCity || settings.qrisCity}\n` +
+        `│ Merchant: ${mName}\n` +
+        `│ Kota: ${mCity}\n` +
         `│ Nominal: ${formattedNominal}\n` +
         `│ Tipe: Dinamis (Nominal Terkunci Otomatis)\n` +
         `└─\n\n` +
