@@ -76,10 +76,11 @@ export async function createSubBot(number, onPairingCode, assignedOwner = null) 
     msgRetryCounterCache,
     generateHighQualityLinkPreview: false,
     shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
-    keepAliveIntervalMs: 25000,
-    connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 60000,
+    keepAliveIntervalMs: 15000,
+    connectTimeoutMs: 90000,
+    defaultQueryTimeoutMs: 90000,
     emitOwnEvents: true,
+    maxMsgRetryCount: 5,
     autoFollowNewsletterOnConnect: false,
   });
 

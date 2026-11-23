@@ -1,32 +1,39 @@
-const HEARTBEAT_MS = 4 * 60 * 1000;
-const MAX_FAILS = 3;
+const HEARTBEAT_MS = 2 * 60 * 1000;
+const MAX_FAILS = 4;
 const LAG_SAMPLE_MS = 2000;
-const LAG_WARN_MS = 1500;
+const LAG_WARN_MS = 2000;
 
 export function startKeepAlive(sock, { logger = console, restart = null, intervalMs = HEARTBEAT_MS } = {}) {
   let fails = 0;
   let stopped = false;
+  let inFlight = false;
   const timer = setInterval(async () => {
-    if (stopped) return;
+    if (stopped || inFlight) return;
 
     if (!sock?.authState?.creds?.registered || !sock?.ws?.isOpen) return;
+    inFlight = true;
     try {
-      await sock?.sendPresenceUpdate?.("available");
+      await Promise.race([
+        sock?.sendPresenceUpdate?.("available"),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Presence timeout")), 12000)),
+      ]);
       fails = 0;
     } catch (err) {
       fails += 1;
       try {
         logger?.warn?.(`[KeepAlive] heartbeat gagal ${fails}x: ${err?.message || err}`);
-      } catch (_) {}
+      } catch (_) { }
       if (fails >= MAX_FAILS) {
         fails = 0;
         try {
-          logger?.warn?.("[KeepAlive] socket diduga stale, restart koneksi...");
-        } catch (_) {}
+          logger?.warn?.("[KeepAlive] socket latency tinggi / stale, auto recover koneksi...");
+        } catch (_) { }
         try {
           await restart?.();
-        } catch (_) {}
+        } catch (_) { }
       }
+    } finally {
+      inFlight = false;
     }
   }, intervalMs);
   if (timer.unref) timer.unref();
@@ -48,7 +55,7 @@ export function startStabilityWatchdog({ logger = console, sampleMs = LAG_SAMPLE
       try {
         const mem = Math.round((process.memoryUsage()?.heapUsed || 0) / 1024 / 1024);
         logger?.warn?.(`[Stability] event-loop lag ${lag}ms (heap ${mem}MB) — event loop terbebani sementara`);
-      } catch (_) {}
+      } catch (_) { }
     }
   }, sampleMs);
   if (timer.unref) timer.unref();

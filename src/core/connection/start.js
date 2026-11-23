@@ -139,12 +139,13 @@ export async function startBot() {
       msgRetryCounterCache,
       generateHighQualityLinkPreview: false,
       shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
-      keepAliveIntervalMs: 25000,
-      connectTimeoutMs: 60000,
-      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 15000,
+      connectTimeoutMs: 90000,
+      defaultQueryTimeoutMs: 90000,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 500,
+      retryRequestDelayMs: 750,
+      maxMsgRetryCount: 5,
       autoFollowNewsletterOnConnect: false,
     });
 
