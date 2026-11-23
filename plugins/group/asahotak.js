@@ -64,9 +64,7 @@ export default {
 
       if (input.toLowerCase() === "nyerah") {
         activeGames.delete(remoteJid);
-        return reply(
-          `*MENYERAH!*\n\nJawaban yang benar adalah: *${game.jawaban}*\nPenjelasan: _${game.petunjuk}_`
-        );
+        return reply(`*MENYERAH!*\n\nJawaban yang benar adalah: *${game.jawaban}*\nPenjelasan: _${game.petunjuk}_`);
       }
 
       if (input.toLowerCase() === game.jawaban.toLowerCase()) {

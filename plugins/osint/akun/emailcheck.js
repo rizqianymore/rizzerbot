@@ -97,13 +97,13 @@ export default {
       const txt = await dns.resolveTxt(domain);
       const flattened = txt.map((t) => (Array.isArray(t) ? t.join("") : t));
       hasSpf = flattened.some((t) => t.toLowerCase().startsWith("v=spf1"));
-    } catch { }
+    } catch {}
 
     try {
       const dmarcTxt = await dns.resolveTxt(`_dmarc.${domain}`);
       const flattened = dmarcTxt.map((t) => (Array.isArray(t) ? t.join("") : t));
       hasDmarc = flattened.some((t) => t.toLowerCase().startsWith("v=dmarc1"));
-    } catch { }
+    } catch {}
 
     const isValidSyntax = Boolean(match);
     const hasMx = mxRecords.length > 0;

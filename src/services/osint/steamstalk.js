@@ -56,7 +56,6 @@ export async function lookupSteam(rawInput) {
   try {
     xml = await fetchSteamXml(targetUrl);
   } catch (err) {
-
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {

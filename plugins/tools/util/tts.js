@@ -73,10 +73,8 @@ export default {
     let text = textParts.join(" ").trim();
 
     if (!text) {
-
       let qText = getQuotedText(quoted);
       if (!qText) {
-
         const ctxQuoted =
           msg.message?.extendedTextMessage?.contextInfo?.quotedMessage ||
           msg.message?.imageMessage?.contextInfo?.quotedMessage ||
@@ -86,7 +84,6 @@ export default {
 
         if (ctxQuoted) qText = getQuotedText(ctxQuoted);
         else {
-
           for (const v of Object.values(msg.message || {})) {
             if (v?.contextInfo?.quotedMessage) {
               qText = getQuotedText(v.contextInfo.quotedMessage);
@@ -138,7 +135,6 @@ export default {
         try {
           buf = await request.buffer(url, { headers, timeout: 15000 });
         } catch (_) {
-
           const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const ab = await res.arrayBuffer();

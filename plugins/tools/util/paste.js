@@ -1,7 +1,6 @@
 import { request } from "@/src/utils/request.js";
 
 async function uploadPaste(content) {
-
   try {
     const res = await request.json("https://katb.in/api/paste", {
       method: "POST",

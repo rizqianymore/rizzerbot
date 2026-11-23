@@ -31,10 +31,7 @@ export default {
     else verdict = "Parah banget, mending jangan deh...";
 
     const text =
-      `*PENILAIAN BOT*\n` +
-      `├─ Target   : ${subject}\n` +
-      `├─ Rating   : *${score}%*\n` +
-      `└─ Catatan  : ${verdict}`;
+      `*PENILAIAN BOT*\n` + `├─ Target   : ${subject}\n` + `├─ Rating   : *${score}%*\n` + `└─ Catatan  : ${verdict}`;
 
     return reply(text);
   },

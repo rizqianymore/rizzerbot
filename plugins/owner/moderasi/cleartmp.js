@@ -17,9 +17,9 @@ export default {
       const freedMB = (freedBytes / (1024 * 1024)).toFixed(2);
       await reply(
         `*Pembersihan Semua Cache & Sampah Selesai!*\n\n` +
-        `*File dihapus:* ${deletedCount} file (cache, temp, dump, session keys)\n` +
-        `*Ruang dibebaskan:* ${freedMB} MB\n` +
-        `*Renderer Chrome:* Dibersihkan (orphaned process killed)`
+          `*File dihapus:* ${deletedCount} file (cache, temp, dump, session keys)\n` +
+          `*Ruang dibebaskan:* ${freedMB} MB\n` +
+          `*Renderer Chrome:* Dibersihkan (orphaned process killed)`
       );
     } catch (err) {
       await reply(`Gagal membersihkan sampah: ${err.message}`);

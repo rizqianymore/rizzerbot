@@ -31,16 +31,9 @@ export default {
       const targetJid = randomMember.id;
       const targetNum = targetJid.split("@")[0].split(":")[0];
 
-      const text =
-        `*SIAPAKAH GRUP*\n` +
-        `├─ Pertanyaan : ${question}\n` +
-        `└─ Terpilih   : @${targetNum}`;
+      const text = `*SIAPAKAH GRUP*\n` + `├─ Pertanyaan : ${question}\n` + `└─ Terpilih   : @${targetNum}`;
 
-      return sock.sendMessage(
-        msg.key.remoteJid,
-        { text, mentions: [targetJid] },
-        { quoted: msg }
-      );
+      return sock.sendMessage(msg.key.remoteJid, { text, mentions: [targetJid] }, { quoted: msg });
     } catch (err) {
       return reply(`Gagal memilih anggota: ${err.message}`);
     }

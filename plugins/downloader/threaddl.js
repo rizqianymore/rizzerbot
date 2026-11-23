@@ -23,7 +23,6 @@ export default {
     }
 
     try {
-
       const { buffer, info } = await unifiedDownload(url, { mode: "video", logger });
       if (!buffer?.length) throw new Error("Gagal ambil media Threads");
       const mime = sniffMime(buffer);

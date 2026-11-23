@@ -1,14 +1,11 @@
-import {
-  createUniversalMailbox,
-  getUniversalMessages,
-  readUniversalMessage,
-} from "@/src/services/network/tempmail.js";
+import { createUniversalMailbox, getUniversalMessages, readUniversalMessage } from "@/src/services/network/tempmail.js";
 import { db } from "@/src/core/database.js";
 
 export default {
   name: "tempmail",
   aliases: ["dropmail", "fakemail", "disposablemail", "mailtemp", "10minutemail"],
-  description: "Buat email sekali pakai (temporary mail) real-time untuk verifikasi akun & OTP (10MinuteMail / Guerrilla)",
+  description:
+    "Buat email sekali pakai (temporary mail) real-time untuk verifikasi akun & OTP (10MinuteMail / Guerrilla)",
   usage: "[create | check | read <id> | delete]",
   premiumOnly: false,
   category: "Tools",
@@ -66,9 +63,7 @@ export default {
 
     if (subCmd === "check" || subCmd === "inbox" || subCmd === "pesan") {
       if (!session?.address) {
-        return reply(
-          `Kamu belum memiliki email aktif.\n\nKetik *${p}tempmail create* untuk membuat baru.`
-        );
+        return reply(`Kamu belum memiliki email aktif.\n\nKetik *${p}tempmail create* untuk membuat baru.`);
       }
 
       try {
@@ -147,4 +142,3 @@ export default {
     return reply(`Perintah tidak dikenal. Ketik *${p}tempmail* untuk melihat panduan.`);
   },
 };
-

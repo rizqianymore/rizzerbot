@@ -36,7 +36,6 @@ export function detectMediaType(buffer) {
   if (buffer.slice(0, 4).toString() === "RIFF" && buffer.slice(8, 12).toString() === "WEBP") return "image";
   if (buffer.slice(0, 3).toString() === "GIF") return "image";
   if (isVideoOrAnimated(buffer)) {
-
     if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return "video";
     return "video";
   }
@@ -65,7 +64,7 @@ export function sniffMime(buffer, fallback = "video/mp4") {
 async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs = []) {
   await acquireFfmpegSlot();
   const cacheDir = path.join(os.tmpdir(), "rizzerbot-compat");
-  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => { });
+  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => {});
   const base = path.join(cacheDir, `cvt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const inFile = `${base}_in.${inputExt}`;
   const outFile = `${base}_out.${outputExt}`;
@@ -78,8 +77,8 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
     return await fsp.readFile(outFile);
   } finally {
     releaseFfmpegSlot();
-    await fsp.unlink(inFile).catch(() => { });
-    await fsp.unlink(outFile).catch(() => { });
+    await fsp.unlink(inFile).catch(() => {});
+    await fsp.unlink(outFile).catch(() => {});
   }
 }
 
@@ -88,11 +87,9 @@ export async function ensureVideoCompatible(buffer) {
   const type = detectMediaType(buffer);
 
   if (type === "image" && buffer.slice(0, 4).toString() !== "RIFF") {
-
     return buffer;
   }
   try {
-
     let inputExt = "mp4";
     if (buffer[0] === 0x1a && buffer[1] === 0x45) inputExt = "webm";
     else if (buffer.slice(4, 8).toString() === "ftyp") inputExt = "mp4";
@@ -142,7 +139,10 @@ export function isProbablyPlayable(buffer, mode) {
   return true;
 }
 
-export async function unifiedDownload(url, { mode = "video", logger, timeoutMs: _timeoutMs = 20000, skipCache = false } = {}) {
+export async function unifiedDownload(
+  url,
+  { mode = "video", logger, timeoutMs: _timeoutMs = 20000, skipCache = false } = {}
+) {
   const isAudio = mode === "audio";
   const cacheKey = `${mode}:${String(url).trim()}`;
   const targetUrl = String(url || "").trim();
@@ -160,7 +160,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs: 
           rawBuffer: cached.buffer,
         };
       }
-    } catch (_) { }
+    } catch (_) {}
   }
 
   let lastErr = null;
@@ -265,19 +265,16 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs: 
 
   let buffer = rawBuffer;
   if (isAudio) {
-
     const t = detectMediaType(buffer);
     if (t === "video") {
       buffer = await ensureAudioCompatible(buffer);
     } else if (t !== "audio") {
-
       const conv = await ensureAudioCompatible(buffer);
       if (conv) buffer = conv;
     }
   } else {
     const t = detectMediaType(buffer);
     if (t === "video" || t === "unknown") {
-
       const conv = await ensureVideoCompatible(buffer);
 
       if (conv && conv.length > 100) buffer = conv;
@@ -291,7 +288,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs: 
       const { setCachedMedia } = await import("./mediaCache.js");
       const mime = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await setCachedMedia(cacheKey, buffer, { mime, info });
-    } catch (_) { }
+    } catch (_) {}
   }
 
   return { buffer, info, source, rawBuffer };
@@ -346,7 +343,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "tiktok-slide",
         };
       }
-    } catch (_) { }
+    } catch (_) {}
   }
 
   try {
@@ -369,7 +366,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
         source: "socialdownloader",
       };
     }
-  } catch (_) { }
+  } catch (_) {}
 
   if (/instagram\.com/i.test(targetUrl)) {
     try {
@@ -390,7 +387,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "kol.id-carousel",
         };
       }
-    } catch (_) { }
+    } catch (_) {}
   }
 
   return { items, info: meta, source: "none" };

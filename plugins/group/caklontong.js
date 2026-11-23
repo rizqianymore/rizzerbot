@@ -72,9 +72,7 @@ export default {
       if (input.toLowerCase() === "nyerah") {
         activeGames.delete(remoteJid);
         return reply(
-          `*MENYERAH!*\n\n` +
-            `Jawaban yang benar: *${game.jawaban}*\n` +
-            `Alasan Cak Lontong: _${game.deskripsi}_`
+          `*MENYERAH!*\n\n` + `Jawaban yang benar: *${game.jawaban}*\n` + `Alasan Cak Lontong: _${game.deskripsi}_`
         );
       }
 

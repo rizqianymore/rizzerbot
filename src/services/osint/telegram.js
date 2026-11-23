@@ -59,7 +59,6 @@ export async function lookupTelegram(rawUsername) {
   try {
     html = await fetchTelegramHtml(targetUrl);
   } catch (err) {
-
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {

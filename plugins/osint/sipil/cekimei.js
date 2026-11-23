@@ -17,11 +17,11 @@ export default {
     if (!input) {
       return context.reply(
         `*OSINT & FORENSIK IMEI LOOKUP*\n\n` +
-        `Gunakan format:\n` +
-        `${context.prefix || "."}imei <15-digit-imei>\n\n` +
-        `*Contoh:*\n` +
-        `${context.prefix || "."}imei 353014061234567\n\n` +
-        `Tip: Anda juga bisa me-reply pesan teks yang berisi nomor IMEI.`
+          `Gunakan format:\n` +
+          `${context.prefix || "."}imei <15-digit-imei>\n\n` +
+          `*Contoh:*\n` +
+          `${context.prefix || "."}imei 353014061234567\n\n` +
+          `Tip: Anda juga bisa me-reply pesan teks yang berisi nomor IMEI.`
       );
     }
 

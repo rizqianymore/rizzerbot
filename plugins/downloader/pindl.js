@@ -29,7 +29,6 @@ export default {
     }
 
     try {
-
       const res = await unifiedDownload(url, { mode: "video", logger, timeoutMs: 15000 }).catch(() => null);
       if (res?.buffer?.length > 100) {
         const mime = sniffMime(res.buffer);

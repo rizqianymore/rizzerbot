@@ -10,7 +10,7 @@ import { searchSimcardByPhone, searchSimcardByNik, isSimcardReady } from "@/src/
 
 try {
   dns.setDefaultResultOrder("ipv4first");
-} catch (_) { }
+} catch (_) {}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,13 +42,13 @@ function getActiveDbPath() {
     try {
       const stat = fs.statSync(DB_TOP_PATH);
       if (stat.isFile() && stat.size >= 1024) return DB_TOP_PATH;
-    } catch (_) { }
+    } catch (_) {}
   }
   if (fs.existsSync(DB_FALLBACK_PATH)) {
     try {
       const stat = fs.statSync(DB_FALLBACK_PATH);
       if (stat.isFile() && stat.size >= 1024) return DB_FALLBACK_PATH;
-    } catch (_) { }
+    } catch (_) {}
   }
   return null;
 }
@@ -78,7 +78,10 @@ function getDatabase() {
       phoneStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nohp IN (?, ?, ?, ?) LIMIT 10`));
       nameExactStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama = ? LIMIT 10`));
       nameRangeStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama >= ? AND nama < ? LIMIT 10`));
-      namePrefixAndLikeStmts.set(table, dbInstance.prepare(`SELECT * FROM ${table} WHERE nama >= ? AND nama < ? AND nama LIKE ? LIMIT 10`));
+      namePrefixAndLikeStmts.set(
+        table,
+        dbInstance.prepare(`SELECT * FROM ${table} WHERE nama >= ? AND nama < ? AND nama LIKE ? LIMIT 10`)
+      );
     }
 
     return dbInstance;
@@ -177,8 +180,7 @@ export async function getCoordinates(query) {
         limit: 1,
       },
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; RizzerBot/2.0; +https://rizzerbot.id)",
+        "User-Agent": "Mozilla/5.0 (compatible; RizzerBot/2.0; +https://rizzerbot.id)",
         "Accept-Language": "id,en;q=0.9",
       },
       timeout: 1000,
@@ -193,9 +195,7 @@ export async function getCoordinates(query) {
       geoCache.set(key, coord);
       return coord;
     }
-  } catch {
-
-  }
+  } catch {}
 
   geoCache.set(key, null);
   return null;
@@ -254,7 +254,9 @@ export async function resolveAccurateCoordinates(alamat, kelurahan, kecamatan, k
 }
 
 export function getPrefixRange(prefix) {
-  const clean = String(prefix || "").trim().toUpperCase();
+  const clean = String(prefix || "")
+    .trim()
+    .toUpperCase();
   if (!clean || clean.length < 2) return null;
   const lastChar = clean.slice(-1);
   const nextChar = String.fromCharCode(lastChar.charCodeAt(0) + 1);
@@ -320,7 +322,6 @@ export async function searchByNik(rawNik) {
 
   let record = null;
   if (db && detectedTables.length > 0) {
-
     const prefix = nik.slice(0, 2);
     const targetTable = TABLE_PREFIX_MAP[prefix];
 
@@ -455,7 +456,9 @@ export async function searchByPhone(rawPhone) {
 
 export async function searchByName(rawName, limit = 5) {
   const db = getDatabase();
-  const name = String(rawName || "").trim().toUpperCase();
+  const name = String(rawName || "")
+    .trim()
+    .toUpperCase();
   if (!name || !db || detectedTables.length === 0) return [];
 
   const records = [];

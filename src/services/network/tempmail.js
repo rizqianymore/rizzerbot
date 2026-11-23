@@ -111,10 +111,13 @@ export async function createGuerrillaMail() {
 }
 
 export async function getGuerrillaMessages(sidToken) {
-  const res = await fetch(`https://api.guerrillamail.com/ajax.php?f=get_email_list&offset=0&sid_token=${encodeURIComponent(sidToken)}`, {
-    headers: { "User-Agent": "Mozilla/5.0 RizzerBot/TempMail" },
-    signal: AbortSignal.timeout(10000),
-  });
+  const res = await fetch(
+    `https://api.guerrillamail.com/ajax.php?f=get_email_list&offset=0&sid_token=${encodeURIComponent(sidToken)}`,
+    {
+      headers: { "User-Agent": "Mozilla/5.0 RizzerBot/TempMail" },
+      signal: AbortSignal.timeout(10000),
+    }
+  );
 
   if (!res.ok) throw new Error(`GuerrillaMail check HTTP ${res.status}`);
   const data = await res.json();
@@ -129,10 +132,13 @@ export async function getGuerrillaMessages(sidToken) {
 }
 
 export async function readGuerrillaMessage(sidToken, mailId) {
-  const res = await fetch(`https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${encodeURIComponent(mailId)}&sid_token=${encodeURIComponent(sidToken)}`, {
-    headers: { "User-Agent": "Mozilla/5.0 RizzerBot/TempMail" },
-    signal: AbortSignal.timeout(10000),
-  });
+  const res = await fetch(
+    `https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${encodeURIComponent(mailId)}&sid_token=${encodeURIComponent(sidToken)}`,
+    {
+      headers: { "User-Agent": "Mozilla/5.0 RizzerBot/TempMail" },
+      signal: AbortSignal.timeout(10000),
+    }
+  );
 
   if (!res.ok) throw new Error(`GuerrillaMail read HTTP ${res.status}`);
   const data = await res.json();

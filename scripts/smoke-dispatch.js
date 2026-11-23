@@ -143,7 +143,11 @@ clearSentMessageCache();
   });
   assert(sent.length > 0, "owner (fromMe) tanpa participant tetap dilayani .menu di grup");
   const menuText = sent[0]?.content?.caption || sent[0]?.content?.text || "";
-  assert(menuText.includes("DAFTAR KATEGORI"), "owner (fromMe) di grup terlayani DAFTAR KATEGORI", menuText.slice(0, 80));
+  assert(
+    menuText.includes("DAFTAR KATEGORI"),
+    "owner (fromMe) di grup terlayani DAFTAR KATEGORI",
+    menuText.slice(0, 80)
+  );
   assert(
     menuText.includes(".menu all -> Tampilkan Seluruh Menu"),
     "owner (fromMe) di grup mendapatkan menu all footer",

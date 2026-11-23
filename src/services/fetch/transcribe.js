@@ -84,7 +84,10 @@ export async function transcribeWithGemini(buffer, mimeType = "audio/mp3") {
 
   const data = await res.json();
   const parts = data?.candidates?.[0]?.content?.parts || [];
-  const text = parts.map((p) => p.text || "").join("").trim();
+  const text = parts
+    .map((p) => p.text || "")
+    .join("")
+    .trim();
 
   return {
     text,
@@ -114,6 +117,6 @@ export async function smartTranscribe(buffer, { filename = "audio.mp3", mimeType
 
   throw new Error(
     `Fitur transkripsi suara membutuhkan API Key AI (GROQ_API_KEY atau GEMINI_API_KEY).\n\n` +
-    `Detail error: ${errors.join(" | ")}`
+      `Detail error: ${errors.join(" | ")}`
   );
 }

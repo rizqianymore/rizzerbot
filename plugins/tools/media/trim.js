@@ -120,12 +120,10 @@ export default {
       if (mtype.startsWith("video")) isVideo = true;
       else if (mtype.startsWith("audio")) isVideo = false;
       else {
-
         const ftyp = buffer.slice(4, 8).toString();
         isVideo = ftyp === "ftyp" || ftyp === "moov";
       }
     } else if (targetType === "stickerMessage") {
-
       const ftyp = buffer.slice(4, 8).toString();
       isVideo = ftyp === "ftyp" || ftyp === "moov" || buffer.slice(0, 3).toString() === "GIF";
       if (!isVideo) return reply("Hanya audio/video");
@@ -155,7 +153,6 @@ export default {
           { timeout: 60000 }
         );
       } catch (_) {
-
         const reEncodeArgs = isVideo
           ? ["-y", "-i", inFile, "-ss", String(start), "-to", String(end), "-c:v", "libx264", "-c:a", "aac", outFile]
           : ["-y", "-i", inFile, "-ss", String(start), "-to", String(end), "-c:a", "aac", outFile];

@@ -38,7 +38,6 @@ function readTiffData(buf, tiffOffset, isLE, type, count, valOrOff) {
           .trim();
       }
     } else {
-
       const slice = Buffer.alloc(4);
       if (isLE) slice.writeUInt32LE(valOrOff);
       else slice.writeUInt32BE(valOrOff);

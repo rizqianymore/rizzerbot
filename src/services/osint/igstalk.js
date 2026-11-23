@@ -59,7 +59,6 @@ export async function lookupInstagram(rawUsername) {
   try {
     html = await fetchIgHtml(username);
   } catch (err) {
-
     try {
       const { isBrightDataEnabled, brightDataRequest } = await import("@/src/services/network/brightdata.js");
       if (isBrightDataEnabled()) {

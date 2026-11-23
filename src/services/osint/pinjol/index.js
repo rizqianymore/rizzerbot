@@ -29,7 +29,6 @@ function loadData() {
         .map((line) => line.trim())
         .filter(Boolean)
         .map((line) => {
-
           const clean = line.replace(/^[0-9]+[\.\)]\s*/, "");
           const parts = clean.split(/ dengan perusahaan developer /i);
           return {

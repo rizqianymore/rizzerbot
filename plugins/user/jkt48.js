@@ -76,7 +76,6 @@ export default {
     if (sub === "random" || sub === "acak") {
       target = allMembers[Math.floor(Math.random() * allMembers.length)];
     } else {
-
       const query = args.join(" ").toLowerCase().trim();
 
       target = allMembers.find((m) => m.panggilan.toLowerCase() === query);
@@ -96,7 +95,9 @@ export default {
     }
 
     if (!target) {
-      return reply(`Member dengan kata kunci "*${args.join(" ")}*" tidak ditemukan.\nKetik *${currentPrefix}jkt48 list* untuk melihat daftar.`);
+      return reply(
+        `Member dengan kata kunci "*${args.join(" ")}*" tidak ditemukan.\nKetik *${currentPrefix}jkt48 list* untuk melihat daftar.`
+      );
     }
 
     const caption =
@@ -119,21 +120,11 @@ export default {
     try {
       if (localImg && fs.existsSync(localImg)) {
         const imgBuf = fs.readFileSync(localImg);
-        return await sock.sendMessage(
-          msg.key.remoteJid,
-          { image: imgBuf, caption },
-          { quoted: msg }
-        );
+        return await sock.sendMessage(msg.key.remoteJid, { image: imgBuf, caption }, { quoted: msg });
       } else if (target.foto_url) {
-        return await sock.sendMessage(
-          msg.key.remoteJid,
-          { image: { url: target.foto_url }, caption },
-          { quoted: msg }
-        );
+        return await sock.sendMessage(msg.key.remoteJid, { image: { url: target.foto_url }, caption }, { quoted: msg });
       }
-    } catch (err) {
-
-    }
+    } catch (err) {}
 
     return reply(caption);
   },

@@ -15,14 +15,11 @@ export async function lookupRoblox(rawUsername) {
   if (cached) return cached;
 
   try {
-    const resId = await request.json(
-      "https://users.roblox.com/v1/usernames/users",
-      {
-        method: "POST",
-        data: { usernames: [username], excludeBannedUsers: false },
-        timeout: 8000,
-      }
-    );
+    const resId = await request.json("https://users.roblox.com/v1/usernames/users", {
+      method: "POST",
+      data: { usernames: [username], excludeBannedUsers: false },
+      timeout: 8000,
+    });
 
     const userEntry = resId?.data?.[0];
     if (!userEntry) {
@@ -39,10 +36,12 @@ export async function lookupRoblox(rawUsername) {
 
     const [resProfile, resAvatar] = await Promise.all([
       request.json(`https://users.roblox.com/v1/users/${userId}`, { timeout: 8000 }).catch(() => null),
-      request.json(
-        `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
-        { timeout: 8000 }
-      ).catch(() => null),
+      request
+        .json(
+          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`,
+          { timeout: 8000 }
+        )
+        .catch(() => null),
     ]);
 
     const profileData = resProfile || {};

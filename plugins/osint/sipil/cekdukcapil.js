@@ -82,12 +82,7 @@ function formatSingleRecord(record, nikInfo, operatorInfo, location, simcards = 
 }
 
 function formatNameResults(records, query, prefix = ".") {
-  const lines = [
-    `*OSINT TOOLS*`,
-    `├─ Query      : "${query}"`,
-    `└─ Ditemukan  : ${records.length} data`,
-    `│`,
-  ];
+  const lines = [`*OSINT TOOLS*`, `├─ Query      : "${query}"`, `└─ Ditemukan  : ${records.length} data`, `│`];
 
   records.forEach((rec, idx) => {
     lines.push(
@@ -168,9 +163,7 @@ export default {
 
     if (!isDukcapilReady()) {
       return reply(
-        `*OSINT TOOLS*\n` +
-          `└─ Status: Database tidak tersedia\n` +
-          `└─ Periksa file database kependudukan`
+        `*OSINT TOOLS*\n` + `└─ Status: Database tidak tersedia\n` + `└─ Periksa file database kependudukan`
       );
     }
 
@@ -215,20 +208,13 @@ export default {
             });
           }
 
-          fallbackLines.push(
-            `│`,
-            `└─ [CATATAN: NIK valid nasional (belum terindeks dukcapil daerah)]`
-          );
+          fallbackLines.push(`│`, `└─ [CATATAN: NIK valid nasional (belum terindeks dukcapil daerah)]`);
           const fallbackText = fallbackLines.join("\n");
           setCachedResult(cacheKey, fallbackText);
           return reply(fallbackText);
         }
 
-        return reply(
-          `*OSINT TOOLS*\n` +
-            `└─ NIK    : ${rawQuery}\n` +
-            `└─ Status : Data tidak ditemukan`
-        );
+        return reply(`*OSINT TOOLS*\n` + `└─ NIK    : ${rawQuery}\n` + `└─ Status : Data tidak ditemukan`);
       }
 
       if (classification.type === "phone") {
@@ -272,11 +258,7 @@ export default {
       const records = await searchByName(rawQuery, 5);
 
       if (records.length === 0) {
-        return reply(
-          `*OSINT TOOLS*\n` +
-            `└─ Nama   : "${rawQuery}"\n` +
-            `└─ Status : Data tidak ditemukan`
-        );
+        return reply(`*OSINT TOOLS*\n` + `└─ Nama   : "${rawQuery}"\n` + `└─ Status : Data tidak ditemukan`);
       }
 
       if (records.length === 1) {

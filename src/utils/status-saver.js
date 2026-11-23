@@ -54,7 +54,5 @@ export async function handleIncomingStatus(sock, msg, autoRead = false) {
 
     const fileName = `status_${sender}_${ts}${ext}`;
     fs.writeFileSync(path.join(STATUSES_DIR, fileName), buf);
-  } catch (_) {
-
-  }
+  } catch (_) {}
 }

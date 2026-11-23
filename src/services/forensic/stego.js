@@ -31,7 +31,6 @@ export async function encodeLSB(imageBuffer, secretText) {
 
   let bitIdx = 0;
   for (let i = 0; i < rawPixels.length && bitIdx < totalBits; i++) {
-
     if (info.channels === 4 && (i + 1) % 4 === 0) continue;
 
     const byteIndex = Math.floor(bitIdx / 8);

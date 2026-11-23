@@ -71,23 +71,29 @@ export function formatBinInfo(p) {
 `;
   text += `└─ Skema      : ${p.scheme}
 `;
-  if (p.detail?.brand && p.detail.brand !== "-") text += `└─ Brand      : ${p.detail.brand}
+  if (p.detail?.brand && p.detail.brand !== "-")
+    text += `└─ Brand      : ${p.detail.brand}
 `;
-  if (p.detail?.type && p.detail.type !== "-") text += `└─ Tipe       : ${p.detail.type}
+  if (p.detail?.type && p.detail.type !== "-")
+    text += `└─ Tipe       : ${p.detail.type}
 `;
   if (p.detail?.prepaid !== null && p.detail?.prepaid !== undefined) {
     text += `└─ Prabayar   : ${p.detail.prepaid ? "Ya" : "Bukan"}
 `;
   }
-  if (p.detail?.bank && p.detail.bank !== "-") text += `└─ Bank       : ${p.detail.bank}
+  if (p.detail?.bank && p.detail.bank !== "-")
+    text += `└─ Bank       : ${p.detail.bank}
 `;
-  if (p.detail?.country && p.detail.country !== "-") text += `└─ Negara     : ${p.detail.country}
+  if (p.detail?.country && p.detail.country !== "-")
+    text += `└─ Negara     : ${p.detail.country}
 `;
-  if (p.detail?.currency && p.detail.currency !== "-") text += `└─ Mata Uang  : ${p.detail.currency}
+  if (p.detail?.currency && p.detail.currency !== "-")
+    text += `└─ Mata Uang  : ${p.detail.currency}
 `;
   text += `└─ Panjang    : ${p.lengths.join("/")} digit
 `;
-  if (!p.detail) text += `└─ Wilayah    : ${p.schemeNote}
+  if (!p.detail)
+    text += `└─ Wilayah    : ${p.schemeNote}
 `;
   text += `│
 `;

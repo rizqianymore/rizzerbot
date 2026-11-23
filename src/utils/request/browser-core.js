@@ -172,7 +172,6 @@ export class StealthBrowserCore {
       const launchOpts = {
         headless: true,
         args: [
-
           "--no-sandbox",
           "--disable-setuid-sandbox",
           "--disable-dev-shm-usage",
@@ -327,7 +326,6 @@ export class StealthBrowserCore {
       const rssMb = browserMemoryMb(pid);
 
       try {
-
         await Promise.race([
           this.browser.close(),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Close timeout")), 2000)),

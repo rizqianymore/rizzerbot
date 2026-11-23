@@ -12,11 +12,7 @@ export default {
     await sendTyping();
     const target = args[0];
     if (!target) {
-      return reply(
-        `*OSINT TOOLS - IP GEO*\n\n` +
-          `Format: .ipgeo <ip / domain>\n\n` +
-          `Contoh: .ipgeo 1.1.1.1`
-      );
+      return reply(`*OSINT TOOLS - IP GEO*\n\n` + `Format: .ipgeo <ip / domain>\n\n` + `Contoh: .ipgeo 1.1.1.1`);
     }
 
     try {

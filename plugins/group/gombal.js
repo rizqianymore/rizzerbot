@@ -25,16 +25,9 @@ export default {
 
     if (mentionedJid) {
       const targetNum = mentionedJid.split("@")[0].split(":")[0];
-      const text =
-        `*GOMBALAN MAUT UNTUK @${targetNum}* 💕\n\n` +
-        `"${item}"\n\n` +
-        `_Awas klepek-klepek ya!_`;
+      const text = `*GOMBALAN MAUT UNTUK @${targetNum}* 💕\n\n` + `"${item}"\n\n` + `_Awas klepek-klepek ya!_`;
 
-      return sock.sendMessage(
-        msg.key.remoteJid,
-        { text, mentions: [mentionedJid] },
-        { quoted: msg }
-      );
+      return sock.sendMessage(msg.key.remoteJid, { text, mentions: [mentionedJid] }, { quoted: msg });
     }
 
     return reply(`*GOMBALAN MAUT* 💘\n\n"${item}"`);

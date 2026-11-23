@@ -70,7 +70,6 @@ export async function resolveCommandAccess(
 
   const cmd = commands.get(commandName);
   if (!cmd) {
-
     return {
       drop: false,
       isCustomCase: true,

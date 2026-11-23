@@ -23,7 +23,6 @@ function wrapText(text, maxLen = 85) {
       if (remaining.length === 0) break;
     }
     if (remaining.length > 0 || para.length <= maxLen) {
-
       if (remaining.length > 0) lines.push(remaining);
       else if (para.length <= maxLen) lines.push(para);
     }
@@ -111,7 +110,6 @@ function isPng(buf) {
 }
 
 async function getImageDimensions(buf) {
-
   try {
     const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
     if (sharpMod) {
@@ -165,7 +163,6 @@ async function createImagePdf(imageBuffer) {
   }
 
   if (!buf || !isJpeg(buf)) {
-
     if (!isJpeg(buf) && !isPng(buf)) {
       throw new Error("Format gambar tidak didukung (hanya JPG/PNG)");
     }
@@ -290,14 +287,12 @@ export default {
           return reply(`Gagal ambil gambar: ${err?.message || err}`);
         }
         if (buffer?.length) {
-
           const headerIsImage = isJpeg(buffer) || isPng(buffer);
 
           if (!headerIsImage) {
             try {
               const sharpMod = await import("sharp").then((m) => m.default || m).catch(() => null);
               if (sharpMod) {
-
                 const jpegBuf = await sharpMod(buffer).jpeg({ quality: 85 }).toBuffer();
                 if (jpegBuf?.length) buffer = jpegBuf;
               }
@@ -313,7 +308,6 @@ export default {
               );
               return;
             } catch (err) {
-
               try {
                 const apiUrl = `https://api.siputzx.my.id/api/convert/txt2pdf?text=${encodeURIComponent("Image PDF - " + (err?.message || ""))}`;
                 const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
@@ -364,7 +358,6 @@ export default {
         { quoted: msg }
       );
     } catch (err) {
-
       try {
         const res = await fetch(`https://api.siputzx.my.id/api/convert/txt2pdf?text=${encodeURIComponent(text)}`, {
           signal: AbortSignal.timeout(10000),

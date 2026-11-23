@@ -19,10 +19,7 @@ export default {
     const name = args.join(" ").trim() || "Kamu";
     const trait = SIFAT_PASANGAN[Math.floor(Math.random() * SIFAT_PASANGAN.length)];
 
-    const text =
-      `*TIPE PASANGAN SEJATI* 🔮💑\n` +
-      `├─ Pemilik Hati: *${name}*\n` +
-      `└─ Karakter Doi: _${trait}_`;
+    const text = `*TIPE PASANGAN SEJATI* 🔮💑\n` + `├─ Pemilik Hati: *${name}*\n` + `└─ Karakter Doi: _${trait}_`;
 
     return reply(text);
   },

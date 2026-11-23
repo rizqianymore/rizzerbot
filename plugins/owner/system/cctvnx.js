@@ -60,16 +60,18 @@ export default {
 
         // Fitur pencarian nama lokasi kamera
         let filteredCams = cameras;
-        const isSearch = (action === "cari" || action === "search") || (targetQuery && isNaN(parseInt(targetQuery, 10)));
+        const isSearch = action === "cari" || action === "search" || (targetQuery && isNaN(parseInt(targetQuery, 10)));
         if (isSearch && targetQuery) {
           const q = targetQuery.toLowerCase();
           filteredCams = cameras.filter((c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
           if (!filteredCams.length) {
-            return reply(`Tidak ditemukan kamera dengan kata kunci *"${targetQuery}"*. Ketik \`${p}nx list\` untuk melihat semua kamera.`);
+            return reply(
+              `Tidak ditemukan kamera dengan kata kunci *"${targetQuery}"*. Ketik \`${p}nx list\` untuk melihat semua kamera.`
+            );
           }
         }
 
-        const page = (!isSearch && parseInt(targetQuery, 10)) ? parseInt(targetQuery, 10) : 1;
+        const page = !isSearch && parseInt(targetQuery, 10) ? parseInt(targetQuery, 10) : 1;
         const perPage = 15;
         const totalPages = Math.ceil(filteredCams.length / perPage);
         const curPage = Math.max(1, Math.min(totalPages, page));
@@ -191,11 +193,11 @@ export default {
 
       return reply(
         `Perintah tidak dikenal.\n\n` +
-        `Gunakan:\n` +
-        `${p}nx list - Daftar semua kamera\n` +
-        `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
-        `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
-        `${p}nx info <nomor/nama> - Cek info kamera`
+          `Gunakan:\n` +
+          `${p}nx list - Daftar semua kamera\n` +
+          `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
+          `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
+          `${p}nx info <nomor/nama> - Cek info kamera`
       );
     } catch (err) {
       logger?.error?.(`[cctvnx] ${err.message}`);

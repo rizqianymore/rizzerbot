@@ -13,9 +13,7 @@ export default {
     const domain = args[0];
     if (!domain) {
       return reply(
-        `*OSINT TOOLS - DNS LOOKUP*\n\n` +
-          `Format: .dnslookup <domain>\n\n` +
-          `Contoh: .dnslookup google.com`
+        `*OSINT TOOLS - DNS LOOKUP*\n\n` + `Format: .dnslookup <domain>\n\n` + `Contoh: .dnslookup google.com`
       );
     }
 

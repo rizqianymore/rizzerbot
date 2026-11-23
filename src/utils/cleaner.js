@@ -114,10 +114,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
 }
 
 export function cleanStatusArchives({ maxAgeMs = 24 * 60 * 60 * 1000, now = Date.now() } = {}) {
-  const statusDirs = [
-    path.join(process.cwd(), "statuses"),
-    path.join(process.cwd(), ".statuses"),
-  ];
+  const statusDirs = [path.join(process.cwd(), "statuses"), path.join(process.cwd(), ".statuses")];
 
   let deletedCount = 0;
   let freedBytes = 0;

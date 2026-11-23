@@ -68,7 +68,6 @@ export default {
       GlobalFonts = mod.GlobalFonts || mod.default?.GlobalFonts || null;
       if (createCanvas) canvasAvailable = true;
     } catch (_) {
-
       try {
         const { getCanvas } = await import("@/src/utils/native.js");
         const mod = getCanvas();
@@ -196,7 +195,6 @@ export default {
           buffer = Buffer.from(canvas.encodeSync("png"));
         }
       } catch (err) {
-
         console.warn(`[nulis] canvas render failed: ${err?.message}`);
         buffer = null;
       }

@@ -6,7 +6,9 @@ const PEJABAT_BASE = "https://pejabat.id";
  * Normalisasi query pencarian nama / fraksi
  */
 export function normalizeQuery(query = "") {
-  return String(query || "").trim().toLowerCase();
+  return String(query || "")
+    .trim()
+    .toLowerCase();
 }
 
 /**

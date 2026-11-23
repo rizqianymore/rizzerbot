@@ -33,9 +33,9 @@ export default {
       if (!input) {
         return reply(
           `*TEBAK GAMBAR SEDANG BERJALAN!*\n\n` +
-          `Petunjuk: _${game.clue}_\n` +
-          `Jumlah Huruf: ${game.jawaban.length} karakter\n\n` +
-          `Ketik tebakan Anda atau ketik \`${p}tebakgambar nyerah\` untuk menyerah.`
+            `Petunjuk: _${game.clue}_\n` +
+            `Jumlah Huruf: ${game.jawaban.length} karakter\n\n` +
+            `Ketik tebakan Anda atau ketik \`${p}tebakgambar nyerah\` untuk menyerah.`
         );
       }
 
@@ -48,9 +48,9 @@ export default {
         activeGames.delete(remoteJid);
         return reply(
           `*TEBAKAN BENAR! 🖼️🎉*\n\n` +
-          `Jawaban: *${game.jawaban}*\n` +
-          `Petunjuk: _${game.clue}_\n\n` +
-          `Penglihatan Anda sangat jeli!`
+            `Jawaban: *${game.jawaban}*\n` +
+            `Petunjuk: _${game.clue}_\n\n` +
+            `Penglihatan Anda sangat jeli!`
         );
       } else {
         return reply(`❌ Tebakan gambar belum tepat!`);

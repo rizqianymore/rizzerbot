@@ -22,15 +22,15 @@ export function startKeepAlive(sock, { logger = console, restart = null, interva
       fails += 1;
       try {
         logger?.warn?.(`[KeepAlive] heartbeat gagal ${fails}x: ${err?.message || err}`);
-      } catch (_) { }
+      } catch (_) {}
       if (fails >= MAX_FAILS) {
         fails = 0;
         try {
           logger?.warn?.("[KeepAlive] socket latency tinggi / stale, auto recover koneksi...");
-        } catch (_) { }
+        } catch (_) {}
         try {
           await restart?.();
-        } catch (_) { }
+        } catch (_) {}
       }
     } finally {
       inFlight = false;
@@ -55,7 +55,7 @@ export function startStabilityWatchdog({ logger = console, sampleMs = LAG_SAMPLE
       try {
         const mem = Math.round((process.memoryUsage()?.heapUsed || 0) / 1024 / 1024);
         logger?.warn?.(`[Stability] event-loop lag ${lag}ms (heap ${mem}MB) — event loop terbebani sementara`);
-      } catch (_) { }
+      } catch (_) {}
     }
   }, sampleMs);
   if (timer.unref) timer.unref();

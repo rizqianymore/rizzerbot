@@ -23,7 +23,7 @@ function parseFileName(contentDisposition) {
   if (utf8) {
     try {
       return decodeURIComponent(utf8[1].trim().replace(/^"|"$/g, ""));
-    } catch (_) { }
+    } catch (_) {}
   }
   const plain = String(contentDisposition).match(/filename="?([^";]+)"?/i);
   return plain ? plain[1].trim() : null;
@@ -207,7 +207,7 @@ export async function downloadTerabox(url, logger) {
 
   throw new Error(
     "Terabox membatasi unduhan langsung untuk link publik (butuh login/cookie). " +
-    `Buka link berikut di browser untuk mengunduh manual:\n${url}`
+      `Buka link berikut di browser untuk mengunduh manual:\n${url}`
   );
 }
 

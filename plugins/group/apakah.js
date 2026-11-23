@@ -44,10 +44,7 @@ export default {
     const index = Math.abs(hash + Math.floor(Date.now() / 60000)) % ANSWERS.length;
     const answer = ANSWERS[index];
 
-    const text =
-      `*MAGIC 8-BALL*\n` +
-      `├─ Pertanyaan : ${question}\n` +
-      `└─ Jawaban    : *${answer}*`;
+    const text = `*MAGIC 8-BALL*\n` + `├─ Pertanyaan : ${question}\n` + `└─ Jawaban    : *${answer}*`;
 
     return reply(text);
   },

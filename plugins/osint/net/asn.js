@@ -46,9 +46,7 @@ export default {
         return context.reply(out);
       } else if (parts.length >= 2) {
         const out =
-          `*OSINT TOOLS*\n` +
-          `├─ ASN        : AS${parts[0]}\n` +
-          `└─ Operator   : ${parts.slice(1).join(",").trim()}`;
+          `*OSINT TOOLS*\n` + `├─ ASN        : AS${parts[0]}\n` + `└─ Operator   : ${parts.slice(1).join(",").trim()}`;
         return context.reply(out);
       }
       return context.reply(`Data ASN:\n${raw}`);

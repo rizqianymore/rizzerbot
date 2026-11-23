@@ -53,7 +53,6 @@ export async function sendVideo(sock, remoteJid, msg, target, cap) {
     await sock.sendMessage(remoteJid, { video: buf, caption: cap, mimetype: "video/mp4" }, { quoted: msg });
   } catch (_) {
     if (target.url) {
-
       try {
         const { request } = await import("@/src/utils/request.js");
         const b = await request.buffer(target.url, { timeout: 25000, bypassCloudflare: "auto" });

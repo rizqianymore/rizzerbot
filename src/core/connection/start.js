@@ -35,16 +35,16 @@ export async function startBot() {
     try {
       connectionState.primarySock.ev.removeAllListeners();
       connectionState.primarySock.end();
-    } catch (_) { }
+    } catch (_) {}
     connectionState.primarySock = null;
   }
   try {
     connectionState.keepAliveStop?.();
-  } catch (_) { }
+  } catch (_) {}
   connectionState.keepAliveStop = null;
   try {
     connectionState.stabilityStop?.();
-  } catch (_) { }
+  } catch (_) {}
   connectionState.stabilityStop = null;
 
   try {
@@ -112,7 +112,11 @@ export async function startBot() {
           try {
             const data = JSON.parse(str);
             const msg = data.msg || "";
-            if (msg.includes("failed to decrypt") || msg.includes("Failed to decrypt") || msg.includes("Session error")) {
+            if (
+              msg.includes("failed to decrypt") ||
+              msg.includes("Failed to decrypt") ||
+              msg.includes("Session error")
+            ) {
               const target = data.author || data.sender;
               const errText = data.err?.message || msg;
               logger.warn(`[Baileys Session Warning] ${msg}${target ? ` (target: ${target})` : ""}`);
@@ -201,7 +205,7 @@ export async function startBot() {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
-      startBot().catch(() => { });
+      startBot().catch(() => {});
     }, 5000);
     return null;
   }

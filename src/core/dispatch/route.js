@@ -36,7 +36,6 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
         }
       }
     } else {
-
       if (db.isBotOwner(botJid, senderJid) || db.isOwner(senderJid)) {
         return false;
       }
@@ -46,7 +45,6 @@ export async function routeMultiBot(sock, msg, { remoteJid, botJid, isSubBotSock
         const isWhitelisted =
           Array.isArray(mySettings?.publicCommands) && mySettings.publicCommands.includes(commandName);
         if (mySettings?.public === false && !isWhitelisted) {
-
           const verdictSelf = await resolveGroupResponder(sock, remoteJid, botJid, isSubBotSock, senderJid);
           if (verdictSelf.mode !== "solo") return true;
           return true;

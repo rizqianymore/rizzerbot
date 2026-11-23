@@ -58,7 +58,6 @@ function resolveRedirects(initialUrl, maxRedirects = 10, timeoutMs = 8000) {
       });
 
       req.on("error", (err) => {
-
         if (req.method === "HEAD") {
           const getReq = client.request(
             urlStr,

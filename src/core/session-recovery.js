@@ -80,7 +80,6 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
   }
 
   try {
-
     await sock.signalRepository?.deleteSession?.([jid]);
 
     const rawId = String(jid).split("@")[0].split(":")[0];
@@ -115,7 +114,7 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
 
     logger.warn(
       `[Session Recovery] Sesi Signal untuk ${jid} berhasil direset dan dibersihkan dari disk. ` +
-      `Pesan berikutnya akan menegosiasikan ratchet session baru secara otomatis.`
+        `Pesan berikutnya akan menegosiasikan ratchet session baru secara otomatis.`
     );
     return true;
   } catch (err) {
@@ -135,7 +134,7 @@ export async function emergencyResetAllSessions(sock) {
           try {
             fs.unlinkSync(path.join(authDir, file));
             deletedCount++;
-          } catch (_) { }
+          } catch (_) {}
         }
       }
     }
@@ -144,7 +143,7 @@ export async function emergencyResetAllSessions(sock) {
 
     logger.warn(
       `[Session Recovery] Reset darurat: ${deletedCount} file sesi Signal dibersihkan dari disk. ` +
-      `Semua pesan berikutnya akan membentuk sesi baru.`
+        `Semua pesan berikutnya akan membentuk sesi baru.`
     );
     return deletedCount;
   } catch (err) {

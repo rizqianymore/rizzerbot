@@ -19,10 +19,7 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
     const quote = BUCIN_QUOTES[Math.floor(Math.random() * BUCIN_QUOTES.length)];
-    const text =
-      `*QUOTES BUCIN* 🥀🤍\n\n` +
-      `"${quote}"\n\n` +
-      `_Tersimpan rapi di dalam sudut hati terdalam._`;
+    const text = `*QUOTES BUCIN* 🥀🤍\n\n` + `"${quote}"\n\n` + `_Tersimpan rapi di dalam sudut hati terdalam._`;
 
     return reply(text);
   },

@@ -48,16 +48,13 @@ export default {
     let audioFilter;
 
     if (isBass) {
-
       audioFilter = "bass=g=10:d=0.7";
     } else {
-
       if (args.length > 0 && firstArg) {
         const parsed = parseFloat(firstArg);
         if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
           level = parsed;
         } else {
-
           level = 2.0;
         }
       } else {
@@ -89,7 +86,6 @@ export default {
       await fs.writeFile(inFile, buffer);
 
       if (isVideo) {
-
         try {
           await execFileAsync(
             getFfmpegPath(),
@@ -97,7 +93,6 @@ export default {
             { timeout: 90000 }
           );
         } catch (_) {
-
           await execFileAsync(
             getFfmpegPath(),
             [
@@ -120,7 +115,6 @@ export default {
           );
         }
       } else {
-
         await execFileAsync(
           getFfmpegPath(),
           ["-y", "-i", inFile, "-af", audioFilter, "-vn", "-c:a", "libmp3lame", "-q:a", "2", outFile],

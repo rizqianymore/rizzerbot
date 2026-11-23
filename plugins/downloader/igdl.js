@@ -34,7 +34,6 @@ export default {
     await sendTyping();
 
     try {
-
       const multi = await extractMultiMedia(input, { logger });
       let mediaList = multi.items || [];
       const info = multi.info || {};

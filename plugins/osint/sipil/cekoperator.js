@@ -39,9 +39,7 @@ export default {
       const op = parseOperator(input);
       if (!op.valid) {
         return reply(
-          `*OSINT TOOLS*\n` +
-            `└─ MSISDN : ${input}\n` +
-            `└─ Error  : ${op.reason || "Format nomor HP tidak valid"}`
+          `*OSINT TOOLS*\n` + `└─ MSISDN : ${input}\n` + `└─ Error  : ${op.reason || "Format nomor HP tidak valid"}`
         );
       }
 

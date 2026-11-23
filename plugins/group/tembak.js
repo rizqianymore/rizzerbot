@@ -22,8 +22,8 @@ export default {
     if (!target) {
       return reply(
         `*SIMULASI TEMBAK DOI*\n\n` +
-        `Format: \`${p}tembak @user\` atau \`${p}tembak <nama>\`\n` +
-        `Contoh: \`${p}tembak @628123456789\``
+          `Format: \`${p}tembak @user\` atau \`${p}tembak <nama>\`\n` +
+          `Contoh: \`${p}tembak @628123456789\``
       );
     }
 

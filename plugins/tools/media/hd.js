@@ -32,7 +32,6 @@ export default {
       try {
         out = await upscaleImage(buffer, 2);
       } catch (err) {
-
         const sharp = getSharp();
         if (!sharp) throw err;
         const img = sharp(buffer);

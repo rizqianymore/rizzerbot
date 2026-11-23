@@ -76,7 +76,6 @@ async function dispatchInner(sock, msg, logger) {
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
-
       if (ts < PROCESS_START_TIME_SEC - 10) {
         logStaleThrottled(logger, Math.round(PROCESS_START_TIME_SEC - ts), msg.key?.id || "?");
         return;

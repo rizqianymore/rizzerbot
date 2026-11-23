@@ -126,7 +126,6 @@ export async function setCachedMedia(url, buffer, { mime = "video/mp4", info = n
   const filePath = path.join(CACHE_DIR, filename);
 
   try {
-
     await enforceCacheLimit();
 
     await fsp.writeFile(filePath, buffer);

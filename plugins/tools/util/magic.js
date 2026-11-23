@@ -1,7 +1,6 @@
 import { getMediaBuffer, findDownloadableTarget } from "@/src/services/fetch/media.js";
 
 const SIGNATURES = [
-
   { sig: [0x4d, 0x5a], ext: "EXE / DLL", desc: "Windows Executable (PE32/PE64)", category: "Executable" },
   { sig: [0x7f, 0x45, 0x4c, 0x46], ext: "ELF", desc: "Linux / Android Executable Binary", category: "Executable" },
   {

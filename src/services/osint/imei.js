@@ -18,7 +18,6 @@ export const GSMA_RBI = {
 };
 
 export const TAC_DATABASE = {
-
   3520: { brand: "Apple", model: "iPhone Series (11/12/13/14)" },
   3530: { brand: "Apple", model: "iPhone Series (SE/X/XR/XS)" },
   3533: { brand: "Apple", model: "iPhone Series (8/8 Plus)" },
@@ -177,11 +176,16 @@ function extractImeiDetails(html = "") {
     html.match(/<h[1-3][^>]*class="[^"]*(?:title|model|device)[^"]*"[^>]*>([^<]+)<\/h[1-3]>/i) ||
     html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
     html.match(/<title>([^<]+)<\/title>/i);
-  const scrapedTitle = titleMatch ? stripHtml(titleMatch[1]).replace(/\s*\|\s*(IMEI24|IMEI\.info).*$/i, "").trim() : null;
+  const scrapedTitle = titleMatch
+    ? stripHtml(titleMatch[1])
+        .replace(/\s*\|\s*(IMEI24|IMEI\.info).*$/i, "")
+        .trim()
+    : null;
 
   return {
     details,
-    brand: details["Brand"] || details["Make"] || details["Producer"] || (scrapedTitle ? scrapedTitle.split(" ")[0] : null),
+    brand:
+      details["Brand"] || details["Make"] || details["Producer"] || (scrapedTitle ? scrapedTitle.split(" ")[0] : null),
     model: details["Model"] || details["Device"] || scrapedTitle || null,
   };
 }

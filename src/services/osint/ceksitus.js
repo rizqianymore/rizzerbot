@@ -86,7 +86,6 @@ export async function analyzeWebsite(rawUrl) {
     const resolved = await dns.lookup(hostname, { all: true });
     ips = resolved.map((r) => r.address);
   } catch (err) {
-
     riskFactors.push("Domain gagal di-resolve ke IP (Bisa jadi sudah di-takedown / belum aktif)");
   }
 
