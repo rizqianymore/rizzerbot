@@ -1,10 +1,14 @@
-import { createMailbox, getMessages, readMessage } from "@/src/services/network/tempmail.js";
+import {
+  createUniversalMailbox,
+  getUniversalMessages,
+  readUniversalMessage,
+} from "@/src/services/network/tempmail.js";
 import { db } from "@/src/core/database.js";
 
 export default {
   name: "tempmail",
-  aliases: ["dropmail", "fakemail", "disposablemail", "mailtemp"],
-  description: "Buat email sekali pakai (temporary mail) real-time untuk verifikasi akun & OTP",
+  aliases: ["dropmail", "fakemail", "disposablemail", "mailtemp", "10minutemail"],
+  description: "Buat email sekali pakai (temporary mail) real-time untuk verifikasi akun & OTP (10MinuteMail / Guerrilla)",
   usage: "[create | check | read <id> | delete]",
   premiumOnly: false,
   category: "Tools",
@@ -14,20 +18,21 @@ export default {
     const subCmd = (args[0] || "").toLowerCase();
 
     const user = db.getUser(senderJid) || {};
-    const activeMail = user.tempMail || null;
+    const session = user.tempMailSession || null;
 
     if (!subCmd || subCmd === "help") {
       let infoText =
         `*TEMPORARY EMAIL REAL-TIME*\n\n` +
-        `Layanan email sekali pakai untuk verifikasi akun, kode OTP, dan menjaga privasi tanpa spam.\n\n` +
+        `Layanan email sekali pakai untuk verifikasi akun, kode OTP, dan privasi tanpa spam.\n\n` +
         `*Panduan Penggunaan:*\n` +
-        `• *${p}tempmail create* (Buat email random baru)\n` +
+        `• *${p}tempmail create* (Buat email 10MinuteMail baru)\n` +
+        `• *${p}tempmail create guerrilla* (Buat alternatif GuerrillaMail)\n` +
         `• *${p}tempmail check* (Cek kotak masuk / inbox real-time)\n` +
         `• *${p}tempmail read <id>* (Buka & baca isi email)\n` +
         `• *${p}tempmail delete* (Hapus sesi email aktif)\n\n`;
 
-      if (activeMail) {
-        infoText += `*Status Akun Anda:* Sedang aktif\n• *Email:* \`${activeMail}\``;
+      if (session?.address) {
+        infoText += `*Status Akun Anda:* Sedang aktif\n• *Email:* \`${session.address}\`\n• *Provider:* ${session.provider} (${session.expiresIn})`;
       } else {
         infoText += `*Status Akun Anda:* Belum ada email aktif. Ketik *${p}tempmail create* untuk membuat.`;
       }
@@ -36,39 +41,47 @@ export default {
     }
 
     if (subCmd === "create" || subCmd === "new" || subCmd === "buat") {
-      const customPrefix = args[1] || null;
-      const mailbox = createMailbox(customPrefix);
+      const engine = (args[1] || "auto").toLowerCase();
+      try {
+        const mailbox = await createUniversalMailbox(engine);
+        db.updateUser(senderJid, {
+          tempMail: mailbox.address,
+          tempMailSession: mailbox,
+        });
 
-      db.updateUser(senderJid, { tempMail: mailbox.address });
-
-      return reply(
-        `┌── EMAIL SEMENTARA BARU\n` +
-          `│ Alamat: ${mailbox.address}\n` +
-          `│ Status: Aktif & Siap Menerima\n` +
-          `└─\n\n` +
-          `Ketik ${p}tempmail check untuk melihat kotak masuk.`
-      );
+        return reply(
+          `┌── EMAIL SEMENTARA BARU\n` +
+            `│ Alamat: \`${mailbox.address}\`\n` +
+            `│ Provider: ${mailbox.provider}\n` +
+            `│ Durasi: ${mailbox.expiresIn}\n` +
+            `│ Status: Aktif & Siap Menerima\n` +
+            `└─\n\n` +
+            `Kirim OTP/verifikasi ke alamat di atas, lalu ketik:\n` +
+            `*${p}tempmail check* untuk melihat kotak masuk.`
+        );
+      } catch (err) {
+        return reply(`Gagal membuat email sementara: ${err.message}`);
+      }
     }
 
     if (subCmd === "check" || subCmd === "inbox" || subCmd === "pesan") {
-      const emailToCheck = args[1] || activeMail;
-      if (!emailToCheck) {
+      if (!session?.address) {
         return reply(
-          `Kamu belum memiliki email aktif.\n\nKetik *${p}tempmail create* untuk membuat baru, atau *${p}tempmail check user@domain.com*.`
+          `Kamu belum memiliki email aktif.\n\nKetik *${p}tempmail create* untuk membuat baru.`
         );
       }
 
       try {
-        const messages = await getMessages(emailToCheck);
+        const messages = await getUniversalMessages(session);
         if (!messages || messages.length === 0) {
           return reply(
             `*KOTAK MASUK (INBOX)*\n` +
-              `Email: \`${emailToCheck}\`\n\n` +
+              `Email: \`${session.address}\`\n\n` +
               `_Belum ada pesan masuk. Kirim email/OTP ke alamat ini lalu cek kembali dalam beberapa detik._`
           );
         }
 
-        let body = `*KOTAK MASUK: \`${emailToCheck}\`* (${messages.length} Pesan)\n\n`;
+        let body = `*KOTAK MASUK: \`${session.address}\`* (${messages.length} Pesan)\n\n`;
         messages.slice(0, 10).forEach((m, idx) => {
           body += `*${idx + 1}. [ID: ${m.id}]*\n`;
           body += `• *Dari:* ${m.from}\n`;
@@ -90,27 +103,19 @@ export default {
         return reply(`Format salah. Gunakan: *${p}tempmail read <ID_PESAN>*`);
       }
 
-      const emailToRead = activeMail;
-      if (!emailToRead) {
+      if (!session?.address) {
         return reply(`Kamu belum memiliki email aktif. Buat terlebih dahulu dengan *${p}tempmail create*.`);
       }
 
       try {
-        const fullMsg = await readMessage(emailToRead, messageId);
-
-        let content = fullMsg.textBody ? fullMsg.textBody.trim() : "";
-        if (!content && fullMsg.htmlBody) {
-          content = fullMsg.htmlBody
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-        }
+        const fullMsg = await readUniversalMessage(session, messageId);
+        const content = fullMsg.textBody ? fullMsg.textBody.trim() : "(Pesan kosong)";
 
         let result =
           `*DETAIL PESAN MASUK*\n\n` +
           `• *ID:* ${fullMsg.id}\n` +
           `• *Dari:* ${fullMsg.from}\n` +
-          `• *Kepada:* \`${emailToRead}\`\n` +
+          `• *Kepada:* \`${session.address}\`\n` +
           `• *Subjek:* ${fullMsg.subject || "(Tanpa Subjek)"}\n` +
           `• *Waktu:* ${fullMsg.date}\n\n`;
 
@@ -120,15 +125,7 @@ export default {
           result += `🔑 *KODE OTP TERDETEKSI:* \`${otpMatch[1]}\`\n\n`;
         }
 
-        result += `*Isi Pesan:*\n${content || "(Pesan kosong)"}`;
-
-        if (fullMsg.attachments && fullMsg.attachments.length > 0) {
-          result += `\n\n*Lampiran (${fullMsg.attachments.length}):*\n`;
-          fullMsg.attachments.forEach((att) => {
-            result += `• ${att.filename} (${(att.size / 1024).toFixed(1)} KB)\n`;
-          });
-        }
-
+        result += `*Isi Pesan:*\n${content}`;
         return reply(result.slice(0, 4000));
       } catch (err) {
         return reply(`[FAIL] Gagal membaca pesan: ${err.message}`);
@@ -136,14 +133,18 @@ export default {
     }
 
     if (subCmd === "delete" || subCmd === "hapus" || subCmd === "reset") {
-      if (!activeMail) {
+      if (!session?.address) {
         return reply("Tidak ada sesi temp-mail aktif yang perlu dihapus.");
       }
 
-      db.updateUser(senderJid, { tempMail: null });
-      return reply(`Sesi temporary email (\`${activeMail}\`) berhasil dihapus.`);
+      db.updateUser(senderJid, {
+        tempMail: null,
+        tempMailSession: null,
+      });
+      return reply(`Sesi temporary email (\`${session.address}\`) berhasil dihapus.`);
     }
 
     return reply(`Perintah tidak dikenal. Ketik *${p}tempmail* untuk melihat panduan.`);
   },
 };
+
