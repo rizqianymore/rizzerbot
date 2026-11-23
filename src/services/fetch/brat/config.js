@@ -34,6 +34,13 @@ export const TEMPLATES = {
     safeZone: { a: 660, b: 1180, c: 270, d: 990 },
     stroke: true,
   },
+  cat1: {
+    localPath: path.join(ASSETS_DIR, "cat1.png"),
+    width: 715,
+    height: 720,
+    safeZone: { a: 400, b: 680, c: 50, d: 665 },
+    stroke: true,
+  },
 };
 
 export const TEXT_STYLE = {
