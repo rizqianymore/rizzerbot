@@ -706,11 +706,12 @@ export default {
 
       const etaStr = typeof b.eta === "number" && b.eta > 0 ? `${b.eta} mnt lagi` : `Tiba sekarang / Dekat`;
       const distStr = b.jarak != null ? ` (±${Math.round(b.jarak)}m)` : "";
+      const statusStr = typeof b.speed === "number" && b.speed > 0 ? `${b.speed} km/j` : `Aktif / Melintas`;
 
       text += `${branch} [${i + 1}] Koridor ${b.route} ➔ ${b.tujuan}\n`;
       text += `${subPipe} No Bodi   : ${b.body}\n`;
       text += `${subPipe} Estimasi  : ${etaStr}${distStr}\n`;
-      text += `${subPipe} Kecepatan : ${b.speed} km/j (Update ${b.umur ?? 0}s lalu)\n`;
+      text += `${subPipe} Status    : ${statusStr} (Sinyal ${b.umur ?? 0}s lalu)\n`;
     });
 
     text += `\n_Menampilkan ${displayBuses.length} armada terdekat. Sumber: tijeapi.transjakarta.co.id_`;
