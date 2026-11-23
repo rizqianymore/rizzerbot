@@ -1,8 +1,8 @@
 export default {
   name: "iqc2",
   aliases: ["iqc"],
-  description: "Maker iPhone quoted chat via deline API",
-  usage: "<teks>|<chatTime>|<statusBarTime>",
+  description: "Maker iPhone quoted chat via siputzx / deline API",
+  usage: "<teks>|[chatTime]|[statusBarTime]",
   premiumOnly: true,
   cooldownMs: 5000,
   category: "Sticker",
@@ -11,14 +11,14 @@ export default {
 
     if (!text) {
       return reply(
-        "Contoh penggunaan:\n\n" + "Otomatis:\n.iqc2 Halo hilman\n\n" + "Manual:\n.iqc2 Halo hilman|22:11|22:20"
+        "Contoh penggunaan:\n\n" + "Otomatis:\n.iqc Halo kawan\n\n" + "Manual:\n.iqc Halo kawan|19:30|19:30"
       );
     }
 
     const [rawMsg, rawChatTime, rawStatusBarTime] = text.split("|");
 
     if (!rawMsg?.trim()) {
-      return reply("Teks tidak boleh kosong! Contoh: *.iqc2 Halo hilman*");
+      return reply("Teks tidak boleh kosong! Contoh: *.iqc Halo kawan*");
     }
 
     const now = new Date();
@@ -31,17 +31,34 @@ export default {
     const chatTime = rawChatTime ? rawChatTime.trim() : autoTime;
     const statusBarTime = rawStatusBarTime ? rawStatusBarTime.trim() : autoTime;
 
-    const url =
+    const siputzxUrl =
+      `https://brat.siputzx.my.id/iphone-quoted?text=${encodeURIComponent(rawMsg.trim())}` +
+      `&chatTime=${encodeURIComponent(chatTime)}` +
+      `&statusBarTime=${encodeURIComponent(statusBarTime)}`;
+
+    const delineUrl =
       `https://api.deline.web.id/maker/iqc?text=${encodeURIComponent(rawMsg.trim())}` +
       `&chatTime=${encodeURIComponent(chatTime)}` +
       `&statusBarTime=${encodeURIComponent(statusBarTime)}`;
 
     await sendTyping();
 
+    // Coba endpoint siputzx terlebih dahulu, jika gagal fallback ke deline
     try {
-      await sock.sendMessage(msg.key.remoteJid, { image: { url }, caption: "" }, { quoted: msg });
-    } catch (err) {
-      return reply(`Gagal membuat iqc: ${err.message}`);
+      const res = await fetch(siputzxUrl, { signal: AbortSignal.timeout(15000) });
+      if (res.ok) {
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > 1000) {
+          return await sock.sendMessage(msg.key.remoteJid, { image: buf, caption: "" }, { quoted: msg });
+        }
+      }
+      throw new Error(`Endpoint siputzx status: ${res.status}`);
+    } catch (_) {
+      try {
+        await sock.sendMessage(msg.key.remoteJid, { image: { url: delineUrl }, caption: "" }, { quoted: msg });
+      } catch (err) {
+        return reply(`Gagal membuat iqc: ${err.message}`);
+      }
     }
   },
 };
