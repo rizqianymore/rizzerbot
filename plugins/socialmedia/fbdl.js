@@ -9,7 +9,7 @@ export default {
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
-    const url = args[0];
+    const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();
     if (!url) return reply("Masukkan link Facebook! Contoh: *.fbdl https://www.facebook.com/reel/xxxx*");
     if (!/(?:^|\.|\/\/)(facebook\.com|fb\.com|fb\.watch)\//i.test(url)) {
       return reply("Link harus dari Facebook (facebook.com, fb.com, atau fb.watch).");

@@ -9,7 +9,7 @@ export default {
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
-    const url = args[0]?.trim();
+    const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();
     if (!url || !/^https?:\/\//i.test(url)) {
       return reply(
         `┌── UNIVERSAL DOWNLOADER\n` +
@@ -20,7 +20,7 @@ export default {
       );
     }
 
-    const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
+    const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
 
     try {
       const { buffer, info, source } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });

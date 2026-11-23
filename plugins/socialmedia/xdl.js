@@ -9,7 +9,7 @@ export default {
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
-    const url = args[0];
+    const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();
     if (!url) return reply("Masukkan link X/Twitter! Contoh: *.xdl https://x.com/user/status/xxxx*");
     if (!/(?:^|\.|\/\/)(twitter\.com|x\.com)\//i.test(url)) {
       return reply("Link harus dari Twitter/X (twitter.com atau x.com).");

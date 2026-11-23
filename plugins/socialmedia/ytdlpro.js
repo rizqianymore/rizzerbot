@@ -9,10 +9,10 @@ export default {
   category: "Social Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
-    const url = args[0];
+    const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();
     if (!url) return reply("Masukkan link YouTube! Contoh: *.ytdl https://youtu.be/xxx*");
 
-    const isAudio = args.some((a) => a.toLowerCase() === "mp3" || a.toLowerCase() === "audio");
+    const isAudio = args.some((a) => a?.toLowerCase() === "mp3" || a?.toLowerCase() === "audio");
 
     try {
       const { buffer, info, source } = await unifiedDownload(url, { mode: isAudio ? "audio" : "video", logger });

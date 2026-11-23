@@ -119,7 +119,7 @@ export function isProbablyPlayable(buffer, mode) {
   return true;
 }
 
-export async function unifiedDownload(url, { mode = "video", logger, timeoutMs = 20000, skipCache = false } = {}) {
+export async function unifiedDownload(url, { mode = "video", logger, timeoutMs: _timeoutMs = 20000, skipCache = false } = {}) {
   const isAudio = mode === "audio";
   const cacheKey = `${mode}:${String(url).trim()}`;
   const targetUrl = String(url || "").trim();
