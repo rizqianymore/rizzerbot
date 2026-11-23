@@ -61,18 +61,39 @@ function resolveHalte(keyword) {
     .toLowerCase();
   if (!k) return null;
 
+  // 1. Exact match on stop_id
   const byId = stops.find((s) => s.stop_id?.toLowerCase() === k);
   if (byId) return byId;
 
+  // 2. Exact match on stop_name
   const exact = stops.find((s) => s.stop_name?.toLowerCase() === k);
   if (exact) return exact;
 
+  // 3. Substring match on stop_name
   const match = stops.find((s) => s.stop_name?.toLowerCase().includes(k));
-  return match || null;
+  if (match) return match;
+
+  // 4. Token-based multi-word match
+  const tokens = k.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const allTokens = stops.find((s) => {
+      const name = s.stop_name?.toLowerCase() || "";
+      return tokens.every((t) => name.includes(t));
+    });
+    if (allTokens) return allTokens;
+
+    const someTokens = stops.find((s) => {
+      const name = s.stop_name?.toLowerCase() || "";
+      return tokens.some((t) => name.includes(t));
+    });
+    if (someTokens) return someTokens;
+  }
+
+  return null;
 }
 
 /**
- * Search halte in local DB
+ * Search halte in local DB with tokenized multi-word ranking
  */
 function searchHalte(keyword, limit = 20) {
   const stops = getStopsDatabase();
@@ -80,8 +101,38 @@ function searchHalte(keyword, limit = 20) {
     .trim()
     .toLowerCase();
   if (!k) return [];
-  const hits = stops.filter((s) => s.stop_name?.toLowerCase().includes(k));
-  return hits.slice(0, limit);
+
+  // Exact substring
+  const exactSub = stops.filter((s) => s.stop_name?.toLowerCase().includes(k));
+  if (exactSub.length > 0) return exactSub.slice(0, limit);
+
+  // Multi-word tokens
+  const tokens = k.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    // Stage 1: Halte containing ALL words
+    const allWords = stops.filter((s) => {
+      const name = s.stop_name?.toLowerCase() || "";
+      return tokens.every((t) => name.includes(t));
+    });
+    if (allWords.length > 0) return allWords.slice(0, limit);
+
+    // Stage 2: Halte containing ANY word (ranked by number of matching words)
+    const ranked = [];
+    for (const s of stops) {
+      const name = s.stop_name?.toLowerCase() || "";
+      let matches = 0;
+      for (const t of tokens) {
+        if (name.includes(t)) matches++;
+      }
+      if (matches > 0) {
+        ranked.push({ halte: s, score: matches });
+      }
+    }
+    ranked.sort((a, b) => b.score - a.score);
+    return ranked.slice(0, limit).map((r) => r.halte);
+  }
+
+  return [];
 }
 
 /**
@@ -162,11 +213,23 @@ async function fetchTije(endpointPath, { method = "GET", params = null, body = n
 }
 
 /**
- * 1) Bus yang AKAN DATANG ke halte + ETA
+ * Autocomplete place search via Google Places bridge on TIJE API
  */
-async function getHalteArrivals(lat, lon, { radius = 500, stopId = null, maxAge = 60 } = {}) {
+async function autocompletePlaces(query) {
+  const d = await fetchTije("/v2/maps/autocomplete", {
+    method: "POST",
+    body: { query },
+  });
+  return Array.isArray(d?.data) ? d.data : [];
+}
+
+/**
+ * 1) Bus yang AKAN DATANG ke halte + ETA
+ * Menggunakan pencocokan ID halte, nama halte pada perhentian, serta bus aktif di terminal/radius halte
+ */
+async function getHalteArrivals(lat, lon, { radius = 1000, stopId = null, stopName = "", maxAge = 90 } = {}) {
   let resolvedStopId = stopId;
-  let resolvedStopName = stopId;
+  let resolvedStopName = stopName || stopId;
 
   if (!resolvedStopId) {
     const sd = await fetchTije("/v2/bus-stop", {
@@ -186,15 +249,28 @@ async function getHalteArrivals(lat, lon, { radius = 500, stopId = null, maxAge 
   });
   const buses = Array.isArray(d?.data) ? d.data : [];
   const arrivals = [];
+  const seenBuses = new Set();
+  const targetLower = String(resolvedStopName || "").toLowerCase();
 
+  // PASS 1: Bus yang secara eksplisit memuat halte ini di daftar stops rutenya
   for (const b of buses) {
+    const bodyNo = b.bus_body_no || "-";
+    if (seenBuses.has(bodyNo)) continue;
+
     const age = busAgeSeconds(b.timestamp);
     if (age != null && age > maxAge) continue;
 
     for (const st of b.stops || []) {
-      if (st.parent_stop_id === resolvedStopId || st.stop_id === resolvedStopId) {
+      const matchId =
+        (st.parent_stop_id && st.parent_stop_id === resolvedStopId) || (st.stop_id && st.stop_id === resolvedStopId);
+
+      const matchName =
+        targetLower && (st.name?.toLowerCase() === targetLower || st.parent_stop_name?.toLowerCase() === targetLower);
+
+      if (matchId || matchName) {
+        seenBuses.add(bodyNo);
         arrivals.push({
-          body: b.bus_body_no || "-",
+          body: bodyNo,
           route: b.route_code || "-",
           tujuan: st.headsign || b.trip_headsign || b.route_name || "-",
           eta: st.eta,
@@ -206,6 +282,36 @@ async function getHalteArrivals(lat, lon, { radius = 500, stopId = null, maxAge 
         });
         break;
       }
+    }
+  }
+
+  // PASS 2: Jika armada masih kurang dari 5, ambil bus yang secara fisik berada sangat dekat (≤ 500m)
+  // Cocok untuk terminal utama/pemberhentian awal tempat bus sedang parkir/siap berangkat
+  if (arrivals.length < 5) {
+    for (const b of buses) {
+      const bodyNo = b.bus_body_no || "-";
+      if (seenBuses.has(bodyNo)) continue;
+      if (b.latitude == null || b.longitude == null) continue;
+
+      const age = busAgeSeconds(b.timestamp);
+      if (age != null && age > maxAge) continue;
+
+      const dist = haversine(lat, lon, b.latitude, b.longitude);
+      if (dist != null && dist <= 500) {
+        seenBuses.add(bodyNo);
+        arrivals.push({
+          body: bodyNo,
+          route: b.route_code || "-",
+          tujuan: b.trip_headsign || b.route_name || "-",
+          eta: 0,
+          jarak: dist,
+          umur: age != null ? Math.round(age) : null,
+          speed: b.speed || 0,
+          trip: b.trip_id,
+          nextStop: b.next_stops || "-",
+        });
+      }
+      if (arrivals.length >= 10) break;
     }
   }
 
@@ -373,9 +479,31 @@ export default {
       }
 
       await sendTyping();
-      const hits = searchHalte(keyword, 8);
+      let hits = searchHalte(keyword, 8);
 
+      // Jika di DB lokal tidak ada, cari via maps autocomplete online
       if (hits.length === 0) {
+        const places = await autocompletePlaces(keyword);
+        if (places.length > 0) {
+          let text =
+            `┌── PENCARIAN TEMPAT / HALTE (ONLINE)\n` +
+            `│ Kata Kunci : ${keyword}\n` +
+            `│ Ditemukan  : ${places.length} lokasi\n` +
+            `└──\n\n`;
+
+          const disp = places.slice(0, 6);
+          disp.forEach((item, i) => {
+            const isLast = i === disp.length - 1;
+            const branch = isLast ? "└──" : "├──";
+            const subPipe = isLast ? "   " : "│  ";
+            text += `${branch} [${i + 1}] ${item.name}\n`;
+            text += `${subPipe} Alamat : ${item.address || item.full_text || "-"}\n`;
+          });
+
+          text += `\n_Catatan: Lokasi di atas adalah area publik/tempat. Gunakan nama halte terdekat untuk cek bus._`;
+          return reply(text);
+        }
+
         return reply(`❌ Halte dengan kata kunci "*${keyword}*" tidak ditemukan di database TransJakarta.`);
       }
 
@@ -545,6 +673,7 @@ export default {
     const arrivalsData = await getHalteArrivals(halte.stop_lat, halte.stop_lon, {
       radius: 1200,
       stopId: halte.stop_id,
+      stopName: halte.stop_name,
       maxAge: 120,
     });
 
@@ -561,7 +690,7 @@ export default {
       );
     }
 
-    // Tampilkan 5 armada terdekat
+    // Tampilkan hingga 5 armada terdekat
     const displayBuses = arrivals.slice(0, 5);
 
     let text =
@@ -584,7 +713,7 @@ export default {
       text += `${subPipe} Kecepatan : ${b.speed} km/j (Update ${b.umur ?? 0}s lalu)\n`;
     });
 
-    text += `\n_Menampilkan 5 armada terdekat. Sumber: tijeapi.transjakarta.co.id_`;
+    text += `\n_Menampilkan ${displayBuses.length} armada terdekat. Sumber: tijeapi.transjakarta.co.id_`;
 
     return reply(text);
   },
