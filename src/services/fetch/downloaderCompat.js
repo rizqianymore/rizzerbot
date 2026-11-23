@@ -259,7 +259,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
 
       if (conv && conv.length > 100) buffer = conv;
     } else if (t === "audio") {
-
+      // Audio passthrough
     }
   }
 

@@ -58,7 +58,7 @@ export default {
 
     try {
       const res = await smartUpload(buffer, filename, providerArg);
-      const sizeStr = typeof formatBytes === "function" ? formatBytes(res.sizeBytes) : `${(res.sizeBytes / 1024 / 1024).toFixed(2)} MB`;
+      const sizeStr = `${(res.sizeBytes / 1024 / 1024).toFixed(2)} MB`;
 
       const text =
         `*BERHASIL UPLOAD FILE*\n\n` +

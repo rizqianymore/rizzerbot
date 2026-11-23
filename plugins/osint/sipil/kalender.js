@@ -83,20 +83,15 @@ export default {
     const mmdd = `${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(dateNum).padStart(2, "0")}`;
     const libur = LIBUR_NASIONAL_TETAP[mmdd] || (targetDate.getDay() === 0 ? "Hari Minggu (Libur Akhir Pekan)" : null);
 
-    let text = `*OSINT TOOLS - KALENDER & WETON SIPIL*
-`;
-    text += `└─ Tanggal Masehi: ${d} ${monthNames[m - 1]} ${y}
-`;
-    text += `└─ Hari         : ${dayName}
-`;
-    text += `└─ Pasar / Weton: ${pasaran}
-`;
-    text += `└─ Neptu        : ${neptu}
-`;
-    text += `└─ Zodiak       : ${zodiac}
-`;
-    text += `│
-`;
+    let text = `*OSINT TOOLS - KALENDER & WETON SIPIL*\n`;
+    text += `└─ Tanggal Masehi: ${dateNum} ${monthName} ${yearNum}\n`;
+    text += `└─ Hari         : ${dayName}\n`;
+    text += `└─ Pasar / Weton: ${pasaran}\n`;
+    text += `└─ Kalender Hijriah: ${hijriah}\n`;
+    if (libur) {
+      text += `└─ Keterangan   : ${libur}\n`;
+    }
+    text += `│\n`;
     return context.reply(text);
   },
 };

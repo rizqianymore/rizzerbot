@@ -67,8 +67,7 @@ export default {
 `;
       text += `└─ Content-Type : ${res.headers.get("content-type") || "-"}
 `;
-      text += `└─ Response Time: ${responseTime} ms
-`;
+      text += `└─ Response Time: ${latency} ms\n`;
       text += `│
 `;
       return reply(text);

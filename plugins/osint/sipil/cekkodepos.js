@@ -37,11 +37,11 @@ export default {
     if (!input) {
       return reply(
         `*PENCARIAN KODE POS INDONESIA*\n\n` +
-          `Masukkan nama daerah (kelurahan, kecamatan, kota) atau 5 digit kode pos.\n\n` +
-          `*Contoh:*\n` +
-          `│ \`${currentPrefix}cekkodepos Kemanggisan\`\n` +
-          `│ \`${currentPrefix}kodepos Palmerah\`\n` +
-          `│ \`${currentPrefix}cekkodepos 11480\``
+        `Masukkan nama daerah (kelurahan, kecamatan, kota) atau 5 digit kode pos.\n\n` +
+        `*Contoh:*\n` +
+        `│ \`${currentPrefix}cekkodepos Kemanggisan\`\n` +
+        `│ \`${currentPrefix}kodepos Palmerah\`\n` +
+        `│ \`${currentPrefix}cekkodepos 11480\``
       );
     }
 
@@ -62,28 +62,18 @@ export default {
       const total = list.length;
       const displayed = list.slice(0, 15);
 
-      let text = `*OSINT TOOLS - KODE POS INDONESIA*
-`;
-      text += `└─ Kueri        : ${input}
-`;
-      text += `└─ Ditemukan    : ${results.length} Wilayah
-`;
-      text += `│
-`;
-      results.slice(0, 5).forEach((item, idx) => {
-        text += `└─ [${idx + 1}] Kode Pos : ${item.postalcode || item.kodepos || "-"}
-`;
-        text += `│   Wilayah  : ${item.urban || item.kelurahan || "-"}, ${item.subdistrict || item.kecamatan || "-"}
-`;
-        text += `│   Kota/Kab : ${item.city || item.kabupaten || "-"}
-`;
-        text += `│   Provinsi : ${item.province || item.provinsi || "-"}
-`;
-        if (idx < Math.min(results.length, 5) - 1) text += `│
-`;
+      let text = `*OSINT TOOLS - KODE POS INDONESIA*\n`;
+      text += `└─ Kueri        : ${input}\n`;
+      text += `└─ Ditemukan    : ${total} Wilayah\n`;
+      text += `│\n`;
+      displayed.forEach((item, idx) => {
+        text += `└─ [${idx + 1}] Kode Pos : ${item.postalcode || item.kodepos || "-"}\n`;
+        text += `│   Wilayah  : ${item.urban || item.kelurahan || "-"}, ${item.subdistrict || item.kecamatan || "-"}\n`;
+        text += `│   Kota/Kab : ${item.city || item.kabupaten || "-"}\n`;
+        text += `│   Provinsi : ${item.province || item.provinsi || "-"}\n`;
+        if (idx < displayed.length - 1) text += `│\n`;
       });
-      text += `│
-`;
+      text += `│\n`;
       return reply(text);
     } catch (err) {
       return reply(`Terjadi kesalahan saat mencari kode pos: ${err.message}`);

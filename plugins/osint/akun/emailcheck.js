@@ -97,30 +97,27 @@ export default {
       const txt = await dns.resolveTxt(domain);
       const flattened = txt.map((t) => (Array.isArray(t) ? t.join("") : t));
       hasSpf = flattened.some((t) => t.toLowerCase().startsWith("v=spf1"));
-    } catch {}
+    } catch { }
 
     try {
       const dmarcTxt = await dns.resolveTxt(`_dmarc.${domain}`);
       const flattened = dmarcTxt.map((t) => (Array.isArray(t) ? t.join("") : t));
       hasDmarc = flattened.some((t) => t.toLowerCase().startsWith("v=dmarc1"));
-    } catch {}
+    } catch { }
 
-    let text = `*OSINT TOOLS - EMAIL ANALYZER*
-`;
-      text += `└─ Email Target : ${email}
-`;
-      text += `└─ Domain       : ${domain}
-`;
-      text += `└─ Format Sintaks: ${isValidSyntax ? "VALID" : "INVALID"}
-`;
-      text += `└─ Disposable   : ${isDisposable ? "YA (Email Sementara)" : "BUKAN (Email Normal)"}
-`;
-      text += `└─ Domain MX Aktif: ${hasMx ? "AKTIF (Bisa Terima Email)" : "TIDAK AKTIF"}
-`;
-      text += `└─ Provider     : ${detectedProvider}
-`;
-      text += `│
-`;
-      return reply(text);
+    const isValidSyntax = Boolean(match);
+    const hasMx = mxRecords.length > 0;
+    const detectedProvider = mxRecords[0]?.exchange || domain;
+
+    let text = `*OSINT TOOLS - EMAIL ANALYZER*\n`;
+    text += `└─ Email Target : ${email}\n`;
+    text += `└─ Domain       : ${domain}\n`;
+    text += `└─ Format Sintaks: ${isValidSyntax ? "VALID" : "INVALID"}\n`;
+    text += `└─ Disposable   : ${isDisposable ? "YA (Email Sementara)" : "BUKAN (Email Normal)"}\n`;
+    text += `└─ Domain MX Aktif: ${hasMx ? "AKTIF (Bisa Terima Email)" : "TIDAK AKTIF"}\n`;
+    text += `└─ Provider     : ${detectedProvider}\n`;
+    text += `└─ Status MX    : ${mxStatus}\n`;
+    text += `│\n`;
+    return reply(text);
   },
 };

@@ -5,7 +5,7 @@ export function looksLikeExternalBot(msg, text) {
   if (!name) return false;
   if (!/bot|assistant|official|support|ai\b/.test(name)) return false;
 
-  if (text && text.length > 200 && /[✅❌⚠️📊👑]/.test(text)) return true;
+  if (text && text.length > 200 && /(?:✅|❌|⚠️|📊|👑)/u.test(text)) return true;
   return /\bbot\b/.test(name);
 }
 

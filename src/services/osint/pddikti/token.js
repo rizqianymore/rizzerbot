@@ -16,7 +16,7 @@ async function getTokenPage() {
       if (existingPage && !existingPage.isClosed?.() && existingPage.browser?.()?.connected) {
         return existingPage;
       }
-    } catch (_) {}
+    } catch (_) { }
     tokenPagePromise = null;
   }
 
@@ -36,7 +36,7 @@ async function getTokenPage() {
           timeout: 15000,
         })
         .catch(async () => {
-          await page.reload({ waitUntil: "domcontentloaded", timeout: TOKEN_TIMEOUT_MS }).catch(() => {});
+          await page.reload({ waitUntil: "domcontentloaded", timeout: TOKEN_TIMEOUT_MS }).catch(() => { });
           await solveTurnstileIfPresent(page);
           await page
             .waitForFunction(() => typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function", {
@@ -62,7 +62,7 @@ async function getTokenPage() {
 
 function runSerialized(fn) {
   const run = tokenLock.then(fn, fn);
-  tokenLock = run.catch(() => {});
+  tokenLock = run.catch(() => { });
   return run;
 }
 
@@ -109,6 +109,6 @@ export async function closePddiktiBrowser() {
       const p = await tokenPagePromise.catch(() => null);
       await stealthBrowser.closePage(p);
     }
-  } catch (_) {}
+  } catch (_) { }
   tokenPagePromise = null;
 }

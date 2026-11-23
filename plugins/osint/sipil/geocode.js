@@ -50,20 +50,14 @@ export default {
       const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
       const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
 
-      let text = `*OSINT TOOLS - GEOLOKASI KOORDINAT*
-`;
-      text += `└─ Alamat Lengkap: ${first.display_name}
-`;
-      text += `└─ Latitude     : ${first.lat}
-`;
-      text += `└─ Longitude    : ${first.lon}
-`;
-      text += `└─ Tipe Lokasi  : ${first.type || "-"}
-`;
-      text += `└─ Google Maps  : https://www.google.com/maps?q=${first.lat},${first.lon}
-`;
-      text += `│
-`;
+      let text = `*OSINT TOOLS - GEOLOKASI KOORDINAT*\n`;
+      text += `└─ Alamat Lengkap: ${place.display_name}\n`;
+      text += `└─ Latitude     : ${lat}\n`;
+      text += `└─ Longitude    : ${lon}\n`;
+      text += `└─ Tipe Lokasi  : ${place.type || "-"}\n`;
+      text += `└─ Google Maps  : ${mapsLink}\n`;
+      text += `└─ OSM Link     : ${osmLink}\n`;
+      text += `│\n`;
       return reply(text);
     } catch (err) {
       return reply(`Gagal mencari geolokasi: ${err.response?.data?.message || err.message}`);
