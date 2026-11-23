@@ -52,34 +52,45 @@ export default {
     const remoteJid = msg.key.remoteJid;
 
     try {
-      if (action === "list" || action === "daftar") {
+      if (action === "list" || action === "daftar" || action === "cari" || action === "search") {
         const cameras = await fetchOrGetCachedCameras();
         if (!cameras.length) {
           return reply("Tidak ada kamera CCTV yang terdeteksi di server Nx Witness.");
         }
 
-        const page = parseInt(targetQuery, 10) || 1;
+        // Fitur pencarian nama lokasi kamera
+        let filteredCams = cameras;
+        const isSearch = (action === "cari" || action === "search") || (targetQuery && isNaN(parseInt(targetQuery, 10)));
+        if (isSearch && targetQuery) {
+          const q = targetQuery.toLowerCase();
+          filteredCams = cameras.filter((c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
+          if (!filteredCams.length) {
+            return reply(`Tidak ditemukan kamera dengan kata kunci *"${targetQuery}"*. Ketik \`${p}nx list\` untuk melihat semua kamera.`);
+          }
+        }
+
+        const page = (!isSearch && parseInt(targetQuery, 10)) ? parseInt(targetQuery, 10) : 1;
         const perPage = 15;
-        const totalPages = Math.ceil(cameras.length / perPage);
+        const totalPages = Math.ceil(filteredCams.length / perPage);
         const curPage = Math.max(1, Math.min(totalPages, page));
         const startIndex = (curPage - 1) * perPage;
-        const pageCams = cameras.slice(startIndex, startIndex + perPage);
+        const pageCams = filteredCams.slice(startIndex, startIndex + perPage);
 
         let text = `*DAFTAR KAMERA CCTV (Nx Witness)*\n`;
-        text += `Total: ${cameras.length} Kamera | Halaman: ${curPage}/${totalPages}\n\n`;
+        text += `Total: ${filteredCams.length} Kamera${isSearch ? ` (Filter: "${targetQuery}")` : ""} | Hal: ${curPage}/${totalPages}\n\n`;
 
         pageCams.forEach((cam, i) => {
-          const num = startIndex + i + 1;
-          const statusIcon = cam.status === "Online" ? "[LIVE]" : "[OFF]";
+          const num = cameras.indexOf(cam) + 1;
+          const statusIcon = cam.status === "Online" ? "🟢 [LIVE]" : "🔴 [OFF]";
           text += `[${num}] ${cam.name} ${statusIcon}\n`;
         });
 
         text += `\n*Petunjuk Penggunaan:*\n`;
-        text += `Ambil snapshot: \`${p}nx snap <nomor/nama>\`\n`;
-        text += `Ambil video: \`${p}nx vid <nomor/nama>\`\n`;
-        text += `Detail info: \`${p}nx info <nomor/nama>\`\n`;
+        text += `• Snapshot : \`${p}nx snap <nomor/nama>\`\n`;
+        text += `• Rekam Vid: \`${p}nx vid <nomor/nama>\`\n`;
+        text += `• Cari Cam : \`${p}nx cari <kata kunci>\` (cth: \`${p}nx cari monas\`)\n`;
         if (totalPages > 1) {
-          text += `Halaman lain: \`${p}nx list ${curPage < totalPages ? curPage + 1 : 1}\`\n`;
+          text += `• Halaman  : \`${p}nx list ${curPage < totalPages ? curPage + 1 : 1}\`\n`;
         }
 
         return reply(text.trim());
@@ -180,11 +191,11 @@ export default {
 
       return reply(
         `Perintah tidak dikenal.\n\n` +
-          `Gunakan:\n` +
-          `${p}nx list - Daftar semua kamera\n` +
-          `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
-          `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
-          `${p}nx info <nomor/nama> - Cek info kamera`
+        `Gunakan:\n` +
+        `${p}nx list - Daftar semua kamera\n` +
+        `${p}nx snap <nomor/nama> - Ambil foto snapshot\n` +
+        `${p}nx vid <nomor/nama> - Rekam video pendek\n` +
+        `${p}nx info <nomor/nama> - Cek info kamera`
       );
     } catch (err) {
       logger?.error?.(`[cctvnx] ${err.message}`);

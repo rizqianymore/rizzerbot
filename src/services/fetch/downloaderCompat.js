@@ -43,7 +43,7 @@ export function sniffMime(buffer, fallback = "video/mp4") {
 
 async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs = []) {
   const cacheDir = path.join(os.tmpdir(), "rizzerbot-compat");
-  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => {});
+  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => { });
   const base = path.join(cacheDir, `cvt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const inFile = `${base}_in.${inputExt}`;
   const outFile = `${base}_out.${outputExt}`;
@@ -55,8 +55,8 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
     });
     return await fsp.readFile(outFile);
   } finally {
-    await fsp.unlink(inFile).catch(() => {});
-    await fsp.unlink(outFile).catch(() => {});
+    await fsp.unlink(inFile).catch(() => { });
+    await fsp.unlink(outFile).catch(() => { });
   }
 }
 
@@ -137,7 +137,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
           rawBuffer: cached.buffer,
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   let lastErr = null;
@@ -268,7 +268,7 @@ export async function unifiedDownload(url, { mode = "video", logger, timeoutMs =
       const { setCachedMedia } = await import("./mediaCache.js");
       const mime = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await setCachedMedia(cacheKey, buffer, { mime, info });
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return { buffer, info, source, rawBuffer };
@@ -323,7 +323,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "tiktok-slide",
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   try {
@@ -346,7 +346,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
         source: "socialdownloader",
       };
     }
-  } catch (_) {}
+  } catch (_) { }
 
   if (/instagram\.com/i.test(targetUrl)) {
     try {
@@ -367,7 +367,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "kol.id-carousel",
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return { items, info: meta, source: "none" };

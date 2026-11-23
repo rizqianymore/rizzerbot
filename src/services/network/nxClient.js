@@ -126,36 +126,51 @@ export async function getNxSnapshot(cameraId) {
   let token = await getNxToken();
   const { baseUrl } = getNxConfig();
 
-  try {
-    const response = await axios.get(`${baseUrl}/rest/v2/devices/${cameraId}/image`, {
-      headers: { Authorization: `Bearer ${token}` },
+  const fetchThumbnail = async (authToken, url, params = {}) => {
+    return await axios.get(url, {
+      params,
+      headers: { Authorization: `Bearer ${authToken}` },
       httpsAgent,
       responseType: "arraybuffer",
       timeout: 10000,
     });
-    if (response.data && response.data.length > 500) {
-      return Buffer.from(response.data);
-    }
-  } catch (e1) {
-    if (e1.response?.status === 401) {
-      token = await getNxToken(true);
+  };
+
+  const attempts = [
+    {
+      url: `${baseUrl}/ec2/cameraThumbnail`,
+      params: { cameraId, width: 1280, height: 720 },
+    },
+    {
+      url: `${baseUrl}/media/${cameraId}.jpg`,
+      params: { resolution: "720p" },
+    },
+    {
+      url: `${baseUrl}/rest/v2/devices/${cameraId}/image`,
+      params: {},
+    },
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      let res = await fetchThumbnail(token, attempt.url, attempt.params);
+      if (res.status === 401) {
+        cachedSession = { token: null, expireAt: 0 };
+        token = await getNxToken(true);
+        res = await fetchThumbnail(token, attempt.url, attempt.params);
+      }
+      if (res.status === 200 && res.data && res.data.length > 500) {
+        return Buffer.from(res.data);
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        cachedSession = { token: null, expireAt: 0 };
+        token = await getNxToken(true);
+      }
     }
   }
 
-  try {
-    const response = await axios.get(`${baseUrl}/ec2/cameraThumbnail`, {
-      params: { cameraId, width: 1280, height: 720 },
-      headers: { Authorization: `Bearer ${token}` },
-      httpsAgent,
-      responseType: "arraybuffer",
-      timeout: 10000,
-    });
-    if (response.data && response.data.length > 500) {
-      return Buffer.from(response.data);
-    }
-  } catch (_) {}
-
-  throw new Error(`Gagal mengambil snapshot live dari kamera ${cameraId}.`);
+  throw new Error(`Kamera ${cameraId} sedang offline atau feed video tidak menghasilkan frame (HTTP 204).`);
 }
 
 export async function getNxVideo(cameraId, duration = 8) {
