@@ -658,14 +658,48 @@ export default {
       return reply(text);
     }
 
-    // 5. DEFAULT: CEK BUS TIBA DI HALTE (ETA)
+    // 5. DEFAULT: CEK BUS TIBA DI HALTE (ETA) / KORIDOR RUTE
     const query = args.join(" ").trim();
     await sendTyping();
+
+    // 5a. Auto-detect jika input user adalah kode rute/koridor (e.g. B41, 3F, JAK.50, 4D, 1A)
+    const upperQuery = query.toUpperCase();
+    const allStops = getStopsDatabase();
+    const routeMatchingStops = allStops.filter((s) =>
+      (s.routes || []).some((r) => r.route_code?.toUpperCase() === upperQuery)
+    );
+
+    if (routeMatchingStops.length > 0) {
+      // Ambil nama rute/tujuan representatif
+      const sampleRoute = routeMatchingStops[0].routes.find((r) => r.route_code?.toUpperCase() === upperQuery);
+      const routeName = sampleRoute?.route_name || upperQuery;
+
+      let text =
+        `┌── KORIDOR ${upperQuery} TRANSJAKARTA\n` +
+        `│ Rute        : ${routeName}\n` +
+        `│ Total Halte : ${routeMatchingStops.length} halte dilewati\n` +
+        `└──\n\n`;
+
+      const displayStops = routeMatchingStops.slice(0, 10);
+      displayStops.forEach((st, i) => {
+        const isLast = i === displayStops.length - 1;
+        const branch = isLast ? "└──" : "├──";
+        text += `${branch} [${i + 1}] ${st.stop_name} (${st.stop_id})\n`;
+      });
+
+      if (routeMatchingStops.length > 10) {
+        text += `\n_Menampilkan 10 dari ${routeMatchingStops.length} halte. Cek halte: \`${p}tj <nama halte>\`_`;
+      } else {
+        text += `\n_Ketik \`${p}tj <nama halte>\` untuk cek kedatangan armada di halte tersebut._`;
+      }
+
+      return reply(text);
+    }
 
     const halte = resolveHalte(query);
     if (!halte) {
       return reply(
-        `❌ Halte *"${query}"* tidak ditemukan di database TransJakarta.\n\n` +
+        `❌ Halte / Rute *"${query}"* tidak ditemukan di database TransJakarta.\n\n` +
           `_Coba cari nama resminya terlebih dahulu dengan: \`${p}tj cari ${query}\`_`
       );
     }
@@ -706,12 +740,17 @@ export default {
 
       const etaStr = typeof b.eta === "number" && b.eta > 0 ? `${b.eta} mnt lagi` : `Tiba sekarang / Dekat`;
       const distStr = b.jarak != null ? ` (±${Math.round(b.jarak)}m)` : "";
-      const statusStr = typeof b.speed === "number" && b.speed > 0 ? `${b.speed} km/j` : `Aktif / Melintas`;
+      const speedNum = typeof b.speed === "number" ? Math.round(b.speed) : 0;
+      const speedStr = `${speedNum} km/j`;
+      const updateStr = `Update ${b.umur ?? 0}s lalu`;
 
       text += `${branch} [${i + 1}] Koridor ${b.route} ➔ ${b.tujuan}\n`;
       text += `${subPipe} No Bodi   : ${b.body}\n`;
       text += `${subPipe} Estimasi  : ${etaStr}${distStr}\n`;
-      text += `${subPipe} Status    : ${statusStr} (Sinyal ${b.umur ?? 0}s lalu)\n`;
+      text += `${subPipe} Kecepatan : ${speedStr} (${updateStr})\n`;
+      if (!isLast) {
+        text += `│\n`;
+      }
     });
 
     text += `\n_Menampilkan ${displayBuses.length} armada terdekat. Sumber: tijeapi.transjakarta.co.id_`;
