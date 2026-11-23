@@ -1,0 +1,772 @@
+[
+  {
+    "id": "AC",
+    "name": "ANCOL",
+    "slug": "ancol",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "AK",
+    "name": "ANGKE",
+    "slug": "angke",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BJD",
+    "name": "BOJONGGEDE",
+    "slug": "bojonggede",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BKS",
+    "name": "BEKASI",
+    "slug": "bekasi",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BKST",
+    "name": "BEKASI TIMUR",
+    "slug": "bekasi-timur",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BOI",
+    "name": "BOJONG INDAH",
+    "slug": "bojong-indah",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BOO",
+    "name": "BOGOR",
+    "slug": "bogor",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BPR",
+    "name": "BATU CEPER",
+    "slug": "batu-ceper",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BUA",
+    "name": "BUARAN",
+    "slug": "buaran",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CBN",
+    "name": "CIBINONG",
+    "slug": "cibinong",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CC",
+    "name": "CICAYUR",
+    "slug": "cicayur",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CIT",
+    "name": "CIBITUNG",
+    "slug": "cibitung",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CJT",
+    "name": "CILEJIT",
+    "slug": "cilejit",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CKI",
+    "name": "CIKINI",
+    "slug": "cikini",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CKR",
+    "name": "CIKARANG",
+    "slug": "cikarang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CKY",
+    "name": "CIKOYA",
+    "slug": "cikoya",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CLT",
+    "name": "CILEBUT",
+    "slug": "cilebut",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CSK",
+    "name": "CISAUK",
+    "slug": "cisauk",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CTA",
+    "name": "CITAYAM",
+    "slug": "citayam",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CTR",
+    "name": "CITERAS",
+    "slug": "citeras",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CUK",
+    "name": "CAKUNG",
+    "slug": "cakung",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CW",
+    "name": "CAWANG",
+    "slug": "cawang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "DAR",
+    "name": "DARU",
+    "slug": "daru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "DP",
+    "name": "DEPOK",
+    "slug": "depok",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "DPB",
+    "name": "DEPOK BARU",
+    "slug": "depok-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "DRN",
+    "name": "DUREN KALIBATA",
+    "slug": "duren-kalibata",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "DU",
+    "name": "DURI",
+    "slug": "duri",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "GDD",
+    "name": "GONDANGDIA",
+    "slug": "gondangdia",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "GGL",
+    "name": "GROGOL",
+    "slug": "grogol",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "GST",
+    "name": "GANG SENTIONG",
+    "slug": "gang-sentiong",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JAKK",
+    "name": "JAKARTA KOTA",
+    "slug": "jakarta-kota",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JIS",
+    "name": "JAKARTA INTERNATIONAL STADIUM",
+    "slug": "jakarta-international-stadium",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JTK",
+    "name": "JATAKE",
+    "slug": "jatake",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JAY",
+    "name": "JAYAKARTA",
+    "slug": "jayakarta",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JMU",
+    "name": "JURANG MANGU",
+    "slug": "jurang-mangu",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JNG",
+    "name": "JATINEGARA",
+    "slug": "jatinegara",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "JUA",
+    "name": "JUANDA",
+    "slug": "juanda",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KBY",
+    "name": "KEBAYORAN",
+    "slug": "kebayoran",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KDS",
+    "name": "KALIDERES",
+    "slug": "kalideres",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KLD",
+    "name": "KLENDER",
+    "slug": "klender",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KLDB",
+    "name": "KLENDER BARU",
+    "slug": "klender-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KMO",
+    "name": "KEMAYORAN",
+    "slug": "kemayoran",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KMT",
+    "name": "KRAMAT",
+    "slug": "kramat",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KPB",
+    "name": "KAMPUNG BANDAN",
+    "slug": "kampung-bandan",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KRI",
+    "name": "KRANJI",
+    "slug": "kranji",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "LNA",
+    "name": "LENTENG AGUNG",
+    "slug": "lenteng-agung",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "MGB",
+    "name": "MANGGA BESAR",
+    "slug": "mangga-besar",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "MJ",
+    "name": "MAJA",
+    "slug": "maja",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "MTR",
+    "name": "MATRAMAN",
+    "slug": "matraman",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "MRI",
+    "name": "MANGGARAI",
+    "slug": "manggarai",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TLM",
+    "name": "METLAND TELAGAMURNI",
+    "slug": "metland-telagamurni",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "NMO",
+    "name": "NAMBO",
+    "slug": "nambo",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PDRG",
+    "name": "PONDOK RAJEG",
+    "slug": "pondok-rajeg",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PDJ",
+    "name": "PONDOK RANJI",
+    "slug": "pondok-ranji",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PI",
+    "name": "PORIS",
+    "slug": "poris",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PLM",
+    "name": "PALMERAH",
+    "slug": "palmerah",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "POC",
+    "name": "PONDOK CINA",
+    "slug": "pondok-cina",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "POK",
+    "name": "PONDOK JATI",
+    "slug": "pondok-jati",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PRP",
+    "name": "PARUNG PANJANG",
+    "slug": "parung-panjang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PSE",
+    "name": "PASAR SENEN",
+    "slug": "pasar-senen",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PSG",
+    "name": "PESING",
+    "slug": "pesing",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PSM",
+    "name": "PASAR MINGGU",
+    "slug": "pasar-minggu",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "PSMB",
+    "name": "PASAR MINGGU BARU",
+    "slug": "pasar-minggu-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "RJW",
+    "name": "RAJAWALI",
+    "slug": "rajawali",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "RU",
+    "name": "RAWA BUNTU",
+    "slug": "rawa-buntu",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "RW",
+    "name": "RAWA BUAYA",
+    "slug": "rawa-buaya",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "SDM",
+    "name": "SUDIMARA",
+    "slug": "sudimara",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "SRP",
+    "name": "SERPONG",
+    "slug": "serpong",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "SUDB",
+    "name": "SUDIRMAN BARU",
+    "slug": "sudirman-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "SUD",
+    "name": "SUDIRMAN",
+    "slug": "sudirman",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "SW",
+    "name": "SAWAH BESAR",
+    "slug": "sawah-besar",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TB",
+    "name": "TAMBUN",
+    "slug": "tambun",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TEB",
+    "name": "TEBET",
+    "slug": "tebet",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TEJ",
+    "name": "TENJO",
+    "slug": "tenjo",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TGS",
+    "name": "TIGARAKSA",
+    "slug": "tigaraksa",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "THB",
+    "name": "TANAH ABANG",
+    "slug": "tanah-abang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TKO",
+    "name": "TAMAN KOTA",
+    "slug": "taman-kota",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TNG",
+    "name": "TANGERANG",
+    "slug": "tangerang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TNT",
+    "name": "TANJUNG BARAT",
+    "slug": "tanjung-barat",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TPK",
+    "name": "TANJUNG PRIOK",
+    "slug": "tanjung-priok",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "THI",
+    "name": "TANAH TINGGI",
+    "slug": "tanah-tinggi",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "UI",
+    "name": "UNIV. INDONESIA",
+    "slug": "univ-indonesia",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "UP",
+    "name": "UNIV. PANCASILA",
+    "slug": "univ-pancasila",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "BBN",
+    "name": "BRAMBANAN",
+    "slug": "brambanan",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "CE",
+    "name": "CEPER",
+    "slug": "ceper",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "DL",
+    "name": "DELANGGU",
+    "slug": "delanggu",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "GW",
+    "name": "GAWOK",
+    "slug": "gawok",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "JN",
+    "name": "JENAR",
+    "slug": "jenar",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "KT",
+    "name": "KLATEN",
+    "slug": "klaten",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "KTA",
+    "name": "KUTOARJO",
+    "slug": "kutoarjo",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "LPN",
+    "name": "LEMPUYANGAN",
+    "slug": "lempuyangan",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "MGW",
+    "name": "MAGUWO",
+    "slug": "maguwo",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "PWS",
+    "name": "PURWOSARI",
+    "slug": "purwosari",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "SLO",
+    "name": "SOLO BALAPAN",
+    "slug": "solo-balapan",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "SWT",
+    "name": "SROWOT",
+    "slug": "srowot",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "WJ",
+    "name": "WOJO",
+    "slug": "wojo",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "WT",
+    "name": "WATES",
+    "slug": "wates",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "YK",
+    "name": "YOGYAKARTA",
+    "slug": "yogyakarta",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "PL",
+    "name": "PALUR",
+    "slug": "palur",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "SK",
+    "name": "SOLO JEBRES",
+    "slug": "solo-jebres",
+    "area": 6,
+    "enabled": true
+  },
+  {
+    "id": "JBU",
+    "name": "JAMBU BARU",
+    "slug": "jambu-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CT",
+    "name": "CATANG",
+    "slug": "catang",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CKL",
+    "name": "CIKEUSAL",
+    "slug": "cikeusal",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "WLT",
+    "name": "WALANTAKA",
+    "slug": "walantaka",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KRA",
+    "name": "KARANGANTU",
+    "slug": "karangantu",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "RK",
+    "name": "RANGKASBITUNG",
+    "slug": "rangkasbitung",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "TOJB",
+    "name": "TONJONG BARU",
+    "slug": "tonjong-baru",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "CLG",
+    "name": "CILEGON",
+    "slug": "cilegon",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "KEN",
+    "name": "KRENCENG",
+    "slug": "krenceng",
+    "area": 0,
+    "enabled": true
+  },
+  {
+    "id": "MER",
+    "name": "MERAK",
+    "slug": "merak",
+    "area": 0,
+    "enabled": true
+  }
+]
