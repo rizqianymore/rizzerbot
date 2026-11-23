@@ -6,7 +6,7 @@ export default {
   aliases: ["spdl", "spotify", "spotdl", "spotify-dl"],
   description: "Unduh lagu dari Spotify via pure link engine.",
   usage: "<url>",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     sendTyping();
     const text = args[0]?.trim();

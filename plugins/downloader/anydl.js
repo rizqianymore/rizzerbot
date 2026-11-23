@@ -6,7 +6,7 @@ export default {
   aliases: ["yoink", "dl", "down", "get"],
   description: "Universal Downloader — auto deteksi platform & auto convert biar kebuka",
   usage: "<url> [mp3]",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     await sendTyping();
     const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();

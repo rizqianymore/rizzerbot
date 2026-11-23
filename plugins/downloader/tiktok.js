@@ -13,7 +13,7 @@ export default {
   aliases: ["tt", "tikdl", "ttdl"],
   description: "Download TikTok video/music/slide foto — support pilih nomor foto",
   usage: "<url> [mp3 / nomor slide, cth: 1, 2, 1-3, all]",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
     const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();

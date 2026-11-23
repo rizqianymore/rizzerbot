@@ -6,7 +6,7 @@ export default {
   aliases: ["ytdl", "yt"],
   description: "Download video/audio YouTube — auto convert mp4/mp3",
   usage: "<url> [mp3]",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
     const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();

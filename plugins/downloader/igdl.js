@@ -13,7 +13,7 @@ export default {
   aliases: ["ig", "instagram", "instagramdl", "ig3", "igdl3", "instagram3"],
   description: "Download video/foto/carousel Instagram — support pilih nomor slide atau download semua",
   usage: "<url> [nomor slide, cth: 1, 2, 1-3, all]",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, prefix, logger }) => {
     const remoteJid = msg.key.remoteJid;
     const currentPrefix = prefix || ".";

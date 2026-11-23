@@ -6,7 +6,7 @@ export default {
   aliases: ["facebookdl", "fbdown", "fbvideo"],
   description: "Download video dari Facebook — auto convert biar kebuka di WA",
   usage: "<url> [mp3]",
-  category: "Social Media",
+  category: "Downloader & Media",
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     await sendTyping();
     const url = args.find((a) => /^https?:\/\//i.test(a)) || args[0]?.trim();
