@@ -8,6 +8,27 @@ import { isVideoOrAnimated } from "./media/buffer.js";
 
 const execFileAsync = promisify(execFile);
 
+// Concurrency gate: maksimal 2 proses FFmpeg bersamaan agar CPU tidak 100%
+let activeFfmpegCount = 0;
+const ffmpegQueue = [];
+
+function acquireFfmpegSlot() {
+  if (activeFfmpegCount < 2) {
+    activeFfmpegCount++;
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => ffmpegQueue.push(resolve));
+}
+
+function releaseFfmpegSlot() {
+  activeFfmpegCount--;
+  if (ffmpegQueue.length > 0) {
+    activeFfmpegCount++;
+    const next = ffmpegQueue.shift();
+    next();
+  }
+}
+
 export function detectMediaType(buffer) {
   if (!buffer || buffer.length < 4) return "unknown";
   if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image";
@@ -42,6 +63,7 @@ export function sniffMime(buffer, fallback = "video/mp4") {
 }
 
 async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs = []) {
+  await acquireFfmpegSlot();
   const cacheDir = path.join(os.tmpdir(), "rizzerbot-compat");
   await fsp.mkdir(cacheDir, { recursive: true }).catch(() => { });
   const base = path.join(cacheDir, `cvt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -55,6 +77,7 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
     });
     return await fsp.readFile(outFile);
   } finally {
+    releaseFfmpegSlot();
     await fsp.unlink(inFile).catch(() => { });
     await fsp.unlink(outFile).catch(() => { });
   }
