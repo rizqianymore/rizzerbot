@@ -1,5 +1,5 @@
-import { runChat, formatReply } from "./_shared.js";
-import { MUSE_MODELS, resolveMuseModel, checkCookieHealth, parseCookies } from "@/src/services/ai/muse-web.js";
+import { runChat } from "./_shared.js";
+import { MUSE_MODELS, resolveMuseModel } from "@/src/services/ai/muse-web.js";
 import { splitChunks } from "@/src/services/ai/util.js";
 
 function renderModelList(prefix = ".") {
@@ -20,26 +20,23 @@ function renderModelList(prefix = ".") {
   );
 }
 
-function renderTokenStatus() {
-  const raw = process.env.MUSE_COOKIE || process.env.META_COOKIE;
-  const cookieStr = parseCookies(raw);
-  const health = checkCookieHealth(cookieStr);
+function formatMuseReply(result) {
+  const header = `*AI (${result.model || "MUSE"})*`;
+  let replyText = `${header}\n\n${result.text}`;
 
-  return (
-    `*STATUS TOKEN & COOKIE MUSE WEB*\n\n` +
-    `┌── Status Autentikasi: *${health.healthy ? "SIAP DIGUNAKAN ✓" : "FALLBACK MODE ×"}*\n` +
-    `│ Sesi Login (User/Abra): ${health.hasAuth ? "Aktif (Akun Terhubung)" : "Tidak Aktif"}\n` +
-    `│ Cookie Session: ${health.hasSession ? "Tersedia" : "Tidak Ada"}\n` +
-    `│ Masking Browser: Rotasi Chrome 133 / Client Hints / TLS Emulation\n` +
-    `└── Catatan: ${health.message}`
-  );
+  if (result.usage) {
+    const u = result.usage;
+    replyText += `\n\n_📊 Tokens: ${u.total_tokens || 0} (Prompt: ${u.prompt_tokens || 0} · Output: ${u.completion_tokens || 0})_`;
+  }
+
+  return replyText;
 }
 
 export default {
   name: "muse",
   aliases: ["museai", "metaai", "metaweb", "musecode"],
-  description: "Chat Meta AI / Muse Code dengan masking canggih, humanized output & auto token check",
-  usage: "[--model] <pertanyaan> | models | status",
+  description: "Chat Meta AI / Muse Code dengan token counter akurat & humanized output",
+  usage: "[--model] <pertanyaan> | models",
   premiumOnly: true,
   category: "AI",
   cooldownMs: 3000,
@@ -49,28 +46,23 @@ export default {
 
     if (!args || args.length === 0) {
       return reply(
-        `*MUSE CODE / META AI (HUMANIZED & MASKED)*\n\n` +
-          `Format Penggunaan:\n` +
-          `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
-          `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
-          `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
-          `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
-          `│ *${p}muse models* (lihat detail model)\n` +
-          `│ *${p}muse status* (cek kesehatan token/cookie)\n\n` +
-          `Fitur:\n` +
-          `│ • Humanized Response Filter (tanpa klise AI kaku)\n` +
-          `│ • Advanced Browser Masking (Sec-Ch-Ua & User-Agent Pool)\n` +
-          `│ • Dynamic LSD & Conversation Session Generator`
+        `*MUSE CODE / META AI (HUMANIZED & TOKEN COUNT)*\n\n` +
+        `Format Penggunaan:\n` +
+        `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
+        `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
+        `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
+        `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
+        `│ *${p}muse models* (lihat daftar model)\n\n` +
+        `Fitur:\n` +
+        `│ • Real-time Token Counter (Prompt + Output Tokens)\n` +
+        `│ • Humanized Filter (bahasa alami, bebas klise AI)\n` +
+        `│ • Anti-Detection Browser Masking`
       );
     }
 
     const first = String(args[0] || "").toLowerCase();
     if (first === "models" || first === "model" || first === "-m" || first === "--models") {
       return reply(renderModelList(p));
-    }
-
-    if (first === "status" || first === "token" || first === "check" || first === "--status") {
-      return reply(renderTokenStatus());
     }
 
     let targetModel = null;
@@ -100,8 +92,8 @@ export default {
       const selected = resolveMuseModel(targetModel);
       return reply(
         `*MODEL DIPILIH: ${selected.name}*\n\n` +
-          `Silakan masukkan pertanyaan setelah nama model.\n` +
-          `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
+        `Silakan masukkan pertanyaan setelah nama model.\n` +
+        `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
       );
     }
 
@@ -114,7 +106,7 @@ export default {
         senderJid,
       });
 
-      for (const chunk of splitChunks(formatReply(result), 3500)) {
+      for (const chunk of splitChunks(formatMuseReply(result), 3500)) {
         await reply(chunk);
       }
     } catch (err) {

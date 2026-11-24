@@ -67,9 +67,17 @@ export function parseCookies(rawCookie) {
           .map((item) => `${item.name}=${item.value}`)
           .join("; ");
       }
-    } catch (_) {}
+    } catch (_) { }
   }
   return str;
+}
+
+export function estimateTokenCount(text) {
+  if (!text || typeof text !== "string") return 0;
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const byWords = Math.ceil(words.length * 1.33);
+  const byChars = Math.ceil(text.length / 3.8);
+  return Math.max(1, Math.round((byWords + byChars) / 2));
 }
 
 export function checkCookieHealth(cookieStr) {
@@ -151,10 +159,10 @@ export async function askMuseWeb(prompt, options = {}) {
     "Sec-Fetch-Site": "same-site",
     ...(isChrome
       ? {
-          "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="133", "Google Chrome";v="133"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"Windows"',
-        }
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="133", "Google Chrome";v="133"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+      }
       : {}),
     ...(cookieString ? { Cookie: cookieString } : {}),
   };
@@ -222,7 +230,7 @@ export async function askMuseWeb(prompt, options = {}) {
         if (snippet && snippet.length > resultText.length) {
           resultText = snippet;
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     if (!resultText) {
@@ -234,7 +242,7 @@ export async function askMuseWeb(prompt, options = {}) {
           singleJson?.data?.message?.text ||
           singleJson?.text ||
           "";
-      } catch (_) {}
+      } catch (_) { }
     }
 
     if (!resultText) {
@@ -268,13 +276,22 @@ export async function askMuseWeb(prompt, options = {}) {
     }
 
     const humanized = cleanHumanizedText(resultText);
+    const outputText = humanized || resultText.trim();
+
+    const promptTokens = estimateTokenCount(clean);
+    const completionTokens = estimateTokenCount(outputText);
+    const totalTokens = promptTokens + completionTokens;
 
     return {
-      text: humanized || resultText.trim(),
+      text: outputText,
       model: selectedModel.name,
       source: "muse-web",
       cookieStatus,
-      usage: null,
+      usage: {
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        total_tokens: totalTokens,
+      },
     };
   } catch (err) {
     if (err instanceof AIError) throw err;
@@ -294,6 +311,7 @@ export default {
   askMuseWeb,
   isMuseConfigured,
   parseCookies,
+  estimateTokenCount,
   checkCookieHealth,
   cleanHumanizedText,
   museCapabilities,
