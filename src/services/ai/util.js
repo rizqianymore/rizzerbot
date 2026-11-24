@@ -109,3 +109,26 @@ export function splitChunks(text, size = AI_MAX_CHARS) {
   if (rest) parts.push(rest);
   return parts;
 }
+
+export function estimateTokens(text) {
+  if (!text || typeof text !== "string") return 0;
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const byWords = Math.ceil(words.length * 1.33);
+  const byChars = Math.ceil(text.length / 3.8);
+  return Math.max(1, Math.round((byWords + byChars) / 2));
+}
+
+export function cleanHumanizedText(rawText) {
+  if (!rawText || typeof rawText !== "string") return "";
+  let clean = rawText
+    .replace(/^([*_\s]*)(Sebagai model AI|Sebagai AI|Saya adalah model bahasa|Sebagai asisten AI|Tentu, berikut adalah|Tentu saja,?)[*_\s,:-]*/i, "")
+    .replace(/^([*_\s]*)(Berikut adalah jawaban(?:nya)?|Berikut ini(?: adalah)?)[*_\s,:-]*/i, "")
+    .trim();
+
+  clean = clean
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+$/gm, "");
+
+  return clean;
+}
+

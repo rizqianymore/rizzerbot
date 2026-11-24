@@ -1,4 +1,4 @@
-import { runChat } from "./_shared.js";
+import { runChat, formatReply } from "./_shared.js";
 import { MUSE_MODELS, resolveMuseModel } from "@/src/services/ai/muse-web.js";
 import { splitChunks } from "@/src/services/ai/util.js";
 
@@ -18,18 +18,6 @@ function renderModelList(prefix = ".") {
     items.join("\n\n") +
     `\n\nKetik \`${prefix}muse <pertanyaan>\` untuk memakai default (Muse Spark).`
   );
-}
-
-function formatMuseReply(result) {
-  const header = `*AI (${result.model || "MUSE"})*`;
-  let replyText = `${header}\n\n${result.text}`;
-
-  if (result.usage) {
-    const u = result.usage;
-    replyText += `\n\nTokens: ${u.total_tokens || 0} (Prompt: ${u.prompt_tokens || 0} | Output: ${u.completion_tokens || 0})`;
-  }
-
-  return replyText;
 }
 
 export default {
@@ -106,7 +94,7 @@ export default {
         senderJid,
       });
 
-      for (const chunk of splitChunks(formatMuseReply(result), 3500)) {
+      for (const chunk of splitChunks(formatReply(result), 3500)) {
         await reply(chunk);
       }
     } catch (err) {

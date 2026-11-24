@@ -5,6 +5,10 @@ import { askPollinations, pollinationsCapabilities } from "./pollinations.js";
 import { askGroq, groqCapabilities, isGroqConfigured } from "../ai-keyed/groq.js";
 import { askOpenRouter, isOpenRouterConfigured } from "../ai-keyed/openrouter.js";
 import { askZen, ZEN_FREE } from "../ai-keyed/opencode-zen.js";
+import { askGemini, isGeminiConfigured } from "../ai-keyed/gemini.js";
+import { askCerebras, isCerebrasConfigured } from "../ai-keyed/cerebras.js";
+import { askMistral, isMistralConfigured } from "../ai-keyed/mistral.js";
+import { askNvidia, isNvidiaConfigured } from "../ai-keyed/nvidia.js";
 import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } from "./aiscrape.js";
 import { askMuseWeb, museCapabilities } from "./muse-web.js";
 
@@ -12,13 +16,17 @@ export const AI_SOURCES = {
   pollinations: { tier: 1, run: askPollinations, caps: pollinationsCapabilities, label: "Pollinations Public" },
   opencode: { tier: 1, run: askOpenCode, caps: opencodeCapabilities, label: "OpenCode Zen Free" },
   muse: { tier: 1, run: askMuseWeb, caps: museCapabilities, label: "Meta Muse Web (SSE)" },
+  gemini: { tier: 2, run: askGemini, caps: { history: true }, label: "Google Gemini API" },
+  cerebras: { tier: 2, run: askCerebras, caps: { history: true }, label: "Cerebras Fast LLM" },
+  groq: { tier: 2, run: askGroq, caps: groqCapabilities, label: "Groq Ultra-Fast API" },
+  deepseek: { tier: 2, run: askDeepSeek, caps: deepseekCapabilities, label: "DeepSeek API" },
+  mistral: { tier: 2, run: askMistral, caps: { history: true }, label: "Mistral AI API" },
+  nvidia: { tier: 2, run: askNvidia, caps: { history: true }, label: "NVIDIA NIM API" },
+  zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
+  openrouter: { tier: 2, run: askOpenRouter, caps: { history: true }, label: "OpenRouter Free" },
   r1: { tier: 3, run: scrapeDeepSeekR1, caps: { history: false }, label: "DeepSeek R1 (scrape)" },
   duckai: { tier: 3, run: scrapeDuckAI, caps: { history: false }, label: "DuckAI (scrape)" },
   meta: { tier: 3, run: scrapeMetaAI, caps: { history: false }, label: "Meta AI (scrape)" },
-  deepseek: { tier: 2, run: askDeepSeek, caps: deepseekCapabilities, label: "DeepSeek API" },
-  groq: { tier: 2, run: askGroq, caps: groqCapabilities, label: "Groq API" },
-  zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
-  openrouter: { tier: 2, run: askOpenRouter, caps: { history: true }, label: "OpenRouter Free" },
 };
 
 const ALIASES = {
@@ -37,11 +45,26 @@ const ALIASES = {
   muse: "muse",
   museweb: "muse",
   musecode: "muse",
+  spark: "muse",
+  wonder: "muse",
 
   meta: "meta",
   metaai: "meta",
   llama: "meta",
   llama3: "meta",
+
+  gemini: "gemini",
+  google: "gemini",
+  googleai: "gemini",
+
+  cerebras: "cerebras",
+  cb: "cerebras",
+
+  mistral: "mistral",
+  codestral: "mistral",
+
+  nvidia: "nvidia",
+  nim: "nvidia",
 
   opencode: "opencode",
   oc: "opencode",
@@ -86,6 +109,10 @@ function skipReason(name, tier) {
   if (name === "deepseek" && !isDeepSeekConfigured()) return "nonaktif (butuh DEEPSEEK_API_KEY)";
   if (name === "groq" && !isGroqConfigured()) return "nonaktif (butuh GROQ_API_KEY)";
   if (name === "openrouter" && !isOpenRouterConfigured()) return "nonaktif (butuh OPENROUTER_API_KEY)";
+  if (name === "gemini" && !isGeminiConfigured()) return "nonaktif (butuh GEMINI_API_KEY)";
+  if (name === "cerebras" && !isCerebrasConfigured()) return "nonaktif (butuh CEREBRAS_API_KEY)";
+  if (name === "mistral" && !isMistralConfigured()) return "nonaktif (butuh MISTRAL_API_KEY)";
+  if (name === "nvidia" && !isNvidiaConfigured()) return "nonaktif (butuh NVIDIA_API_KEY)";
   return null;
 }
 

@@ -2,7 +2,7 @@ import { askAI, getAIStatus, listSources, normalizeSource } from "@/src/services
 import { runQueued } from "@/src/services/ai/queue.js";
 import { cacheGet, cacheSet } from "@/src/services/ai/cache.js";
 import { getHistory, pushTurn } from "@/src/services/ai/memory.js";
-import { splitChunks } from "@/src/services/ai/util.js";
+import { splitChunks, estimateTokens, cleanHumanizedText } from "@/src/services/ai/util.js";
 
 export function renderStatus() {
   const lines = Object.entries(getAIStatus())
@@ -28,10 +28,12 @@ export function renderHelp(p) {
     `│ *${p}ai status* — status engine\n\n` +
     `Model populer:\n` +
     `│ *pollinations* (gratis, default)\n` +
-    `│ *opencode* / *oc* (coding)\n` +
-    `│ *r1* / *deepseek* (butuh DEEPSEEK_API_KEY)\n` +
-    `│ *groq* (butuh GROQ_API_KEY)\n\n` +
-    `Contoh: *${p}ai r1 jelaskan black hole*`
+    `│ *muse* / *spark* (Meta Muse Web)\n` +
+    `│ *opencode* / *oc* (coding & reasoning)\n` +
+    `│ *gemini* (butuh GEMINI_API_KEY)\n` +
+    `│ *groq* (butuh GROQ_API_KEY)\n` +
+    `│ *r1* / *deepseek* (butuh DEEPSEEK_API_KEY)\n\n` +
+    `Contoh: *${p}ai spark jelaskan algoritma sorting*`
   );
 }
 
@@ -44,18 +46,41 @@ export async function runChat(prompt, opts = {}) {
   if (cached) return { ...cached, source: cached.source || "cache", cached: true };
 
   const result = await runQueued(() =>
-    askAI(clean, { prefer: opts.prefer, history: scope.history, system: opts.system })
+    askAI(clean, { prefer: opts.prefer, model: opts.model, history: scope.history, system: opts.system })
   );
 
-  cacheSet(clean, scope, { text: result.text, model: result.model, source: result.source });
-  pushTurn(senderJid, clean, result.text);
-  return result;
+  const humanizedText = cleanHumanizedText(result.text) || result.text;
+  const promptTok = result.usage?.prompt_tokens ?? estimateTokens(clean);
+  const compTok = result.usage?.completion_tokens ?? estimateTokens(humanizedText);
+  const totalTok = result.usage?.total_tokens ?? (promptTok + compTok);
+
+  const finalResult = {
+    ...result,
+    text: humanizedText,
+    usage: {
+      prompt_tokens: promptTok,
+      completion_tokens: compTok,
+      total_tokens: totalTok,
+    },
+  };
+
+  cacheSet(clean, scope, { text: finalResult.text, model: finalResult.model, source: finalResult.source });
+  pushTurn(senderJid, clean, finalResult.text);
+  return finalResult;
 }
 
 export function formatReply(result) {
   const tag = result.cached ? " (cached)" : "";
-  const header = `*AI (${result.model || String(result.source).toUpperCase()})*${tag}`;
-  return `${header}\n\n${result.text}`;
+  const modelName = result.model || String(result.source || "AI").toUpperCase();
+  const header = `*AI (${modelName})*${tag}`;
+  let replyText = `${header}\n\n${result.text}`;
+
+  if (result.usage && Number.isFinite(result.usage.total_tokens)) {
+    const u = result.usage;
+    replyText += `\n\nTokens: ${u.total_tokens} (Prompt: ${u.prompt_tokens || 0} | Output: ${u.completion_tokens || 0})`;
+  }
+
+  return replyText;
 }
 
 export function makeAICommand(cfg) {
