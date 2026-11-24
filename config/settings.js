@@ -8,7 +8,7 @@ export const settings = {
   autoOnline: true,
   cooldownTime: 0,
   responseDelay: 0,
-  menuImage: true,
+  menuImage: false,
 
   ownerNumbers: ["6285714077950"],
   premiumNumbers: [],
