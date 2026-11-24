@@ -73,15 +73,30 @@ export class StealthBrowserManager extends StealthBrowserCore {
     if (blockHeavyMedia) {
       try {
         await page.setRequestInterception(true);
+        const AD_HOST_PATTERNS = [
+          "google-analytics",
+          "googletagmanager",
+          "doubleclick.net",
+          "facebook.net",
+          "adservice",
+          "adnxs",
+          "popads",
+          "adsterra",
+          "exoclick",
+          "trafficjunky",
+          "monetag",
+          "outbrain",
+          "taboola",
+          "mgid.com",
+          "propellerads",
+          "yandex.ru/ads",
+        ];
         page.on("request", (req) => {
           const type = req.resourceType();
           const url = req.url().toLowerCase();
           if (
             ["media", "font", "image"].includes(type) ||
-            url.includes("google-analytics") ||
-            url.includes("googletagmanager") ||
-            url.includes("doubleclick.net") ||
-            url.includes("facebook.net")
+            AD_HOST_PATTERNS.some((ad) => url.includes(ad))
           ) {
             req.abort().catch(() => { });
           } else {
@@ -90,6 +105,14 @@ export class StealthBrowserManager extends StealthBrowserCore {
         });
       } catch (_) { }
     }
+
+    // Blokir window.open / alert / confirm popup iklan
+    await page.evaluateOnNewDocument(() => {
+      window.open = () => null;
+      window.alert = () => null;
+      window.confirm = () => false;
+      window.prompt = () => null;
+    }).catch(() => { });
 
     await page.goto(targetUrl, {
       waitUntil: "domcontentloaded",

@@ -106,11 +106,14 @@ export async function pollJob(kind, requestId, session, { timeoutMs = 45000, int
   const s = session || (await createSession(kind));
   const statusUrl = `${BASE}/api/v2/downloader/status/${requestId}`;
   const started = Date.now();
-  for (;;) {
+  const initialDelay = Math.min(2000, intervalMs || 2000);
+  let currentDelay = initialDelay;
+  for (let attempt = 0; ; attempt++) {
     if (Date.now() - started > timeoutMs) {
       throw new KolIdError("kol.id terlalu lama memproses (timeout)", "timeout");
     }
-    await new Promise((r) => setTimeout(r, intervalMs || 5000));
+    await new Promise((r) => setTimeout(r, attempt === 0 ? currentDelay : Math.min(3000, currentDelay)));
+    currentDelay = Math.min(3500, Math.floor(currentDelay * 1.3));
     let res;
     try {
       res = await fetch(statusUrl, {

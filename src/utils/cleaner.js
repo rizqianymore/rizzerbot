@@ -155,6 +155,11 @@ export function clearAllCache({ logger } = {}) {
 export function autoCleanSessionCache(logger) {
   try {
     const { deletedCount, freedBytes } = cleanTempFiles();
+    try {
+      import("@/src/services/fetch/mediaCache.js")
+        .then(({ cleanupExpiredCache }) => cleanupExpiredCache())
+        .catch(() => {});
+    } catch (_) {}
     if (deletedCount > 0 && logger) {
       const mb = (freedBytes / (1024 * 1024)).toFixed(2);
       logger.info(`[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi (${mb} MB).`);

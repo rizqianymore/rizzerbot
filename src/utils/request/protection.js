@@ -139,32 +139,97 @@ export function findCustomHandler(host) {
 }
 
 async function clickVisibleCheckbox(page) {
+  // Selector target yang mencakup Turnstile, Cloudflare Challenge, reCAPTCHA, hCaptcha, Safelink verify button, dll.
   const targets = [
     'iframe[src*="challenges.cloudflare.com"]',
     ".cf-turnstile iframe",
     'iframe[src*="captcha-delivery.com"]',
     'iframe[src*="recaptcha"]',
+    'iframe[src*="hcaptcha"]',
     'input[type="checkbox"]',
+    'button[id*="verify"]',
+    'button[class*="verify"]',
+    'button[id*="challenge"]',
+    'button[class*="challenge"]',
+    'button[id*="captcha"]',
+    'button[class*="captcha"]',
+    'button[id*="download"]',
+    'button[id*="btn-download"]',
+    'a[id*="download"]',
+    '#cf-stage input[type="button"]',
+    '#challenge-stage input[type="button"]',
+    '#challenge-stage button',
   ];
   for (const frame of page.frames()) {
     for (const sel of targets) {
       let el = null;
       try {
         el = await frame.$(sel);
-      } catch (_) {}
+      } catch (_) { }
       if (!el) continue;
       try {
+        const isVisible = await frame.evaluate((node) => {
+          if (!node) return false;
+          const style = window.getComputedStyle(node);
+          return (
+            style &&
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            style.opacity !== "0" &&
+            !node.disabled
+          );
+        }, el).catch(() => false);
+
+        if (!isVisible) continue;
+
         const box = await el.boundingBox();
         if (!box || box.width < 2 || box.height < 2) continue;
-        const cx = box.x + box.width / 2;
-        const cy = box.y + box.height / 2;
-        await page.mouse.move(cx - 60, cy - 40, { steps: 3 }).catch(() => {});
-        await page.mouse.move(cx, cy, { steps: 5 }).catch(() => {});
-        await new Promise((r) => setTimeout(r, 120));
-        await page.mouse.click(cx, cy, { delay: 60 }).catch(() => {});
+
+        const frameUrl = typeof frame.url === "function" ? frame.url() : "";
+        const isTurnstileFrame = frameUrl.includes("challenges.cloudflare.com") || sel.includes("cloudflare");
+
+        let targetX = box.x + box.width / 2;
+        let targetY = box.y + box.height / 2;
+
+        if (isTurnstileFrame && box.width > 120) {
+          // Checkbox Cloudflare Turnstile berada di sisi kiri (sekitar 28px)
+          targetX = box.x + 28 + (Math.random() * 6 - 3);
+          targetY = box.y + box.height / 2 + (Math.random() * 6 - 3);
+        } else {
+          const jitterX = (Math.random() - 0.5) * Math.min(10, box.width * 0.2);
+          const jitterY = (Math.random() - 0.5) * Math.min(10, box.height * 0.2);
+          targetX += jitterX;
+          targetY += jitterY;
+        }
+
+        await el.scrollIntoViewIfNeeded?.().catch(() => { });
+        await page.mouse.move(targetX - 40 - Math.random() * 20, targetY - 20 - Math.random() * 15, { steps: 3 }).catch(() => { });
+        await page.mouse.move(targetX, targetY, { steps: 5 }).catch(() => { });
+        await new Promise((r) => setTimeout(r, 60 + Math.floor(Math.random() * 40)));
+        await page.mouse.click(targetX, targetY, { delay: 40 + Math.floor(Math.random() * 40) }).catch(() => { });
+        await el.evaluate((node) => node.click?.()).catch(() => { });
         return true;
-      } catch (_) {}
+      } catch (_) { }
     }
+
+    try {
+      const clickedByText = await frame.evaluate(() => {
+        const candidates = Array.from(document.querySelectorAll("button, a, div[role='button'], input[type='button']"));
+        const regex = /i am human|verify you are human|verifikasi|saya manusia|i'm not a robot|saya bukan robot|click to continue|lanjutkan/i;
+        for (const btn of candidates) {
+          const text = (btn.innerText || btn.textContent || btn.value || "").trim();
+          if (regex.test(text)) {
+            const style = window.getComputedStyle(btn);
+            if (style && style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0") {
+              btn.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+      if (clickedByText) return true;
+    } catch (_) { }
   }
   return false;
 }
@@ -182,7 +247,7 @@ export async function waitForClearance(page, { timeoutMs = 25000, clickCheckbox 
     tick++;
     const title = (await page.title().catch(() => "")) || "";
     let html = "";
-    if (tick === 1 || tick % 3 === 0) {
+    if (tick === 1 || tick % 2 === 0) {
       html = (await page.content().catch(() => "")) || "";
     }
 
@@ -195,7 +260,7 @@ export async function waitForClearance(page, { timeoutMs = 25000, clickCheckbox 
         let cookies = [];
         try {
           cookies = await page.cookies();
-        } catch (_) {}
+        } catch (_) { }
         return {
           cleared: true,
           type: "none",
@@ -222,13 +287,15 @@ export async function waitForClearance(page, { timeoutMs = 25000, clickCheckbox 
         try {
           await page
             .reload({ waitUntil: "domcontentloaded", timeout: Math.min(15000, timeoutMs - elapsed) })
-            .catch(() => {});
-        } catch (_) {}
+            .catch(() => { });
+        } catch (_) { }
         clicked = false;
       }
     }
 
-    await new Promise((r) => setTimeout(r, 500));
+    // Polling adaptif: 200ms di awal, bertahap hingga 400ms agar respon clearance cepat
+    const sleepMs = tick < 5 ? 200 : tick < 10 ? 300 : 400;
+    await new Promise((r) => setTimeout(r, sleepMs));
   }
 
   return { cleared: false, type: lastType, waitedMs: Date.now() - start, hasClearanceCookie: false };
