@@ -99,7 +99,7 @@ export async function getCachedMedia(url, ttlMs = DEFAULT_TTL_MS) {
     let info = null;
     try {
       if (row.info_json) info = JSON.parse(row.info_json);
-    } catch (_) {}
+    } catch (_) { }
 
     return {
       buffer,
@@ -143,9 +143,9 @@ async function removeCacheEntry(row) {
   if (!row) return;
   try {
     const filePath = path.join(CACHE_DIR, row.filename);
-    await fsp.unlink(filePath).catch(() => {});
+    await fsp.unlink(filePath).catch(() => { });
     deleteStmt.run(row.url_hash);
-  } catch (_) {}
+  } catch (_) { }
 }
 
 async function enforceCacheLimit() {
@@ -161,7 +161,7 @@ async function enforceCacheLimit() {
         if (current <= MAX_CACHE_SIZE_BYTES) break;
       }
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 export async function cleanupExpiredCache(ttlMs = DEFAULT_TTL_MS) {
