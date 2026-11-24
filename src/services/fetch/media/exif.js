@@ -59,32 +59,44 @@ export function getExifChunk(buffer) {
 
 function parseWebpCanvasSize(buf) {
   let offset = 12;
+  let hasAnim = false;
+  let hasAlpha = false;
+
   while (offset + 8 <= buf.length) {
     const tag = buf.subarray(offset, offset + 4).toString("ascii");
     const size = buf.readUInt32LE(offset + 4);
+    if (tag === "ANIM") hasAnim = true;
     if (tag === "VP8X" && size >= 10) {
+      const flags = buf[offset + 8];
       const w = 1 + buf.readUIntLE(offset + 8 + 4, 3);
       const h = 1 + buf.readUIntLE(offset + 8 + 7, 3);
-      const flags = buf[offset + 8];
       return { width: w, height: h, flags };
     }
     if (tag === "VP8 " && size >= 10) {
       const vp8 = buf.subarray(offset + 8);
       if (vp8[3] === 0x9d && vp8[4] === 0x01 && vp8[5] === 0x2a) {
-        return { width: vp8.readUInt16LE(6) & 0x3fff, height: vp8.readUInt16LE(8) & 0x3fff, flags: 0 };
+        return {
+          width: vp8.readUInt16LE(6) & 0x3fff,
+          height: vp8.readUInt16LE(8) & 0x3fff,
+          flags: (hasAnim ? 0x02 : 0) | (hasAlpha ? 0x10 : 0),
+        };
       }
     }
     if (tag === "VP8L" && size >= 5) {
       const vp8l = buf.subarray(offset + 8);
       if (vp8l[0] === 0x2f) {
         const val = vp8l.readUInt32LE(1);
-        const hasAlpha = Boolean((val >> 28) & 1);
-        return { width: (val & 0x3fff) + 1, height: ((val >> 14) & 0x3fff) + 1, flags: hasAlpha ? 0x10 : 0 };
+        hasAlpha = Boolean((val >> 28) & 1);
+        return {
+          width: (val & 0x3fff) + 1,
+          height: ((val >> 14) & 0x3fff) + 1,
+          flags: (hasAnim ? 0x02 : 0) | (hasAlpha ? 0x10 : 0),
+        };
       }
     }
     offset += 8 + size + (size % 2);
   }
-  return null;
+  return { width: 512, height: 512, flags: hasAnim ? 0x02 : 0 };
 }
 
 function buildVp8xChunk(width, height, flags = 0) {

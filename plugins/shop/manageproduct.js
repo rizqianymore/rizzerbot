@@ -44,15 +44,15 @@ export default {
     if (!sub || sub === "help") {
       return reply(
         `*MANAJEMEN TOKO & PRODUK*\n\n` +
-          `│ *${p}addproduct <KODE> <HARGA> <STOK> <NAMA>*\n` +
-          `  (Gunakan stok -1 untuk produk digital tak terbatas)\n` +
-          `  Contoh: \`${p}addproduct CANVA 15000 -1 Canva Pro 1 Bulan\`\n\n` +
-          `│ *${p}delproduct <KODE>*\n` +
-          `  Hapus produk dari toko\n\n` +
-          `│ *${p}listorders*\n` +
-          `  Lihat daftar pesanan terbaru yang masuk\n\n` +
-          `│ *${p}setorder <ID_ORDER> <PAID/COMPLETED/CANCELLED>*\n` +
-          `  Update status pembayaran pesanan`
+        `│ *${p}addproduct <KODE> <HARGA> <STOK> <NAMA>*\n` +
+        `  (Gunakan stok -1 untuk produk digital tak terbatas)\n` +
+        `  Contoh: \`${p}addproduct CANVA 15000 -1 Canva Pro 1 Bulan\`\n\n` +
+        `│ *${p}delproduct <KODE>*\n` +
+        `  Hapus produk dari toko\n\n` +
+        `│ *${p}listorders*\n` +
+        `  Lihat daftar pesanan terbaru yang masuk\n\n` +
+        `│ *${p}setorder <ID_ORDER> <PAID/COMPLETED/CANCELLED>*\n` +
+        `  Update status pembayaran pesanan`
       );
     }
 
@@ -65,7 +65,7 @@ export default {
       if (!code || isNaN(price) || isNaN(stock) || !name) {
         return reply(
           `Format salah!\nGunakan: \`${p}addproduct <KODE> <HARGA> <STOK> <NAMA>\`\n` +
-            `Contoh: \`${p}addproduct SPOTIFY 20000 -1 Spotify Premium 1 Bulan\``
+          `Contoh: \`${p}addproduct SPOTIFY 20000 -1 Spotify Premium 1 Bulan\``
         );
       }
 
@@ -73,10 +73,10 @@ export default {
       const stockStr = prod.stock === -1 ? "Unlimited" : `${prod.stock} unit`;
       return reply(
         `*PRODUK BERHASIL DISIMPAN:*\n\n` +
-          `│ Kode: ${prod.code}\n` +
-          `│ Nama: ${prod.name}\n` +
-          `│ Harga: ${formatRupiah(prod.price)}\n` +
-          `│ Stok: ${stockStr}`
+        `│ Kode: ${prod.code}\n` +
+        `│ Nama: ${prod.name}\n` +
+        `│ Harga: ${formatRupiah(prod.price)}\n` +
+        `│ Stok: ${stockStr}`
       );
     }
 
@@ -108,7 +108,7 @@ export default {
       if (!orderId || !["PAID", "COMPLETED", "CANCELLED", "PENDING"].includes(status)) {
         return reply(
           `Gunakan format: \`${p}setorder <ID_ORDER> <PAID|COMPLETED|CANCELLED|PENDING>\`\n` +
-            `Contoh: \`${p}setorder ORD-M3K7 PAID\``
+          `Contoh: \`${p}setorder ORD-M3K7 PAID\``
         );
       }
       const ord = getOrder(orderId);
