@@ -10,9 +10,6 @@ let tokenCache = null;
 let tokenExpiry = 0;
 let stopsCache = null;
 
-/**
- * Geodesic distance in meters (Haversine formula)
- */
 function haversine(lat1, lon1, lat2, lon2) {
   if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
   const R = 6371000.0;
@@ -24,9 +21,6 @@ function haversine(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-/**
- * Calculate age of bus telemetry in seconds
- */
 function busAgeSeconds(ts) {
   if (!ts) return null;
   const num = Number(ts);
@@ -34,9 +28,6 @@ function busAgeSeconds(ts) {
   return Math.max(0, Date.now() / 1000.0 - num / 1000.0);
 }
 
-/**
- * Load 7.210 stops from local database
- */
 function getStopsDatabase() {
   if (stopsCache) return stopsCache;
   try {
@@ -51,9 +42,6 @@ function getStopsDatabase() {
   return stopsCache || [];
 }
 
-/**
- * Resolve single best halte from name or code
- */
 function resolveHalte(keyword) {
   const stops = getStopsDatabase();
   const k = String(keyword || "")
@@ -61,19 +49,15 @@ function resolveHalte(keyword) {
     .toLowerCase();
   if (!k) return null;
 
-  // 1. Exact match on stop_id
   const byId = stops.find((s) => s.stop_id?.toLowerCase() === k);
   if (byId) return byId;
 
-  // 2. Exact match on stop_name
   const exact = stops.find((s) => s.stop_name?.toLowerCase() === k);
   if (exact) return exact;
 
-  // 3. Substring match on stop_name
   const match = stops.find((s) => s.stop_name?.toLowerCase().includes(k));
   if (match) return match;
 
-  // 4. Token-based multi-word match
   const tokens = k.split(/\s+/).filter(Boolean);
   if (tokens.length > 1) {
     const allTokens = stops.find((s) => {
@@ -92,9 +76,6 @@ function resolveHalte(keyword) {
   return null;
 }
 
-/**
- * Search halte in local DB with tokenized multi-word ranking
- */
 function searchHalte(keyword, limit = 20) {
   const stops = getStopsDatabase();
   const k = String(keyword || "")
@@ -102,21 +83,18 @@ function searchHalte(keyword, limit = 20) {
     .toLowerCase();
   if (!k) return [];
 
-  // Exact substring
   const exactSub = stops.filter((s) => s.stop_name?.toLowerCase().includes(k));
   if (exactSub.length > 0) return exactSub.slice(0, limit);
 
-  // Multi-word tokens
   const tokens = k.split(/\s+/).filter(Boolean);
   if (tokens.length > 1) {
-    // Stage 1: Halte containing ALL words
+
     const allWords = stops.filter((s) => {
       const name = s.stop_name?.toLowerCase() || "";
       return tokens.every((t) => name.includes(t));
     });
     if (allWords.length > 0) return allWords.slice(0, limit);
 
-    // Stage 2: Halte containing ANY word (ranked by number of matching words)
     const ranked = [];
     for (const s of stops) {
       const name = s.stop_name?.toLowerCase() || "";
@@ -135,9 +113,6 @@ function searchHalte(keyword, limit = 20) {
   return [];
 }
 
-/**
- * Obtain guest token from TransJakarta API
- */
 async function getGuestToken() {
   const now = Date.now();
   if (tokenCache && now < tokenExpiry - 60000) {
@@ -169,9 +144,6 @@ async function getGuestToken() {
   return tokenCache || "";
 }
 
-/**
- * Generic fetch wrapper for TransJakarta API
- */
 async function fetchTije(endpointPath, { method = "GET", params = null, body = null } = {}) {
   const token = await getGuestToken();
   let url = `${BASE_URL}${endpointPath}`;
@@ -212,9 +184,6 @@ async function fetchTije(endpointPath, { method = "GET", params = null, body = n
   }
 }
 
-/**
- * Autocomplete place search via Google Places bridge on TIJE API
- */
 async function autocompletePlaces(query) {
   const d = await fetchTije("/v2/maps/autocomplete", {
     method: "POST",
@@ -223,10 +192,6 @@ async function autocompletePlaces(query) {
   return Array.isArray(d?.data) ? d.data : [];
 }
 
-/**
- * 1) Bus yang AKAN DATANG ke halte + ETA
- * Menggunakan pencocokan ID halte, nama halte pada perhentian, serta bus aktif di terminal/radius halte
- */
 async function getHalteArrivals(lat, lon, { radius = 1000, stopId = null, stopName = "", maxAge = 90 } = {}) {
   let resolvedStopId = stopId;
   let resolvedStopName = stopName || stopId;
@@ -252,7 +217,6 @@ async function getHalteArrivals(lat, lon, { radius = 1000, stopId = null, stopNa
   const seenBuses = new Set();
   const targetLower = String(resolvedStopName || "").toLowerCase();
 
-  // PASS 1: Bus yang secara eksplisit memuat halte ini di daftar stops rutenya
   for (const b of buses) {
     const bodyNo = b.bus_body_no || "-";
     if (seenBuses.has(bodyNo)) continue;
@@ -285,8 +249,6 @@ async function getHalteArrivals(lat, lon, { radius = 1000, stopId = null, stopNa
     }
   }
 
-  // PASS 2: Jika armada masih kurang dari 5, ambil bus yang secara fisik berada sangat dekat (≤ 500m)
-  // Cocok untuk terminal utama/pemberhentian awal tempat bus sedang parkir/siap berangkat
   if (arrivals.length < 5) {
     for (const b of buses) {
       const bodyNo = b.bus_body_no || "-";
@@ -328,9 +290,6 @@ async function getHalteArrivals(lat, lon, { radius = 1000, stopId = null, stopNa
   };
 }
 
-/**
- * 2) Rute dari halte
- */
 async function getRuteFromHalte(lat, lon, { radius = 1000, maxAge = 60, tujuan = null } = {}) {
   const sd = await fetchTije("/v2/bus-stop", {
     params: { latitude: lat, longitude: lon, radius: 300 },
@@ -396,9 +355,6 @@ async function getRuteFromHalte(lat, lon, { radius = 1000, maxAge = 60, tujuan =
   return { stopName, stopId, routes: rows };
 }
 
-/**
- * 3) Detail 1 bus
- */
 async function getBusDetail(bodyNo) {
   const d = await fetchTije("/v1/bus", {
     params: { latitude: -6.2088, longitude: 106.8456, radius: 25000 },
@@ -413,9 +369,6 @@ async function getBusDetail(bodyNo) {
   return hit || null;
 }
 
-/**
- * 4) Semua rute
- */
 async function getRoutesList(keyword = null) {
   const d = await fetchTije("/v2/route");
   let routes = d?.data?.routes || [];
@@ -476,7 +429,6 @@ export default {
     const sub = args[0].toLowerCase();
     const timeStr = getWibTime();
 
-    // 1. CARI HALTE
     if (sub === "cari" || sub === "search") {
       const keyword = cleanInput(args.slice(1).join(" "));
       if (!keyword) {
@@ -486,7 +438,6 @@ export default {
       await sendTyping();
       let hits = searchHalte(keyword, 8);
 
-      // Jika di DB lokal tidak ada, cari via maps autocomplete online
       if (hits.length === 0) {
         const places = await autocompletePlaces(keyword);
         if (places.length > 0) {
@@ -535,7 +486,6 @@ export default {
       return reply(text);
     }
 
-    // 2. RUTE DARI HALTE (NAIK APA DARI SINI)
     if (sub === "rute" || sub === "naik") {
       const rest = args.slice(1).join(" ").trim();
       if (!rest) {
@@ -596,7 +546,6 @@ export default {
       return reply(text);
     }
 
-    // 3. DETAIL 1 BUS BERDASARKAN NOMOR BODI
     if (sub === "bus" || sub === "body") {
       const bodyNo = args[1];
       if (!bodyNo) {
@@ -632,7 +581,6 @@ export default {
       return reply(text);
     }
 
-    // 4. DAFTAR RUTE / KORIDOR RESMI
     if (sub === "koridor" || sub === "routes" || sub === "daftar") {
       const filterWord = args.slice(1).join(" ").trim();
       await sendTyping();
@@ -663,11 +611,9 @@ export default {
       return reply(text);
     }
 
-    // 5. DEFAULT: CEK BUS TIBA DI HALTE (ETA) / KORIDOR RUTE
     const query = cleanInput(args.join(" "));
     await sendTyping();
 
-    // 5a. Auto-detect jika input user adalah kode rute/koridor (e.g. B41, 3F, JAK.50, 4D, 1A)
     const upperQuery = query.toUpperCase();
     const allStops = getStopsDatabase();
     const routeMatchingStops = allStops.filter((s) =>
@@ -675,7 +621,7 @@ export default {
     );
 
     if (routeMatchingStops.length > 0) {
-      // Ambil nama rute/tujuan representatif
+
       const sampleRoute = routeMatchingStops[0].routes.find((r) => r.route_code?.toUpperCase() === upperQuery);
       const routeName = sampleRoute?.route_name || upperQuery;
 
@@ -729,7 +675,6 @@ export default {
       );
     }
 
-    // Tampilkan hingga 5 armada terdekat
     const displayBuses = arrivals.slice(0, 5);
 
     let text =

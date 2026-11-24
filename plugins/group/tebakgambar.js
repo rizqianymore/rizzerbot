@@ -59,7 +59,6 @@ export default {
 
     await sendTyping();
 
-    // Pilih soal
     const q = FALLBACK_SOAL[Math.floor(Math.random() * FALLBACK_SOAL.length)];
 
     activeGames.set(remoteJid, {

@@ -38,7 +38,7 @@ export default {
     const isDare = sub === "dare" || msg.body?.toLowerCase?.().includes("dare");
 
     if (!sub && !isDare) {
-      // Pilihan acak atau panduan
+
       const choice = Math.random() > 0.5 ? "truth" : "dare";
       if (choice === "truth") {
         const item = TRUTH_LIST[Math.floor(Math.random() * TRUTH_LIST.length)];

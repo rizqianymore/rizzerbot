@@ -40,7 +40,6 @@ export default {
       hash = (hash * 31 + lower.charCodeAt(i)) % ANSWERS.length;
     }
 
-    // Variasi acak berbasis timestamp menit ini
     const index = Math.abs(hash + Math.floor(Date.now() / 60000)) % ANSWERS.length;
     const answer = ANSWERS[index];
 

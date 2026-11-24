@@ -8,7 +8,6 @@ import { isVideoOrAnimated } from "./media/buffer.js";
 
 const execFileAsync = promisify(execFile);
 
-// Concurrency gate: maksimal 2 proses FFmpeg bersamaan agar CPU tidak 100%
 let activeFfmpegCount = 0;
 const ffmpegQueue = [];
 
@@ -90,7 +89,6 @@ export async function ensureVideoCompatible(buffer) {
     return buffer;
   }
 
-  // Fast path: standard MP4/M4V files with h264/avc1 don't need re-encoding
   const isMp4 = buffer.slice(4, 8).toString() === "ftyp";
   if (isMp4) {
     const headerPrefix = buffer.slice(0, Math.min(buffer.length, 4096)).toString("binary");
@@ -130,7 +128,7 @@ export async function ensureVideoCompatible(buffer) {
 
 export async function ensureAudioCompatible(buffer) {
   if (!buffer || buffer.length < 100) return buffer;
-  // Fast path: MP3 files with ID3 tag don't need re-encoding
+
   if (buffer.slice(0, 3).toString() === "ID3") {
     return buffer;
   }
@@ -292,7 +290,7 @@ export async function unifiedDownload(
 
       if (conv && conv.length > 100) buffer = conv;
     } else if (t === "audio") {
-      // Audio passthrough
+
     }
   }
 

@@ -17,7 +17,7 @@ export default {
       if (!Array.isArray(list)) throw new Error("Format respons API tidak valid");
 
       if (!query) {
-        // Tampilkan doa acak jika tanpa parameter
+
         const randomDoa = list[Math.floor(Math.random() * list.length)];
         const text =
           `*DOA HARIAN ISLAMI*\n\n` +

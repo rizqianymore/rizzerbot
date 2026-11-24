@@ -20,7 +20,6 @@ export default {
         data = await res.json();
       }
 
-      // Fallback jika API pertama offline
       if (!data || !data.data) {
         const res2 = await fetch("https://indodax.com/api/ticker/paxg_idr", {
           signal: AbortSignal.timeout(10000),
@@ -28,7 +27,7 @@ export default {
         if (res2.ok) {
           const d2 = await res2.json();
           const paxgIdr = Number(d2.ticker?.last || 0);
-          // 1 troy ounce = 31.1035 gram
+
           const perGram = Math.round(paxgIdr / 31.1035);
           if (perGram > 0) {
             const formatted = new Intl.NumberFormat("id-ID", {

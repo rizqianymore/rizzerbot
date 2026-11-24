@@ -42,7 +42,6 @@ export default {
         return reply(text);
       }
 
-      // Jika banyak hasil
       let text = `*HASIL PENCARIAN DPR RI (${results.length} Ditemukan)*\n\n`;
       const displayed = results.slice(0, 10);
 

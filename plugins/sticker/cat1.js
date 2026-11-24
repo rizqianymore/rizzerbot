@@ -7,7 +7,6 @@ import {
   validateBratText,
 } from "@/src/services/fetch/brat.js";
 
-// Template fallback aman jika bot berjalan tanpa restart proses utama
 const CAT1_TEMPLATE = TEMPLATES?.cat1 || {
   localPath: path.join(process.cwd(), "assets", "brat", "cat1.png"),
   width: 715,
@@ -28,7 +27,6 @@ export default {
   run: async (sock, msg, args, { reply, sendTyping, logger }) => {
     const { text, bgColor } = parseBratArgs(args, { allowVideo: false, allowGreen: true });
 
-    // Jika tanpa teks, kirim stiker polosan cat1
     const displayText = text || " ";
 
     const check = validateBratText(displayText, false);

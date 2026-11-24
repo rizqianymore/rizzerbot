@@ -3,9 +3,6 @@ try {
   dns.setDefaultResultOrder("ipv4first");
 } catch (_) {}
 
-/**
- * 10MinuteMail API Engine
- */
 export async function create10MinuteMail() {
   const res = await fetch("https://10minutemail.net/address.api.php?new=1", {
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RizzerBot/TempMail" },
@@ -90,9 +87,6 @@ export async function read10MinuteMessage(cookie, mailId) {
   };
 }
 
-/**
- * GuerrillaMail API Engine (Fallback)
- */
 export async function createGuerrillaMail() {
   const res = await fetch("https://api.guerrillamail.com/ajax.php?f=get_email_address", {
     headers: { "User-Agent": "Mozilla/5.0 RizzerBot/TempMail" },
@@ -163,9 +157,6 @@ export async function readGuerrillaMessage(sidToken, mailId) {
   };
 }
 
-/**
- * Universal Multi-Engine TempMail Interface
- */
 export async function createUniversalMailbox(engine = "auto") {
   const e = String(engine || "").toLowerCase();
   if (e.includes("guerrilla")) {

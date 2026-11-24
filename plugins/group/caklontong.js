@@ -41,7 +41,6 @@ const CAK_LONTONG_QUESTIONS = [
   },
 ];
 
-// Session game aktif per remoteJid
 const activeGames = new Map();
 
 export default {
@@ -58,7 +57,6 @@ export default {
 
     const game = activeGames.get(remoteJid);
 
-    // Jika sedang ada soal aktif
     if (game) {
       if (!input) {
         return reply(
@@ -89,11 +87,9 @@ export default {
       }
     }
 
-    // Buat soal baru
     await sendTyping();
     const q = CAK_LONTONG_QUESTIONS[Math.floor(Math.random() * CAK_LONTONG_QUESTIONS.length)];
 
-    // Buat clue (huruf pertama dan strip)
     const clue = q.jawaban
       .split("")
       .map((c, i) => (i === 0 || i === q.jawaban.length - 1 ? c : "_"))

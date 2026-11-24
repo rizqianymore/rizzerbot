@@ -20,7 +20,6 @@ export default {
       );
     }
 
-    // Deteksi OS
     let os = "Unknown OS";
     if (/windows nt 10/i.test(ua)) os = "Windows 10 / 11";
     else if (/windows nt 6\.3/i.test(ua)) os = "Windows 8.1";
@@ -31,7 +30,6 @@ export default {
     else if (/mac os x (\d+([._]\d+)*)/i.test(ua)) os = `macOS ${RegExp.$1.replace(/_/g, ".")}`;
     else if (/linux/i.test(ua)) os = "Linux";
 
-    // Deteksi Browser
     let browser = "Unknown Browser";
     if (/edg\/([0-9.]+)/i.test(ua)) browser = `Microsoft Edge ${RegExp.$1}`;
     else if (/chrome\/([0-9.]+)/i.test(ua)) browser = `Google Chrome ${RegExp.$1}`;
@@ -39,7 +37,6 @@ export default {
     else if (/safari\/([0-9.]+)/i.test(ua) && !/chrome/i.test(ua)) browser = `Apple Safari ${RegExp.$1}`;
     else if (/opr\/([0-9.]+)/i.test(ua)) browser = `Opera ${RegExp.$1}`;
 
-    // Tipe Perangkat
     let device = "Desktop / PC";
     if (/mobile/i.test(ua)) device = "Mobile (Smartphone)";
     else if (/tablet|ipad/i.test(ua)) device = "Tablet";

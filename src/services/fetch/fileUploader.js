@@ -3,10 +3,6 @@ try {
   dns.setDefaultResultOrder("ipv4first");
 } catch (_) {}
 
-/**
- * Upload buffer file ke Qu.ax
- * Batas: 256 MB
- */
 export async function uploadToQuax(buffer, filename = "file.bin") {
   if (!buffer || !buffer.length) throw new Error("Buffer file kosong");
 
@@ -41,10 +37,6 @@ export async function uploadToQuax(buffer, filename = "file.bin") {
   };
 }
 
-/**
- * Upload buffer file ke Uguu.se
- * Batas: 128 MB (Temporary 3 jam)
- */
 export async function uploadToUguu(buffer, filename = "file.bin") {
   if (!buffer || !buffer.length) throw new Error("Buffer file kosong");
 
@@ -79,10 +71,6 @@ export async function uploadToUguu(buffer, filename = "file.bin") {
   };
 }
 
-/**
- * Upload buffer file ke Catbox.moe
- * Batas: 200 MB
- */
 export async function uploadToCatbox(buffer, filename = "file.bin") {
   if (!buffer || !buffer.length) throw new Error("Buffer file kosong");
 
@@ -117,9 +105,6 @@ export async function uploadToCatbox(buffer, filename = "file.bin") {
   };
 }
 
-/**
- * Smart Multi-provider Uploader dengan automatic failover
- */
 export async function smartUpload(buffer, filename = "file.bin", preferred = "auto") {
   const providers = [];
   const pref = String(preferred || "").toLowerCase();
@@ -129,7 +114,7 @@ export async function smartUpload(buffer, filename = "file.bin", preferred = "au
   } else if (pref.includes("uguu")) {
     providers.push(uploadToUguu, uploadToQuax, uploadToCatbox);
   } else {
-    // Default prioritas: Qu.ax (permanen & responsif) -> Uguu -> Catbox
+
     providers.push(uploadToQuax, uploadToUguu, uploadToCatbox);
   }
 

@@ -31,7 +31,6 @@ export default {
       return reply(`❌ Nilai angka "${args[0]}" tidak valid.`);
     }
 
-    // 1. Suhu
     const tempMap = ["c", "celcius", "f", "fahrenheit", "k", "kelvin", "r", "reaumur"];
     if (tempMap.includes(from) && tempMap.includes(to)) {
       let c = val;
@@ -60,7 +59,6 @@ export default {
       );
     }
 
-    // 2. Panjang (meter)
     const lenToMeter = {
       km: 1000,
       m: 1,
@@ -84,7 +82,6 @@ export default {
       );
     }
 
-    // 3. Berat (gram)
     const weightToGram = {
       kg: 1000,
       g: 1,
@@ -105,7 +102,6 @@ export default {
       );
     }
 
-    // 4. Data Storage (Bytes)
     const dataToBytes = {
       b: 1,
       byte: 1,

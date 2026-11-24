@@ -1,8 +1,3 @@
-/**
- * Clean HTML tags and entities from raw verse text
- * @param {string} rawHtml
- * @returns {string}
- */
 function cleanVerseHtml(rawHtml) {
   return rawHtml
     .replace(/<x[^>]*\/>/gi, "")
@@ -17,9 +12,6 @@ function cleanVerseHtml(rawHtml) {
     .trim();
 }
 
-/**
- * Built-in fallback passages for common popular verses
- */
 const POPULAR_VERSES = {
   "yohanes 3:16": {
     title: "Yohanes 3:16",
@@ -73,11 +65,6 @@ const POPULAR_VERSES = {
   },
 };
 
-/**
- * Fetch passage from SABDA Alkitab Web
- * @param {string} query
- * @returns {Promise<{ title: string, verses: string[] } | null>}
- */
 async function fetchSabdaPassage(query) {
   try {
     const url = `https://alkitab.sabda.org/passage.php?passage=${encodeURIComponent(query)}&mode=text`;
@@ -93,15 +80,12 @@ async function fetchSabdaPassage(query) {
     const html = await res.text();
     if (!html || !html.includes('class="texts"')) return null;
 
-    // Extract title (e.g. <h1>Yohanes 3:16</h1> or <h1>Mazmur 23:1-6</h1>)
     const titleMatch = html.match(/<div class="texts"[^>]*>[\s\S]*?<h1>([^<]+)<\/h1>/i);
     const title = titleMatch ? titleMatch[1].trim() : query;
 
-    // Extract paragraph title if available
     const subTitleMatch = html.match(/<div class="paragraphtitle">([^<]+)<\/div>/i);
     const subTitle = subTitleMatch ? subTitleMatch[1].trim() : "";
 
-    // Extract verses
     const verses = [];
     const verseRegex = /<span class="vref">([^<]+)<\/span>([\s\S]*?)(?=<span class="vref">|<hr\/>|<\/div>)/gi;
     let match;
@@ -116,7 +100,7 @@ async function fetchSabdaPassage(query) {
     }
 
     if (verses.length === 0) {
-      // Single verse or plain text match
+
       const plainTextMatch = html.match(/<div class="texts"[^>]*>[\s\S]*?<h1>[^<]+<\/h1>([\s\S]*?)<hr\/>/i);
       if (plainTextMatch) {
         const cleaned = cleanVerseHtml(plainTextMatch[1]);
@@ -157,7 +141,6 @@ export default {
     const queryLower = query.toLowerCase();
     await sendTyping();
 
-    // 1. Check local popular passages fallback
     if (POPULAR_VERSES[queryLower]) {
       const data = POPULAR_VERSES[queryLower];
       const verseText = data.verses.join("\n\n");
@@ -169,7 +152,6 @@ export default {
       );
     }
 
-    // 2. Fetch live from SABDA
     const result = await fetchSabdaPassage(query);
 
     if (!result || result.verses.length === 0) {
@@ -179,7 +161,6 @@ export default {
       );
     }
 
-    // Truncate if too long (max 25 verses per message to avoid exceeding WhatsApp message size)
     const displayVerses = result.verses.slice(0, 25);
     const isTruncated = result.verses.length > 25;
     let messageText = displayVerses.join("\n\n");

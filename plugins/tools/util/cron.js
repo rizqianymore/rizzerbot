@@ -67,7 +67,6 @@ export default {
       `├── [4] Bulan       : ${explainCronPart(month, "bulan")}\n` +
       `└── [5] Hari Minggu : ${descHari}\n\n`;
 
-    // Ringkasan sederhana
     let summary = "Berjalan ";
     if (minute === "*" && hour === "*") {
       summary += "setiap menit sepanjang waktu.";

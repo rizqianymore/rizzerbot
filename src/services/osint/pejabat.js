@@ -2,18 +2,12 @@ import { request } from "@/src/utils/request.js";
 
 const PEJABAT_BASE = "https://pejabat.id";
 
-/**
- * Normalisasi query pencarian nama / fraksi
- */
 export function normalizeQuery(query = "") {
   return String(query || "")
     .trim()
     .toLowerCase();
 }
 
-/**
- * Format teks output profil anggota DPR RI
- */
 export function formatDprMember(member) {
   const fields = [
     ["Nama", member.nama || "-"],
@@ -37,10 +31,6 @@ export function formatDprMember(member) {
   return lines.join("\n");
 }
 
-/**
- * Scrape data pejabat / DPR dari pejabat.id
- * Mendukung bypassCloudflare secara otomatis melalui BrightData/Proxy jika tersedia
- */
 export async function fetchPejabatDpr(query = "", { logger } = {}) {
   const targetUrl = `${PEJABAT_BASE}/dpr`;
   const cleanQ = normalizeQuery(query);
@@ -61,14 +51,12 @@ export async function fetchPejabatDpr(query = "", { logger } = {}) {
     logger?.warn?.(`[pejabat.id] Scrape langsung gagal: ${err.message}`);
   }
 
-  // Jika halaman berupa Cloudflare challenge interaktif
   if (!html || html.includes("Memastikan anda bukan BOT") || html.includes("challenge-platform")) {
     throw new Error(
       "Situs https://pejabat.id/dpr saat ini sedang membatasi akses bot dengan proteksi Cloudflare Turnstile/Bot Challenge."
     );
   }
 
-  // Parsing card anggota DPR dari HTML
   const members = [];
   const cardRegex = /<article[^>]*class=["'][^"']*dpr-card[^"']*["'][^>]*>([\s\S]*?)<\/article>/gi;
   let match;

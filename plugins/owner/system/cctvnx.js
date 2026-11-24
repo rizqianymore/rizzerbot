@@ -58,7 +58,6 @@ export default {
           return reply("Tidak ada kamera CCTV yang terdeteksi di server Nx Witness.");
         }
 
-        // Fitur pencarian nama lokasi kamera
         let filteredCams = cameras;
         const isSearch = action === "cari" || action === "search" || (targetQuery && isNaN(parseInt(targetQuery, 10)));
         if (isSearch && targetQuery) {

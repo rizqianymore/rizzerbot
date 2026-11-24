@@ -29,14 +29,13 @@ export default {
     const name1 = parts[0].trim();
     const name2 = parts[1].trim();
 
-    // Deterministic hash based on both names sorted
     const combined = [name1.toLowerCase(), name2.toLowerCase()].sort().join("::");
     let hash = 0;
     for (let i = 0; i < combined.length; i++) {
       hash = (hash * 31 + combined.charCodeAt(i)) % 1000000;
     }
 
-    const percentage = 40 + (Math.abs(hash) % 60); // Range 40% - 99%
+    const percentage = 40 + (Math.abs(hash) % 60);
 
     let verdict = "Cukup Cocok — Perlu saling memahami dan komunikasi lebih dalam.";
     if (percentage >= 85) verdict = "Sangat Cocok — Pasangan serasi dan saling melengkapi!";

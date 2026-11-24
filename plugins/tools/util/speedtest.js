@@ -1,14 +1,11 @@
 import os from "os";
 
-/**
- * Measure network latency, download & upload speed using Cloudflare speed test endpoints
- */
 async function runNetworkSpeedTest() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
 
   try {
-    // 1. Latency / Ping test
+
     const t0 = Date.now();
     await fetch("https://1.1.1.1/cdn-cgi/trace", {
       signal: controller.signal,
@@ -16,7 +13,6 @@ async function runNetworkSpeedTest() {
     });
     const pingMs = Date.now() - t0;
 
-    // 2. Download speed test (5 MB payload)
     const downloadBytes = 5 * 1024 * 1024;
     const dStart = Date.now();
     const downRes = await fetch(`https://speed.cloudflare.com/__down?bytes=${downloadBytes}`, {
@@ -27,7 +23,6 @@ async function runNetworkSpeedTest() {
     const dDurationSec = Math.max(0.1, (Date.now() - dStart) / 1000);
     const downloadMbps = ((downBuf.byteLength * 8) / (dDurationSec * 1024 * 1024)).toFixed(2);
 
-    // 3. Upload speed test (2 MB payload)
     const uploadBytes = 2 * 1024 * 1024;
     const uploadPayload = new Uint8Array(uploadBytes);
     const uStart = Date.now();

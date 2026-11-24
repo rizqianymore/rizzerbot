@@ -5,10 +5,6 @@ import { request } from "@/src/utils/request.js";
 const STATIONS_FILE = path.join(process.cwd(), "src", "utils", "krl-stations.json");
 let stationsCache = null;
 
-/**
- * Load station list from local database or fallback
- * @returns {Array<{ id: string, name: string, slug: string }>}
- */
 function getStations() {
   if (stationsCache) return stationsCache;
   try {
@@ -19,11 +15,6 @@ function getStations() {
   return stationsCache || [];
 }
 
-/**
- * Find station by query (ID or Name or Slug)
- * @param {string} query
- * @returns {{ id: string, name: string } | null}
- */
 function findStation(query) {
   const q = String(query || "")
     .trim()
@@ -31,26 +22,16 @@ function findStation(query) {
   if (!q) return null;
   const stations = getStations();
 
-  // 1. Exact match on ID (e.g. MRI, BOO, JAKK)
   const byId = stations.find((s) => s.id.toLowerCase() === q);
   if (byId) return byId;
 
-  // 2. Exact match on Name (e.g. MANGGARAI, BOGOR)
   const byName = stations.find((s) => s.name.toLowerCase() === q);
   if (byName) return byName;
 
-  // 3. Partial match on Name or Slug
   const byPartial = stations.find((s) => s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q));
   return byPartial || null;
 }
 
-/**
- * Fetch schedule from rutekrl.com API
- * Uses the shared smartRequest client (retries + transient-error handling)
- * so brief network hiccups don't surface as "no schedule available".
- * @param {string} stationId
- * @returns {Promise<Array<any> | null>}
- */
 async function fetchKrlSchedule(stationId) {
   try {
     const url = `https://rutekrl.com/api/schedules?stationId=${encodeURIComponent(stationId)}&from=00:00&to=24:00`;
@@ -126,13 +107,11 @@ export default {
 
     await sendTyping();
 
-    // Parse origin and optional destination filter
     let originQuery = args[0];
     let destQuery = "";
 
-    // Check if args[0] and args[1] could be joined or separate
     if (args.length >= 2) {
-      // Test if first 2 args form a station name (e.g. "Jakarta Kota")
+
       const testOrigin2 = `${args[0]} ${args[1]}`;
       const foundOrigin2 = findStation(testOrigin2);
       if (foundOrigin2 && args.length >= 3) {
@@ -161,7 +140,6 @@ export default {
       );
     }
 
-    // Filter by destination if provided
     let filtered = schedules;
     let filterNote = "";
     if (destQuery) {
@@ -185,14 +163,12 @@ export default {
       );
     }
 
-    // Find upcoming trains based on current local time
     const now = new Date();
-    // WIB offset is UTC+7
+
     const wibHours = (now.getUTCHours() + 7) % 24;
     const wibMinutes = now.getUTCMinutes();
     const currentMins = wibHours * 60 + wibMinutes;
 
-    // Sort upcoming first
     const upcoming = [];
     const past = [];
 
@@ -210,7 +186,6 @@ export default {
       }
     }
 
-    // Combine: prioritize 5 nearest upcoming trains first, followed by previous if needed
     let displayList = upcoming.slice(0, 5);
     if (displayList.length < 5 && past.length > 0) {
       displayList = [...displayList, ...past.slice(0, 5 - displayList.length)];

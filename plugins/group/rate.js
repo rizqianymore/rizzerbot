@@ -21,7 +21,7 @@ export default {
 
     await sendTyping();
 
-    const score = Math.floor(Math.random() * 101); // 0 - 100%
+    const score = Math.floor(Math.random() * 101);
 
     let verdict = "Biasa saja.";
     if (score >= 90) verdict = "Luar biasa sempurna! ⭐⭐⭐⭐⭐";

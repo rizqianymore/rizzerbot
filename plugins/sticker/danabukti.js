@@ -72,8 +72,6 @@ export default {
         return reply("❌ Template DANA tidak ditemukan di server.");
       }
 
-      // Jika user tidak mengisi nama penerima (tanpa nama):
-      // gunakan template blank di mana bagian tengah langsung menampilkan nominal besar rapi
       const isCustomRecipient = Boolean(recipientRaw);
       const bg = isCustomRecipient ? blank : blank;
 
@@ -86,7 +84,7 @@ export default {
       const centerX = bg.width / 2;
 
       if (isCustomRecipient) {
-        // Render custom recipient
+
         ctx.font = "bold 20px 'Liberation Sans', sans-serif";
         ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
         ctx.fillText(recipientRaw.toUpperCase(), centerX, 440);
@@ -101,7 +99,7 @@ export default {
         ctx.fillStyle = "#ffffff";
         ctx.fillText(nominalText, centerX, bankRaw ? 570 : 540);
       } else {
-        // Tanpa nama penerima: letakkan nominal pas di tengah area pembayaran sukses
+
         ctx.font = "bold 48px 'Liberation Sans', sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.fillText(nominalText, centerX, 520);

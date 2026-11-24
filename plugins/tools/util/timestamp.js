@@ -14,10 +14,10 @@ export default {
 
     if (input) {
       if (/^\d{10}$/.test(input)) {
-        // 10 digits = seconds
+
         dateObj = new Date(Number(input) * 1000);
       } else if (/^\d{13}$/.test(input)) {
-        // 13 digits = milliseconds
+
         dateObj = new Date(Number(input));
       } else {
         const parsed = Date.parse(input);

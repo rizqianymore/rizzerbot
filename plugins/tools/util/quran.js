@@ -25,7 +25,7 @@ export default {
     const ayatArg = args[1];
 
     try {
-      // Ambil daftar surat jika input nama
+
       let surahNumber = parseInt(query, 10);
       if (isNaN(surahNumber)) {
         const list = await request.json("https://equran.id/api/v2/surat", { timeout: 15000 });
@@ -57,7 +57,7 @@ export default {
           ayatList = ayatList.filter((a) => a.nomorAyat === single);
         }
       } else {
-        // Tampilkan 3 ayat pertama jika tidak spesifik agar chat tidak kepanjangan
+
         ayatList = ayatList.slice(0, 3);
       }
 

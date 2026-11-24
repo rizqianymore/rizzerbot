@@ -6,9 +6,6 @@ function getApiKey(name) {
   return process.env[name] || env[name] || "";
 }
 
-/**
- * Transkripsi audio buffer menggunakan Groq Whisper-large-v3
- */
 export async function transcribeWithGroq(buffer, filename = "audio.mp3", lang = "id") {
   const apiKey = getApiKey("GROQ_API_KEY");
   if (!apiKey) throw new Error("GROQ_API_KEY belum dikonfigurasi.");
@@ -42,9 +39,6 @@ export async function transcribeWithGroq(buffer, filename = "audio.mp3", lang = 
   };
 }
 
-/**
- * Transkripsi audio buffer menggunakan Google Gemini 2.0 / 1.5 Flash
- */
 export async function transcribeWithGemini(buffer, mimeType = "audio/mp3") {
   const apiKey = getApiKey("GEMINI_API_KEY");
   if (!apiKey) throw new Error("GEMINI_API_KEY belum dikonfigurasi.");
@@ -95,20 +89,15 @@ export async function transcribeWithGemini(buffer, mimeType = "audio/mp3") {
   };
 }
 
-/**
- * Smart Transcribe dengan Auto Fallback
- */
 export async function smartTranscribe(buffer, { filename = "audio.mp3", mimeType = "audio/mp3", lang = "id" } = {}) {
   const errors = [];
 
-  // 1. Coba Groq Whisper (sangat cepat & akurat untuk suara)
   try {
     return await transcribeWithGroq(buffer, filename, lang);
   } catch (err) {
     errors.push(`Groq: ${err.message}`);
   }
 
-  // 2. Coba Gemini Multimodal
   try {
     return await transcribeWithGemini(buffer, mimeType);
   } catch (err) {

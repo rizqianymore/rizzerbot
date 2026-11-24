@@ -10,7 +10,6 @@ export default {
     const mentionedJid = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
     const target = mentionedJid ? `@${mentionedJid.split("@")[0].split(":")[0]}` : args.join(" ").trim() || "Kamu";
 
-    // Hash nama/target untuk hasil deterministik hari ini
     const today = new Date().toISOString().slice(0, 10);
     const seed = `${target.toLowerCase()}_${today}`;
     let hash = 0;
@@ -18,7 +17,7 @@ export default {
       hash = (hash * 33 + seed.charCodeAt(i)) % 1000000;
     }
 
-    const percentage = 15 + (Math.abs(hash) % 85); // 15% - 99%
+    const percentage = 15 + (Math.abs(hash) % 85);
 
     let status = "Masih rasional dan terkendali.";
     if (percentage >= 90) status = "BUCIN AKUT TINGKAT DEWA! Dunia serasa milik berdua, yang lain cuma ngontrak.";

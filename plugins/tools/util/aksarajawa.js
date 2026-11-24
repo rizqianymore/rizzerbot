@@ -1,4 +1,3 @@
-// Pemetaan Hanacaraka Latin ke Unicode Aksara Jawa
 const AKSARA_MAP = {
   ha: "ꦲ",
   na: "ꦤ",
@@ -39,7 +38,6 @@ export function latinToJawa(text = "") {
       continue;
     }
 
-    // Cek suku 3 huruf (cth: dha, tha, nya, nga)
     const three = str.slice(i, i + 3);
     if (AKSARA_MAP[three]) {
       result += AKSARA_MAP[three];
@@ -47,7 +45,6 @@ export function latinToJawa(text = "") {
       continue;
     }
 
-    // Cek suku 2 huruf (cth: ha, na, ca, ra, ka...)
     const two = str.slice(i, i + 2);
     if (AKSARA_MAP[two]) {
       result += AKSARA_MAP[two];
@@ -55,7 +52,6 @@ export function latinToJawa(text = "") {
       continue;
     }
 
-    // Cek 1 huruf
     const one = str[i];
     if (AKSARA_MAP[one]) {
       result += AKSARA_MAP[one];

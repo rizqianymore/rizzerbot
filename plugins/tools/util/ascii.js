@@ -22,7 +22,6 @@ export default {
       );
     }
 
-    // Jika input adalah 1 angka decimal
     if (/^\d{1,3}$/.test(input) && Number(input) <= 255) {
       const code = Number(input);
       const char = String.fromCharCode(code);
@@ -40,7 +39,6 @@ export default {
       );
     }
 
-    // Jika input teks
     const chars = input.slice(0, 12).split("");
     let text = `┌── ASCII BREAKDOWN (${chars.length} Karakter)\n` + `│ Teks : "${input.slice(0, 25)}"\n` + `└──\n\n`;
 

@@ -27,9 +27,6 @@ let tokenCache = null;
 let tokenExpiry = 0;
 let stopsCache = null;
 
-/**
- * Geodesic distance in meters (Haversine formula)
- */
 export function haversine(lat1, lon1, lat2, lon2) {
   if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
   const R = 6371000.0;
@@ -41,9 +38,6 @@ export function haversine(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-/**
- * Calculate age of bus telemetry in seconds from timestamp epoch ms
- */
 export function busAgeSeconds(ts) {
   if (!ts) return null;
   const num = Number(ts);
@@ -51,9 +45,6 @@ export function busAgeSeconds(ts) {
   return Math.max(0, Date.now() / 1000.0 - num / 1000.0);
 }
 
-/**
- * Load 7.210 stops from local database
- */
 export function getStopsDatabase() {
   if (stopsCache) return stopsCache;
   try {
@@ -69,9 +60,6 @@ export function getStopsDatabase() {
   return stopsCache || [];
 }
 
-/**
- * Resolve single best halte from name or code. Returns halte or null.
- */
 export function resolveHalte(keyword) {
   const stops = getStopsDatabase();
   const k = String(keyword || "")
@@ -79,22 +67,16 @@ export function resolveHalte(keyword) {
     .toLowerCase();
   if (!k) return null;
 
-  // 1. Exact match on stop_id
   const byId = stops.find((s) => s.stop_id?.toLowerCase() === k);
   if (byId) return byId;
 
-  // 2. Exact match on stop_name
   const exact = stops.find((s) => s.stop_name?.toLowerCase() === k);
   if (exact) return exact;
 
-  // 3. Substring match on stop_name
   const match = stops.find((s) => s.stop_name?.toLowerCase().includes(k));
   return match || null;
 }
 
-/**
- * Search halte in local DB
- */
 export function searchHalte(keyword, limit = 20) {
   const stops = getStopsDatabase();
   const k = String(keyword || "")
@@ -105,9 +87,6 @@ export function searchHalte(keyword, limit = 20) {
   return hits.slice(0, limit);
 }
 
-/**
- * Core TransJakarta API Client class in 100% pure JavaScript
- */
 export class TJLive {
   constructor({ baseUrl = BASE_URL, token = null, deviceId = DEVICE_ID } = {}) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
@@ -225,9 +204,6 @@ export class TJLive {
     return out;
   }
 
-  /**
-   * 1) Halte: Bus yang AKAN DATANG ke halte + ETA
-   */
   async getHalteArrivals(lat, lon, { radius = 500, stopId = null, maxAge = 60 } = {}) {
     let resolvedStopId = stopId;
     let resolvedStopName = stopId;
@@ -282,9 +258,6 @@ export class TJLive {
     };
   }
 
-  /**
-   * 2) Rute: Naik apa dari halte + rute & headsign
-   */
   async getRuteFromHalte(lat, lon, { radius = 1000, maxAge = 60, tujuan = null } = {}) {
     const sd = await this.fetch("bus.stop", { latitude: lat, longitude: lon, radius: 300 });
     const stops = Array.isArray(sd?.data) ? sd.data : [];
@@ -346,9 +319,6 @@ export class TJLive {
     return { stopName, stopId, routes: rows };
   }
 
-  /**
-   * 3) Detail 1 bus berdasarkan nomor bodi
-   */
   async getBusDetail(bodyNo, params = null) {
     const p = params || DEFAULT_PARAMS["bus.live"];
     const d = await this.fetch("bus.live", p);
@@ -363,9 +333,6 @@ export class TJLive {
     return hit || null;
   }
 
-  /**
-   * 4) Semua rute TransJakarta resmi
-   */
   async getRoutesList(keyword = null) {
     const d = await this.fetch("route", {}, true);
     let routes = d?.data?.routes || [];
@@ -378,22 +345,15 @@ export class TJLive {
     return routes;
   }
 
-  /**
-   * 5) Halte terdekat dari koordinat
-   */
   async getNearbyStops(lat, lon, radius = 2000) {
     const d = await this.fetch("bus.stop", { latitude: lat, longitude: lon, radius });
     return Array.isArray(d?.data) ? d.data : [];
   }
 
-  /**
-   * 6) Autocomplete pencarian tempat
-   */
   async autocomplete(query) {
     const d = await this.fetch("maps.autocomplete", { query });
     return Array.isArray(d?.data) ? d.data : [];
   }
 }
 
-// Global default singleton instance
 export const tjLive = new TJLive();
