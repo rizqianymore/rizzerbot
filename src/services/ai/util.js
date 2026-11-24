@@ -83,10 +83,14 @@ export function stripThink(text) {
 }
 
 export function buildMessages(prompt, options = {}) {
+  const defaultSystem =
+    options.system ||
+    "Kamu adalah teman ngobrol WhatsApp yang santai, cerdas, dan asik. Jawab ringkas, to the point, dan natural seperti gaya chat manusia. Hindari format kodingan panjang, basa-basi AI atau jawaban bertele-tele.";
+
   return [
     {
       role: "system",
-      content: options.system || "Jawab dengan bahasa yang sama seperti user, natural, informatif, singkat dan jelas.",
+      content: defaultSystem,
     },
     ...(Array.isArray(options.history) ? options.history : []),
     { role: "user", content: String(prompt).trim() },

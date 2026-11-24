@@ -1,14 +1,24 @@
 import crypto from "node:crypto";
 
-const DEFAULT_TTL_MS = 10 * 60 * 1000;
-const MAX_ENTRIES = 300;
+const DEFAULT_TTL_MS = 15 * 60 * 1000;
+const MAX_ENTRIES = 500;
 const store = new Map();
 
+function normalizePrompt(prompt) {
+  if (!prompt || typeof prompt !== "string") return "";
+  return prompt
+    .toLowerCase()
+    .replace(/[?!.,;:_~`'"()\[\]{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function keyOf(prompt, options = {}) {
+  const norm = normalizePrompt(prompt);
   const h = JSON.stringify(options.history || []);
   return crypto
     .createHash("sha1")
-    .update(`${options.prefer || "auto"}|${prompt}|${h ? h.slice(0, 200) : ""}`)
+    .update(`${options.prefer || "auto"}|${norm}|${h ? h.slice(0, 150) : ""}`)
     .digest("hex");
 }
 

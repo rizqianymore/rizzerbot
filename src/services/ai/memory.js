@@ -2,9 +2,10 @@ import { cacheGet, cacheSet } from "./cache.js";
 
 const DEFAULT_GROUP = "global";
 const MAX_GROUPS = 2000;
-const MAX_TURNS = 10;
-const MAX_CHARS = 1000;
-const TTL_MS = 2 * 60 * 60 * 1000;
+const MAX_TURNS = 3;
+const MAX_CHARS_USER = 350;
+const MAX_CHARS_ASSISTANT = 400;
+const TTL_MS = 30 * 60 * 1000;
 
 const buckets = new Map();
 
@@ -17,9 +18,10 @@ function sanitizeTurns(raw) {
   const out = [];
   for (const m of raw) {
     if (!m || (m.role !== "user" && m.role !== "assistant")) continue;
+    const maxLen = m.role === "user" ? MAX_CHARS_USER : MAX_CHARS_ASSISTANT;
     const content = String(m.content || "")
       .trim()
-      .slice(0, MAX_CHARS);
+      .slice(0, maxLen);
     if (!content) continue;
     out.push({ role: m.role, content });
   }
@@ -56,10 +58,10 @@ export function pushTurn(jid, userText, assistantText) {
   const bucket = getBucket(groupIdFrom(jid));
   const u = String(userText || "")
     .trim()
-    .slice(0, MAX_CHARS);
+    .slice(0, MAX_CHARS_USER);
   const a = String(assistantText || "")
     .trim()
-    .slice(0, MAX_CHARS);
+    .slice(0, MAX_CHARS_ASSISTANT);
   if (u) bucket.turns.push({ role: "user", content: u });
   if (a) bucket.turns.push({ role: "assistant", content: a });
   bucket.turns = sanitizeTurns(bucket.turns).slice(-MAX_TURNS * 2);
