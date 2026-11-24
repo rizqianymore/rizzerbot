@@ -8,8 +8,7 @@
     "@/*": "./*"
   },
   "scripts": {
-    "start": "bun run index.js",
-    "start:node": "node index.js",
+    "start": "node index.js",
     "start:termux": "BROWSER_DISABLED=1 node index.js",
     "setup:termux": "bash scripts/termux-setup.sh",
     "termux:run": "bash scripts/termux-run.sh",
@@ -26,8 +25,7 @@
     "reset:force": "node scripts/reset-total.js --force"
   },
   "engines": {
-    "node": ">=20",
-    "bun": ">=1.0.0"
+    "node": ">=20"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
