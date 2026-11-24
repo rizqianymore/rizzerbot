@@ -29,21 +29,24 @@ function releaseFfmpegSlot() {
 }
 
 export function detectMediaType(buffer) {
-  if (!buffer || buffer.length < 4) return "unknown";
-  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image";
-  if (buffer[0] === 0x89 && buffer.toString("ascii", 1, 4) === "PNG") return "image";
-  if (buffer.slice(0, 4).toString() === "RIFF" && buffer.slice(8, 12).toString() === "WEBP") return "image";
-  if (buffer.slice(0, 3).toString() === "GIF") return "image";
-  if (isVideoOrAnimated(buffer)) {
-    if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return "video";
-    return "video";
+  if (!buffer || buffer.length < 3) return "unknown";
+  if (buffer.length >= 4) {
+    if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image";
+    if (buffer[0] === 0x89 && buffer.toString("ascii", 1, 4) === "PNG") return "image";
+    if (buffer.slice(0, 4).toString() === "RIFF" && buffer.slice(8, 12).toString() === "WEBP") return "image";
+    if (buffer.slice(0, 3).toString() === "GIF") return "image";
+    if (isVideoOrAnimated(buffer)) {
+      if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) return "video";
+      return "video";
+    }
   }
 
   if (buffer.slice(0, 3).toString() === "ID3") return "audio";
+  if (buffer.length >= 2 && buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return "audio"; // MPEG Audio Frame sync
 
-  if (buffer.slice(4, 8).toString() === "ftyp") return "video";
+  if (buffer.length >= 8 && buffer.slice(4, 8).toString() === "ftyp") return "video";
 
-  if (buffer.slice(0, 4).toString() === "OggS") return "audio";
+  if (buffer.length >= 4 && buffer.slice(0, 4).toString() === "OggS") return "audio";
   return "unknown";
 }
 
