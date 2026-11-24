@@ -47,16 +47,16 @@ export default {
     if (!args || args.length === 0) {
       return reply(
         `*MUSE CODE / META AI*\n\n` +
-          `Format Penggunaan:\n` +
-          `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
-          `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
-          `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
-          `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
-          `│ *${p}muse models* (lihat daftar model)\n\n` +
-          `Catatan:\n` +
-          `│ • Real-time Token Counter (Prompt + Output Tokens)\n` +
-          `│ • Humanized Response Filter\n` +
-          `│ • Advanced Browser Masking`
+        `Format Penggunaan:\n` +
+        `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
+        `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
+        `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
+        `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
+        `│ *${p}muse models* (lihat daftar model)\n\n` +
+        `Catatan:\n` +
+        `│ • Real-time Token Counter (Prompt + Output Tokens)\n` +
+        `│ • Humanized Response Filter\n` +
+        `│ • Advanced Browser Masking`
       );
     }
 
@@ -92,8 +92,8 @@ export default {
       const selected = resolveMuseModel(targetModel);
       return reply(
         `*MODEL DIPILIH: ${selected.name}*\n\n` +
-          `Silakan masukkan pertanyaan setelah nama model.\n` +
-          `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
+        `Silakan masukkan pertanyaan setelah nama model.\n` +
+        `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
       );
     }
 
