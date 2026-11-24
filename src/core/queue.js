@@ -23,15 +23,22 @@ const QUEUE_DELAY_MS = 0;
 
 const MAX_CONCURRENT_PER_CHAT = 3;
 
+const TASK_TIMEOUT_MS = 60000;
+
 async function runTask(key, task, logger) {
   const { sock, msg } = task;
   try {
-    await db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger));
+    await Promise.race([
+      db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger)),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Queue task execution timeout (60s)")), TASK_TIMEOUT_MS)
+      ),
+    ]);
   } catch (err) {
     if (logger) {
-      logger.error(`[Queue Error] Failed to handle message in ${key}:`, err);
+      logger.error(`[Queue Error] Failed to handle message in ${key}:`, err?.message || err);
     } else {
-      console.error(`[Queue Error] Failed to handle message in ${key}:`, err);
+      console.error(`[Queue Error] Failed to handle message in ${key}:`, err?.message || err);
     }
   }
 }

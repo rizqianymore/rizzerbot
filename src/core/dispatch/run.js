@@ -89,7 +89,7 @@ async function dispatchInner(sock, msg, logger) {
         return;
       }
 
-      if (ageMs < -5 * 60 * 1000) {
+      if (ageMs < -15 * 60 * 1000) {
         logger?.info?.(
           `[Stale] timestamp masa depan dilewati (selisih ${Math.round(ageMs / 1000)}s): ${msg.key?.id || "?"}`
         );
