@@ -89,10 +89,20 @@ export async function ensureVideoCompatible(buffer) {
   if (type === "image" && buffer.slice(0, 4).toString() !== "RIFF") {
     return buffer;
   }
+
+  // Fast path: standard MP4/M4V files with h264/avc1 don't need re-encoding
+  const isMp4 = buffer.slice(4, 8).toString() === "ftyp";
+  if (isMp4) {
+    const headerPrefix = buffer.slice(0, Math.min(buffer.length, 4096)).toString("binary");
+    if (headerPrefix.includes("avc1") || headerPrefix.includes("isom") || headerPrefix.includes("mp42")) {
+      return buffer;
+    }
+  }
+
   try {
     let inputExt = "mp4";
     if (buffer[0] === 0x1a && buffer[1] === 0x45) inputExt = "webm";
-    else if (buffer.slice(4, 8).toString() === "ftyp") inputExt = "mp4";
+    else if (isMp4) inputExt = "mp4";
     else if (buffer.slice(0, 3).toString() === "GIF") inputExt = "gif";
     else inputExt = "bin";
 
@@ -120,10 +130,13 @@ export async function ensureVideoCompatible(buffer) {
 
 export async function ensureAudioCompatible(buffer) {
   if (!buffer || buffer.length < 100) return buffer;
+  // Fast path: MP3 files with ID3 tag don't need re-encoding
+  if (buffer.slice(0, 3).toString() === "ID3") {
+    return buffer;
+  }
   try {
     let inputExt = "bin";
-    if (buffer.slice(0, 3).toString() === "ID3") inputExt = "mp3";
-    else if (buffer.slice(0, 4).toString() === "OggS") inputExt = "ogg";
+    if (buffer.slice(0, 4).toString() === "OggS") inputExt = "ogg";
     else if (buffer.slice(4, 8).toString() === "ftyp") inputExt = "m4a";
     const out = await ffmpegConvertBuffer(buffer, inputExt, "mp3", ["-c:a", "libmp3lame", "-q:a", "2"]);
     return out && out.length > 100 ? out : buffer;
