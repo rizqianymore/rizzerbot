@@ -30,10 +30,13 @@ async function handleInactive(sock, logger, reason) {
   } catch (_) {}
   try {
     const { notifyOwner } = await import("@/src/services/system/health.js");
-    await notifyOwner(
+    const ok = await notifyOwner(
       `[ActiveCheck] Nomor bot tidak aktif (${reason}). Pairing ulang diperlukan. Auto-reconnect dimatikan.`
     );
-  } catch (_) {}
+    if (ok === false) logger?.warn?.("[ActiveCheck] Notifikasi ke owner GAGAL dikirim.");
+  } catch (err) {
+    logger?.warn?.(`[ActiveCheck] Gagal memanggil notifyOwner: ${err?.message || err}`);
+  }
   try {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
     connectionState.reconnectTimer = null;

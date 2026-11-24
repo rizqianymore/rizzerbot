@@ -157,7 +157,9 @@ export function attachWelcomeHandler(sock) {
         const text = `Halo @${num} 👋\nSelamat datang di *${subject}*!\nBaca deskripsi grup ya.`;
         try {
           await sock.sendMessage(jid, { text, mentions: [p] });
-        } catch (_) {}
+        } catch (err) {
+          logger?.warn?.(`[Welcome] Gagal kirim pesan welcome ke ${jid} untuk ${p}: ${err?.message || err}`);
+        }
       }
     } catch (_) {}
   });

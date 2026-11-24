@@ -102,7 +102,7 @@ export async function resolveCommandAccess(
           { text: "🔒 Bot sedang dalam mode private. Perintah ini hanya untuk Owner/Admin/Premium." },
           { quoted: msg }
         )
-        .catch(() => {});
+        .catch((err) => logger?.warn?.(`[Access] Gagal kirim pesan private ke ${remoteJid}: ${err?.message || err}`));
     }
     return drop(`mode private, ${commandName} bukan whitelist`);
   }
@@ -110,7 +110,11 @@ export async function resolveCommandAccess(
   if (activeSettings.maintenance === true && !isOwner) {
     if (activeSettings.silentDeny === false) {
       const mtext = String(activeSettings.maintenanceMessage || "🔧 Bot sedang maintenance. Coba lagi nanti.");
-      await sock.sendMessage(remoteJid, { text: mtext }, { quoted: msg }).catch(() => {});
+      await sock
+        .sendMessage(remoteJid, { text: mtext }, { quoted: msg })
+        .catch((err) =>
+          logger?.warn?.(`[Access] Gagal kirim pesan maintenance ke ${remoteJid}: ${err?.message || err}`)
+        );
     }
     return drop("mode maintenance");
   }

@@ -79,10 +79,14 @@ export default {
       activeReminders.delete(id);
       try {
         await sock.sendMessage(jid, { text: `⏰ *Pengingat #${id}:* ${text}` }, { quoted: msg });
-      } catch (_) {
+      } catch (err1) {
         try {
           await sock.sendMessage(jid, { text: `⏰ *Pengingat #${id}:* ${text}` });
-        } catch (_) {}
+        } catch (err2) {
+          console.warn(
+            `[Reminder] Gagal kirim pengingat #${id} ke ${jid}: ${err1?.message || err1} / fallback: ${err2?.message || err2}`
+          );
+        }
       }
     }, dur);
     if (timer.unref) timer.unref();

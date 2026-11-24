@@ -54,11 +54,17 @@ export async function checkAntilink(sock, msg, logger, remoteJid, messageContent
         logger?.warn?.(`[Anti-Link] Menghapus link grup dari non-admin: ${senderJid} di grup ${remoteJid}`);
         try {
           await sock.sendMessage(remoteJid, { delete: msg.key });
+        } catch (err) {
+          logger?.warn?.(`[Anti-Link] Gagal hapus pesan: ${err?.message || err}`);
+        }
+        try {
           await sock.sendMessage(remoteJid, {
             text: `⚠️ *Anti-Link*\n\nMaaf @${senderJid.split("@")[0]}, dilarang mengirim tautan grup WhatsApp di sini. Pesan Anda telah dihapus.`,
             mentions: [senderJid],
           });
-        } catch (_) {}
+        } catch (err) {
+          logger?.warn?.(`[Anti-Link] Gagal kirim peringatan ke ${remoteJid}: ${err?.message || err}`);
+        }
         return true;
       }
     }

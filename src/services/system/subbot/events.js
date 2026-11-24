@@ -106,8 +106,11 @@ export function setupSubBotEvents({
         subBots.delete(botId);
         try {
           const { notifyOwner } = await import("@/src/services/system/health.js");
-          notifyOwner(`Subbot ${cleanNumber} logout, sesi dihapus.`).catch(() => {});
-        } catch (_) {}
+          const ok = await notifyOwner(`Subbot ${cleanNumber} logout, sesi dihapus.`);
+          if (ok === false) logger?.warn?.(`[SubBot] Notifikasi logout ${cleanNumber} GAGAL dikirim ke owner.`);
+        } catch (err) {
+          logger?.warn?.(`[SubBot] Gagal notify logout ${cleanNumber}: ${err?.message || err}`);
+        }
         try {
           deleteFolderRecursive(sessionDir);
         } catch (_) {}

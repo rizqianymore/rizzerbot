@@ -1,4 +1,5 @@
 import { db } from "@/src/core/database.js";
+import { notifyOwnerSafe, resolveOwnerJid } from "@/src/utils/send-safe.js";
 
 let _primaryOnline = false;
 
@@ -6,32 +7,15 @@ export function setPrimaryOnline(v) {
   _primaryOnline = Boolean(v);
 }
 
+export function isPrimaryOnline() {
+  return _primaryOnline;
+}
+
 export async function notifyOwner(text) {
-  let ownerJid = "";
-  try {
-    const s = db.main?.().getSettings?.() || db.getSettings();
-    ownerJid = db.normalizeJid(s.ownerNumber || "");
-  } catch (_) {}
-  if (!ownerJid) return false;
-
-  const candidates = [];
-  try {
-    const { getPrimarySock } = await import("@/src/core/connection.js");
-    const primary = getPrimarySock?.();
-    if (primary) candidates.push(primary);
-  } catch (_) {}
-  try {
-    const { subBots } = await import("@/src/services/system/subbot/store.js");
-    for (const entry of subBots.values()) {
-      if (entry?.status === "online" && entry?.sock) candidates.push(entry.sock);
-    }
-  } catch (_) {}
-
-  for (const sock of candidates) {
-    try {
-      await sock.sendMessage(ownerJid, { text });
-      return true;
-    } catch (_) {}
+  const jid = resolveOwnerJid();
+  if (!jid) {
+    console.warn("[notifyOwner] ownerNumber kosong, notifikasi tidak dikirim");
+    return false;
   }
-  return false;
+  return notifyOwnerSafe(text, console, "notifyOwner");
 }

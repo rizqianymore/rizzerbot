@@ -89,28 +89,40 @@ export async function checkRentals(logger) {
     const { getPrimarySock } = await import("@/src/core/connection.js");
     sock = getPrimarySock?.() || null;
     ({ notifyOwner: notify } = await import("@/src/services/system/health.js"));
-  } catch (_) {}
+  } catch (err) {
+    logger?.warn?.(`[expiry] Gagal memuat sock/notify: ${err?.message || err}`);
+  }
+  if (!notify) {
+    try {
+      ({ notifyOwnerSafe: notify } = await import("@/src/utils/send-safe.js"));
+    } catch (_) {}
+  }
 
   for (const gid of ids) {
     const r = data.groups[gid];
     if (!r) continue;
     try {
       if (r.until <= Date.now()) {
-        if (!sock) continue;
+        if (!sock) {
+          logger?.warn?.(`[expiry] Sock belum online, sewa ${gid} tidak diproses (akan dicoba lagi jam berikutnya).`);
+          continue;
+        }
         try {
           await sock.groupLeave(gid);
         } catch (_) {}
         delete data.groups[gid];
         left++;
-        try {
-          await notify?.(`Sewa grup ${gid} habis, bot keluar otomatis.`);
-        } catch (_) {}
+        const ok = await notify?.(`Sewa grup ${gid} habis, bot keluar otomatis.`, logger, "expiry");
+        if (ok === false) logger?.warn?.(`[expiry] Notifikasi sewa habis ${gid} GAGAL dikirim ke owner.`);
       } else if (!r.warned && r.until - Date.now() < 24 * 60 * 60 * 1000) {
         r.warned = true;
         warned++;
-        try {
-          await notify?.(`Sewa grup ${gid} habis <24 jam (${new Date(r.until).toLocaleString("id-ID")}).`);
-        } catch (_) {}
+        const ok = await notify?.(
+          `Sewa grup ${gid} habis <24 jam (${new Date(r.until).toLocaleString("id-ID")}).`,
+          logger,
+          "expiry"
+        );
+        if (ok === false) logger?.warn?.(`[expiry] Notifikasi H-1 sewa ${gid} GAGAL dikirim ke owner.`);
       }
     } catch (_) {}
   }

@@ -195,7 +195,9 @@ async function dispatchInner(sock, msg, logger) {
           { text: `⚠️ Perintah *${commandName}* tidak dikenal.\nKetik ${prefix}menu untuk daftar perintah.` },
           { quoted: msg }
         )
-        .catch(() => {});
+        .catch((err) =>
+          logger?.warn?.(`[Run] Gagal kirim pesan "perintah tidak dikenal" ke ${remoteJid}: ${err?.message || err}`)
+        );
     }
     return;
   }
@@ -253,7 +255,7 @@ async function dispatchInner(sock, msg, logger) {
         { text: `⏳ Terlalu banyak perintah owner. Tunggu 10 detik sebelum mengulangi.` },
         { quoted: msg }
       )
-      .catch(() => {});
+      .catch((err) => logger?.warn?.(`[Run] Gagal kirim pesan owner-throttle ke ${remoteJid}: ${err?.message || err}`));
     return;
   }
 

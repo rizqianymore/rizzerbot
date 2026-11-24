@@ -1,6 +1,7 @@
 import fs from "fs";
 import { db } from "@/src/core/database.js";
 import { createBackup, formatBytes } from "./backup.js";
+import { resolveOwnerJid } from "@/src/utils/send-safe.js";
 
 function backupEnabled() {
   return String(process.env.BACKUP_TO_OWNER || "").trim() === "1";
@@ -21,10 +22,7 @@ export async function runBackupToOwner(logger) {
     logger?.warn?.("[backup-cron] sock utama belum online, lewati.");
     return false;
   }
-  let ownerJid = "";
-  try {
-    ownerJid = db.normalizeJid(db.getSettings()?.ownerNumber || "");
-  } catch (_) {}
+  const ownerJid = resolveOwnerJid();
   if (!ownerJid) {
     logger?.warn?.("[backup-cron] ownerNumber kosong, lewati.");
     return false;
@@ -41,6 +39,9 @@ export async function runBackupToOwner(logger) {
     });
     logger?.info?.(`[backup-cron] backup terkirim ke owner (${formatBytes(size)}).`);
     return true;
+  } catch (err) {
+    logger?.warn?.(`[backup-cron] Gagal kirim backup ke owner: ${err?.message || err}`);
+    return false;
   } finally {
     try {
       fs.rmSync(file, { force: true });

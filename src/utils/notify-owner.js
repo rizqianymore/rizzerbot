@@ -1,4 +1,5 @@
 import { db } from "@/src/core/database.js";
+import { resolveOwnerJid } from "./send-safe.js";
 
 const COOLDOWN_MS = 60 * 1000;
 const lastSent = new Map();
@@ -18,7 +19,7 @@ export async function notifyPrimaryOwner(sock, { actor, action, target, botJid, 
   try {
     if (!sock?.sendMessage) return false;
 
-    const ownerJid = db.normalizeJid(db.main().getSettings()?.ownerNumber);
+    const ownerJid = resolveOwnerJid();
     if (!ownerJid) return false;
     if (ownerJid === actor) return false;
 
@@ -37,8 +38,13 @@ export async function notifyPrimaryOwner(sock, { actor, action, target, botJid, 
     ];
     if (extra) lines.push(`\n${extra}`);
 
-    await sock.sendMessage(ownerJid, { text: lines.join("\n") });
-    return true;
+    try {
+      await sock.sendMessage(ownerJid, { text: lines.join("\n") });
+      return true;
+    } catch (err) {
+      console.warn(`[notifyPrimaryOwner] Gagal kirim ke ${digits(ownerJid)}: ${err?.message || err}`);
+      return false;
+    }
   } catch (_) {
     return false;
   }
