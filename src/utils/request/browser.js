@@ -61,7 +61,14 @@ export class StealthBrowserManager extends StealthBrowserCore {
         await page.setRequestInterception(true);
         page.on("request", (req) => {
           const type = req.resourceType();
-          if (["media", "font"].includes(type)) {
+          const url = req.url().toLowerCase();
+          if (
+            ["media", "font", "image"].includes(type) ||
+            url.includes("google-analytics") ||
+            url.includes("googletagmanager") ||
+            url.includes("doubleclick.net") ||
+            url.includes("facebook.net")
+          ) {
             req.abort().catch(() => {});
           } else {
             req.continue().catch(() => {});
