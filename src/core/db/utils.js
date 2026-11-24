@@ -32,30 +32,46 @@ export function toBoolean(value, fallback = false) {
   return Boolean(fallback);
 }
 
+const JID_CACHE = new Map();
+const MAX_JID_CACHE = 2000;
+
 export function normalizeJid(value) {
   if (value === null || value === undefined || value === "") return "";
-  const raw = String(value).trim();
+  const raw = typeof value === "string" ? value.trim() : String(value).trim();
   if (!raw) return "";
 
+  const cached = JID_CACHE.get(raw);
+  if (cached !== undefined) return cached;
+
+  let result = "";
   if (raw.startsWith("@") && !raw.slice(1).includes("@")) {
     const numeric = normalizePhone(raw.slice(1));
-    return numeric ? `${numeric}@s.whatsapp.net` : "";
-  }
-
-  const atIndex = raw.indexOf("@");
-  if (atIndex >= 0) {
-    const local = raw.slice(0, atIndex).split(":")[0];
-    const domain = raw.slice(atIndex + 1).toLowerCase();
-    if (domain === "g.us" || domain === "broadcast" || domain === "newsletter") {
-      return `${local}@${domain}`;
+    result = numeric ? `${numeric}@s.whatsapp.net` : "";
+  } else {
+    const atIndex = raw.indexOf("@");
+    if (atIndex >= 0) {
+      const local = raw.slice(0, atIndex).split(":")[0];
+      const domain = raw.slice(atIndex + 1).toLowerCase();
+      if (domain === "g.us" || domain === "broadcast" || domain === "newsletter") {
+        result = `${local}@${domain}`;
+      } else if (domain === "lid") {
+        result = `${local}@lid`;
+      } else {
+        const numeric = normalizePhone(local);
+        result = `${numeric || local}@s.whatsapp.net`;
+      }
+    } else {
+      const numeric = normalizePhone(raw);
+      result = numeric ? `${numeric}@s.whatsapp.net` : "";
     }
-    if (domain === "lid") return `${local}@lid`;
-    const numeric = normalizePhone(local);
-    return `${numeric || local}@s.whatsapp.net`;
   }
 
-  const numeric = normalizePhone(raw);
-  return numeric ? `${numeric}@s.whatsapp.net` : "";
+  if (JID_CACHE.size >= MAX_JID_CACHE) {
+    const firstKey = JID_CACHE.keys().next().value;
+    if (firstKey) JID_CACHE.delete(firstKey);
+  }
+  JID_CACHE.set(raw, result);
+  return result;
 }
 
 export function toJidList(values) {

@@ -1,10 +1,8 @@
-import crypto from "node:crypto";
-
 const DEFAULT_TTL_MS = 15 * 60 * 1000;
 const MAX_ENTRIES = 500;
 const store = new Map();
 
-function normalizePrompt(prompt) {
+export function normalizePrompt(prompt) {
   if (!prompt || typeof prompt !== "string") return "";
   return prompt
     .toLowerCase()
@@ -13,13 +11,20 @@ function normalizePrompt(prompt) {
     .trim();
 }
 
+function fnv1a(str) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16);
+}
+
 function keyOf(prompt, options = {}) {
   const norm = normalizePrompt(prompt);
-  const h = JSON.stringify(options.history || []);
-  return crypto
-    .createHash("sha1")
-    .update(`${options.prefer || "auto"}|${norm}|${h ? h.slice(0, 150) : ""}`)
-    .digest("hex");
+  const p = options.prefer || "auto";
+  const h = options.history ? (Array.isArray(options.history) ? options.history.length : 0) : 0;
+  return `${p}|${h}|${fnv1a(norm)}`;
 }
 
 export function cacheGet(prompt, options = {}) {
