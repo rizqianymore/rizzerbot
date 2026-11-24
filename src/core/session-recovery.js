@@ -154,6 +154,50 @@ export async function emergencyResetAllSessions(sock) {
 
 export const SESSION_FAILURE_THRESHOLD = MAX_SESSION_FAILURES;
 
+/**
+ * Membersihkan file pre-key dan app-state sync usang untuk mencegah
+ * ribuan file menumpuk dan memperlambat I/O disk.
+ */
+export function cleanOldPreKeys({ authDir, maxAgeDays = 7, logger: customLogger } = {}) {
+  const log = customLogger || logger;
+  const targetDir = authDir || path.resolve(process.cwd(), "assets", "sessions", "primary_bot");
+  if (!fs.existsSync(targetDir)) return { deletedCount: 0, freedBytes: 0 };
+
+  const now = Date.now();
+  const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+  let deletedCount = 0;
+  let freedBytes = 0;
+
+  try {
+    const files = fs.readdirSync(targetDir);
+    for (const file of files) {
+      // Hanya bersihkan pre-key atau app-state-sync lama, JANGAN pernah sentuh creds.json atau app-state-sync-version
+      if (
+        (file.startsWith("pre-key-") || file.startsWith("sender-key-status@broadcast") || file.startsWith("app-state-sync-key-")) &&
+        file.endsWith(".json")
+      ) {
+        const filePath = path.join(targetDir, file);
+        try {
+          const stat = fs.statSync(filePath);
+          if (now - stat.mtimeMs > maxAgeMs) {
+            freedBytes += stat.size || 0;
+            fs.unlinkSync(filePath);
+            deletedCount++;
+          }
+        } catch (_) {}
+      }
+    }
+    if (deletedCount > 0) {
+      const mb = (freedBytes / (1024 * 1024)).toFixed(2);
+      log?.info?.(`[Session Cleaner] Berhasil merotasi ${deletedCount} pre-key/sync-key usang (> ${maxAgeDays} hari, ${mb} MB).`);
+    }
+  } catch (err) {
+    log?.warn?.(`[Session Cleaner] Gagal rotasi pre-key sesi: ${err?.message || err}`);
+  }
+
+  return { deletedCount, freedBytes };
+}
+
 export function getSessionRecoveryStats() {
   const now = Date.now();
   const stats = {

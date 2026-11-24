@@ -27,12 +27,14 @@ const TASK_TIMEOUT_MS = 60000;
 
 async function runTask(key, task, logger) {
   const { sock, msg } = task;
+  let timer;
   try {
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Queue task execution timeout (60s)")), TASK_TIMEOUT_MS);
+    });
     await Promise.race([
       db.runWithBot(getTaskBotJid(sock), () => handleMessage(sock, msg, logger)),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Queue task execution timeout (60s)")), TASK_TIMEOUT_MS)
-      ),
+      timeoutPromise,
     ]);
   } catch (err) {
     if (logger) {
@@ -40,6 +42,8 @@ async function runTask(key, task, logger) {
     } else {
       console.error(`[Queue Error] Failed to handle message in ${key}:`, err?.message || err);
     }
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 

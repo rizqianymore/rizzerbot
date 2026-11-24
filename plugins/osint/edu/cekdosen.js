@@ -12,10 +12,13 @@ export default {
     const currentPrefix = prefix || ".";
     const input = (args || []).join(" ").trim();
 
-    if (!input) {
+    if (!input || input.length < 2) {
       return reply(
-        `Masukkan nama atau NIDN! Contoh: \`${currentPrefix}cekdosen 2013119103\`\n` +
-          `Cari nama: \`${currentPrefix}cekdosen PUSPA NOVITA SARI\``
+        `*CEK DOSEN — PDDIKTI*\n\n` +
+          `Masukkan nama dosen atau NIDN (minimal 2 karakter).\n\n` +
+          `*Contoh:*\n` +
+          `│ \`${currentPrefix}cekdosen 2013119103\`\n` +
+          `│ \`${currentPrefix}cekdosen PUSPA NOVITA SARI\``
       );
     }
 

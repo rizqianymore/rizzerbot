@@ -12,10 +12,13 @@ export default {
     const currentPrefix = prefix || ".";
     const input = (args || []).join(" ").trim();
 
-    if (!input) {
+    if (!input || input.length < 2) {
       return reply(
-        `Masukkan nama atau NIM! Contoh: \`${currentPrefix}ceknim 201311413\`\n` +
-          `Cari nama: \`${currentPrefix}ceknim Raka\``
+        `*CEK MAHASISWA — PDDIKTI*\n\n` +
+          `Masukkan nama mahasiswa atau NIM (minimal 2 karakter).\n\n` +
+          `*Contoh:*\n` +
+          `│ \`${currentPrefix}ceknim 201311413\`\n` +
+          `│ \`${currentPrefix}ceknim Raka Pratama\``
       );
     }
 

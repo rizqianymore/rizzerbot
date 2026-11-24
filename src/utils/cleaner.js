@@ -160,6 +160,11 @@ export function autoCleanSessionCache(logger) {
         .then(({ cleanupExpiredCache }) => cleanupExpiredCache())
         .catch(() => {});
     } catch (_) {}
+    try {
+      import("@/src/core/session-recovery.js")
+        .then(({ cleanOldPreKeys }) => cleanOldPreKeys({ logger }))
+        .catch(() => {});
+    } catch (_) {}
     if (deletedCount > 0 && logger) {
       const mb = (freedBytes / (1024 * 1024)).toFixed(2);
       logger.info(`[System Auto Clean] Berhasil menghapus ${deletedCount} file sampah/cache sesi (${mb} MB).`);

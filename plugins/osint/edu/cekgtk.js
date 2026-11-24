@@ -12,10 +12,10 @@ export default {
     const currentPrefix = prefix || ".";
     const input = (args || []).join(" ").trim();
 
-    if (!input) {
+    if (!input || input.length < 3) {
       return reply(
         `*CEK GTK / GURU — SIMPKB*\n\n` +
-          `Masukkan Nama GTK, No. UKG (SIMPKB-ID), NUPTK, atau NIK.\n\n` +
+          `Masukkan Nama GTK, No. UKG (SIMPKB-ID), NUPTK, atau NIK (minimal 3 karakter).\n\n` +
           `*Contoh:*\n` +
           `│ \`${currentPrefix}cekgtk ROSYANTO\`\n` +
           `│ \`${currentPrefix}cekgtk 201698552239\`\n` +
