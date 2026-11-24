@@ -16,7 +16,7 @@ function renderModelList(prefix = ".") {
   return (
     `*DAFTAR MODEL META MUSE*\n\n` +
     items.join("\n\n") +
-    `\n\nTips: Ketik \`${prefix}muse <pertanyaan>\` untuk memakai default (*Muse Spark*).`
+    `\n\nKetik \`${prefix}muse <pertanyaan>\` untuk memakai default (Muse Spark).`
   );
 }
 
@@ -26,7 +26,7 @@ function formatMuseReply(result) {
 
   if (result.usage) {
     const u = result.usage;
-    replyText += `\n\n_📊 Tokens: ${u.total_tokens || 0} (Prompt: ${u.prompt_tokens || 0} · Output: ${u.completion_tokens || 0})_`;
+    replyText += `\n\nTokens: ${u.total_tokens || 0} (Prompt: ${u.prompt_tokens || 0} | Output: ${u.completion_tokens || 0})`;
   }
 
   return replyText;
@@ -46,17 +46,17 @@ export default {
 
     if (!args || args.length === 0) {
       return reply(
-        `*MUSE CODE / META AI (HUMANIZED & TOKEN COUNT)*\n\n` +
-        `Format Penggunaan:\n` +
-        `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
-        `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
-        `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
-        `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
-        `│ *${p}muse models* (lihat daftar model)\n\n` +
-        `Fitur:\n` +
-        `│ • Real-time Token Counter (Prompt + Output Tokens)\n` +
-        `│ • Humanized Filter (bahasa alami, bebas klise AI)\n` +
-        `│ • Anti-Detection Browser Masking`
+        `*MUSE CODE / META AI*\n\n` +
+          `Format Penggunaan:\n` +
+          `│ *${p}muse <pertanyaan>* (default: Muse Spark)\n` +
+          `│ *${p}muse --spark <pertanyaan>* (fast reasoning & coding)\n` +
+          `│ *${p}muse --wonder <pertanyaan>* (deep analysis mode)\n` +
+          `│ *${p}muse --llama <pertanyaan>* (Llama 3.3 70B general)\n` +
+          `│ *${p}muse models* (lihat daftar model)\n\n` +
+          `Catatan:\n` +
+          `│ • Real-time Token Counter (Prompt + Output Tokens)\n` +
+          `│ • Humanized Response Filter\n` +
+          `│ • Advanced Browser Masking`
       );
     }
 
@@ -92,8 +92,8 @@ export default {
       const selected = resolveMuseModel(targetModel);
       return reply(
         `*MODEL DIPILIH: ${selected.name}*\n\n` +
-        `Silakan masukkan pertanyaan setelah nama model.\n` +
-        `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
+          `Silakan masukkan pertanyaan setelah nama model.\n` +
+          `Contoh: *${p}muse ${first} buatkan algoritma Dijkstra di JavaScript*`
       );
     }
 
