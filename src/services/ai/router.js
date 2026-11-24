@@ -6,10 +6,12 @@ import { askGroq, groqCapabilities, isGroqConfigured } from "../ai-keyed/groq.js
 import { askOpenRouter, isOpenRouterConfigured } from "../ai-keyed/openrouter.js";
 import { askZen, ZEN_FREE } from "../ai-keyed/opencode-zen.js";
 import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } from "./aiscrape.js";
+import { askMuseWeb, museCapabilities } from "./muse-web.js";
 
 export const AI_SOURCES = {
   pollinations: { tier: 1, run: askPollinations, caps: pollinationsCapabilities, label: "Pollinations Public" },
   opencode: { tier: 1, run: askOpenCode, caps: opencodeCapabilities, label: "OpenCode Zen Free" },
+  muse: { tier: 1, run: askMuseWeb, caps: museCapabilities, label: "Meta Muse Web (SSE)" },
   r1: { tier: 3, run: scrapeDeepSeekR1, caps: { history: false }, label: "DeepSeek R1 (scrape)" },
   duckai: { tier: 3, run: scrapeDuckAI, caps: { history: false }, label: "DuckAI (scrape)" },
   meta: { tier: 3, run: scrapeMetaAI, caps: { history: false }, label: "Meta AI (scrape)" },
@@ -31,6 +33,10 @@ const ALIASES = {
   duck: "duckai",
   duckduckgo: "duckai",
   ddg: "duckai",
+
+  muse: "muse",
+  museweb: "muse",
+  musecode: "muse",
 
   meta: "meta",
   metaai: "meta",
