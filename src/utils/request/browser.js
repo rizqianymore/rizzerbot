@@ -11,7 +11,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => undefined });
 
-      window.chrome = { runtime: {}, loadTimes: () => {}, csi: () => {}, app: {} };
+      window.chrome = { runtime: {}, loadTimes: () => { }, csi: () => { }, app: {} };
 
       Object.defineProperty(navigator, "plugins", {
         get: () => [1, 2, 3, 4, 5],
@@ -20,6 +20,20 @@ export class StealthBrowserManager extends StealthBrowserCore {
       Object.defineProperty(navigator, "languages", {
         get: () => ["id-ID", "id", "en-US", "en"],
       });
+
+      Object.defineProperty(navigator, "hardwareConcurrency", {
+        get: () => 8,
+      });
+
+      Object.defineProperty(navigator, "deviceMemory", {
+        get: () => 8,
+      });
+
+      const originalQuery = window.navigator.permissions.query;
+      window.navigator.permissions.query = (parameters) =>
+        parameters.name === "notifications"
+          ? Promise.resolve({ state: Notification.permission })
+          : originalQuery(parameters);
     });
     return d;
   }
@@ -33,7 +47,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
         const [name, ...rest] = pair.split("=");
         return { name: name.trim(), value: rest.join("=").trim(), domain: u.hostname };
       });
-      await page.setCookie(...cookieObjects).catch(() => {});
+      await page.setCookie(...cookieObjects).catch(() => { });
     })();
   }
 
@@ -69,12 +83,12 @@ export class StealthBrowserManager extends StealthBrowserCore {
             url.includes("doubleclick.net") ||
             url.includes("facebook.net")
           ) {
-            req.abort().catch(() => {});
+            req.abort().catch(() => { });
           } else {
-            req.continue().catch(() => {});
+            req.continue().catch(() => { });
           }
         });
-      } catch (_) {}
+      } catch (_) { }
     }
 
     await page.goto(targetUrl, {
@@ -97,7 +111,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
             cookies,
           };
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     const verdict = await waitForClearance(page, { timeoutMs });
@@ -144,7 +158,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
             let parsed = null;
             try {
               parsed = JSON.parse(text);
-            } catch (_) {}
+            } catch (_) { }
             return {
               ok: resp.ok,
               status: resp.status,
