@@ -89,9 +89,9 @@ export async function handleCustomCase(
     case "myrole":
       return reply(
         `*STATUS ROLE ANDA:*\n` +
-          `Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
-          `Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
-          `Premium: ${isPremium ? "Ya" : "Bukan"}`
+        `Owner: ${isOwner ? "Ya" : "Bukan"}\n` +
+        `Admin: ${isAdmin ? "Ya" : "Bukan"}\n` +
+        `Premium: ${isPremium ? "Ya" : "Bukan"}`
       );
 
     default:
