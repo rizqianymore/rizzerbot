@@ -187,7 +187,10 @@ export async function unifiedDownload(
   if (/tiktok\.com|douyin\.com/i.test(lower)) {
     try {
       const { downloadViaSnaptik } = await import("./snaptik.js");
-      const snap = await downloadViaSnaptik(targetUrl, { isAudio });
+      const snap = await Promise.race([
+        downloadViaSnaptik(targetUrl, { isAudio }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Snaptik timeout (7s)")), 7000)),
+      ]);
       if (snap?.buffer?.length > 100) {
         rawBuffer = snap.buffer;
         info = snap.info;
@@ -204,10 +207,13 @@ export async function unifiedDownload(
       const { request } = await import("@/src/utils/request.js");
       if (/tiktok\.com/i.test(lower)) {
         const { downloadTiktok } = await import("./kolid.js");
-        const kd = await downloadTiktok(targetUrl);
+        const kd = await Promise.race([
+          downloadTiktok(targetUrl),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Kol.id TikTok timeout (7s)")), 7000)),
+        ]);
         const targetDl = isAudio ? kd?.mp3 : kd?.noWatermark || kd?.watermark;
         if (targetDl) {
-          const buf = await request.buffer(targetDl, { timeout: 15000, bypassCloudflare: "auto" });
+          const buf = await request.buffer(targetDl, { timeout: 12000, bypassCloudflare: "auto" });
           if (buf?.length > 100) {
             rawBuffer = buf;
             info = { title: kd.title, uploader: kd.author, duration: kd.duration };
@@ -216,10 +222,13 @@ export async function unifiedDownload(
         }
       } else if (/instagram\.com/i.test(lower)) {
         const { downloadInstagram } = await import("./kolid.js");
-        const kd = await downloadInstagram(targetUrl);
+        const kd = await Promise.race([
+          downloadInstagram(targetUrl),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Kol.id Instagram timeout (7s)")), 7000)),
+        ]);
         const firstMedia = kd?.media?.[0]?.url;
         if (firstMedia) {
-          const buf = await request.buffer(firstMedia, { timeout: 15000, bypassCloudflare: "auto" });
+          const buf = await request.buffer(firstMedia, { timeout: 12000, bypassCloudflare: "auto" });
           if (buf?.length > 100) {
             rawBuffer = buf;
             info = { title: kd.title, uploader: kd.username };
@@ -228,9 +237,12 @@ export async function unifiedDownload(
         }
       } else if (/youtube\.com|youtu\.be/i.test(lower)) {
         const { downloadYoutube } = await import("./kolid.js");
-        const kd = await downloadYoutube(targetUrl);
+        const kd = await Promise.race([
+          downloadYoutube(targetUrl),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Kol.id YouTube timeout (8s)")), 8000)),
+        ]);
         if (kd?.videoUrl) {
-          const buf = await request.buffer(kd.videoUrl, { timeout: 20000, bypassCloudflare: "auto" });
+          const buf = await request.buffer(kd.videoUrl, { timeout: 15000, bypassCloudflare: "auto" });
           if (buf?.length > 100) {
             rawBuffer = buf;
             info = { title: kd.title, uploader: kd.channelName, duration: kd.duration };
@@ -247,7 +259,7 @@ export async function unifiedDownload(
   if (!rawBuffer) {
     try {
       const { downloadSocialMedia } = await import("./socialdownloader.js");
-      const sd = await downloadSocialMedia(targetUrl, { isAudio, logger, timeout: 8000, downloadTimeout: 15000 });
+      const sd = await downloadSocialMedia(targetUrl, { isAudio, logger, timeout: 6000, downloadTimeout: 12000 });
       if (sd?.buffer?.length > 100) {
         rawBuffer = sd.buffer;
         info = sd.info;
