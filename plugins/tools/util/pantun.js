@@ -12,7 +12,7 @@ export default {
   aliases: ["pantunjawa", "pantunjenaka", "berpantun"],
   description: "Generator pantun nusantara (nasehat, jenaka, dan motivasi) rima a-b-a-b",
   usage: "",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

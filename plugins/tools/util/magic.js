@@ -76,7 +76,7 @@ export default {
   aliases: ["filetype", "identifyfile", "magicbytes"],
   description: "Deteksi tipe asli file berdasarkan header biner Magic Bytes (Anti-Spoofing File)",
   usage: "(reply dokumen/media apa saja)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 3000,
   run: async (sock, msg, _args, context) => {
     const target = findDownloadableTarget(msg);

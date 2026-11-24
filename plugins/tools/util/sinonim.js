@@ -5,7 +5,7 @@ export default {
   aliases: ["tesaurus", "antonim", "persamaankata"],
   description: "Pencarian persamaan kata (sinonim) dan lawan kata (antonim) bahasa Indonesia",
   usage: "<kata>",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const kata = (args[0] || "").toLowerCase().trim();

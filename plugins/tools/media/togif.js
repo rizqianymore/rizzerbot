@@ -12,7 +12,7 @@ export default {
   aliases: ["gif", "videotogif"],
   description: "Convert video ke GIF (reply video, max 10 detik)",
   usage: "(reply video)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

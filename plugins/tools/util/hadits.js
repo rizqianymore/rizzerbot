@@ -5,7 +5,7 @@ export default {
   aliases: ["hadist", "shahih"],
   description: "Pencarian hadits shahih (Bukhari, Muslim, Abu Dawud, Tirmidzi, dll)",
   usage: "<perawi> <nomor hadits>",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 3000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const p = prefix || ".";

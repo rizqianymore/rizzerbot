@@ -12,7 +12,7 @@ export default {
   aliases: ["toaudio", "mp3", "tomp3dl"],
   description: "Convert video/audio/sticker ke MP3 (reply media)",
   usage: "(reply video/audio/voice)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

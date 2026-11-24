@@ -5,7 +5,7 @@ export default {
   aliases: ["surah", "ayat", "alquran"],
   description: "Tampilkan surat dan ayat Al-Qur'an lengkap (teks Arab, Latin, dan terjemahan Kemenag)",
   usage: "<nomor surat / nama surat> [nomor ayat]",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 3000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const p = prefix || ".";

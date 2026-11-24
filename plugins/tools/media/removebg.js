@@ -5,7 +5,7 @@ export default {
   aliases: ["nobg", "hapusbg", "bgremove"],
   description: "Hapus background gambar (reply gambar)",
   usage: "(reply gambar)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

@@ -5,7 +5,7 @@ export default {
   aliases: ["doaharian", "kumpurandoa"],
   description: "Kumpulan doa-doa harian lengkap beserta teks latin dan artinya",
   usage: "[nama doa / cari]",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

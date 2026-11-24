@@ -59,7 +59,7 @@ export default {
   aliases: ["qrisinfo", "parseqris"],
   description: "Bedah payload QRIS (Merchant, Kota, NMID, Jenis) via EMVCo TLV parser murni",
   usage: "<string-qris> ATAU reply gambar QRIS",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 5000,
   run: async (sock, msg, args, context) => {
     let rawQris = args.join(" ").trim();

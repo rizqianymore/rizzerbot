@@ -43,7 +43,7 @@ export default {
   aliases: ["aeffect", "nightcore", "slowed", "robotvoice", "chipmunk", "audiofilter"],
   description: "Ubah efek suara audio atau video (nightcore, slowed, robot, reverse, chipmunk, echo, deep)",
   usage: "<efek> (reply audio/vn/video)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

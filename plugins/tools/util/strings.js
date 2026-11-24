@@ -49,7 +49,7 @@ export default {
   aliases: ["binstrings", "extractstrings", "dumpstrings"],
   description: "Ekstrak teks ASCII/URL/Token tersembunyi dari file biner (Forensik Biner)",
   usage: "(reply dokumen/audio/gambar/APK)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 5000,
   run: async (sock, msg, args, context) => {
     const target = findDownloadableTarget(msg);

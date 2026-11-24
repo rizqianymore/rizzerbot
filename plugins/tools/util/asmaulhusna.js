@@ -5,7 +5,7 @@ export default {
   aliases: ["asmaul", "asma"],
   description: "Menampilkan 99 Asmaul Husna beserta lafadz Arab, latin, dan artinya",
   usage: "[nomor 1-99 / nama]",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

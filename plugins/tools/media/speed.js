@@ -12,7 +12,7 @@ export default {
   aliases: ["fast", "tempo", "speeds"],
   description: "Ubah kecepatan video atau audio (0.5x sampai 2.0x)",
   usage: "<angka multiplier 0.5 - 2.0> (reply video atau audio)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

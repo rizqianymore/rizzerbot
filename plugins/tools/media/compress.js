@@ -12,7 +12,7 @@ export default {
   aliases: ["kecilkan", "kempes", "shrink"],
   description: "Kompres video/biar <8MB untuk WhatsApp",
   usage: "(reply video)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

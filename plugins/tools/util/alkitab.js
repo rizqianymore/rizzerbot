@@ -135,7 +135,7 @@ export default {
   aliases: ["injil", "bible", "ayatalkitab"],
   description: "Cari ayat dan pasal Alkitab / Injil (Terjemahan Baru - SABDA)",
   usage: "<nama kitab & pasal/ayat>\nContoh: .alkitab Yohanes 3:16",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 3000,
 
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

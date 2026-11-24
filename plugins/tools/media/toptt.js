@@ -12,7 +12,7 @@ export default {
   aliases: ["tovn", "ptt", "voicenote"],
   description: "Convert video/audio ke voice note (PTT opus)",
   usage: "(reply video/audio)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

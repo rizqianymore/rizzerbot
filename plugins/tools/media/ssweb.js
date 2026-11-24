@@ -13,7 +13,7 @@ export default {
   aliases: ["screenshot", "ss", "captureweb"],
   description: "Ambil tangkapan layar website secara headless via Puppeteer lokal",
   usage: "<url> atau .ssweb mobile <url>",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, context) => {
     let isMobile = false;

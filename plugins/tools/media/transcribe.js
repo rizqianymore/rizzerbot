@@ -6,7 +6,7 @@ export default {
   aliases: ["stt", "voicetotext", "vntotext", "notulen", "transkrip"],
   description: "Transkripsi pesan suara (VN) atau file audio menjadi teks menggunakan AI Whisper / Gemini",
   usage: "[reply VN/audio]",
-  category: "Tools & Media",
+  category: "Tools",
   premiumOnly: true,
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {

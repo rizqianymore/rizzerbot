@@ -5,7 +5,7 @@ export default {
   aliases: ["nabi", "ceritanabi"],
   description: "Kisah inspiratif dan mukjizat 25 Nabi dan Rasul Allah",
   usage: "<nama nabi>",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 3000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const p = prefix || ".";

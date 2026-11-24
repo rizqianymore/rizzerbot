@@ -12,7 +12,7 @@ export default {
   aliases: ["unmuteaudio", "removeaudio", "hilangsuara"],
   description: "Hapus suara (audio track) dari file video sehingga menjadi video hening / tanpa suara",
   usage: "(reply video)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

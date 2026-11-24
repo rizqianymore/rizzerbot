@@ -38,7 +38,7 @@ export default {
   aliases: ["pepatah", "ungkapan"],
   description: "Cari arti dan makna peribahasa nusantara",
   usage: "[kata kunci (opsional)]",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

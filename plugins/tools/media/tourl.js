@@ -21,7 +21,7 @@ export default {
   aliases: ["upload", "tolink", "uploadfile", "catbox", "quax"],
   description: "Upload gambar, video, audio, atau dokumen ke URL publik offshore (Catbox / Qu.ax / Uguu)",
   usage: "[reply media]",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

@@ -30,7 +30,7 @@ export default {
   aliases: ["quotes", "motivasi", "kutipan"],
   description: "Kumpulan kutipan kata bijak, motivasi hidup, dan filosofi tokoh dunia",
   usage: "",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();

@@ -12,7 +12,7 @@ export default {
   aliases: ["videoreverse", "putarbalik"],
   description: "Putar balik video dan audio secara bersamaan (reverse playback)",
   usage: "(reply video pendek)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 8000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     await sendTyping();

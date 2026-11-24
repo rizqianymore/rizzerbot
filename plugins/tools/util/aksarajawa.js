@@ -73,7 +73,7 @@ export default {
   aliases: ["carakan", "jawa", "hanacaraka"],
   description: "Konversi teks tulisan latin ke Aksara Jawa (Hanacaraka)",
   usage: "<teks latin>",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 2000,
   run: async (sock, msg, args, { reply, sendTyping, prefix }) => {
     const text = args.join(" ").trim();

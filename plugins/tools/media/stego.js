@@ -6,7 +6,7 @@ export default {
   aliases: ["sisip", "sembunyi", "unstego", "bacastego"],
   description: "Steganografi foto LSB: Sembunyikan & baca pesan rahasia di dalam pixel gambar (100% lokal)",
   usage: "<pesan> (reply foto) ATAU ketik .unstego (reply foto)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 5000,
   run: async (sock, msg, args, context) => {
     const isUnstego = context.commandName === "unstego" || context.commandName === "bacastego";

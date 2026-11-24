@@ -6,7 +6,7 @@ export default {
   aliases: ["hd4x", "remini", "hdpro", "enhance"],
   description: "Upscale image 4x (HD Pro)",
   usage: "(reply gambar)",
-  category: "Tools & Media",
+  category: "Tools",
   cooldownMs: 15000,
   run: async (sock, msg, args, { reply, sendTyping }) => {
     await sendTyping();
