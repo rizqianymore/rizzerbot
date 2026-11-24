@@ -53,7 +53,7 @@ export async function runChat(prompt, opts = {}) {
 }
 
 export function formatReply(result) {
-  const tag = result.cached ? " ⚡cache" : "";
+  const tag = result.cached ? " (cached)" : "";
   const header = `*AI (${result.model || String(result.source).toUpperCase()})*${tag}`;
   return `${header}\n\n${result.text}`;
 }
