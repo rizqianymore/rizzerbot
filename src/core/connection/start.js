@@ -51,11 +51,8 @@ export async function startBot() {
     const activeSettings = db.getSettings();
 
     if (!connectionState.isPluginsLoaded) {
-      loadPlugins()
-        .then(() => {
-          connectionState.isPluginsLoaded = true;
-        })
-        .catch((e) => logger.error("Plugin load error:", e));
+      await loadPlugins();
+      connectionState.isPluginsLoaded = true;
     }
 
     if (!connectionState.cleanIntervalStarted) {
