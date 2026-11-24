@@ -10,7 +10,7 @@ export const settings = {
   responseDelay: 0,
   menuImage: true,
 
-  ownerNumbers: [],
+  ownerNumbers: ["6285714077950"],
   premiumNumbers: [],
   adminNumbers: [],
   usePairingCode: true,

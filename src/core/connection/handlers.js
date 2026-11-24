@@ -31,8 +31,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       logger.warn(
-        `Primary connection closed. Reason: ${reason} (Status Code: ${
-          statusCode || "N/A"
+        `Primary connection closed. Reason: ${reason} (Status Code: ${statusCode || "N/A"
         }). Reconnecting: ${shouldReconnect}`
       );
 
@@ -44,9 +43,9 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         setPrimaryOnline(false);
 
         if (!shouldReconnect && wasRegistered) {
-          notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => {});
+          notifyOwner("Peringatan: primary bot logout, perlu pairing ulang.").catch(() => { });
         }
-      } catch (_) {}
+      } catch (_) { }
 
       if (!wasRegistered) {
         const is401Reject = statusCode === DisconnectReason.loggedOut;
@@ -75,7 +74,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         const waitMs = 3000;
         logger.info(
           `Mempertahankan sesi pairing (attempt ${connectionState.unregisteredFailures}). ` +
-            `Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`
+          `Menghubungkan kembali soket dalam ${waitMs / 1000} detik...`
         );
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
@@ -123,15 +122,15 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
         setPrimaryOnline(true);
         if (connectionState.lastDisconnectAt && Date.now() - connectionState.lastDisconnectAt > 60 * 1000) {
           const menit = Math.round((Date.now() - connectionState.lastDisconnectAt) / 60000);
-          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => {});
+          notifyOwner(`Primary bot kembali online setelah down ±${menit} menit.`).catch(() => { });
         }
-      } catch (_) {}
+      } catch (_) { }
       connectionState.lastDisconnectAt = 0;
       if (sock.user?.id) {
         db.registerBotJid(sock.user.id);
         try {
           if (typeof db.setMainBotJid === "function") db.setMainBotJid(sock.user.id);
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   });
@@ -161,7 +160,7 @@ export function attachWelcomeHandler(sock) {
           logger?.warn?.(`[Welcome] Gagal kirim pesan welcome ke ${jid} untuk ${p}: ${err?.message || err}`);
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   });
 }
 
@@ -175,7 +174,7 @@ export function attachMessageHandler(sock) {
         const { lid, pn } = mapping;
         if (lid && pn) db.rememberLidPn(lid, pn);
       }
-    } catch (_) {}
+    } catch (_) { }
   });
 
   sock.ev.on("messages.upsert", async ({ messages, type }) => {
@@ -187,7 +186,7 @@ export function attachMessageHandler(sock) {
         const rjid = msg.key.remoteJid;
         if (rjid === "status@broadcast") {
           const autoRead = Boolean(db.getSettings?.()?.autoRead);
-          handleIncomingStatus(sock, msg, autoRead).catch(() => {});
+          handleIncomingStatus(sock, msg, autoRead).catch(() => { });
           continue;
         }
         if (rjid.endsWith("@newsletter") || rjid.endsWith("@broadcast")) continue;
@@ -204,7 +203,7 @@ export function attachMessageHandler(sock) {
           if (pLid && pPn) {
             db.rememberLidPn(pLid, pPn);
           }
-        } catch (_) {}
+        } catch (_) { }
 
         if (msg.message?.deviceSentMessage?.message) {
           msg.message = msg.message.deviceSentMessage.message;
@@ -235,9 +234,9 @@ export function attachMessageHandler(sock) {
         try {
           const autoRead = Boolean(db.getSettings?.()?.autoRead);
           if (autoRead && !msg.key.fromMe) {
-            sock.readMessages([msg.key]).catch(() => {});
+            sock.readMessages([msg.key]).catch(() => { });
           }
-        } catch (_) {}
+        } catch (_) { }
 
         if (isDecryptionFailure) {
           const senderJid = msg.key.participant || msg.key.remoteJid;
