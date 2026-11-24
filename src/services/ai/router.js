@@ -13,20 +13,15 @@ import { scrapeDeepSeekR1, scrapeDuckAI, scrapeMetaAI, SCRAPE_NODE_ENABLED } fro
 import { askMuseWeb, museCapabilities } from "./muse-web.js";
 
 export const AI_SOURCES = {
-  pollinations: { tier: 1, run: askPollinations, caps: pollinationsCapabilities, label: "Pollinations Public" },
-  opencode: { tier: 1, run: askOpenCode, caps: opencodeCapabilities, label: "OpenCode Zen Free" },
   muse: { tier: 1, run: askMuseWeb, caps: museCapabilities, label: "Meta Muse Web (SSE)" },
   gemini: { tier: 2, run: askGemini, caps: { history: true }, label: "Google Gemini API" },
-  cerebras: { tier: 2, run: askCerebras, caps: { history: true }, label: "Cerebras Fast LLM" },
   groq: { tier: 2, run: askGroq, caps: groqCapabilities, label: "Groq Ultra-Fast API" },
+  cerebras: { tier: 2, run: askCerebras, caps: { history: true }, label: "Cerebras Fast LLM" },
   deepseek: { tier: 2, run: askDeepSeek, caps: deepseekCapabilities, label: "DeepSeek API" },
   mistral: { tier: 2, run: askMistral, caps: { history: true }, label: "Mistral AI API" },
   nvidia: { tier: 2, run: askNvidia, caps: { history: true }, label: "NVIDIA NIM API" },
-  zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
   openrouter: { tier: 2, run: askOpenRouter, caps: { history: true }, label: "OpenRouter Free" },
-  r1: { tier: 3, run: scrapeDeepSeekR1, caps: { history: false }, label: "DeepSeek R1 (scrape)" },
-  duckai: { tier: 3, run: scrapeDuckAI, caps: { history: false }, label: "DuckAI (scrape)" },
-  meta: { tier: 3, run: scrapeMetaAI, caps: { history: false }, label: "Meta AI (scrape)" },
+  zen: { tier: 2, run: askZen, caps: { history: true }, label: "OpenCode Zen Pro" },
 };
 
 const ALIASES = {
