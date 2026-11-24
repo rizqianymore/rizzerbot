@@ -48,12 +48,13 @@ async function dispatchInner(sock, msg, logger) {
     return;
   }
 
-  const rawTypeKeys = msg.message ? Object.keys(msg.message) : [];
+  const rawMsg = msg.message;
   if (
-    rawTypeKeys.length === 1 &&
-    (rawTypeKeys[0] === "protocolMessage" ||
-      rawTypeKeys[0] === "reactionMessage" ||
-      rawTypeKeys[0] === "pollUpdateMessage")
+    rawMsg &&
+    (rawMsg.protocolMessage ||
+      rawMsg.reactionMessage ||
+      rawMsg.pollUpdateMessage ||
+      rawMsg.senderKeyDistributionMessage)
   ) {
     return;
   }

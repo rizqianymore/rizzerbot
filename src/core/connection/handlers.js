@@ -209,13 +209,16 @@ export function attachMessageHandler(sock) {
           msg.message = msg.message.deviceSentMessage.message;
         }
 
-        if (msg.message) {
-          const keys = Object.keys(msg.message);
+        const rawMsg = msg.message;
+        if (rawMsg) {
           if (
-            keys.length === 1 &&
-            (keys[0] === "protocolMessage" || keys[0] === "reactionMessage" || keys[0] === "pollUpdateMessage")
-          )
+            rawMsg.protocolMessage ||
+            rawMsg.reactionMessage ||
+            rawMsg.pollUpdateMessage ||
+            rawMsg.senderKeyDistributionMessage
+          ) {
             continue;
+          }
         }
 
         const stubType = Number(msg.messageStubType) || 0;
