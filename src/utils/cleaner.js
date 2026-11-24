@@ -26,15 +26,15 @@ export function cleanRootJunkFiles() {
             fs.unlinkSync(filePath);
             count++;
           }
-        } catch (_) {}
+        } catch (_) { }
       }
     }
-  } catch (_) {}
+  } catch (_) { }
 
   return { count, bytes };
 }
 
-export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
+export function cleanTempFiles({ maxAgeMs = 15 * 60 * 1000 } = {}) {
   const pathsToClean = [
     path.join(__dirname, "..", "..", "assets", "media"),
     path.join(__dirname, "..", "..", "assets", "cache"),
@@ -83,7 +83,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
                 }
               }
             }
-          } catch (_) {}
+          } catch (_) { }
         } else if (isCacheDir) {
           if (item === ".gitkeep" || item === "session_cookies.json") continue;
           if (maxAgeMs <= 0 || now - stat.mtimeMs > maxAgeMs) {
@@ -103,7 +103,7 @@ export function cleanTempFiles({ maxAgeMs = 2 * 60 * 60 * 1000 } = {}) {
           }
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   const statusClean = cleanStatusArchives({ now });
@@ -134,9 +134,9 @@ export function cleanStatusArchives({ maxAgeMs = 24 * 60 * 60 * 1000, now = Date
             fs.unlinkSync(sfilePath);
             deletedCount++;
           }
-        } catch (_) {}
+        } catch (_) { }
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return { deletedCount, freedBytes, totalFiles };
@@ -189,9 +189,9 @@ function pruneOldSnapshots(backupDir, logger) {
           fs.unlinkSync(full);
           pruned++;
         }
-      } catch (_) {}
+      } catch (_) { }
     }
-  } catch (_) {}
+  } catch (_) { }
   if (pruned > 0 && logger) {
     logger.info(`[Auto Backup] Rotasi: membuang ${pruned} snapshot lama (>${SNAPSHOT_RETENTION_DAYS} hari).`);
   }
@@ -230,7 +230,7 @@ export function periodicDatabaseSnapshot(logger) {
           snap(path.join(subDir, entry, "users.json"), `sub-${digits}-snapshot`);
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     pruneOldSnapshots(backupDir, logger);
   } catch (err) {
@@ -249,22 +249,22 @@ export function cleanOrphanChromeProcesses(logger) {
           }
         });
       })
-      .catch(() => {});
-  } catch (_) {}
+      .catch(() => { });
+  } catch (_) { }
 }
 
 export function startAutoCleanInterval(logger) {
   try {
     clearAllCache({ logger });
     periodicDatabaseSnapshot(logger);
-  } catch (_) {}
+  } catch (_) { }
 
   const AUTO_CLEAN_INTERVAL_MS = 15 * 60 * 1000;
   const timer = setInterval(() => {
     try {
       clearAllCache({ logger });
       periodicDatabaseSnapshot(logger);
-    } catch (_) {}
+    } catch (_) { }
   }, AUTO_CLEAN_INTERVAL_MS);
 
   if (timer && typeof timer.unref === "function") {

@@ -8,8 +8,8 @@
     "@/*": "./*"
   },
   "scripts": {
-    "start": "node index.js",
-    "start:termux": "BROWSER_DISABLED=1 node index.js",
+    "start": "node --max-old-space-size=512 index.js",
+    "start:termux": "BROWSER_DISABLED=1 node --max-old-space-size=256 index.js",
     "setup:termux": "bash scripts/termux-setup.sh",
     "termux:run": "bash scripts/termux-run.sh",
     "update": "bash scripts/update.sh",
