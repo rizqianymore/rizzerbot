@@ -2,6 +2,45 @@ import { AI_TIMEOUT_MS, AIError, mkWaiter } from "./util.js";
 
 const GRAPHQL_ENDPOINT = "https://graph.meta.ai/graphql";
 
+export const MUSE_MODELS = {
+  "muse-spark": {
+    id: "muse-spark",
+    name: "Muse Spark (Fast Reasoning & Code)",
+    docId: "7771747806240098",
+    aliases: ["spark", "fast", "speed", "code"],
+    promptPrefix: "[System: Muse Spark Fast Mode]\n",
+    description: "Model cepat berfokus pada penalaran coding dan eksekusi instruksi ringkas.",
+  },
+  "muse-wonder": {
+    id: "muse-wonder",
+    name: "Muse Wonder (Deep Reasoning & Analysis)",
+    docId: "7771747806240098",
+    aliases: ["wonder", "deep", "think", "analysis"],
+    promptPrefix: "[System: Muse Wonder Deep Analysis Mode]\n",
+    description: "Model analisis mendalam untuk pemecahan masalah rumit, logika, dan arsitektur.",
+  },
+  "llama-3.3-70b": {
+    id: "llama-3.3-70b",
+    name: "Llama 3.3 70B (General Chat)",
+    docId: "7771747806240098",
+    aliases: ["llama", "llama3", "llama70b", "general", "chat"],
+    promptPrefix: "",
+    description: "Model serbaguna untuk percakapan natural dan tanya jawab umum.",
+  },
+};
+
+export const DEFAULT_MUSE_MODEL = "muse-spark";
+
+export function resolveMuseModel(input) {
+  if (!input) return MUSE_MODELS[DEFAULT_MUSE_MODEL];
+  const query = String(input).trim().toLowerCase().replace(/^--?/, "");
+  if (MUSE_MODELS[query]) return MUSE_MODELS[query];
+  for (const model of Object.values(MUSE_MODELS)) {
+    if (model.aliases.includes(query)) return model;
+  }
+  return MUSE_MODELS[DEFAULT_MUSE_MODEL];
+}
+
 export function isMuseConfigured() {
   return Boolean(process.env.MUSE_COOKIE || process.env.META_COOKIE);
 }
@@ -18,7 +57,7 @@ export function parseCookies(rawCookie) {
           .map((item) => `${item.name}=${item.value}`)
           .join("; ");
       }
-    } catch (_) { }
+    } catch (_) {}
   }
   return str;
 }
@@ -27,6 +66,7 @@ export async function askMuseWeb(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new AIError("Prompt tidak boleh kosong.", { source: "muse-web", code: "INPUT" });
 
+  const selectedModel = resolveMuseModel(options.model || options.prefer);
   const rawCookie = process.env.MUSE_COOKIE || process.env.META_COOKIE;
   const cookieString = parseCookies(rawCookie);
 
@@ -47,19 +87,22 @@ export async function askMuseWeb(prompt, options = {}) {
     ...(cookieString ? { Cookie: cookieString } : {}),
   };
 
+  const finalPrompt = selectedModel.promptPrefix ? `${selectedModel.promptPrefix}${clean}` : clean;
+
   const payload = {
     lsd: "AVq",
     fb_api_caller_class: "RelayModern",
     fb_api_req_friendly_name: "useAbraSendMessageMutation",
     variables: JSON.stringify({
       input: {
-        message: { text: clean },
+        message: { text: finalPrompt },
         external_conversation_id: `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         offline_threading_id: `${Date.now()}${Math.floor(Math.random() * 1000)}`,
         source: "desktop_web",
+        model: selectedModel.id,
       },
     }),
-    doc_id: "7771747806240098",
+    doc_id: selectedModel.docId || "7771747806240098",
   };
 
   const bodyData = new URLSearchParams(payload).toString();
@@ -107,7 +150,7 @@ export async function askMuseWeb(prompt, options = {}) {
         if (snippet && snippet.length > resultText.length) {
           resultText = snippet;
         }
-      } catch (_) { }
+      } catch (_) {}
     }
 
     if (!resultText) {
@@ -119,12 +162,12 @@ export async function askMuseWeb(prompt, options = {}) {
           singleJson?.data?.message?.text ||
           singleJson?.text ||
           "";
-      } catch (_) { }
+      } catch (_) {}
     }
 
     if (!resultText) {
       const publicFallback = await fetch(
-        `https://api.siputzx.my.id/api/ai/metaai?prompt=${encodeURIComponent(clean)}`,
+        `https://api.siputzx.my.id/api/ai/metaai?prompt=${encodeURIComponent(finalPrompt)}`,
         {
           headers: { "User-Agent": "Mozilla/5.0 RizzerBot/MuseWeb" },
           signal: AbortSignal.timeout(Math.max(1000, wait.remaining())),
@@ -154,7 +197,7 @@ export async function askMuseWeb(prompt, options = {}) {
 
     return {
       text: resultText.trim(),
-      model: "Muse Code / Meta AI (Web)",
+      model: selectedModel.name,
       source: "muse-web",
       usage: null,
     };
@@ -172,4 +215,12 @@ export const museCapabilities = {
   history: false,
 };
 
-export default { askMuseWeb, isMuseConfigured, parseCookies, museCapabilities };
+export default {
+  askMuseWeb,
+  isMuseConfigured,
+  parseCookies,
+  museCapabilities,
+  MUSE_MODELS,
+  DEFAULT_MUSE_MODEL,
+  resolveMuseModel,
+};
