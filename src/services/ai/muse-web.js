@@ -8,15 +8,17 @@ export const MUSE_MODELS = {
     name: "Muse Spark (Fast Reasoning & Code)",
     docId: "7771747806240098",
     aliases: ["spark", "fast", "speed", "code"],
-    promptPrefix: "[System: Muse Spark Fast Mode]\n",
-    description: "Model cepat berfokus pada penalaran coding dan eksekusi instruksi ringkas.",
+    promptPrefix:
+      "Berperilaku sebagai Muse Spark: asisten pintar yang berpikir tajam, alami, dan to-the-point. Jawab dengan gaya natural manusia (humanized), hindari bahasa kaku robotik atau klise seperti 'Tentu, saya adalah AI'.\n\n",
+    description: "Model cepat berfokus pada penalaran coding dan eksekusi instruksi ringkas & humanized.",
   },
   "muse-wonder": {
     id: "muse-wonder",
     name: "Muse Wonder (Deep Reasoning & Analysis)",
     docId: "7771747806240098",
     aliases: ["wonder", "deep", "think", "analysis"],
-    promptPrefix: "[System: Muse Wonder Deep Analysis Mode]\n",
+    promptPrefix:
+      "Berperilaku sebagai Muse Wonder: analis tingkat tinggi dengan penalaran mendalam dan bahasa yang elegan, cerdas, serta humanis. Strukturkan jawaban secara logis tanpa basa-basi artifisial.\n\n",
     description: "Model analisis mendalam untuk pemecahan masalah rumit, logika, dan arsitektur.",
   },
   "llama-3.3-70b": {
@@ -24,12 +26,20 @@ export const MUSE_MODELS = {
     name: "Llama 3.3 70B (General Chat)",
     docId: "7771747806240098",
     aliases: ["llama", "llama3", "llama70b", "general", "chat"],
-    promptPrefix: "",
+    promptPrefix:
+      "Jawablah dengan gaya bahasa yang ramah, santai, ekspresif, dan sangat manusiawi sesuai bahasa pengguna.\n\n",
     description: "Model serbaguna untuk percakapan natural dan tanya jawab umum.",
   },
 };
 
 export const DEFAULT_MUSE_MODEL = "muse-spark";
+
+const USER_AGENTS = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
+];
 
 export function resolveMuseModel(input) {
   if (!input) return MUSE_MODELS[DEFAULT_MUSE_MODEL];
@@ -62,6 +72,58 @@ export function parseCookies(rawCookie) {
   return str;
 }
 
+export function checkCookieHealth(cookieStr) {
+  if (!cookieStr) {
+    return {
+      healthy: false,
+      hasAuth: false,
+      hasSession: false,
+      message: "Tidak ada cookie terpasang (berjalan di public fallback node)",
+    };
+  }
+
+  const hasDatr = cookieStr.includes("datr=");
+  const hasAbraSess = cookieStr.includes("abra_sess=") || cookieStr.includes("ecto_1_sess=");
+  const hasCUser = cookieStr.includes("c_user=");
+  const hasXs = cookieStr.includes("xs=");
+
+  const hasAuth = hasAbraSess || (hasCUser && hasXs);
+
+  return {
+    healthy: Boolean(hasAuth || hasDatr),
+    hasAuth,
+    hasSession: hasAbraSess,
+    message: hasAuth
+      ? "Sesi autentikasi Meta AI aktif & valid"
+      : hasDatr
+        ? "Cookie terdeteksi (anonim/perangkat), siap dipakai"
+        : "Format cookie tidak lengkap, berpotensi fallback",
+  };
+}
+
+export function cleanHumanizedText(rawText) {
+  if (!rawText || typeof rawText !== "string") return "";
+  let clean = rawText
+    .replace(/^([*_\s]*)(Sebagai model AI|Sebagai AI|Saya adalah model bahasa|Sebagai asisten AI|Tentu, berikut adalah|Tentu saja,?)[*_\s,:-]*/i, "")
+    .replace(/^([*_\s]*)(Berikut adalah jawaban(?:nya)?|Berikut ini(?: adalah)?)[*_\s,:-]*/i, "")
+    .trim();
+
+  clean = clean
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+$/gm, "");
+
+  return clean;
+}
+
+function getRandomLsd() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let str = "AV";
+  for (let i = 0; i < 6; i++) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return str;
+}
+
 export async function askMuseWeb(prompt, options = {}) {
   const clean = String(prompt || "").trim();
   if (!clean) throw new AIError("Prompt tidak boleh kosong.", { source: "muse-web", code: "INPUT" });
@@ -69,35 +131,45 @@ export async function askMuseWeb(prompt, options = {}) {
   const selectedModel = resolveMuseModel(options.model || options.prefer);
   const rawCookie = process.env.MUSE_COOKIE || process.env.META_COOKIE;
   const cookieString = parseCookies(rawCookie);
+  const cookieStatus = checkCookieHealth(cookieString);
 
   const wait = options.wait || mkWaiter(options.timeoutMs || AI_TIMEOUT_MS);
   const budget = Math.max(1000, wait.remaining());
 
+  const randomUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+  const isChrome = randomUA.includes("Chrome");
+
   const headers = {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "User-Agent": randomUA,
     Accept: "text/event-stream, application/json, */*",
-    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
     "Content-Type": "application/x-www-form-urlencoded",
     Origin: "https://www.meta.ai",
     Referer: "https://www.meta.ai/",
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-site",
+    ...(isChrome
+      ? {
+          "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="133", "Google Chrome";v="133"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+        }
+      : {}),
     ...(cookieString ? { Cookie: cookieString } : {}),
   };
 
   const finalPrompt = selectedModel.promptPrefix ? `${selectedModel.promptPrefix}${clean}` : clean;
 
   const payload = {
-    lsd: "AVq",
+    lsd: getRandomLsd(),
     fb_api_caller_class: "RelayModern",
     fb_api_req_friendly_name: "useAbraSendMessageMutation",
     variables: JSON.stringify({
       input: {
         message: { text: finalPrompt },
-        external_conversation_id: `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        offline_threading_id: `${Date.now()}${Math.floor(Math.random() * 1000)}`,
+        external_conversation_id: `conv_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        offline_threading_id: `${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
         source: "desktop_web",
         model: selectedModel.id,
       },
@@ -116,7 +188,7 @@ export async function askMuseWeb(prompt, options = {}) {
     });
 
     if (res.status === 401 || res.status === 403) {
-      throw new AIError("Sesi Meta AI / Muse Web kedaluwarsa atau membutuhkan cookie yang valid.", {
+      throw new AIError("Sesi Meta AI kedaluwarsa atau token invalid.", {
         source: "muse-web",
         code: "AUTH",
       });
@@ -169,7 +241,7 @@ export async function askMuseWeb(prompt, options = {}) {
       const publicFallback = await fetch(
         `https://api.siputzx.my.id/api/ai/metaai?prompt=${encodeURIComponent(finalPrompt)}`,
         {
-          headers: { "User-Agent": "Mozilla/5.0 RizzerBot/MuseWeb" },
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RizzerBot/MuseWeb" },
           signal: AbortSignal.timeout(Math.max(1000, wait.remaining())),
         }
       )
@@ -195,10 +267,13 @@ export async function askMuseWeb(prompt, options = {}) {
       });
     }
 
+    const humanized = cleanHumanizedText(resultText);
+
     return {
-      text: resultText.trim(),
+      text: humanized || resultText.trim(),
       model: selectedModel.name,
       source: "muse-web",
+      cookieStatus,
       usage: null,
     };
   } catch (err) {
@@ -219,6 +294,8 @@ export default {
   askMuseWeb,
   isMuseConfigured,
   parseCookies,
+  checkCookieHealth,
+  cleanHumanizedText,
   museCapabilities,
   MUSE_MODELS,
   DEFAULT_MUSE_MODEL,
