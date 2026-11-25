@@ -9,17 +9,18 @@ import { stealthBrowser } from "./browser.js";
 
 const httpAgent = new http.Agent({
   keepAlive: true,
-  maxSockets: 50,
-  maxFreeSockets: 10,
+  maxSockets: 100,
+  maxFreeSockets: 25,
   keepAliveMsecs: 60000,
   timeout: 15000,
 });
 const httpsAgent = new https.Agent({
   keepAlive: true,
-  maxSockets: 50,
-  maxFreeSockets: 10,
+  maxSockets: 100,
+  maxFreeSockets: 25,
   keepAliveMsecs: 60000,
   timeout: 15000,
+  rejectUnauthorized: false,
 });
 
 const DEFAULT_TIMEOUT_MS = 15000;
