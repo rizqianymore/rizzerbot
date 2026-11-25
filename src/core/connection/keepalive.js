@@ -1,5 +1,5 @@
-const HEARTBEAT_MS = 2 * 60 * 1000;
-const MAX_FAILS = 4;
+const HEARTBEAT_MS = 45 * 1000;
+const MAX_FAILS = 3;
 const LAG_SAMPLE_MS = 2000;
 const LAG_WARN_MS = 2000;
 
@@ -15,18 +15,18 @@ export function startKeepAlive(sock, { logger = console, restart = null, interva
     try {
       await Promise.race([
         sock?.sendPresenceUpdate?.("available"),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Presence timeout")), 12000)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Presence timeout")), 8000)),
       ]);
       fails = 0;
     } catch (err) {
       fails += 1;
       try {
-        logger?.warn?.(`[KeepAlive] heartbeat gagal ${fails}x: ${err?.message || err}`);
+        logger?.warn?.(`[KeepAlive] heartbeat ping gagal (${fails}/${MAX_FAILS}): ${err?.message || err}`);
       } catch (_) {}
       if (fails >= MAX_FAILS) {
         fails = 0;
         try {
-          logger?.warn?.("[KeepAlive] socket latency tinggi / stale, auto recover koneksi...");
+          logger?.warn?.("[KeepAlive] Soket WhatsApp terdeteksi zombie/silent-dead, memulai auto-reconnect...");
         } catch (_) {}
         try {
           await restart?.();

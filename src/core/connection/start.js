@@ -138,12 +138,12 @@ export async function startBot() {
       msgRetryCounterCache,
       generateHighQualityLinkPreview: false,
       shouldIgnoreJid: (jid) => jid?.endsWith("@broadcast") && jid !== "status@broadcast",
-      keepAliveIntervalMs: 25000,
-      connectTimeoutMs: 60000,
-      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 20000,
+      connectTimeoutMs: 45000,
+      defaultQueryTimeoutMs: 45000,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 500,
+      retryRequestDelayMs: 350,
       maxMsgRetryCount: 5,
       autoFollowNewsletterOnConnect: false,
     });
@@ -169,10 +169,8 @@ export async function startBot() {
           try {
             logger.info(`Meminta kode pairing untuk: +${phoneNumber}...`);
             const code = await sock.requestPairingCode(phoneNumber);
-            console.log(`\n\x1b[36m====================================\x1b[0m`);
             console.log(`🔑 \x1b[1m\x1b[32mYOUR WHATSAPP PAIRING CODE:\x1b[0m \x1b[1m\x1b[4m\x1b[33m${code}\x1b[0m 🔑`);
-            console.log(`\x1b[0m   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.\n`);
-            console.log(`\x1b[36m====================================\x1b[0m\n`);
+            console.log(`   Masukkan di WhatsApp → Perangkat Tertaut → Tautkan dengan nomor telepon.`);
           } catch (err) {
             logger.warn(`Gagal meminta kode pairing (${err?.message || err}). Mencoba lagi dalam 10 detik...`);
             timers.pairingTimeout = setTimeout(requestPairing, 10000);

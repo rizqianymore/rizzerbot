@@ -7,6 +7,11 @@ const TARGETS = [
   { name: "Cloudflare", host: "1.1.1.1", port: 443 },
 ];
 
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  timeout: 10000,
+});
+
 export async function pingHttpHost(host, port = 443, timeoutMs = 5000) {
   const start = Date.now();
   return new Promise((resolve) => {
@@ -16,6 +21,7 @@ export async function pingHttpHost(host, port = 443, timeoutMs = 5000) {
         port,
         method: "HEAD",
         timeout: timeoutMs,
+        agent: httpsAgent,
       },
       (res) => {
         const ms = Date.now() - start;
@@ -57,7 +63,7 @@ export async function checkNetworkHealth() {
   const allOk = dnsResult.ok && httpResults.some((r) => r.ok);
   const avgHttpLatency =
     httpResults.filter((r) => r.ok).reduce((acc, cur) => acc + cur.ms, 0) /
-      Math.max(1, httpResults.filter((r) => r.ok).length) || 0;
+    Math.max(1, httpResults.filter((r) => r.ok).length) || 0;
 
   return {
     status: allOk ? "online" : "degraded",

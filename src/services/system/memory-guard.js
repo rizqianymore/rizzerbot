@@ -1,6 +1,7 @@
 import os from "node:os";
-import { clearNetworkCache } from "./network.js";
+import { clearNetworkCache } from "../network/network.js";
 import { stealthBrowser } from "@/src/utils/request/browser.js";
+import { clearAllCache } from "@/src/utils/cleaner.js";
 
 const DEFAULT_MEMORY_LIMIT_MB = 450;
 const CHECK_INTERVAL_MS = 60 * 1000;
@@ -21,6 +22,10 @@ export function getMemoryStats() {
 export function performProactiveCleanup(logger = console) {
   try {
     clearNetworkCache();
+  } catch (_) {}
+
+  try {
+    clearAllCache({ logger });
   } catch (_) {}
 
   try {

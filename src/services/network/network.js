@@ -26,13 +26,20 @@ export async function getDnsRecords(rawDomain) {
   const domain = cleanDomain(rawDomain);
   const hit = dnsCache.get(domain);
   if (hit !== undefined) return hit;
+
+  const withTimeout = (p, ms = 5000) =>
+    Promise.race([
+      p,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("DNS query timeout")), ms)),
+    ]);
+
   const [a, aaaa, mx, txt, ns, cname] = await Promise.allSettled([
-    dns.resolve4(domain),
-    dns.resolve6(domain),
-    dns.resolveMx(domain),
-    dns.resolveTxt(domain),
-    dns.resolveNs(domain),
-    dns.resolveCname(domain),
+    withTimeout(dns.resolve4(domain)),
+    withTimeout(dns.resolve6(domain)),
+    withTimeout(dns.resolveMx(domain)),
+    withTimeout(dns.resolveTxt(domain)),
+    withTimeout(dns.resolveNs(domain)),
+    withTimeout(dns.resolveCname(domain)),
   ]);
 
   const result = {

@@ -140,28 +140,33 @@ export class StoreBase {
       this._saveTimer = null;
     }
     const dbDirectory = path.dirname(this.dbPath);
-    fs.mkdirSync(dbDirectory, { recursive: true });
-    fs.mkdirSync(path.dirname(this.usersDbPath), { recursive: true });
+    if (!fs.existsSync(dbDirectory)) fs.mkdirSync(dbDirectory, { recursive: true });
+    const usersDbDir = path.dirname(this.usersDbPath);
+    if (!fs.existsSync(usersDbDir)) fs.mkdirSync(usersDbDir, { recursive: true });
 
     const usersSerialized = JSON.stringify(this.data.users || {});
-    const tempUsersPath = `${this.usersDbPath}.${process.pid}.tmp`;
+    const tempUsersPath = `${this.usersDbPath}.${process.pid}.${Date.now()}.tmp`;
     try {
       fs.writeFileSync(tempUsersPath, usersSerialized, "utf8");
       fs.renameSync(tempUsersPath, this.usersDbPath);
     } catch (_) {
-      fs.writeFileSync(this.usersDbPath, usersSerialized, "utf8");
+      try {
+        fs.writeFileSync(this.usersDbPath, usersSerialized, "utf8");
+      } catch (_) {}
       try {
         fs.rmSync(tempUsersPath, { force: true });
       } catch (_) {}
     }
 
     const serialized = JSON.stringify(this.data);
-    const temporaryPath = `${this.dbPath}.${process.pid}.tmp`;
+    const temporaryPath = `${this.dbPath}.${process.pid}.${Date.now()}.tmp`;
     try {
       fs.writeFileSync(temporaryPath, serialized, "utf8");
       fs.renameSync(temporaryPath, this.dbPath);
     } catch (_) {
-      fs.writeFileSync(this.dbPath, serialized, "utf8");
+      try {
+        fs.writeFileSync(this.dbPath, serialized, "utf8");
+      } catch (_) {}
       try {
         fs.rmSync(temporaryPath, { force: true });
       } catch (_) {}

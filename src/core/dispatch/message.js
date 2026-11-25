@@ -13,6 +13,20 @@ const DEDUP_TTL_MS = 5 * 60 * 1000;
 const MAX_DEDUP_SIZE = 4000;
 const seenMessageIds = new Map();
 
+// Pembersihan berkala otomatis agar tidak memakan CPU saat lookup
+let _dedupCleanupTimer = null;
+function ensureDedupCleanup() {
+  if (_dedupCleanupTimer) return;
+  _dedupCleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [k, t] of seenMessageIds.entries()) {
+      if (now - t > DEDUP_TTL_MS) seenMessageIds.delete(k);
+    }
+  }, 60 * 1000);
+  if (_dedupCleanupTimer.unref) _dedupCleanupTimer.unref();
+}
+ensureDedupCleanup();
+
 export function isDuplicateMessage(botIdentity, key) {
   const id = key?.id;
   if (!id) return false;
@@ -22,17 +36,8 @@ export function isDuplicateMessage(botIdentity, key) {
   if (last !== undefined && now - last < DEDUP_TTL_MS) return true;
 
   if (seenMessageIds.size >= MAX_DEDUP_SIZE) {
-    let deleted = 0;
-    for (const [k, t] of seenMessageIds.entries()) {
-      if (now - t > DEDUP_TTL_MS) {
-        seenMessageIds.delete(k);
-        deleted++;
-      }
-    }
-    if (deleted === 0) {
-      const oldestKey = seenMessageIds.keys().next().value;
-      if (oldestKey) seenMessageIds.delete(oldestKey);
-    }
+    const oldestKey = seenMessageIds.keys().next().value;
+    if (oldestKey) seenMessageIds.delete(oldestKey);
   }
 
   seenMessageIds.set(mapKey, now);
