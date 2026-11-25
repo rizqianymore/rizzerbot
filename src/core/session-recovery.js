@@ -158,7 +158,7 @@ export const SESSION_FAILURE_THRESHOLD = MAX_SESSION_FAILURES;
  * Membersihkan file pre-key dan app-state sync usang untuk mencegah
  * ribuan file menumpuk dan memperlambat I/O disk.
  */
-export function cleanOldPreKeys({ authDir, maxAgeDays = 7, logger: customLogger } = {}) {
+export function cleanOldPreKeys({ authDir, maxAgeDays = 2, logger: customLogger } = {}) {
   const log = customLogger || logger;
   const targetDir = authDir || path.resolve(process.cwd(), "assets", "sessions", "primary_bot");
   if (!fs.existsSync(targetDir)) return { deletedCount: 0, freedBytes: 0 };

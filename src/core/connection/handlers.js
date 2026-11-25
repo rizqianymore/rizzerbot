@@ -87,14 +87,16 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       }
 
       if (shouldReconnect) {
-        logger.info("Mencoba menghubungkan kembali (reconnect) dalam 5 detik...");
+        const reconnectDelay = Math.min(1000 * Math.max(1, (connectionState.reconnectAttempts || 1)), 5000);
+        connectionState.reconnectAttempts = ((connectionState.reconnectAttempts || 0) % 5) + 1;
+        logger.info(`Mencoba menghubungkan kembali (reconnect) dalam ${Math.round(reconnectDelay / 1000)} detik...`);
         if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
         connectionState.reconnectTimer = setTimeout(() => {
           connectionState.reconnectTimer = null;
           restart().catch((err) => {
             logger.error("Gagal restart bot:", err);
           });
-        }, 5000);
+        }, reconnectDelay);
         return;
       }
 
@@ -115,6 +117,7 @@ export function attachConnectionEvents(sock, { authDir, usePairingCode, timers, 
       }, 3000);
     } else if (connection === "open") {
       connectionState.unregisteredFailures = 0;
+      connectionState.reconnectAttempts = 0;
       if (timers.pairingTimeout) clearTimeout(timers.pairingTimeout);
       logger.info("🎉 Primary Rizzer Bot BERHASIL TERHUBUNG dan sekarang ONLINE!");
       try {

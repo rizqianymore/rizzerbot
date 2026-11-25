@@ -7,6 +7,7 @@ export const connectionState = {
   keepAliveStop: null,
   stabilityStop: null,
   lastDisconnectAt: 0,
+  reconnectAttempts: 0,
   pairingHintSent: false,
   unregisteredFailures: 0,
 };

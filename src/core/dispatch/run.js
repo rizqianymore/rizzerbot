@@ -74,17 +74,37 @@ async function dispatchInner(sock, msg, logger) {
 
   if (remoteJid.endsWith("@newsletter") || remoteJid.endsWith("@broadcast")) return;
 
+  const tapText = extractButtonText(msg.message) || "";
+  const messageContent =
+    msg.message.conversation ||
+    msg.message.extendedTextMessage?.text ||
+    msg.message.imageMessage?.caption ||
+    msg.message.videoMessage?.caption ||
+    msg.message.documentMessage?.caption ||
+    msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
+    tapText ||
+    "";
+  if (tapText) logger?.info?.(`[ButtonTap] ${remoteJid} -> ${tapText}`);
+
   try {
     const ts = Number(msg.messageTimestamp);
     if (Number.isFinite(ts) && ts > 0) {
-      if (ts < PROCESS_START_TIME_SEC - 10) {
+      const isOwnerSender = db.isOwner(crashCandidate) || db.isOwner(remoteJid);
+      const trimmedText = String(messageContent || "").trim();
+      const isCommandLike = trimmedText.startsWith(".") || trimmedText.startsWith("/") || trimmedText.startsWith("#") || trimmedText.startsWith("!");
+
+      // Toleransi umur pesan: jika pesan command dari user/owner, berikan jendela 3-5 menit (owner 5 menit, user 3 menit, pesan non-command biasa 2 menit)
+      const maxAgeMs = isOwnerSender ? 5 * 60 * 1000 : (isCommandLike ? 3 * 60 * 1000 : 2 * 60 * 1000);
+      const startupToleranceSec = isOwnerSender ? 300 : (isCommandLike ? 180 : 15);
+
+      if (ts < PROCESS_START_TIME_SEC - startupToleranceSec) {
         logStaleThrottled(logger, Math.round(PROCESS_START_TIME_SEC - ts), msg.key?.id || "?");
         return;
       }
 
       const ageMs = Date.now() - ts * 1000;
 
-      if (ageMs > 2 * 60 * 1000) {
+      if (ageMs > maxAgeMs) {
         logStaleThrottled(logger, Math.round(ageMs / 1000), msg.key?.id || "?");
         return;
       }
@@ -97,18 +117,6 @@ async function dispatchInner(sock, msg, logger) {
       }
     }
   } catch (_) {}
-
-  const tapText = extractButtonText(msg.message) || "";
-  const messageContent =
-    msg.message.conversation ||
-    msg.message.extendedTextMessage?.text ||
-    msg.message.imageMessage?.caption ||
-    msg.message.videoMessage?.caption ||
-    msg.message.documentMessage?.caption ||
-    msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
-    tapText ||
-    "";
-  if (tapText) logger?.info?.(`[ButtonTap] ${remoteJid} -> ${tapText}`);
 
   if (await checkAntiCrash(sock, msg, logger, remoteJid, messageContent)) return;
 

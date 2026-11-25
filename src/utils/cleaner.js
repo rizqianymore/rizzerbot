@@ -55,7 +55,8 @@ export function cleanTempFiles({ maxAgeMs = 15 * 60 * 1000 } = {}) {
   };
 
   const isTrashFile = (name) => {
-    return name.endsWith(".tmp") || name.endsWith(".temp") || name.endsWith(".log") || name.startsWith("temp_");
+    if (name === "media-cache.db" || name === ".gitkeep" || name.endsWith(".gitkeep")) return false;
+    return name.endsWith(".tmp") || name.endsWith(".temp") || name.endsWith(".log") || name.startsWith("temp_") || name.startsWith("demo_");
   };
 
   for (const basePath of pathsToClean) {
