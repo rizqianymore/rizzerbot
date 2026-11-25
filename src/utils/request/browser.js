@@ -29,6 +29,14 @@ export class StealthBrowserManager extends StealthBrowserCore {
         get: () => 8,
       });
 
+      // Canvas fingerprint noise spoofing
+      try {
+        const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+        HTMLCanvasElement.prototype.toDataURL = function (...args) {
+          return originalToDataURL.apply(this, args);
+        };
+      } catch (_) {}
+
       const originalQuery = window.navigator.permissions.query;
       window.navigator.permissions.query = (parameters) =>
         parameters.name === "notifications"
@@ -90,12 +98,16 @@ export class StealthBrowserManager extends StealthBrowserCore {
           "mgid.com",
           "propellerads",
           "yandex.ru/ads",
+          "hotjar",
+          "clarity.ms",
+          "scorecardresearch",
+          "criteo.com",
         ];
         page.on("request", (req) => {
           const type = req.resourceType();
           const url = req.url().toLowerCase();
           if (
-            ["media", "font", "image"].includes(type) ||
+            ["media", "font", "image", "stylesheet"].includes(type) ||
             AD_HOST_PATTERNS.some((ad) => url.includes(ad))
           ) {
             req.abort().catch(() => { });
