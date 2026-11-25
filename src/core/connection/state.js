@@ -10,6 +10,7 @@ export const connectionState = {
   reconnectAttempts: 0,
   pairingHintSent: false,
   unregisteredFailures: 0,
+  startedAtSec: Math.floor(Date.now() / 1000),
 };
 
 export function getPrimarySock() {

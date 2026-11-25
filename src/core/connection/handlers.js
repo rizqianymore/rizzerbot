@@ -224,6 +224,22 @@ export function attachMessageHandler(sock) {
           }
         }
 
+        // Drop pesan lama dari masa sebelum bot start / saat offline tanpa diproses sama sekali
+        const ts = Number(msg.messageTimestamp);
+        if (Number.isFinite(ts) && ts > 0) {
+          const isOwnerSender = db.isOwner(msg.key.participant || rjid) || db.isOwner(rjid);
+          const startupBase = connectionState.startedAtSec || Math.floor(Date.now() / 1000);
+          // Bila pesan dikirim sebelum bot aktif, langsung lewati (toleransi 10 detik clock skew)
+          if (ts < startupBase - (isOwnerSender ? 60 : 10)) {
+            continue;
+          }
+          const ageMs = Date.now() - ts * 1000;
+          const maxAgeMs = isOwnerSender ? 3 * 60 * 1000 : 1 * 60 * 1000;
+          if (ageMs > maxAgeMs) {
+            continue;
+          }
+        }
+
         const stubType = Number(msg.messageStubType) || 0;
         const stubStr = String(msg.messageStubType || "").toLowerCase();
         const isDecryptionFailure = stubType === 2 || stubStr === "ciphertext";

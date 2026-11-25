@@ -12,9 +12,12 @@ const SESSION_ERROR_PATTERNS = [
   "Key used already or never filled",
   "Decryption failed",
   "CIPHERTEXT",
+  "Invalid signature",
+  "Session error",
+  "Unknown error in crypto",
 ];
 
-const MAX_SESSION_FAILURES = 3;
+const MAX_SESSION_FAILURES = 2;
 
 const FAILURE_WINDOW_MS = 10 * 60 * 1000;
 
@@ -116,6 +119,12 @@ export async function resetSessionIfThresholdReached(jid, sock, count) {
       `[Session Recovery] Sesi Signal untuk ${jid} berhasil direset dan dibersihkan dari disk. ` +
         `Pesan berikutnya akan menegosiasikan ratchet session baru secara otomatis.`
     );
+
+    // Kirim sinyal touch/presence atau init retry secara proaktif agar ratchet ter-reset
+    if (sock && typeof sock.presenceSubscribe === "function") {
+      sock.presenceSubscribe(jid).catch(() => {});
+    }
+
     return true;
   } catch (err) {
     logger.error(`[Session Recovery] Gagal mereset sesi ${jid}:`, err.message || err);

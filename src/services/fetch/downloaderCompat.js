@@ -4,6 +4,7 @@ import os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { resolveFfmpegPath } from "@/src/utils/termux.js";
+import { ffmpegStreamConvert } from "./media/stream.js";
 import { isVideoOrAnimated } from "./media/buffer.js";
 
 const execFileAsync = promisify(execFile);
@@ -76,7 +77,7 @@ export function sniffMime(buffer, fallback = "video/mp4") {
 async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs = []) {
   await acquireFfmpegSlot();
   const cacheDir = path.join(os.tmpdir(), "rizzerbot-compat");
-  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => {});
+  await fsp.mkdir(cacheDir, { recursive: true }).catch(() => { });
   const base = path.join(cacheDir, `cvt-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const inFile = `${base}_in.${inputExt}`;
   const outFile = `${base}_out.${outputExt}`;
@@ -89,8 +90,8 @@ async function ffmpegConvertBuffer(inputBuffer, inputExt, outputExt, extraArgs =
     return await fsp.readFile(outFile);
   } finally {
     releaseFfmpegSlot();
-    await fsp.unlink(inFile).catch(() => {});
-    await fsp.unlink(outFile).catch(() => {});
+    await fsp.unlink(inFile).catch(() => { });
+    await fsp.unlink(outFile).catch(() => { });
   }
 }
 
@@ -145,6 +146,19 @@ export async function ensureAudioCompatible(buffer) {
   if (buffer.slice(0, 3).toString() === "ID3") {
     return buffer;
   }
+
+  // Coba stream in-memory langsung tanpa menyentuh disk
+  try {
+    const streamOut = await ffmpegStreamConvert(
+      buffer,
+      ["-vn", "-acodec", "libmp3lame", "-b:a", "128k", "-f", "mp3"],
+      20000
+    );
+    if (streamOut && streamOut.length > 100) {
+      return streamOut;
+    }
+  } catch (_) { }
+
   try {
     let inputExt = "bin";
     if (buffer.slice(0, 4).toString() === "OggS") inputExt = "ogg";
@@ -184,7 +198,7 @@ export async function unifiedDownload(
           rawBuffer: cached.buffer,
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   let lastErr = null;
@@ -312,7 +326,7 @@ export async function unifiedDownload(
       const { setCachedMedia } = await import("./mediaCache.js");
       const mime = sniffMime(buffer, isAudio ? "audio/mpeg" : "video/mp4");
       await setCachedMedia(cacheKey, buffer, { mime, info });
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return { buffer, info, source, rawBuffer };
@@ -367,7 +381,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "tiktok-slide",
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   try {
@@ -390,7 +404,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
         source: "socialdownloader",
       };
     }
-  } catch (_) {}
+  } catch (_) { }
 
   if (/instagram\.com/i.test(targetUrl)) {
     try {
@@ -411,7 +425,7 @@ export async function extractMultiMedia(url, { isAudio = false, logger } = {}) {
           source: "kol.id-carousel",
         };
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return { items, info: meta, source: "none" };

@@ -1,12 +1,25 @@
 import { extractMessageContent } from "baileys";
 
-const MEDIA_TYPES = ["imageMessage", "videoMessage", "stickerMessage", "documentMessage", "audioMessage"];
+const MEDIA_TYPES = [
+  "imageMessage",
+  "videoMessage",
+  "stickerMessage",
+  "documentMessage",
+  "audioMessage",
+  "ptvMessage",
+];
 
 export function unwrapMessageContent(content) {
   try {
     if (!content) return content;
     let curr = content;
     for (let i = 0; i < 5; i++) {
+      if (curr.viewOnceMessage?.message) curr = curr.viewOnceMessage.message;
+      else if (curr.viewOnceMessageV2?.message) curr = curr.viewOnceMessageV2.message;
+      else if (curr.viewOnceMessageV2Extension?.message) curr = curr.viewOnceMessageV2Extension.message;
+      else if (curr.ephemeralMessage?.message) curr = curr.ephemeralMessage.message;
+      else if (curr.documentWithCaptionMessage?.message) curr = curr.documentWithCaptionMessage.message;
+
       const extracted = extractMessageContent(curr);
       if (!extracted || extracted === curr) break;
       curr = extracted;

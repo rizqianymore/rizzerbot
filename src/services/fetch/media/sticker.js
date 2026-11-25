@@ -5,6 +5,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { db } from "@/src/core/database.js";
 import { getFfmpegPath } from "./ffmpeg.js";
+import { ffmpegStreamConvert } from "./stream.js";
 import { getSharp } from "@/src/utils/native.js";
 import { buildStickerExif, injectExif, isWebP } from "./exif.js";
 import { isVideoOrAnimated } from "./buffer.js";
@@ -22,6 +23,29 @@ function toFfmpegTime(seconds) {
 }
 
 async function ffmpegStaticToWebp(buffer) {
+  // Gunakan in-memory pipe untuk konversi instan tanpa nulis disk
+  try {
+    return await ffmpegStreamConvert(
+      buffer,
+      [
+        "-vf",
+        "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(512-iw)/2:(512-ih)/2:color=0x00000000",
+        "-vcodec",
+        "libwebp",
+        "-preset",
+        "picture",
+        "-quality",
+        "85",
+        "-compression_level",
+        "3",
+        "-f",
+        "webp",
+      ],
+      15000
+    );
+  } catch (_) {}
+
+  // Fallback disk jika pipes gagal
   const cacheDir = path.join(process.cwd(), "assets", "cache");
   if (!fs.existsSync(cacheDir)) {
     try {
@@ -40,17 +64,19 @@ async function ffmpegStaticToWebp(buffer) {
         "-i",
         inFile,
         "-vf",
-        "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(512-iw)/2:(512-ih)/2:color=0x00000000,fps=15",
-        "-loop",
-        "0",
+        "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(512-iw)/2:(512-ih)/2:color=0x00000000",
+        "-vcodec",
+        "libwebp",
         "-preset",
         "picture",
         "-an",
         "-quality",
-        "90",
+        "85",
+        "-compression_level",
+        "3",
         outFile,
       ],
-      { timeout: 60000, maxBuffer: 10 * 1024 * 1024 }
+      { timeout: 30000, maxBuffer: 10 * 1024 * 1024 }
     );
     return await fsp.readFile(outFile);
   } finally {
@@ -203,13 +229,13 @@ export async function createSticker(
         "512:512",
 
         "-quality",
-        "90",
+        "75",
         "-compression_level",
-        "6",
+        "4",
         outWebp,
       ];
 
-      await execFileAsync(getFfmpegPath(), ffmpegArgs, { timeout: 90000, maxBuffer: 10 * 1024 * 1024 });
+      await execFileAsync(getFfmpegPath(), ffmpegArgs, { timeout: 45000, maxBuffer: 10 * 1024 * 1024 });
       webpBuffer = await fsp.readFile(outWebp);
       webpBuffer = await shrinkIfTooBig(webpBuffer);
     } catch (vidErr) {
@@ -236,12 +262,12 @@ export async function createSticker(
           .resize(512, 512, {
             fit: "contain",
             background: { r: 0, g: 0, b: 0, alpha: 0 },
-            kernel: sharp.kernel.lanczos3,
+            kernel: sharp.kernel.nearest,
           })
           .webp({
-            quality: 85,
+            quality: 75,
             smartSubsample: true,
-            effort: 5,
+            effort: 2,
           })
           .toBuffer();
       } catch (animErr) {

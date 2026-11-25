@@ -4,17 +4,34 @@ import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { getFfmpegPath } from "./ffmpeg.js";
+import { ffmpegStreamConvert } from "./stream.js";
 import { getSharp } from "@/src/utils/native.js";
 import { createSticker } from "./sticker.js";
 
 const execFileAsync = promisify(execFile);
 
 async function ffmpegConvert(inputBuffer, inputExt, outputExt, extraArgs = []) {
+  // Coba stream in-memory dulu untuk format umum tanpa menulis ke disk
+  if (outputExt === "mp3") {
+    try {
+      return await ffmpegStreamConvert(inputBuffer, ["-vn", "-acodec", "libmp3lame", "-b:a", "128k", "-f", "mp3"]);
+    } catch (_) { }
+  } else if (outputExt === "png" && (inputExt === "webp" || inputExt === "jpg" || inputExt === "jpeg")) {
+    try {
+      return await ffmpegStreamConvert(inputBuffer, ["-vframes", "1", "-f", "image2pipe", "-vcodec", "png", ...extraArgs]);
+    } catch (_) { }
+  } else if (outputExt === "webp") {
+    try {
+      return await ffmpegStreamConvert(inputBuffer, ["-vcodec", "libwebp", "-f", "webp", ...extraArgs]);
+    } catch (_) { }
+  }
+
+  // Fallback file disk jika format/codec membutuhkan multi-pass atau seekable file
   const cacheDir = path.join(process.cwd(), "assets", "cache");
   if (!fs.existsSync(cacheDir)) {
     try {
       fs.mkdirSync(cacheDir, { recursive: true });
-    } catch (_) {}
+    } catch (_) { }
   }
   const tmpBase = path.join(cacheDir, `conv-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const inFile = `${tmpBase}.${inputExt}`;
@@ -27,8 +44,8 @@ async function ffmpegConvert(inputBuffer, inputExt, outputExt, extraArgs = []) {
     });
     return await fsp.readFile(outFile);
   } finally {
-    await fsp.unlink(inFile).catch(() => {});
-    await fsp.unlink(outFile).catch(() => {});
+    await fsp.unlink(inFile).catch(() => { });
+    await fsp.unlink(outFile).catch(() => { });
   }
 }
 
@@ -49,6 +66,29 @@ export async function webpToImage(buffer) {
 }
 
 export async function webpToVideo(buffer) {
+  // Coba stream in-memory langsung jika ffmpeg mendukung libwebp demux
+  try {
+    const directStream = await ffmpegStreamConvert(
+      buffer,
+      [
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-vf",
+        "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+        "-movflags",
+        "frag_keyframe+empty_moov+default_base_moof",
+        "-f",
+        "mp4",
+      ],
+      30000
+    );
+    if (directStream && directStream.length > 500) {
+      return directStream;
+    }
+  } catch (_) {}
+
   const sharp = getSharp();
   let pages = 1;
   if (sharp) {
@@ -84,7 +124,7 @@ export async function webpToVideo(buffer) {
     if (!fs.existsSync(cacheDir)) {
       try {
         fs.mkdirSync(cacheDir, { recursive: true });
-      } catch (_) {}
+      } catch (_) { }
     }
     const tmpDir = await fsp.mkdtemp(path.join(cacheDir, "webpvid-"));
 
@@ -114,7 +154,7 @@ export async function webpToVideo(buffer) {
 
       return await fsp.readFile(outMp4);
     } finally {
-      await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+      await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => { });
     }
   } catch (err) {
     console.warn("[webpToVideo] error:", err?.message || err);
