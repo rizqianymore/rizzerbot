@@ -17,7 +17,7 @@ const SESSION_ERROR_PATTERNS = [
   "Unknown error in crypto",
 ];
 
-const MAX_SESSION_FAILURES = 2;
+const MAX_SESSION_FAILURES = 1;
 
 const FAILURE_WINDOW_MS = 10 * 60 * 1000;
 

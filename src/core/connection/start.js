@@ -35,16 +35,16 @@ export async function startBot() {
     try {
       connectionState.primarySock.ev.removeAllListeners();
       connectionState.primarySock.end();
-    } catch (_) {}
+    } catch (_) { }
     connectionState.primarySock = null;
   }
   try {
     connectionState.keepAliveStop?.();
-  } catch (_) {}
+  } catch (_) { }
   connectionState.keepAliveStop = null;
   try {
     connectionState.stabilityStop?.();
-  } catch (_) {}
+  } catch (_) { }
   connectionState.stabilityStop = null;
 
   try {
@@ -119,12 +119,10 @@ export async function startBot() {
               logger.warn(`[Baileys Session Warning] ${msg}${target ? ` (target: ${target})` : ""}`);
               if (target && sockInstance) {
                 const failCount = recordDecryptionFailure(target, errText);
-                if (failCount) {
-                  resetSessionIfThresholdReached(target, sockInstance, failCount).catch(() => {});
-                }
+                resetSessionIfThresholdReached(target, sockInstance, failCount || 1).catch(() => { });
               }
             }
-          } catch (_) {}
+          } catch (_) { }
         },
       }
     );
@@ -202,7 +200,7 @@ export async function startBot() {
     if (connectionState.reconnectTimer) clearTimeout(connectionState.reconnectTimer);
     connectionState.reconnectTimer = setTimeout(() => {
       connectionState.reconnectTimer = null;
-      startBot().catch(() => {});
+      startBot().catch(() => { });
     }, 5000);
     return null;
   }
