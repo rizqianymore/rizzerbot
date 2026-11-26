@@ -35,7 +35,7 @@ export class StealthBrowserManager extends StealthBrowserCore {
         HTMLCanvasElement.prototype.toDataURL = function (...args) {
           return originalToDataURL.apply(this, args);
         };
-      } catch (_) {}
+      } catch (_) { }
 
       const originalQuery = window.navigator.permissions.query;
       window.navigator.permissions.query = (parameters) =>
